@@ -14,6 +14,18 @@ $result = mysqli_query($conn, $query);
 $data = mysqli_fetch_assoc($result);
 $totalstudent = $data['total_student'];
 
+// Get total admins
+$query = "SELECT COUNT(*) AS total_admin FROM admin";
+$result = mysqli_query($conn, $query);
+$data = mysqli_fetch_assoc($result);
+$totaladmin = $data['total_admin'];
+
+// Get total super admins
+$query = "SELECT COUNT(*) AS total_superadmin FROM superadmin";
+$result = mysqli_query($conn, $query);
+$data = mysqli_fetch_assoc($result);
+$totalsuperadmin = $data['total_superadmin'];
+
 
 
 ?>
@@ -266,6 +278,7 @@ $totalstudent = $data['total_student'];
           </a>
         </li><!-- End Dashboard Nav -->
 
+        <!-- Faculty Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-menu-button-wide"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -282,8 +295,9 @@ $totalstudent = $data['total_student'];
               </a>
             </li>
           </ul>
-        </li><!-- End Components Nav -->
-
+        </li><!-- End Faculty Nav -->
+        
+        <!-- Student Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-journal-text"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -300,7 +314,26 @@ $totalstudent = $data['total_student'];
               </a>
             </li>
           </ul>
-        </li><!-- End Forms Nav -->
+        </li><!-- End Student Nav -->
+
+        <!-- Admin Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-menu-button-wide"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-adminlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-admincreation.php">
+                <i class="bi bi-circle"></i><span>Add New Admin</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Admin Nav -->
 
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
@@ -370,7 +403,7 @@ $totalstudent = $data['total_student'];
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="users-profile.html">
+          <a class="nav-link collapsed" href="user-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -441,9 +474,9 @@ $totalstudent = $data['total_student'];
           <div class="col-lg-8">
             <div class="row">
 
-              <!-- Sales Card -->
+              <!-- Total Faculty Card -->
               <div class="col-xxl-4 col-md-6">
-                <div class="card info-card sales-card">
+                <div class="card info-card ">
 
                   <!-- <div class="filter">
                     <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -458,6 +491,7 @@ $totalstudent = $data['total_student'];
                     </ul>
                   </div> -->
 
+                  
                   <div class="card-body">
                     <h5 class="card-title">Total<span> | Faculty Members</span></h5>
 
@@ -472,11 +506,11 @@ $totalstudent = $data['total_student'];
                   </div>
 
                 </div>
-              </div><!-- End Sales Card -->
+              </div><!-- End Total Faculty Card -->
 
-              <!-- Revenue Card -->
-              <div class="col-xxl-4 col-md-6">
-                <div class="card info-card revenue-card">
+              <!-- Total Student Card -->
+              <div class="col-xxl-4 col-xl-12">
+                <div class="card info-card ">
 
                   <!-- <div class="filter">
                     <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -505,12 +539,11 @@ $totalstudent = $data['total_student'];
                   </div>
 
                 </div>
-              </div><!-- End Revenue Card -->
+              </div><!-- End Total Student Card -->
 
-              <!-- Customers Card -->
+              <!-- Total Admins Card -->
               <div class="col-xxl-4 col-xl-12">
-
-                <div class="card info-card customers-card">
+                <div class="card info-card">
 
                   <!-- <div class="filter">
                     <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -533,14 +566,48 @@ $totalstudent = $data['total_student'];
                         <img src="icons/admin.png" alt="Admin Icon" style="width: 50px; height: 50px;">
                       </div>
                       <div class="ps-3">
-                        <h6>1244</h6>
+                        <h6><?php echo $totaladmin; ?></h6>
                       </div>
                     </div>
 
                   </div>
                 </div>
 
-              </div><!-- End Customers Card -->
+              </div><!-- End Total Admin Card -->
+
+              <!-- Total Super Admins Card -->
+              <div class="col-xxl-4 col-xl-12">
+                <div class="card info-card">
+
+                  <!-- <div class="filter">
+                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                      <li class="dropdown-header text-start">
+                        <h6>Filter</h6>
+                      </li>
+
+                      <li><a class="dropdown-item" href="#">Today</a></li>
+                      <li><a class="dropdown-item" href="#">This Month</a></li>
+                      <li><a class="dropdown-item" href="#">This Year</a></li>
+                    </ul>
+                  </div> -->
+
+                  <div class="card-body">
+                    <h5 class="card-title">Total <span>| Super Admins</span></h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <img src="icons/superadmin.png" alt="Admin Icon" style="width: 50px; height: 50px;">
+                      </div>
+                      <div class="ps-3">
+                        <h6><?php echo $totalsuperadmin; ?></h6>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div><!-- End Total Super Admin Card -->
 
               <!-- Reports -->
               <div class="col-12">
@@ -1065,18 +1132,8 @@ $totalstudent = $data['total_student'];
     </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->
-    <footer id="footer" class="footer">
-      <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </footer><!-- End Footer -->
+    <?php include'footer.php'?>
+    <!-- End Footer -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
         class="bi bi-arrow-up-short"></i></a>

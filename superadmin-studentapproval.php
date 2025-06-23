@@ -298,6 +298,25 @@ $result = mysqli_query($conn, $query);
         </ul>
       </li><!-- End Student Nav -->
 
+      <!-- Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-adminlist.php" >
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-admincreation.php">
+              <i class="bi bi-circle"></i><span>Add New Admin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Admin Nav -->
+
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-layout-text-window-reverse"></i><span>Tables</span><i class="bi bi-chevron-down ms-auto"></i>

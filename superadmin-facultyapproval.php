@@ -2,6 +2,7 @@
 session_start();
 include 'conn/conn.php';
 include 'approval.php';
+
 // Fetch faculty data for approval
 $query = "SELECT * FROM register WHERE status = 'pending' AND role = 'faculty'";
 $result = mysqli_query($conn, $query);
@@ -251,14 +252,15 @@ $result = mysqli_query($conn, $query);
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-    <li class="nav-item">
-      <a class="nav-link collapsed" href="superadmin-dashboard.php">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-      </a>
-    </li> 
-    <!-- End Dashboard Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-dashboard.php">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+        </a>
+      </li> 
+      <!-- End Dashboard Nav -->
 
+      <!-- Faculty Nav -->
       <li class="nav-item">
         <a class="nav-link " data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-menu-button-wide"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -275,8 +277,9 @@ $result = mysqli_query($conn, $query);
             </a>
           </li>
         </ul>
-      </li><!-- End Components Nav -->
+      </li><!-- End Faculty Nav -->
 
+      <!-- Student Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-journal-text"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -293,7 +296,26 @@ $result = mysqli_query($conn, $query);
             </a>
           </li>
         </ul>
-      </li><!-- End Forms Nav -->
+      </li><!-- End Student Nav -->
+
+      <!-- Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-menu-button-wide"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-adminlist.php" >
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-admincreation.php">
+              <i class="bi bi-circle"></i><span>Add New Admin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Admin Nav -->
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
