@@ -1,16 +1,14 @@
 <?php
+
 session_start();
 include 'conn/conn.php';
-include 'approval.php';
 
-// Fetch student data for approval
-$query = "SELECT * FROM register WHERE status = 'pending' AND role = 'student'";
-$result = mysqli_query($conn, $query);
-
+// Create a new super admin account
 
 
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,7 +16,7 @@ $result = mysqli_query($conn, $query);
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / StudentApproval</title>
+  <title>FEAST / SuperAdmin Creation</title>
   <?php include 'header.php'?>
 </head>
 
@@ -27,7 +25,9 @@ $result = mysqli_query($conn, $query);
   <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <?php include 'logo.php' ?><!-- End Logo -->
+    
+    <?php include 'logo.php'?>
+    <!-- End Logo -->
 
     <div class="search-bar">
       <form class="search-form d-flex align-items-center" method="POST" action="#">
@@ -252,85 +252,84 @@ $result = mysqli_query($conn, $query);
 
     <ul class="sidebar-nav" id="sidebar-nav">
 
-     <li class="nav-item">
-        <a class="nav-link collapsed" href="superadmin-dashboard.php">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li>
-    <!-- End Dashboard Nav -->
-
-      <!-- Faculty Nav -->
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="superadmin-facultylist.php">
-              <i class="bi bi-circle"></i><span>List</span>
-            </a>
-          </li>
-          <li>
-            <a href="superadmin-facultyapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Faculty Nav -->
+          <a class="nav-link collapsed" href="superadmin-dashboard.php">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li><!-- End Dashboard Nav -->
 
-      <!-- Student Nav -->
-      <li class="nav-item">
-        <a class="nav-link " data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="forms-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="superadmin-studentlist.php">
-              <i class="bi bi-circle"></i><span>List</span>
-            </a>
-          </li>
-          <li>
-            <a href="superadmin-studentapproval.php" class="active">
-              <i class="bi bi-circle"></i><span>Approval</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Student Nav -->
-
-      <!-- Admin Nav -->
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="superadmin-adminlist.php" >
-              <i class="bi bi-circle"></i><span>List</span>
-            </a>
-          </li>
-          <li>
-            <a href="superadmin-admincreation.php">
-              <i class="bi bi-circle"></i><span>Add New Admin</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Admin Nav -->
-
-      <!-- Super Admin Nav -->
+        <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-facultylist.php">
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-facultyapproval.php">
+                <i class="bi bi-circle"></i><span>Approval</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Faculty Nav -->
+        
+        <!-- Student Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-studentlist.php">
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-studentapproval.php">
+                <i class="bi bi-circle"></i><span>Approval</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Student Nav -->
+
+        <!-- Admin Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-adminlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-admincreation.php">
+                <i class="bi bi-circle"></i><span>Add New Admin</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Admin Nav -->
+
+        <!-- Super Admin Nav -->
+        <li class="nav-item">
+          <a class="nav-link " data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person-fill"></i><span>Super Admin</span><i
               class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="tables-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-superadminlist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-superadmincreation.php">
+              <a href="superadmin-superadmincreation.php" class="active">
                 <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
               </a>
             </li>
@@ -441,71 +440,95 @@ $result = mysqli_query($conn, $query);
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>List of Student Approval</h1>
+      <h1>Super Admin Creation</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Student</li>
-          <li class="breadcrumb-item active">Approval</li>
+          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item">Super Admin</li>
+          <li class="breadcrumb-item active">Add New Super Admin</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
-    <section class="section"><!-- Section with datatables -->
-      <div class="row">
-        <div class="col-lg-12">
+    <!-- Super Admin Creation Section -->
+        <section class="section">
+          <div class="row">
+            <div class="col-lg-12">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Create New Super Admin</h5>
+                    <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Datatables</h5>
+                      <!-- ID Number -->
+                      <div class="col-md-3">
+                        <div class="form-floating">
+                          <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
+                          <label for="idnumber" class="form-label">ID Number</label>
+                          <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
+                        </div>
+                      </div>
 
-              <!-- Table with stripped rows -->
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Department</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td><?php echo $row['idnumber'];?></td>
-                        <td><?php echo $row['first_name'];?></td>
-                        <td><?php echo $row['mid_name'];?></td>
-                        <td><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-uppercase"><?php echo $row['department'];?></td>
-                        <td>
-                      <form method="post" style="display:inline;">
-                        <input type="hidden" name="idnumber" value="<?php echo $row['idnumber']; ?>">
-                        <button class="btn btn-success btn-sm" name="approve" type="submit">Approve</button>
-                        <input type="hidden" name="idnumber" value="<?php echo $row['idnumber']; ?>">
-                        <button class="btn btn-danger btn-sm" name="reject" type="submit">Reject</button>
-                      </form>
-                        </td>
-                  </tr>
-                    <?php } 
-                        ?>
-                </tbody>
-              </table>
-              <!-- End Table with stripped rows -->
+                      <!-- First Name -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
+                              <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
+                              <label class="form-label">First Name</label>
+                          </div>
+                      </div>
 
+                      <!-- Middle Name -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
+                              <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
+                              <label class="form-label">Middle Name</label>
+                          </div>
+                      </div>
+
+                      <!-- Last Name -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
+                              <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                              <label class="form-label">Last Name</label>
+                          </div>
+                      </div>
+
+                      <!-- Email -->
+                      <div class="col-6">
+                          <div class="form-floating">
+                              <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
+                              <label for="yourEmail" class="form-label">Email</label>
+                          </div>
+                      </div>
+
+                      <!-- Password -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
+                              <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
+                              <label class="form-label">Password</label>
+                              <div class="invalid-feedback">Password must be at least 8 characters!</div>
+                          </div>
+                      </div>
+
+                      <!-- Confirm Password -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
+                              <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
+                              <div class="invalid-feedback" id="mess">Password do not match</div>
+                              <label class="form-label">Confirm Password</label>
+                          </div>
+                      </div>
+
+                      <!-- Submit -->
+                      <div class="col-4 offset-4">
+                        <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                      </div>
+
+                    </form>
+                </div>
+              </div>
             </div>
           </div>
-
-        </div>
-      </div>
-    </section><!-- End Section with datatables -->
+        </section><!-- End Super Admin Creation Section -->
 
   </main><!-- End #main -->
 
@@ -537,6 +560,24 @@ $result = mysqli_query($conn, $query);
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+   <script>
+      var checkpass = function() {
+
+      if (document.getElementById('password').value == document.getElementById('conpass').value) {
+        document.getElementById('mess').style.display = 'none';
+        document.getElementById('conpass').style.borderColor = 'green';
+      } 
+      else
+      {
+        document.getElementById('mess').style.display = 'block';
+        document.getElementById('conpass').style.borderColor = 'red';
+        }
+
+      }
+
+
+    </script>
 
 </body>
 

@@ -2,16 +2,16 @@
 session_start();
 include "conn/conn.php";
 
-$id       = $_POST['idnumber'];
-$password = $_POST['password'];
+$id         = $_POST['idnumber'];
+$password   = $_POST['password'];
 
 // Sanitize input (very important for security)
-$id = mysqli_real_escape_string($conn, $id);
-$password = mysqli_real_escape_string($conn, $password);
+$id         = mysqli_real_escape_string($conn, $id);
+$password   = mysqli_real_escape_string($conn, $password);
 
 // ---- Check Superadmin ----
-$query2  = "SELECT * FROM superadmin WHERE idnumber='$id' AND password='$password'";
-$result2 = mysqli_query($conn, $query2);
+$query2     = "SELECT * FROM superadmin WHERE idnumber='$id' AND password='$password'";
+$result2    = mysqli_query($conn, $query2);
 
 if ($row = mysqli_fetch_assoc($result2)) {
     $_SESSION['idnumber'] = $row['idnumber'];
@@ -36,19 +36,24 @@ $query  = "SELECT * FROM register WHERE idnumber='$id' AND password='$password'"
 $result = mysqli_query($conn, $query);
 
 if ($row = mysqli_fetch_assoc($result)) {
-    $_SESSION['idnumber'] = $row['idnumber'];
-    $_SESSION['role']     = $row['role'];
-    $_SESSION['status']   = $row['status'];
+    $_SESSION['idnumber']   = $row['idnumber'];
+    $_SESSION['role']       = $row['role'];
+    $_SESSION['status']     = $row['status'];
 
-    if ($row['status'] == 'pending') {
+    if ($row['status']      == 'pending') {
         echo "<script>alert('Your account is still pending for approval');</script>";
         header("Location: pages-login.php?error=Your_account_is_pending");
         exit();
+        
+    } elseif ($row['status'] == 'disapproved') {
+        echo "<script>alert('Your account has been rejected');</script>";
+        header("Location: pages-login.php?error=Your_account_has_been_rejected");
+        exit();
     }
 
-    if ($row['role'] == 'faculty') {
+    if ($row['role']        == 'faculty') {
         header("Location: faculty-dashboard.php");
-    } elseif ($row['role'] == 'student') {
+    } elseif ($row['role']  == 'student') {
         header("Location: student-dashboard.php");
     }
 
@@ -59,4 +64,5 @@ if ($row = mysqli_fetch_assoc($result)) {
 echo "<script>alert('Invalid ID or Password');</script>";
 header("Location: pages-login.php?error=Invalid_credentials");
 exit();
+
 ?>
