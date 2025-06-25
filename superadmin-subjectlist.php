@@ -1,14 +1,18 @@
-<?php 
+<?php
 
 session_start();
 include 'conn/conn.php';
 
-// Fetch super admin data for listing
-$query = "SELECT * FROM superadmin ";
+// Fetching subjects and faculty names
+$query = "SELECT subject.*, register.first_name, register.mid_name, register.last_name 
+          FROM subject 
+          JOIN register ON subject.faculty_id = register.idnumber";
+
 $result = mysqli_query($conn, $query);
 
 
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -17,8 +21,10 @@ $result = mysqli_query($conn, $query);
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Super Admin List</title>
+  <title>FEAST / Subject List</title>
+
   <?php include 'header.php'?>
+
 </head>
 
 <body>
@@ -26,7 +32,7 @@ $result = mysqli_query($conn, $query);
   <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <?php include 'logo.php' ?><!-- End Logo -->
+    <?php include 'logo.php'?><!-- End Logo -->
 
     <div class="search-bar">
       <form class="search-form d-flex align-items-center" method="POST" action="#">
@@ -317,18 +323,18 @@ $result = mysqli_query($conn, $query);
 
         <!-- Super Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link " data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person-fill"></i><span>Super Admin</span><i
               class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="tables-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
+          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-superadminlist.php" class="active">
+              <a href="superadmin-superadminlist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-superadmincreation.php" >
+              <a href="superadmin-superadmincreation.php">
                 <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
               </a>
             </li>
@@ -337,12 +343,12 @@ $result = mysqli_query($conn, $query);
 
       <!-- Subject Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-subjectlist.php" >
+              <a href="superadmin-subjectlist.php"  class="active">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
@@ -435,66 +441,61 @@ $result = mysqli_query($conn, $query);
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Super Admin List</h1>
+      <h1>List of Subjects</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">List</li>
-          <li class="breadcrumb-item active">Super Admin List</li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Subject</li>
+          <li class="breadcrumb-item active">List</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
     <section class="section">
-        <div class="row">
-          <div class="col-lg-12">
+      <div class="row">
+        <div class="col-lg-12">
 
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Datatables</h5>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Datatables</h5>
 
-                <!-- Table with stripped rows -->
-                <table class="table datatable">
-                  <thead>
-                    <tr>
-                      <th>
-                        <b>ID Number</b>
-                      </th>
-                      <th>First Name</th>
-                      <th>Middle Name</th>
-                      <th>Last Name</th>
-                      <th>Email</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <?php
-                        while ($row = mysqli_fetch_assoc($result)) {
-                          ?>
-                          <td><?php echo $row['idnumber'];?></td>
-                          <td><?php echo $row['first_name'];?></td>
-                          <td><?php echo $row['mid_name'];?></td>
-                          <td><?php echo $row['last_name'];?></td>
-                          <td><?php echo $row['email'];?></td>
-                          <td>
-                            <a class="btn btn-primary btn-sm">View</a>
-                            <a class="btn btn-warning btn-sm">Edit</a>
-                        </tr>
-                      <?php
-                        }
+              <!-- Table with stripped rows -->
+              <table class="table datatable">
+                <thead>
+                  <tr>
+                    <th>
+                      <b>Subject Code</b>
+                    </th>
+                    <th>Descriptive Title</th>
+                    <th>Faculty Name</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <?php
+                      while ($row = mysqli_fetch_assoc($result)) {
                         ?>
-                    </tr>
-                  </tbody>
-                </table>
-                <!-- End Table with stripped rows -->
+                        <td><?php echo $row['code'];?></td>
+                        <td><?php echo $row['title'];?></td>
+                        <td><?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name'];?></td>
+                        <td>
+                          <a class="btn btn-danger btn-sm">Delete</a>
+                      </tr>
+                    <?php
+                      }
+                       ?>
+                  </tr>
+                </tbody>
+              </table>
+              <!-- End Table with stripped rows -->
 
-              </div>
             </div>
-
           </div>
+
         </div>
-      </section>
+      </div>
+    </section>
 
   </main><!-- End #main -->
 

@@ -3,12 +3,13 @@
 session_start();
 include 'conn/conn.php';
 
-// Fetch super admin data for listing
-$query = "SELECT * FROM superadmin ";
+$query = "SELECT * FROM register WHERE role = 'faculty' AND status = 'approved' ";
 $result = mysqli_query($conn, $query);
 
 
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -17,8 +18,10 @@ $result = mysqli_query($conn, $query);
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Super Admin List</title>
+  <title>FEAST / Adding Subject</title>
+
   <?php include 'header.php'?>
+
 </head>
 
 <body>
@@ -26,7 +29,7 @@ $result = mysqli_query($conn, $query);
   <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top d-flex align-items-center">
 
-    <?php include 'logo.php' ?><!-- End Logo -->
+    <?php include 'logo.php'?><!-- End Logo -->
 
     <div class="search-bar">
       <form class="search-form d-flex align-items-center" method="POST" action="#">
@@ -317,18 +320,18 @@ $result = mysqli_query($conn, $query);
 
         <!-- Super Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link " data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person-fill"></i><span>Super Admin</span><i
               class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="tables-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
+          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-superadminlist.php" class="active">
+              <a href="superadmin-superadminlist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-superadmincreation.php" >
+              <a href="superadmin-superadmincreation.php">
                 <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
               </a>
             </li>
@@ -337,17 +340,17 @@ $result = mysqli_query($conn, $query);
 
       <!-- Subject Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-subjectlist.php" >
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-subjectadding.php">
+              <a href="superadmin-subjectadding.php" class="active">
                 <i class="bi bi-circle"></i><span>Add Subject</span>
               </a>
             </li>
@@ -435,66 +438,71 @@ $result = mysqli_query($conn, $query);
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Super Admin List</h1>
+      <h1>Add Subject</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">List</li>
-          <li class="breadcrumb-item active">Super Admin List</li>
+          <li class="breadcrumb-item">Subject</li>
+          <li class="breadcrumb-item active">Add Subject</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
-    <section class="section">
+    <!-- Super Admin Creation Section -->
+      <section class="section">
         <div class="row">
           <div class="col-lg-12">
-
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Datatables</h5>
+                <h5 class="card-title">Create New Super Admin</h5>
+                  <form class="row g-3 needs-validation" novalidate method="post" action="addsubject.php">
 
-                <!-- Table with stripped rows -->
-                <table class="table datatable">
-                  <thead>
-                    <tr>
-                      <th>
-                        <b>ID Number</b>
-                      </th>
-                      <th>First Name</th>
-                      <th>Middle Name</th>
-                      <th>Last Name</th>
-                      <th>Email</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <?php
-                        while ($row = mysqli_fetch_assoc($result)) {
+                    <!-- Subject Code -->
+                    <div class="col-md-3">
+                      <div class="form-floating">
+                        <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
+                        <label for="idnumber" class="form-label">Subject Code</label>
+                      </div>
+                    </div>
+
+                    <!-- Subject title -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="text" name="title" class="form-control" placeholder="Descriptive Title" required>
+                            <label class="form-label">Descriptive Title</label>
+                        </div>
+                    </div>
+
+                    <!-- Faculty Name Dropdown -->
+                    <div class="col-md-3">
+                      <div class="form-floating">
+                        <select class="form-select" name="faculty_id" required>
+                          <option value="" disabled selected>Select Faculty Name</option>
+                          <?php
+                            while ($row = mysqli_fetch_assoc($result)) {
+                              $faculty_name = $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name'];
+                              $faculty_id = $row['idnumber']; // The correct foreign key
+                              echo "<option value='$faculty_id'>$faculty_name</option>";
+                            }
                           ?>
-                          <td><?php echo $row['idnumber'];?></td>
-                          <td><?php echo $row['first_name'];?></td>
-                          <td><?php echo $row['mid_name'];?></td>
-                          <td><?php echo $row['last_name'];?></td>
-                          <td><?php echo $row['email'];?></td>
-                          <td>
-                            <a class="btn btn-primary btn-sm">View</a>
-                            <a class="btn btn-warning btn-sm">Edit</a>
-                        </tr>
-                      <?php
-                        }
-                        ?>
-                    </tr>
-                  </tbody>
-                </table>
-                <!-- End Table with stripped rows -->
+                        </select>
+                        <label for="faculty_id">Faculty Name</label>
+                      </div>
+                    </div>
 
+                    <!-- Submit -->
+                    <div class="col-4 offset-4">
+                      <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>
+                    </div>
+
+                  </form>
               </div>
             </div>
-
           </div>
         </div>
-      </section>
+      </section><!-- End Super Admin Creation Section -->
+
+    
 
   </main><!-- End #main -->
 
