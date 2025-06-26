@@ -1,28 +1,24 @@
-<?php 
-
+<?php
 session_start();
 include 'conn/conn.php';// Connection to the database
 
-// Display message if set
-if(isset($_SESSION['msg'])) {
-    echo "<script>alert('".$_SESSION['msg']."');</script>";
-    unset($_SESSION['msg']);
-}
+
 
 
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
-
   <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>FEAST / Admin Creation  </title>
-    <?php include 'header.php'?>
+  <title>FEAST / Reports </title>
+
+  <?php include 'header.php' ?>
+
   </head>
-
   <body>
 
     <!-- ======= Header ======= -->
@@ -281,12 +277,12 @@ if(isset($_SESSION['msg'])) {
 
         <!-- Report Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-reports.php">
+          <a class="nav-link collapse" href="superadmin-reports.php">
             <i class="bi bi-journal-text"></i>
             <span>Reports</span>
           </a>
         </li><!-- End Report Nav -->
-
+        
         <li class="nav-heading">Account Management</li>
 
         <!-- Faculty Nav -->
@@ -329,17 +325,17 @@ if(isset($_SESSION['msg'])) {
 
         <!-- Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="admin-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
+          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-adminlist.php" >
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-admincreation.php" class="active">
+              <a href="superadmin-admincreation.php">
                 <i class="bi bi-circle"></i><span>Add New Admin</span>
               </a>
             </li>
@@ -392,7 +388,7 @@ if(isset($_SESSION['msg'])) {
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="users-profile.html">
+          <a class="nav-link collapsed" href="user-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -447,130 +443,27 @@ if(isset($_SESSION['msg'])) {
     <main id="main" class="main">
 
       <div class="pagetitle">
-        <h1>Admin</h1>
+        <h1>Reports</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-            <li class="breadcrumb-item ">Admin</li>
-            <li class="breadcrumb-item active">Add New Admin</li>
+            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active">Reports</li>
           </ol>
         </nav>
       </div><!-- End Page Title -->
 
-        <!-- Admin Creation Section -->
-        <section class="section">
-          <div class="row">
-            <div class="col-lg-12">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Create New Admin</h5>
-                    <form class="row g-3 needs-validation" novalidate method="post" action="admincreation.php">
-
-                      <!-- ID Number -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
-                          <label for="idnumber" class="form-label">ID Number</label>
-                          <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
-                        </div>
-                      </div>
-
-                      <!-- First Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
-                              <label class="form-label">First Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Middle Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
-                              <label class="form-label">Middle Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Last Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
-                              <label class="form-label">Last Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Email -->
-                      <div class="col-6">
-                          <div class="form-floating">
-                              <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
-                              <label for="yourEmail" class="form-label">Email</label>
-                          </div>
-                      </div>
-
-                      <!-- Password -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
-                              <label class="form-label">Password</label>
-                              <div class="invalid-feedback">Password must be at least 8 characters!</div>
-                          </div>
-                      </div>
-
-                      <!-- Confirm Password -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
-                              <div class="invalid-feedback" id="mess">Password do not match</div>
-                              <label class="form-label">Confirm Password</label>
-                          </div>
-                      </div>
-
-                      <!-- Department -->
-                      <div class="col-4 offset-4">
-                          <div class="form-floating">
-                              <select class="form-select" name="department" required>
-                                  <option value="" disabled selected>Select Department</option>
-                                  <option value="cis">CIS</option>
-                                  <option value="cas">CAS</option>
-                                  <option value="cvm">CVM</option>
-                              </select>
-                              <label for="department">Department</label>
-                          </div>
-                      </div>
-
-                      <!-- Submit -->
-                      <div class="col-4 offset-4">
-                        <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
-                      </div>
-
-                    </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section><!-- End Admin Creation Section -->
+      
 
     </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->
-    <footer id="footer" class="footer">
-      <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </footer><!-- End Footer -->
+    <?php include'footer.php'?>
+    <!-- End Footer -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
         class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
     <script src="vendors/apexcharts/apexcharts.min.js"></script>
     <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendors/chart.js/chart.umd.js"></script>
@@ -582,23 +475,6 @@ if(isset($_SESSION['msg'])) {
 
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
-    <script>
-      var checkpass = function() {
-
-      if (document.getElementById('password').value == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display = 'none';
-        document.getElementById('conpass').style.borderColor = 'green';
-      } 
-      else
-      {
-        document.getElementById('mess').style.display = 'block';
-        document.getElementById('conpass').style.borderColor = 'red';
-        }
-
-      }
-
-
-    </script>
 
   </body>
 

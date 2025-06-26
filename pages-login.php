@@ -1,6 +1,13 @@
 <?php
 session_start();
-include 'conn/conn.php';
+include 'conn/conn.php';// Connection to the database
+
+// Display messaeges if set
+if (isset($_SESSION['msg'])) {
+    echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
+    unset($_SESSION['msg']);
+  }
+
 
 ?>
 

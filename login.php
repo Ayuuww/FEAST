@@ -1,6 +1,6 @@
 <?php
 session_start();
-include "conn/conn.php";
+include "conn/conn.php";// connection to the database
 
 $id         = $_POST['idnumber'];
 $password   = $_POST['password'];
@@ -41,13 +41,13 @@ if ($row = mysqli_fetch_assoc($result)) {
     $_SESSION['status']     = $row['status'];
 
     if ($row['status']      == 'pending') {
-        echo "<script>alert('Your account is still pending for approval');</script>";
-        header("Location: pages-login.php?error=Your_account_is_pending");
+        $_SESSION['msg'] = 'Your account is still in pending. Please contact the admin.';
+        header("Location: pages-login.php");
         exit();
         
     } elseif ($row['status'] == 'disapproved') {
-        echo "<script>alert('Your account has been rejected');</script>";
-        header("Location: pages-login.php?error=Your_account_has_been_rejected");
+        $_SESSION['msg'] = 'Your account has been rejected. Please contact the admin.';
+        header("Location: pages-login.php");
         exit();
     }
 
@@ -61,8 +61,8 @@ if ($row = mysqli_fetch_assoc($result)) {
 }
 
 // ---- Invalid Login ----
-echo "<script>alert('Invalid ID or Password');</script>";
-header("Location: pages-login.php?error=Invalid_credentials");
-exit();
+$_SESSION['msg'] = 'Invalid ID or Password. Please try again.';
+        header("Location: pages-login.php");
+        exit();
 
 ?>

@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php';
+include 'conn/conn.php';// Connection to the database
 
 // Get total approved faculty
 $query = "SELECT COUNT(*) AS total_faculty FROM register WHERE role = 'faculty' AND status = 'approved'";
@@ -26,6 +26,12 @@ $result = mysqli_query($conn, $query);
 $data = mysqli_fetch_assoc($result);
 $totalsuperadmin = $data['total_superadmin'];
 
+// Get total subjects
+$query = "SELECT COUNT(*) AS total_subject FROM subject";
+$result = mysqli_query($conn, $query);
+$data = mysqli_fetch_assoc($result);
+$totalsubject = $data['total_subject'];
+
 
 
 ?>
@@ -36,7 +42,7 @@ $totalsuperadmin = $data['total_superadmin'];
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST - Home </title>
+  <title>FEAST / Home </title>
 
   <?php include 'header.php' ?>
 
@@ -278,6 +284,35 @@ $totalsuperadmin = $data['total_superadmin'];
           </a>
         </li><!-- End Dashboard Nav -->
 
+        <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+            <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-subjectlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-subjectadding.php">
+                <i class="bi bi-circle"></i><span>Add Subject</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Subject Nav -->
+
+        <!-- Report Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-reports.php">
+            <i class="bi bi-journal-text"></i>
+            <span>Reports</span>
+          </a>
+        </li><!-- End Report Nav -->
+        
+        <li class="nav-heading">Account Management</li>
+
         <!-- Faculty Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
@@ -354,25 +389,6 @@ $totalsuperadmin = $data['total_superadmin'];
             </li>
           </ul>
         </li><!-- End Super Admin Nav -->
-
-        <!-- Subject Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-subjectlist.php" >
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-subjectadding.php">
-                <i class="bi bi-circle"></i><span>Add Subject</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Subject Nav -->
 
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
@@ -598,6 +614,40 @@ $totalsuperadmin = $data['total_superadmin'];
                       </div>
                       <div class="ps-3">
                         <h6><?php echo $totalsuperadmin; ?></h6>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div><!-- End Total Super Admin Card -->
+
+              <!-- Total Subjects Card -->
+              <div class="col-xxl-4 col-xl-12">
+                <div class="card info-card">
+
+                  <!-- <div class="filter">
+                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                      <li class="dropdown-header text-start">
+                        <h6>Filter</h6>
+                      </li>
+
+                      <li><a class="dropdown-item" href="#">Today</a></li>
+                      <li><a class="dropdown-item" href="#">This Month</a></li>
+                      <li><a class="dropdown-item" href="#">This Year</a></li>
+                    </ul>
+                  </div> -->
+
+                  <div class="card-body">
+                    <h5 class="card-title">Total <span>| Subjects</span></h5>
+
+                    <div class="d-flex align-items-center">
+                      <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                        <img src="icons/books.png" alt="Admin Icon" style="width: 50px; height: 50px;">
+                      </div>
+                      <div class="ps-3">
+                        <h6><?php echo $totalsubject; ?></h6>
                       </div>
                     </div>
 

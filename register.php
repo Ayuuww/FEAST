@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php';
+include 'conn/conn.php';// Connection to the database
 
 // Submit form data
 
@@ -14,6 +14,18 @@ $department = $_POST['department'];
 $role       = $_POST['role'];
 
 if (isset($_POST['submit'])) {
+
+    // Check if student and faculty membes with same ID already exists
+    $check_query            = "SELECT * FROM register WHERE idnumber = '$id'";
+    $check_result           = mysqli_query($conn, $check_query);
+
+    if (mysqli_num_rows($check_result) > 0) {
+        $_SESSION['msg']    = 'ID already exists!';
+        header("Location: pages-register.php");
+        exit();
+    }
+    // Proceed with insertion
+
     $sql    = "INSERT INTO register (   idnumber, 
                                         first_name, 
                                         mid_name, 
@@ -35,8 +47,9 @@ if (isset($_POST['submit'])) {
 $query      = mysqli_query($conn, $sql);
 
     if ($query) {
-        header("Location: pages-login.php");
-        echo "<script>alert('Registration successful! Wait for approval. Thank You!');</script>";
+        $_SESSION['msg'] = 'Account successfully registered. Wait for the admin to approve!';
+            header("Location: pages-register.php");
+            exit;
         
     } else {
         echo "<script>alert('Error: " . mysqli_error($conn) . "');</script>";
