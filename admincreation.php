@@ -2,6 +2,7 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+// Submit form data
 if (isset($_POST['submit'])) {
     $id         = $_POST['idnumber'];
     $first_name = $_POST['first_name'];

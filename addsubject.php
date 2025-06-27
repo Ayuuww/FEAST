@@ -20,6 +20,7 @@ if (isset($_POST['addsubject'])) {
             $query = "INSERT INTO subject ( code, 
                                             title, 
                                             faculty_id)
+                                            
                                 VALUES (    '$subject_code', 
                                             '$subject_title', 
                                             '$faculty_id')";

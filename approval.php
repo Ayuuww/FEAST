@@ -1,9 +1,8 @@
 <?php
 
-include 'conn/conn.php';
+include 'conn/conn.php';// Connection to the database
 
-
-
+// Approval and rejection of student and faculty members
 if (isset($_POST['approve'])) {
     $id = $_POST['idnumber'];
     

@@ -9,9 +9,26 @@ if (isset($_SESSION['msg'])) {
     unset($_SESSION['msg']);
   }
 
-$query = "SELECT * FROM register WHERE role = 'faculty' AND status = 'approved' ";
+$max_subjects = 9; // example limit
+
+// Query to get students with less than the maximum number of subjects
+// This query counts the number of subjects each student is enrolled in and filters those with less than the maximum allowed
+$query = "  SELECT r.idnumber, r.first_name, r.mid_name, r.last_name, r.department, r.role, COUNT(ss.subject_code) AS subject_count
+            FROM register r
+            LEFT JOIN student_subject ss ON r.idnumber = ss.student_id
+            WHERE r.role = 'student'
+            GROUP BY r.idnumber
+            HAVING subject_count < $max_subjects 
+            ORDER BY r.department";
+
 $result = mysqli_query($conn, $query);
 
+// Query to get subjects and their associated faculty
+// This query retrieves all subjects along with the faculty who teaches them
+$subject_query = "  SELECT s.code, s.title, r.first_name, r.last_name
+                    FROM subject s
+                    LEFT JOIN register r ON s.faculty_id = r.idnumber ";
+$subject_result = mysqli_query($conn, $subject_query);
 
 
 ?>
@@ -24,7 +41,7 @@ $result = mysqli_query($conn, $query);
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Adding Subject</title>
+  <title>FEAST / Student Subject</title>
 
   <?php include 'header.php'?>
 
@@ -52,6 +69,7 @@ $result = mysqli_query($conn, $query);
             <i class="bi bi-search"></i>
           </a>
         </li><!-- End Search Icon-->
+
 
         <li class="nav-item dropdown pe-3">
 
@@ -128,17 +146,17 @@ $result = mysqli_query($conn, $query);
 
       <!-- Subject Nav -->
       <li class="nav-item">
-        <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+        <ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
             <a href="superadmin-subjectlist.php" >
               <i class="bi bi-circle"></i><span>List</span>
             </a>
           </li>
           <li>
-            <a href="superadmin-subjectadding.php" class="active">
+            <a href="superadmin-subjectadding.php" >
               <i class="bi bi-circle"></i><span>Add Subject</span>
             </a>
           </li>
@@ -321,69 +339,85 @@ $result = mysqli_query($conn, $query);
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Add Subject</h1>
+      <h1>Assign Subject</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Subject</li>
-          <li class="breadcrumb-item active">Add Subject</li>
+          <li class="breadcrumb-item">Student Subject</li>
+          <li class="breadcrumb-item active">Assign Subject</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
-    <!-- Super Admin Creation Section -->
+    <!-- Inserting Subject to Student Section -->
       <section class="section">
         <div class="row">
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Create New Super Admin</h5>
-                  <form class="row g-3 needs-validation" novalidate method="post" action="addsubject.php">
+                <h5 class="card-title">Assign Subject</h5>
 
-                    <!-- Subject Code -->
-                    <div class="col-md-3">
-                      <div class="form-floating">
-                        <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
-                        <label for="idnumber" class="form-label">Subject Code</label>
-                      </div>
-                    </div>
-
-                    <!-- Subject title -->
+                  <form method="POST" action="assignsubject.php" class="row g-3">
+                    <!-- Student Selection -->
                     <div class="col-md-6">
                         <div class="form-floating">
-                            <input type="text" name="title" class="form-control" placeholder="Descriptive Title" required>
-                            <label class="form-label">Descriptive Title</label>
+                            <select id="student_id" name="student_id" class="form-select" required>
+                                <option value="" disabled selected>Select Student Name</option>
+                                    <?php
+                                    $students_by_dept = [];
+                                    while ($row = mysqli_fetch_assoc($result)) {
+                                        $students_by_dept[$row['department']][] = $row;
+                                    }
+                                    foreach ($students_by_dept as $department => $students): ?>
+                                        <optgroup label="<?= htmlspecialchars($department) ?>">
+                                            <?php foreach ($students as $student): ?>
+                                                <option value="<?= $student['idnumber'] ?>" class="text-capitalize">
+                                                    <?= $student['first_name'] . ' '  . $student['mid_name'] . ' ' . $student['last_name'] ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </optgroup>
+                                    <?php endforeach; ?>
+                            </select>
+                            <label for="student_id" class="form-label">Student Name</label>
                         </div>
-                    </div>
+                    </div><!-- End Student Selection -->
 
-                    <!-- Faculty Name Dropdown -->
-                    <div class="col-md-3">
-                      <div class="form-floating">
-                        <select class="form-select" name="faculty_id" required>
-                          <option value="" disabled selected>Select Faculty Name</option>
-                          <?php
-                            while ($row = mysqli_fetch_assoc($result)) {
-                              $faculty_name = $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name'];
-                              $faculty_id = $row['idnumber']; // The correct foreign key
-                              echo "<option value='$faculty_id'>$faculty_name</option>";
-                            }
-                          ?>
-                        </select>
-                        <label for="faculty_id">Faculty Name</label>
-                      </div>
-                    </div>
+                    <!-- Subject Selection -->
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select id="subject_code" name="subject_code" class="form-select" required>
+                                <option value="" disabled selected>Subject with Instructor Name</option>
+                                <?php
+                                $subjects_by_faculty = [];
+                                while ($subject = mysqli_fetch_assoc($subject_result)) {
+                                    $faculty_name = $subject['first_name'] . ' ' . $subject['last_name'];
+                                    $subjects_by_faculty[$faculty_name][] = $subject;
+                                }
+                                foreach ($subjects_by_faculty as $faculty => $subjects): ?>
+                                    <optgroup label="Instructor: <?= htmlspecialchars($faculty) ?>">
+                                        <?php foreach ($subjects as $sub): ?>
+                                            <option value="<?= $sub['code'] ?>">
+                                                <?= $sub['title'] ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </optgroup>
+                                <?php endforeach; ?>
+                            </select>
+                            <label for="subject_code" class="form-label">Select Subject</label>
+                        </div>
+                    </div><!-- End Subject Selection -->
 
-                    <!-- Submit -->
+                    <!-- Submit Button -->
                     <div class="col-4 offset-4">
-                      <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>
+                        <button type="submit" name="assign" class="btn btn-success w-100">Assign Subject</button>
                     </div>
+                </form>
 
-                  </form>
               </div>
             </div>
           </div>
         </div>
-      </section><!-- End Super Admin Creation Section -->
+      </section><!-- End Inserting Subject to Student Section -->
 
     
 
