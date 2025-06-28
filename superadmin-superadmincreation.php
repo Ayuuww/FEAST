@@ -442,17 +442,19 @@ if (isset($_SESSION['msg'])) {
    <script>
       var checkpass = function() {
 
-      if (document.getElementById('password').value == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display = 'none';
-        document.getElementById('conpass').style.borderColor = 'green';
+      if (document.getElementById('password').value           == document.getElementById('conpass').value) {
+        document.getElementById('mess').style.display         = 'none';
+        document.getElementById('conpass').style.borderColor  = 'green';
+        
       } 
       else
       {
-        document.getElementById('mess').style.display = 'block';
-        document.getElementById('conpass').style.borderColor = 'red';
+        document.getElementById('mess').style.display         = 'block';
+        document.getElementById('conpass').style.borderColor  = 'red';
         }
 
       }
+
 
 
     </script>

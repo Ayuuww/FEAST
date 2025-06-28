@@ -15,6 +15,7 @@ if (isset($_POST['submit'])) {
     $check_query            = "SELECT * FROM superadmin WHERE idnumber = '$id'";
     $check_result           = mysqli_query($conn, $check_query);
 
+    
     if (mysqli_num_rows($check_result) > 0) {
         $_SESSION['msg']    = 'Super Admin with this ID already exists!';
         header("Location: superadmin-superadmincreation.php");

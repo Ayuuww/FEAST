@@ -14,7 +14,7 @@ if (isset($_POST['assign'])) {
     $data = mysqli_fetch_assoc($check_result);
     $current_count  = $data['count'];
 
-    $max_subjects = 5;
+    $max_subjects = 9; // Maximum subjects allowed
 
     if ($current_count  >= $max_subjects) {
         $_SESSION['msg'] = "Student already has maximum subjects.";

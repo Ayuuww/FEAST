@@ -16,7 +16,7 @@ $max_subjects = 9; // example limit
 $query = "  SELECT r.idnumber, r.first_name, r.mid_name, r.last_name, r.department, r.role, COUNT(ss.subject_code) AS subject_count
             FROM register r
             LEFT JOIN student_subject ss ON r.idnumber = ss.student_id
-            WHERE r.role = 'student'
+            WHERE r.role = 'student' AND r.status = 'approved'
             GROUP BY r.idnumber
             HAVING subject_count < $max_subjects 
             ORDER BY r.department";
@@ -44,6 +44,12 @@ $subject_result = mysqli_query($conn, $subject_query);
   <title>FEAST / Student Subject</title>
 
   <?php include 'header.php'?>
+
+  <style>
+  div.dataTables_length {
+    display: none;
+  }
+  </style>
 
 </head>
 
@@ -358,34 +364,49 @@ $subject_result = mysqli_query($conn, $subject_query);
                 <h5 class="card-title">Assign Subject</h5>
 
                   <form method="POST" action="assignsubject.php" class="row g-3">
+                    <!--Organize students by department -->
+                    <div class="col-md-2">
+                      <div class="form-floating mb-3">
+                        <select id="departmentFilter" class="form-select">
+                          <option value="">All Departments</option>
+                          <?php         
+                          $students_by_dept = [];
+                          while ($row = mysqli_fetch_assoc($result)) {
+                              $students_by_dept[$row['department']][] = $row;
+                          }
+                          ksort($students_by_dept); // Sort departments alphabetically
+                          foreach (array_keys($students_by_dept) as $dept): ?>
+                            <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label for="departmentFilter">Filter by Department</label>
+                      </div>
+                    </div>
+                    
                     <!-- Student Selection -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <select id="student_id" name="student_id" class="form-select" required>
-                                <option value="" disabled selected>Select Student Name</option>
-                                    <?php
-                                    $students_by_dept = [];
-                                    while ($row = mysqli_fetch_assoc($result)) {
-                                        $students_by_dept[$row['department']][] = $row;
-                                    }
-                                    foreach ($students_by_dept as $department => $students): ?>
-                                        <optgroup label="<?= htmlspecialchars($department) ?>">
-                                            <?php foreach ($students as $student): ?>
-                                                <option value="<?= $student['idnumber'] ?>" class="text-capitalize">
-                                                    <?= $student['first_name'] . ' '  . $student['mid_name'] . ' ' . $student['last_name'] ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                    <?php endforeach; ?>
-                            </select>
-                            <label for="student_id" class="form-label">Student Name</label>
-                        </div>
-                    </div><!-- End Student Selection -->
+                    <div class="col-md-5">
+                      <div class="form-floating">
+                        <select id="student_id" name="student_id" class="form-select text-capitalize" required>
+                          <option value="" disabled selected>Select Student Name</option>
+                          <?php foreach ($students_by_dept as $department => $students): ?>
+                            <optgroup label="<?= htmlspecialchars($department) ?>" data-department="<?= htmlspecialchars($department) ?>">
+                              <?php foreach ($students as $student): ?>
+                                <option value="<?= $student['idnumber'] ?>" class="text-capitalize">
+                                  <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>
+                                </option>
+                              <?php endforeach; ?>
+                            </optgroup>
+                          <?php endforeach; ?>
+                        </select>
+                        <label for="student_id" class="form-label">Student Name</label>
+                      </div>
+                    </div>
+
 
                     <!-- Subject Selection -->
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <div class="form-floating">
-                            <select id="subject_code" name="subject_code" class="form-select" required>
+                            <select id="subject_code" name="subject_code" class="form-select text-capitalize" required>
                                 <option value="" disabled selected>Subject with Instructor Name</option>
                                 <?php
                                 $subjects_by_faculty = [];
@@ -397,7 +418,7 @@ $subject_result = mysqli_query($conn, $subject_query);
                                     <optgroup label="Instructor: <?= htmlspecialchars($faculty) ?>">
                                         <?php foreach ($subjects as $sub): ?>
                                             <option value="<?= $sub['code'] ?>">
-                                                <?= $sub['title'] ?>
+                                                <?= $sub['title'] . " - " . $faculty ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </optgroup>
@@ -451,6 +472,29 @@ $subject_result = mysqli_query($conn, $subject_query);
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const departmentFilter = document.getElementById("departmentFilter");
+      const studentSelect = document.getElementById("student_id");
+      const allGroups = Array.from(studentSelect.querySelectorAll("optgroup"));
+
+      departmentFilter.addEventListener("change", function () {
+        const selectedDept = this.value;
+
+        allGroups.forEach(group => {
+          if (!selectedDept || group.getAttribute("data-department") === selectedDept) {
+            group.style.display = "";
+          } else {
+            group.style.display = "none";
+          }
+        });
+
+        studentSelect.value = "";
+      });
+    });
+  </script>
+
 
 </body>
 

@@ -359,7 +359,7 @@ $result = mysqli_query($conn, $query);
                     <!-- Faculty Name Dropdown -->
                     <div class="col-md-3">
                       <div class="form-floating">
-                        <select class="form-select" name="faculty_id" required>
+                        <select class="form-select text-capitalize" name="faculty_id" required>
                           <option value="" disabled selected>Select Faculty Name</option>
                           <?php
                             while ($row = mysqli_fetch_assoc($result)) {
@@ -372,7 +372,7 @@ $result = mysqli_query($conn, $query);
                         <label for="faculty_id">Faculty Name</label>
                       </div>
                     </div>
-
+                    
                     <!-- Submit -->
                     <div class="col-4 offset-4">
                       <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>

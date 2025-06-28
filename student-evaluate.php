@@ -1,7 +1,13 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
+// Fetching subjects and their respective faculty
+$query = "SELECT * FROM student_subject ss
+          JOIN subject s ON ss.subject_code = s.code
+          JOIN register r ON s.faculty_id = r.idnumber
+          WHERE ss.student_id = '{$_SESSION['idnumber']}'";
+$result = mysqli_query($conn, $query);
 
 ?>
 
@@ -11,7 +17,7 @@ include 'conn/conn.php';// Connection to the database
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Home </title>
+  <title>FEAST / Student Evaluate </title>
 
   <?php include 'header.php' ?>
 
@@ -54,7 +60,7 @@ include 'conn/conn.php';// Connection to the database
 
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
               <li class="dropdown-header">
-                <h6>Kevin Anderson</h6>
+                <h6><?php echo $_SESSION['first_name'];?></h6>
                 <span>Web Designer</span>
               </li>
               <li>
@@ -62,7 +68,7 @@ include 'conn/conn.php';// Connection to the database
               </li>
 
               <li>
-                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                <a class="dropdown-item d-flex align-items-center" href="users-profile.php">
                   <i class="bi bi-person"></i>
                   <span>My Profile</span>
                 </a>
@@ -92,7 +98,7 @@ include 'conn/conn.php';// Connection to the database
               </li>
 
               <li>
-                <a class="dropdown-item d-flex align-items-center" href="#">
+                <a class="dropdown-item d-flex align-items-center" href="logout.php">
                   <i class="bi bi-box-arrow-right"></i>
                   <span>Sign Out</span>
                 </a>
@@ -112,20 +118,20 @@ include 'conn/conn.php';// Connection to the database
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link " href="student-dashboard.php">
+          <a class="nav-link collapsed" href="student-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
         </li><!-- End Dashboard Nav -->
 
-        <!-- Subject Nav -->
+        <!-- Evaluate Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="student-evaluate.php" >
+              <a href="student-evaluate.php" class="active">
                 <i class="bi bi-circle"></i><span>Evaluate Subject</span>
               </a>
             </li>
@@ -135,7 +141,7 @@ include 'conn/conn.php';// Connection to the database
               </a>
             </li>
           </ul>
-        </li><!-- End Subject Nav -->
+        </li><!-- End Evaluate Nav -->
 
         <!-- Report Nav -->
         <li class="nav-item">
@@ -172,7 +178,7 @@ include 'conn/conn.php';// Connection to the database
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="user-profile.php">
+          <a class="nav-link collapsed" href="users-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -200,7 +206,7 @@ include 'conn/conn.php';// Connection to the database
         </li><!-- End Register Page Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-login.html">
+          <a class="nav-link collapsed" href="pages-login.php">
             <i class="bi bi-box-arrow-in-right"></i>
             <span>Login</span>
           </a>
@@ -227,18 +233,49 @@ include 'conn/conn.php';// Connection to the database
     <main id="main" class="main">
 
       <div class="pagetitle">
-        <h1>Dashboard</h1>
+        <h1>Evaluate Subject</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item active">Dashboard</li>
+            <li class="breadcrumb-item ">Evaluate</li>
+            <li class="breadcrumb-item active">Evaluate Subject</li>
           </ol>
         </nav>
       </div><!-- End Page Title -->
 
       <section class="section dashboard">
         <div class="row">
+           <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Table with stripped rows</h5>
 
+              <!-- Table with stripped rows -->
+              <h3>Evaluate Your Faculty</h3>
+                <table class="table table-bordered">
+                <thead>
+                    <tr>
+                    <th>Subject Code</th>
+                    <th>Title</th>
+                    <th>Faculty Name</th>
+                    <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while($row = mysqli_fetch_assoc($result)): ?>
+                    <tr>
+                    <td><?= htmlspecialchars($row['code']) ?></td>
+                    <td><?= htmlspecialchars($row['title']) ?></td>
+                    <td><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
+                    <td>
+                        <a href="evaluate-form.php?subject=<?= $row['code'] ?>" class="btn btn-primary btn-sm">Evaluate</a>
+                    </td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+                </table><!-- End Table with stripped rows -->
+
+            </div>
+          </div> 
 
 
         </div>
