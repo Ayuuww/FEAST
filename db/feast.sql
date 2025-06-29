@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 25, 2025 at 07:18 PM
+-- Generation Time: Jun 29, 2025 at 07:47 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -43,7 +43,25 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `role`) VALUES
-('000-0000-0', 'clark', 'juswa', 'rojas', 'clarkjoshua@email.com', '12345678', 'cis', 'admin');
+('000-0000-0', 'clark', 'juswa', 'rojas', 'clarkjoshua@email.com', '12345678', 'cis', 'admin'),
+('000-0000-1', 'clark', 'juswa', 'rojas', 'clarkjoshua85@gmail.com', '12345678', 'cis', 'admin'),
+('000-0000-3', 'clark', 'juswa', 'rojas', 'asdf@gmailc.com', '12345678', 'cas', 'admin');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `evaluation`
+--
+
+CREATE TABLE `evaluation` (
+  `id` int(11) NOT NULL,
+  `student_id` varchar(50) DEFAULT NULL,
+  `subject_code` varchar(50) DEFAULT NULL,
+  `faculty_id` varchar(50) DEFAULT NULL,
+  `rating` int(11) DEFAULT NULL,
+  `comment` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -68,9 +86,36 @@ CREATE TABLE `register` (
 --
 
 INSERT INTO `register` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `role`, `status`) VALUES
-('098-7654-3', 'faculty', 'faculty', 'faculty', 'faculty@email.com', '12345678', 'cis', 'faculty', 'approved'),
-('111-1111-1', 'sample', 'sample', 'sample', 'sample@email.com', '12345678', 'cas', 'student', 'disapproved'),
-('123-4567-8', 'clark', 'joshua', 'rojas', 'clark@email.com', '12345678', 'cis', 'student', 'approved');
+('000-0000-0', 'faculty2', 'faculty 2', 'faculty 2', 'faculty2@email.com', '12345678', 'CIS', 'faculty', 'approved'),
+('0927-4492-1', 'clark', 'juswa', 'rojas', 'asdf@gmailc.com', '12345678', 'CIS', 'student', 'pending'),
+('098-7654-3', 'faculty', 'faculty', 'faculty', 'faculty@email.com', '12345678', 'CIS', 'faculty', 'approved'),
+('111-1111-1', 'Maam', 'Shirley', 'maam', 'shirley@email.com', '12345678', 'CAS', 'faculty', 'approved'),
+('123-4567-8', 'clark', 'joshua', 'rojas', 'clark@email.com', '12345678', 'CIS', 'student', 'approved'),
+('1234', '1234', '1234', '1234', '1234@email.com', '12345678', 'CAS', 'student', 'approved');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `student_subject`
+--
+
+CREATE TABLE `student_subject` (
+  `idnumber` int(11) NOT NULL,
+  `student_id` varchar(11) NOT NULL,
+  `subject_code` varchar(11) NOT NULL,
+  `faculty_id` varchar(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `student_subject`
+--
+
+INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`) VALUES
+(6, '123-4567-8', 'ISPC-102', ''),
+(7, '123-4567-8', 'PATHFIR', ''),
+(8, '1234', 'ISPC-101', ''),
+(9, '123-4567-8', 'ISPC-101', ''),
+(10, '123-4567-8', 'PATHFIT-2', '');
 
 -- --------------------------------------------------------
 
@@ -80,7 +125,7 @@ INSERT INTO `register` (`idnumber`, `first_name`, `mid_name`, `last_name`, `emai
 
 CREATE TABLE `subject` (
   `idnumber` int(11) NOT NULL,
-  `code` varchar(255) NOT NULL,
+  `code` varchar(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `faculty_id` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -90,7 +135,11 @@ CREATE TABLE `subject` (
 --
 
 INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`) VALUES
-(2, 'ISPC-101', 'Computer Programming', '098-7654-3');
+(1, 'ISPC-101', 'Computer Programming', '000-0000-0'),
+(2, 'ISPC-102', 'Computer Programming', '098-7654-3'),
+(3, 'PATHFIR', 'Physical Education', '111-1111-1'),
+(4, 'PATHFIT-2', 'PASAKIT', '111-1111-1'),
+(5, 'ISPC-101', 'Computer Programming', '098-7654-3');
 
 -- --------------------------------------------------------
 
@@ -126,17 +175,35 @@ ALTER TABLE `admin`
   ADD PRIMARY KEY (`idnumber`);
 
 --
+-- Indexes for table `evaluation`
+--
+ALTER TABLE `evaluation`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `student_id_key` (`student_id`),
+  ADD KEY `subject_code_key` (`subject_code`),
+  ADD KEY `faculty_id_key` (`faculty_id`);
+
+--
 -- Indexes for table `register`
 --
 ALTER TABLE `register`
   ADD PRIMARY KEY (`idnumber`);
 
 --
+-- Indexes for table `student_subject`
+--
+ALTER TABLE `student_subject`
+  ADD PRIMARY KEY (`idnumber`),
+  ADD KEY `student_key` (`student_id`),
+  ADD KEY `subject_key` (`subject_code`);
+
+--
 -- Indexes for table `subject`
 --
 ALTER TABLE `subject`
   ADD PRIMARY KEY (`idnumber`),
-  ADD KEY `faculty_key` (`faculty_id`);
+  ADD KEY `faculty_key` (`faculty_id`),
+  ADD KEY `code` (`code`);
 
 --
 -- Indexes for table `superadmin`
@@ -149,20 +216,47 @@ ALTER TABLE `superadmin`
 --
 
 --
+-- AUTO_INCREMENT for table `evaluation`
+--
+ALTER TABLE `evaluation`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `student_subject`
+--
+ALTER TABLE `student_subject`
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables
 --
 
 --
+-- Constraints for table `evaluation`
+--
+ALTER TABLE `evaluation`
+  ADD CONSTRAINT `faculty_id_key` FOREIGN KEY (`faculty_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `student_subject`
+--
+ALTER TABLE `student_subject`
+  ADD CONSTRAINT `student_key` FOREIGN KEY (`student_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `subject_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `subject`
 --
 ALTER TABLE `subject`
-  ADD CONSTRAINT `faculty_key` FOREIGN KEY (`faculty_id`) REFERENCES `register` (`idnumber`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+  ADD CONSTRAINT `faculty_key` FOREIGN KEY (`faculty_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
