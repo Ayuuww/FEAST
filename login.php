@@ -14,8 +14,10 @@ $query2     = "SELECT * FROM superadmin WHERE idnumber='$id' AND password='$pass
 $result2    = mysqli_query($conn, $query2);
 
 if ($row = mysqli_fetch_assoc($result2)) {
-    $_SESSION['idnumber'] = $row['idnumber'];
-    $_SESSION['role']     = 'superadmin';
+    $_SESSION['idnumber']   = $row['idnumber'];
+    $_SESSION['first_name'] = $row['first_name'];
+    $_SESSION['last_name']  = $row['last_name'];
+    $_SESSION['role']       = 'superadmin';
     header("Location: superadmin-dashboard.php");
     exit();
 }
@@ -25,8 +27,10 @@ $query3  = "SELECT * FROM admin WHERE idnumber='$id' AND password='$password'";
 $result3 = mysqli_query($conn, $query3);
 
 if ($row = mysqli_fetch_assoc($result3)) {
-    $_SESSION['idnumber'] = $row['idnumber'];
-    $_SESSION['role']     = 'admin';
+    $_SESSION['idnumber']   = $row['idnumber'];
+    $_SESSION['first_name'] = $row['first_name'];
+    $_SESSION['last_name']  = $row['last_name'];
+    $_SESSION['role']       = 'admin';
     header("Location: admin-dashboard.php");
     exit();
 }
@@ -37,6 +41,8 @@ $result = mysqli_query($conn, $query);
 
 if ($row = mysqli_fetch_assoc($result)) {
     $_SESSION['idnumber']   = $row['idnumber'];
+    $_SESSION['first_name'] = $row['first_name'];
+    $_SESSION['last_name'] = $row['last_name'];
     $_SESSION['role']       = $row['role'];
     $_SESSION['status']     = $row['status'];
 

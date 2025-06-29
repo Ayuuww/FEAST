@@ -3,33 +3,33 @@ session_start();
 include 'conn/conn.php';// Connection to the database
 
 // Get total approved faculty
-$query = "SELECT COUNT(*) AS total_faculty FROM register WHERE role = 'faculty' AND status = 'approved'";
-$result = mysqli_query($conn, $query);
-$data = mysqli_fetch_assoc($result);
+$faculty_query = "SELECT COUNT(*) AS total_faculty FROM register WHERE role = 'faculty' AND status = 'approved'";
+$faulty_result = mysqli_query($conn, $faculty_query);
+$data = mysqli_fetch_assoc($faulty_result);
 $totalfaculty = $data['total_faculty'];
 
 // Get total approved students
-$query = "SELECT COUNT(*) AS total_student FROM register WHERE role = 'student' AND status = 'approved'";
-$result = mysqli_query($conn, $query);
-$data = mysqli_fetch_assoc($result);
+$student_query = "SELECT COUNT(*) AS total_student FROM register WHERE role = 'student' AND status = 'approved'";
+$student_result = mysqli_query($conn, $student_query);
+$data = mysqli_fetch_assoc($student_result );
 $totalstudent = $data['total_student'];
 
 // Get total admins
-$query = "SELECT COUNT(*) AS total_admin FROM admin";
-$result = mysqli_query($conn, $query);
-$data = mysqli_fetch_assoc($result);
+$admin_result  = "SELECT COUNT(*) AS total_admin FROM admin";
+$admin_result = mysqli_query($conn, $admin_result );
+$data = mysqli_fetch_assoc($admin_result);
 $totaladmin = $data['total_admin'];
 
 // Get total super admins
-$query = "SELECT COUNT(*) AS total_superadmin FROM superadmin";
-$result = mysqli_query($conn, $query);
-$data = mysqli_fetch_assoc($result);
+$superadmin_query = "SELECT COUNT(*) AS total_superadmin FROM superadmin";
+$superadmin_result = mysqli_query($conn, $superadmin_query );
+$data = mysqli_fetch_assoc($superadmin_result);
 $totalsuperadmin = $data['total_superadmin'];
 
 // Get total subjects
-$query = "SELECT COUNT(*) AS total_subject FROM subject";
-$result = mysqli_query($conn, $query);
-$data = mysqli_fetch_assoc($result);
+$subject_query = "SELECT COUNT(*) AS total_subject FROM subject";
+$subject_result = mysqli_query($conn, $subject_query );
+$data = mysqli_fetch_assoc($subject_result);
 $totalsubject = $data['total_subject'];
 
 
@@ -49,87 +49,7 @@ $totalsubject = $data['total_subject'];
   </head>
   <body>
 
-    <!-- ======= Header ======= -->
-    <header id="header" class="header fixed-top d-flex align-items-center">
-
-      <?php include 'logo.php'?><!-- End Logo -->
-
-      <div class="search-bar">
-        <form class="search-form d-flex align-items-center" method="POST" action="#">
-          <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-          <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-        </form>
-      </div><!-- End Search Bar -->
-
-      <nav class="header-nav ms-auto">
-        <ul class="d-flex align-items-center">
-
-          <li class="nav-item d-block d-lg-none">
-            <a class="nav-link nav-icon search-bar-toggle " href="#">
-              <i class="bi bi-search"></i>
-            </a>
-          </li><!-- End Search Icon-->
-
-          <li class="nav-item dropdown pe-3">
-
-            <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-              <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-              <span class="d-none d-md-block dropdown-toggle ps-2">K. Anderson</span>
-            </a><!-- End Profile Iamge Icon -->
-
-            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-              <li class="dropdown-header">
-                <h6>Kevin Anderson</h6>
-                <span>Web Designer</span>
-              </li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                  <i class="bi bi-person"></i>
-                  <span>My Profile</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                  <i class="bi bi-gear"></i>
-                  <span>Account Settings</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
-                  <i class="bi bi-question-circle"></i>
-                  <span>Need Help?</span>
-                </a>
-              </li>
-              <li>
-                <hr class="dropdown-divider">
-              </li>
-
-              <li>
-                <a class="dropdown-item d-flex align-items-center" href="#">
-                  <i class="bi bi-box-arrow-right"></i>
-                  <span>Sign Out</span>
-                </a>
-              </li>
-
-            </ul><!-- End Profile Dropdown Items -->
-          </li><!-- End Profile Nav -->
-
-        </ul>
-      </nav><!-- End Icons Navigation -->
-
-    </header><!-- End Header -->
+    <?php include 'superadmin-header.php'?>
 
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
@@ -257,80 +177,6 @@ $totalsubject = $data['total_subject'];
           </ul>
         </li><!-- End Super Admin Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-gem"></i><span>Icons</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="icons-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="icons-bootstrap.html">
-                <i class="bi bi-circle"></i><span>Bootstrap Icons</span>
-              </a>
-            </li>
-            <li>
-              <a href="icons-remix.html">
-                <i class="bi bi-circle"></i><span>Remix Icons</span>
-              </a>
-            </li>
-            <li>
-              <a href="icons-boxicons.html">
-                <i class="bi bi-circle"></i><span>Boxicons</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Icons Nav -->
-
-        <li class="nav-heading">Pages</li>
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="user-profile.php">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-        </li><!-- End Profile Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-faq.html">
-            <i class="bi bi-question-circle"></i>
-            <span>F.A.Q</span>
-          </a>
-        </li><!-- End F.A.Q Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-contact.html">
-            <i class="bi bi-envelope"></i>
-            <span>Contact</span>
-          </a>
-        </li><!-- End Contact Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-register.html">
-            <i class="bi bi-card-list"></i>
-            <span>Register</span>
-          </a>
-        </li><!-- End Register Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-login.html">
-            <i class="bi bi-box-arrow-in-right"></i>
-            <span>Login</span>
-          </a>
-        </li><!-- End Login Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-error-404.html">
-            <i class="bi bi-dash-circle"></i>
-            <span>Error 404</span>
-          </a>
-        </li><!-- End Error 404 Page Nav -->
-
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="pages-blank.html">
-            <i class="bi bi-file-earmark"></i>
-            <span>Blank</span>
-          </a>
-        </li><!-- End Blank Page Nav -->
-
       </ul>
 
     </aside><!-- End Sidebar-->
@@ -392,19 +238,6 @@ $totalsubject = $data['total_subject'];
               <div class="col-xxl-4 col-xl-12">
                 <div class="card info-card ">
 
-                  <!-- <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div> -->
-
                   <div class="card-body">
                     <h5 class="card-title">Total<span> | Students</span></h5>
 
@@ -424,19 +257,6 @@ $totalsubject = $data['total_subject'];
               <!-- Total Admins Card -->
               <div class="col-xxl-4 col-xl-12">
                 <div class="card info-card">
-
-                  <!-- <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div> -->
 
                   <div class="card-body">
                     <h5 class="card-title">Total <span>| Admins</span></h5>
@@ -459,19 +279,6 @@ $totalsubject = $data['total_subject'];
               <div class="col-xxl-4 col-xl-12">
                 <div class="card info-card">
 
-                  <!-- <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div> -->
-
                   <div class="card-body">
                     <h5 class="card-title">Total <span>| Super Admins</span></h5>
 
@@ -492,19 +299,6 @@ $totalsubject = $data['total_subject'];
               <!-- Total Subjects Card -->
               <div class="col-xxl-4 col-xl-12">
                 <div class="card info-card">
-
-                  <!-- <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div> -->
 
                   <div class="card-body">
                     <h5 class="card-title">Total <span>| Subjects</span></h5>
@@ -604,154 +398,6 @@ $totalsubject = $data['total_subject'];
 
                 </div>
               </div><!-- End Reports -->
-
-              <!-- Recent Sales -->
-              <div class="col-12">
-                <div class="card recent-sales overflow-auto">
-
-                  <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div>
-
-                  <div class="card-body">
-                    <h5 class="card-title">Recent Sales <span>| Today</span></h5>
-
-                    <table class="table table-borderless datatable">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">Customer</th>
-                          <th scope="col">Product</th>
-                          <th scope="col">Price</th>
-                          <th scope="col">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row"><a href="#">#2457</a></th>
-                          <td>Brandon Jacob</td>
-                          <td><a href="#" class="text-primary">At praesentium minu</a></td>
-                          <td>$64</td>
-                          <td><span class="badge bg-success">Approved</span></td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#">#2147</a></th>
-                          <td>Bridie Kessler</td>
-                          <td><a href="#" class="text-primary">Blanditiis dolor omnis similique</a></td>
-                          <td>$47</td>
-                          <td><span class="badge bg-warning">Pending</span></td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#">#2049</a></th>
-                          <td>Ashleigh Langosh</td>
-                          <td><a href="#" class="text-primary">At recusandae consectetur</a></td>
-                          <td>$147</td>
-                          <td><span class="badge bg-success">Approved</span></td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#">#2644</a></th>
-                          <td>Angus Grady</td>
-                          <td><a href="#" class="text-primar">Ut voluptatem id earum et</a></td>
-                          <td>$67</td>
-                          <td><span class="badge bg-danger">Rejected</span></td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#">#2644</a></th>
-                          <td>Raheem Lehner</td>
-                          <td><a href="#" class="text-primary">Sunt similique distinctio</a></td>
-                          <td>$165</td>
-                          <td><span class="badge bg-success">Approved</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                  </div>
-
-                </div>
-              </div><!-- End Recent Sales -->
-
-              <!-- Top Selling -->
-              <div class="col-12">
-                <div class="card top-selling overflow-auto">
-
-                  <div class="filter">
-                    <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                      <li class="dropdown-header text-start">
-                        <h6>Filter</h6>
-                      </li>
-
-                      <li><a class="dropdown-item" href="#">Today</a></li>
-                      <li><a class="dropdown-item" href="#">This Month</a></li>
-                      <li><a class="dropdown-item" href="#">This Year</a></li>
-                    </ul>
-                  </div>
-
-                  <div class="card-body pb-0">
-                    <h5 class="card-title">Top Selling <span>| Today</span></h5>
-
-                    <table class="table table-borderless">
-                      <thead>
-                        <tr>
-                          <th scope="col">Preview</th>
-                          <th scope="col">Product</th>
-                          <th scope="col">Price</th>
-                          <th scope="col">Sold</th>
-                          <th scope="col">Revenue</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th scope="row"><a href="#"><img src="assets/img/product-1.jpg" alt=""></a></th>
-                          <td><a href="#" class="text-primary fw-bold">Ut inventore ipsa voluptas nulla</a></td>
-                          <td>$64</td>
-                          <td class="fw-bold">124</td>
-                          <td>$5,828</td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#"><img src="assets/img/product-2.jpg" alt=""></a></th>
-                          <td><a href="#" class="text-primary fw-bold">Exercitationem similique doloremque</a></td>
-                          <td>$46</td>
-                          <td class="fw-bold">98</td>
-                          <td>$4,508</td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#"><img src="assets/img/product-3.jpg" alt=""></a></th>
-                          <td><a href="#" class="text-primary fw-bold">Doloribus nisi exercitationem</a></td>
-                          <td>$59</td>
-                          <td class="fw-bold">74</td>
-                          <td>$4,366</td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#"><img src="assets/img/product-4.jpg" alt=""></a></th>
-                          <td><a href="#" class="text-primary fw-bold">Officiis quaerat sint rerum error</a></td>
-                          <td>$32</td>
-                          <td class="fw-bold">63</td>
-                          <td>$2,016</td>
-                        </tr>
-                        <tr>
-                          <th scope="row"><a href="#"><img src="assets/img/product-5.jpg" alt=""></a></th>
-                          <td><a href="#" class="text-primary fw-bold">Sit unde debitis delectus repellendus</a></td>
-                          <td>$79</td>
-                          <td class="fw-bold">41</td>
-                          <td>$3,239</td>
-                        </tr>
-                      </tbody>
-                    </table>
-
-                  </div>
-
-                </div>
-              </div><!-- End Top Selling -->
 
             </div>
           </div><!-- End Left side columns -->
@@ -983,60 +629,6 @@ $totalsubject = $data['total_subject'];
 
               </div>
             </div><!-- End Website Traffic -->
-
-            <!-- News & Updates Traffic -->
-            <div class="card">
-              <div class="filter">
-                <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                  <li class="dropdown-header text-start">
-                    <h6>Filter</h6>
-                  </li>
-
-                  <li><a class="dropdown-item" href="#">Today</a></li>
-                  <li><a class="dropdown-item" href="#">This Month</a></li>
-                  <li><a class="dropdown-item" href="#">This Year</a></li>
-                </ul>
-              </div>
-
-              <div class="card-body pb-0">
-                <h5 class="card-title">News &amp; Updates <span>| Today</span></h5>
-
-                <div class="news">
-                  <div class="post-item clearfix">
-                    <img src="assets/img/news-1.jpg" alt="">
-                    <h4><a href="#">Nihil blanditiis at in nihil autem</a></h4>
-                    <p>Sit recusandae non aspernatur laboriosam. Quia enim eligendi sed ut harum...</p>
-                  </div>
-
-                  <div class="post-item clearfix">
-                    <img src="assets/img/news-2.jpg" alt="">
-                    <h4><a href="#">Quidem autem et impedit</a></h4>
-                    <p>Illo nemo neque maiores vitae officiis cum eum turos elan dries werona nande...</p>
-                  </div>
-
-                  <div class="post-item clearfix">
-                    <img src="assets/img/news-3.jpg" alt="">
-                    <h4><a href="#">Id quia et et ut maxime similique occaecati ut</a></h4>
-                    <p>Fugiat voluptas vero eaque accusantium eos. Consequuntur sed ipsam et totam...</p>
-                  </div>
-
-                  <div class="post-item clearfix">
-                    <img src="assets/img/news-4.jpg" alt="">
-                    <h4><a href="#">Laborum corporis quo dara net para</a></h4>
-                    <p>Qui enim quia optio. Eligendi aut asperiores enim repellendusvel rerum cuder...</p>
-                  </div>
-
-                  <div class="post-item clearfix">
-                    <img src="assets/img/news-5.jpg" alt="">
-                    <h4><a href="#">Et dolores corrupti quae illo quod dolor</a></h4>
-                    <p>Odit ut eveniet modi reiciendis. Atque cupiditate libero beatae dignissimos eius...</p>
-                  </div>
-
-                </div><!-- End sidebar recent posts-->
-
-              </div>
-            </div><!-- End News & Updates -->
 
           </div><!-- End Right side columns -->
 
