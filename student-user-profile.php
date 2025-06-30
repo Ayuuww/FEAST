@@ -27,7 +27,7 @@ include 'conn/conn.php';// Connection to the database
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link " href="student-dashboard.php">
+          <a class="nav-link collapsed" href="student-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -41,16 +41,33 @@ include 'conn/conn.php';// Connection to the database
           <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
               <a href="student-evaluate.php" >
-                <i class="bi bi-circle"></i><span>Evaluate Subject</span>
+                <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
               <a href="superadmin-subjectadding.php">
-                <i class="bi bi-circle"></i><span>Evaluated Subject</span>
+                <i class="bi bi-circle"></i><span>Evaluated Subjects</span>
               </a>
             </li>
           </ul>
         </li><!-- End Evaluate Nav -->
+
+        <li class="nav-heading">Pages</li>
+
+        <li class="nav-item">
+          <a class="nav-link collapse" href="student-user-profile.php">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+          </a>
+        </li><!-- End Profile Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="logout.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li><!-- End Sign out Nav -->
+        
 
       </ul>
 

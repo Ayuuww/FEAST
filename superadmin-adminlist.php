@@ -3,6 +3,12 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+// Check if the user is logged in and is a superadmin
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: pages-login.php");
+    exit();
+}
+
 // Fetching admin data
 $query = "SELECT * FROM admin";
 $result = mysqli_query($conn, $query);
@@ -149,6 +155,22 @@ $result = mysqli_query($conn, $query);
             </li>
           </ul>
         </li><!-- End Super Admin Nav -->
+
+        <li class="nav-heading">Pages</li>
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-user-profile.php">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+          </a>
+        </li><!-- End Profile Page Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="logout.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li><!-- End Sign Out Page Nav -->
 
       </ul>
 

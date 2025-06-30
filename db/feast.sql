@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 29, 2025 at 07:47 PM
+-- Generation Time: Jun 30, 2025 at 09:05 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -57,10 +57,13 @@ CREATE TABLE `evaluation` (
   `id` int(11) NOT NULL,
   `student_id` varchar(50) DEFAULT NULL,
   `subject_code` varchar(50) DEFAULT NULL,
+  `subject_title` varchar(50) NOT NULL,
+  `school_year` varchar(9) NOT NULL,
   `faculty_id` varchar(50) DEFAULT NULL,
-  `rating` int(11) DEFAULT NULL,
+  `rating` decimal(2,1) DEFAULT NULL,
   `comment` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `semester` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -87,11 +90,13 @@ CREATE TABLE `register` (
 
 INSERT INTO `register` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `role`, `status`) VALUES
 ('000-0000-0', 'faculty2', 'faculty 2', 'faculty 2', 'faculty2@email.com', '12345678', 'CIS', 'faculty', 'approved'),
+('010-0120-1', 'Clark Joshua', 'Velasco', 'Rojas', 'email@email.com', '12345678', 'CAS', 'faculty', 'approved'),
 ('0927-4492-1', 'clark', 'juswa', 'rojas', 'asdf@gmailc.com', '12345678', 'CIS', 'student', 'pending'),
 ('098-7654-3', 'faculty', 'faculty', 'faculty', 'faculty@email.com', '12345678', 'CIS', 'faculty', 'approved'),
 ('111-1111-1', 'Maam', 'Shirley', 'maam', 'shirley@email.com', '12345678', 'CAS', 'faculty', 'approved'),
 ('123-4567-8', 'clark', 'joshua', 'rojas', 'clark@email.com', '12345678', 'CIS', 'student', 'approved'),
-('1234', '1234', '1234', '1234', '1234@email.com', '12345678', 'CAS', 'student', 'approved');
+('1234', '1234', '1234', '1234', '1234@email.com', '12345678', 'CAS', 'student', 'approved'),
+('221-0101-1', 'yes', 'yow', 'yes', 'yes@rmail.com', '12345678', 'CIS', 'student', 'pending');
 
 -- --------------------------------------------------------
 
@@ -111,11 +116,8 @@ CREATE TABLE `student_subject` (
 --
 
 INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`) VALUES
-(6, '123-4567-8', 'ISPC-102', ''),
-(7, '123-4567-8', 'PATHFIR', ''),
-(8, '1234', 'ISPC-101', ''),
-(9, '123-4567-8', 'ISPC-101', ''),
-(10, '123-4567-8', 'PATHFIT-2', '');
+(8, '1234', 'ISPC-101', '111-1111-1'),
+(9, '123-4567-8', 'ISPC-101', '010-0120-1');
 
 -- --------------------------------------------------------
 
@@ -135,11 +137,8 @@ CREATE TABLE `subject` (
 --
 
 INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`) VALUES
-(1, 'ISPC-101', 'Computer Programming', '000-0000-0'),
-(2, 'ISPC-102', 'Computer Programming', '098-7654-3'),
-(3, 'PATHFIR', 'Physical Education', '111-1111-1'),
-(4, 'PATHFIT-2', 'PASAKIT', '111-1111-1'),
-(5, 'ISPC-101', 'Computer Programming', '098-7654-3');
+(6, 'ISPC-101', 'Computer Programming', '010-0120-1'),
+(7, 'ISPC-101', 'Computer Programming', '111-1111-1');
 
 -- --------------------------------------------------------
 
@@ -179,9 +178,10 @@ ALTER TABLE `admin`
 --
 ALTER TABLE `evaluation`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `student_id_key` (`student_id`),
+  ADD UNIQUE KEY `unique_eval` (`student_id`,`subject_code`,`school_year`,`semester`),
   ADD KEY `subject_code_key` (`subject_code`),
-  ADD KEY `faculty_id_key` (`faculty_id`);
+  ADD KEY `faculty_id_key` (`faculty_id`),
+  ADD KEY `subject_title` (`subject_title`);
 
 --
 -- Indexes for table `register`
@@ -195,7 +195,8 @@ ALTER TABLE `register`
 ALTER TABLE `student_subject`
   ADD PRIMARY KEY (`idnumber`),
   ADD KEY `student_key` (`student_id`),
-  ADD KEY `subject_key` (`subject_code`);
+  ADD KEY `subject_key` (`subject_code`),
+  ADD KEY `faculty_student_subject` (`faculty_id`);
 
 --
 -- Indexes for table `subject`
@@ -203,7 +204,8 @@ ALTER TABLE `student_subject`
 ALTER TABLE `subject`
   ADD PRIMARY KEY (`idnumber`),
   ADD KEY `faculty_key` (`faculty_id`),
-  ADD KEY `code` (`code`);
+  ADD KEY `code` (`code`),
+  ADD KEY `title` (`title`);
 
 --
 -- Indexes for table `superadmin`
@@ -219,19 +221,19 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
@@ -243,12 +245,14 @@ ALTER TABLE `subject`
 ALTER TABLE `evaluation`
   ADD CONSTRAINT `faculty_id_key` FOREIGN KEY (`faculty_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `subject_title_key` FOREIGN KEY (`subject_title`) REFERENCES `subject` (`title`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student_subject`
 --
 ALTER TABLE `student_subject`
+  ADD CONSTRAINT `faculty_student_subject` FOREIGN KEY (`faculty_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_key` FOREIGN KEY (`student_id`) REFERENCES `register` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE;
 

@@ -3,6 +3,12 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+// Check if the user is logged in and is a superadmin
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: pages-login.php");
+    exit();
+}
+
 // Display message if set
 if (isset($_SESSION['msg'])) {
     echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
@@ -25,9 +31,10 @@ $result = mysqli_query($conn, $query);
 
 // Query to get subjects and their associated faculty
 // This query retrieves all subjects along with the faculty who teaches them
-$subject_query = "  SELECT s.code, s.title, r.first_name, r.last_name
+$subject_query = " SELECT s.code, s.title, s.faculty_id, r.first_name, r.last_name
                     FROM subject s
-                    LEFT JOIN register r ON s.faculty_id = r.idnumber ";
+                    LEFT JOIN register r ON s.faculty_id = r.idnumber";
+
 $subject_result = mysqli_query($conn, $subject_query);
 
 
@@ -90,7 +97,7 @@ $subject_result = mysqli_query($conn, $subject_query);
 
       <!-- Student Subject Nav -->
       <li class="nav-item">
-        <a class="nav-link collapsed" href="superadmin-studentsubject.php">
+        <a class="nav-link collapse" href="superadmin-studentsubject.php">
           <i class="bi bi-book-fill"></i>
           <span>Assign Subject</span>
         </a>
@@ -183,6 +190,22 @@ $subject_result = mysqli_query($conn, $subject_query);
         </ul>
       </li><!-- End Super Admin Nav -->
 
+      <li class="nav-heading">Pages</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-user-profile.php">
+          <i class="bi bi-person"></i>
+          <span>Profile</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="logout.php">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
+        </a>
+      </li><!-- End Sign Out Page Nav -->
+
     </ul>
 
   </aside><!-- End Sidebar-->
@@ -247,31 +270,34 @@ $subject_result = mysqli_query($conn, $subject_query);
                       </div>
                     </div>
 
-
                     <!-- Subject Selection -->
                     <div class="col-md-5">
-                        <div class="form-floating">
-                            <select id="subject_code" name="subject_code" class="form-select text-capitalize" required>
-                                <option value="" disabled selected>Subject with Instructor Name</option>
-                                <?php
-                                $subjects_by_faculty = [];
-                                while ($subject = mysqli_fetch_assoc($subject_result)) {
-                                    $faculty_name = $subject['first_name'] . ' ' . $subject['last_name'];
-                                    $subjects_by_faculty[$faculty_name][] = $subject;
-                                }
-                                foreach ($subjects_by_faculty as $faculty => $subjects): ?>
-                                    <optgroup label="Instructor: <?= htmlspecialchars($faculty) ?>">
-                                        <?php foreach ($subjects as $sub): ?>
-                                            <option value="<?= $sub['code'] ?>">
-                                                <?= $sub['code'] . ":".$sub['title']?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </optgroup>
-                                <?php endforeach; ?>
-                            </select>
-                            <label for="subject_code" class="form-label">Select Subject</label>
-                        </div>
-                    </div><!-- End Subject Selection -->
+                      <div class="form-floating">
+                        <select id="subject_code" name="subject_code" class="form-select text-capitalize" required>
+                          <option value="" disabled selected>Subject with Instructor Name</option>
+                          <?php
+                          $subjects_by_faculty = [];
+                          while ($subject = mysqli_fetch_assoc($subject_result)) {
+                              $faculty_name = $subject['first_name'] . ' ' . $subject['last_name'];
+                              $subjects_by_faculty[$faculty_name][] = $subject;
+                          }
+                          foreach ($subjects_by_faculty as $faculty => $subjects): ?>
+                            <optgroup label="Instructor: <?= htmlspecialchars($faculty) ?>">
+                              <?php foreach ($subjects as $sub): ?>
+                                <option value="<?= $sub['code'] ?>" data-faculty-id="<?= $sub['faculty_id'] ?>">
+                                  <?= $sub['code'] . ": " . $sub['title'] ?>
+                                </option>
+                              <?php endforeach; ?>
+                            </optgroup>
+                          <?php endforeach; ?>
+                        </select>
+                        <label for="subject_code" class="form-label">Select Subject</label>
+                      </div>
+                    </div>
+                    <!-- Hidden Faculty ID -->
+                    <input type="hidden" name="faculty_id" id="faculty_id_hidden">
+                    <!-- End Subject Selection -->
+
 
                     <!-- Submit Button -->
                     <div class="col-4 offset-4">
@@ -318,27 +344,44 @@ $subject_result = mysqli_query($conn, $subject_query);
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const departmentFilter = document.getElementById("departmentFilter");
-      const studentSelect = document.getElementById("student_id");
-      const allGroups = Array.from(studentSelect.querySelectorAll("optgroup"));
+ <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Department filter logic
+    const departmentFilter = document.getElementById("departmentFilter");
+    const studentSelect = document.getElementById("student_id");
+    const allGroups = Array.from(studentSelect.querySelectorAll("optgroup"));
 
-      departmentFilter.addEventListener("change", function () {
-        const selectedDept = this.value;
+    departmentFilter.addEventListener("change", function () {
+      const selectedDept = this.value;
 
-        allGroups.forEach(group => {
-          if (!selectedDept || group.getAttribute("data-department") === selectedDept) {
-            group.style.display = "";
-          } else {
-            group.style.display = "none";
-          }
-        });
-
-        studentSelect.value = "";
+      allGroups.forEach(group => {
+        if (!selectedDept || group.getAttribute("data-department") === selectedDept) {
+          group.style.display = "";
+        } else {
+          group.style.display = "none";
+        }
       });
+
+      studentSelect.value = "";
     });
-  </script>
+
+    // Subject selection logic to set hidden faculty_id
+    const subjectSelect = document.getElementById("subject_code");
+    const hiddenFaculty = document.getElementById("faculty_id_hidden");
+
+    subjectSelect.addEventListener("change", function () {
+      const selectedOption = this.options[this.selectedIndex];
+      const facultyId = selectedOption.getAttribute("data-faculty-id");
+      hiddenFaculty.value = facultyId;
+
+      // Debugging (optional)
+      console.log("Selected subject:", selectedOption.value);
+      console.log("Faculty ID set to:", facultyId);
+    });
+  });
+</script>
+
+
 
 
 </body>

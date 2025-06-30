@@ -25,7 +25,7 @@
             </a>
           </li><!-- End Search Icon-->
 
-          <li class="nav-item dropdown pe-3">
+          <li class="nav-item dropdown pe-3 position-relative">
 
             <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
               <span class="d-none d-md-block dropdown-toggle ps-2 text-capitalize"><?php echo $_SESSION['first_name'] .' '. $_SESSION['last_name'];?></span>

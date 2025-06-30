@@ -2,6 +2,12 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+// Check if the user is logged in and is a student
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
+    header("Location: pages-login.php");
+    exit();
+}
+
 $query = "SELECT * FROM register WHERE role = 'student'";
 $result = mysqli_query($conn, $query);
 
@@ -17,6 +23,7 @@ $result = mysqli_query($conn, $query);
   <title>FEAST / Home </title>
 
   <?php include 'header.php' ?>
+  
 
   </head>
   <body>
@@ -42,16 +49,33 @@ $result = mysqli_query($conn, $query);
           <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
               <a href="student-evaluate.php" >
-                <i class="bi bi-circle"></i><span>Evaluate Subject</span>
+                <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-subjectadding.php">
+              <a href="student-evaluatedsubject.php">
                 <i class="bi bi-circle"></i><span>Evaluated Subject</span>
               </a>
             </li>
           </ul>
         </li><!-- End Evaluate Nav -->
+
+        <li class="nav-heading">Pages</li>
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="student-user-profile.php">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
+          </a>
+        </li><!-- End Profile Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="logout.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
+          </a>
+        </li><!-- End Sign out Nav -->
+
 
       </ul>
 
