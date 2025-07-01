@@ -11,9 +11,9 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
 
 // Fetching subjects and their respective faculty
 
-$student_id = $_SESSION['idnumber'];
-$school_year = $_GET['sy'] ?? '';
-$semester = $_GET['sem'] ?? '';
+$student_id   = $_SESSION['idnumber'];
+$school_year  = $_GET['sy'] ?? '';
+$semester     = $_GET['sem'] ?? '';
 
 $query = "SELECT 
             s.code AS subject_code,
@@ -22,24 +22,24 @@ $query = "SELECT
             r.first_name, r.mid_name, r.last_name
           FROM student_subject ss
           JOIN subject s ON ss.subject_code = s.code AND ss.faculty_id = s.faculty_id
-          JOIN register r ON ss.faculty_id = r.idnumber
+          JOIN register r ON ss.faculty_id  = r.idnumber
           WHERE ss.student_id = ?
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
-              WHERE e.student_id = ss.student_id 
-                AND e.subject_code = ss.subject_code
-                AND e.faculty_id = ss.faculty_id
-                AND e.school_year = ?
-                AND e.semester = ?
+              WHERE e.student_id    = ss.student_id 
+                AND e.subject_code  = ss.subject_code
+                AND e.faculty_id    = ss.faculty_id
+                AND e.school_year   = ?
+                AND e.semester      = ?
             )";
 
-$stmt = $conn->prepare($query);
+$stmt   = $conn->prepare($query);
 $stmt->bind_param("sss", $student_id, $school_year, $semester);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$subjects = [];
-while ($row = $result->fetch_assoc()) {
+$subjects       = [];
+while ($row     = $result->fetch_assoc()) {
     $subjects[] = $row;
 }
 
@@ -173,10 +173,10 @@ if (isset($_SESSION['msg'])) {
                         <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
                           <option value="" disabled selected>-- Select a Subject --</option>
                           <?php foreach ($subjects as $row): 
-                            $facultyName = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
+                            $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
                             $subjectTitle = htmlspecialchars($row['subject_title']);
-                            $subjectCode = htmlspecialchars($row['subject_code']);
-                            $facultyId = htmlspecialchars($row['faculty_id']);
+                            $subjectCode  = htmlspecialchars($row['subject_code']);
+                            $facultyId    = htmlspecialchars($row['faculty_id']);
                           ?>
                             <option value="<?= $subjectCode . '|' . $facultyId ?>">
                               <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
@@ -263,7 +263,7 @@ if (isset($_SESSION['msg'])) {
                     <input type="hidden" name="student_id" value="<?= $_SESSION['idnumber'] ?>">
 
                     <div class="col-md-4 offset-md-4 mb3">
-                      <button type="submit" class="btn btn-primary btn-block w-100">Submit Evaluation</button>
+                      <button type="submit" class="btn btn-success btn-block w-100">Submit Evaluation</button>
                     </div>
                     
                   </form>

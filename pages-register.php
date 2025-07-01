@@ -19,6 +19,21 @@ if (isset($_SESSION['msg'])) {
 
   <title>FEAST - Register</title>
   <?php include 'header.php'?>
+
+  <style>
+    @media (max-width: 576px) {
+      .card {
+        padding: 1rem !important;
+      }
+      .card-body {
+        padding: 1.5rem !important;
+      }
+      .logo-img {
+        width: 200px;
+      }
+    }
+  </style>
+  
 </head>
 
 <body>
@@ -27,7 +42,7 @@ if (isset($_SESSION['msg'])) {
   
   <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
     <div class="container-fluid">
-      <div class="row h-100">
+      <div class="row h-100 flex-column flex-md-row">
 
       <!-- Right side: Logo -->
         <div class="col-md-6 d-flex flex-column align-items-center justify-content-center bg-light text-center">
@@ -37,8 +52,7 @@ if (isset($_SESSION['msg'])) {
         
         <!-- Left side: Registration form -->
         <div class="col-md-6 d-flex flex-column justify-content-center align-items-center bg-light">
-          <div class="w-75">
-
+          <div class="w-100 px-3 px-sm-5 px-md-0" style="max-width: 500px;">
 
             <div class="card shadow-lg">
               <div class="card-body">

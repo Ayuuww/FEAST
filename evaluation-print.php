@@ -46,17 +46,67 @@ $questions = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Bootstrap CSS -->
   <link href="vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  
   <style>
-    @media print {
-      .no-print { display: none; }
+      @media print {
+    .no-print {
+      display: none !important;
     }
+
     body {
-      background-color: #f8f9fa;
+      background-color: #fff;
+      margin: 0;
+      padding: 0;
     }
+
+    .container {
+      width: 100% !important;
+      max-width: none !important;
+      padding: 0 1cm !important;
+    }
+
     .card {
-      margin-top: 30px;
+      border: none !important;
+      box-shadow: none !important;
     }
+
+    .card-body {
+      font-size: 14px;
+    }
+
+    .card-body p {
+      text-align: left;
+      margin: 4px 0;
+    }
+
+    .table {
+      width: 100% !important;
+      table-layout: fixed;
+    }
+
+    .table th:first-child,
+    .table td:first-child {
+      width: 80%;  /* Question column */
+      text-align: left;
+    }
+
+    .table th:last-child,
+    .table td:last-child {
+      width: 20%;  /* Rating column */
+      text-align: center;
+    }
+
+    .table th, .table td {
+      padding: 10px;
+      font-size: 13px;
+    }
+  }
+
   </style>
+
+
+
+  
 </head>
 <body onload="window.print()">
 
@@ -69,15 +119,13 @@ $questions = [
       </div>
 
       <div class="row mb-3">
-        <div class="col-md-6">
+        <div class="col-12">
           <p><strong>Student ID:</strong> <?= htmlspecialchars($data['student_id']) ?></p>
           <p><strong>School Year:</strong> <?= htmlspecialchars($data['school_year']) ?></p>
           <p><strong>Semester:</strong> <?= htmlspecialchars($data['semester']) ?></p>
-        </div>
-        <div class="col-md-6">
-          <p><strong>Subject Code: </strong> <?= htmlspecialchars($data['subject_code']) ?></p>
-          <p><strong>Descriptive Title: </strong> <?= htmlspecialchars($data['subject_title']) ?></p>
-          <p><strong>Instructor Name: </strong><span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
+          <p><strong>Subject Code:</strong> <?= htmlspecialchars($data['subject_code']) ?></p>
+          <p><strong>Descriptive Title:</strong> <?= htmlspecialchars($data['subject_title']) ?></p>
+          <p><strong>Instructor Name:</strong> <span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
         </div>
       </div>
 

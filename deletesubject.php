@@ -7,8 +7,8 @@ if (isset($_POST['delete'])) {
     $subject_code = $_POST['code'];
 
     // Check if subject code exists
-    $check_query = "SELECT * FROM subject WHERE code='$subject_code'";
-    $check_result = mysqli_query($conn, $check_query);
+    $check_query    = "SELECT * FROM subject WHERE code='$subject_code'";
+    $check_result   = mysqli_query($conn, $check_query);
 
     if (mysqli_num_rows($check_result) == 0) {
         $_SESSION['msg'] = 'Subject does not exist!';
