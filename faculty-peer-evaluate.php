@@ -2,56 +2,43 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a student
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
+// Check if the user is logged in and is a faculty
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
     header("Location: pages-login.php");
     exit();
 }
 
+$evaluator_id = $_SESSION['idnumber'];
 
-// Fetching subjects and their respective faculty
+// Get current faculty's department
+$dept_query = "SELECT department FROM register WHERE idnumber = ?";
+$stmt = $conn->prepare($dept_query);
+$stmt->bind_param("s", $evaluator_id);
+$stmt->execute();
+$dept_result = $stmt->get_result();
+$dept_row = $dept_result->fetch_assoc();
+$department = $dept_row['department'] ?? '';
 
-$student_id   = $_SESSION['idnumber'];
-$school_year  = $_GET['sy'] ?? '';
-$semester     = $_GET['sem'] ?? '';
-
-$query = "SELECT 
-            s.code AS subject_code,
-            s.title AS subject_title,
-            s.faculty_id,
-            r.first_name, r.mid_name, r.last_name
-          FROM student_subject ss
-          JOIN subject s ON ss.subject_code = s.code AND ss.faculty_id = s.faculty_id
-          JOIN register r ON ss.faculty_id  = r.idnumber
-          WHERE ss.student_id = ?
-            AND NOT EXISTS (
-              SELECT 1 FROM evaluation e 
-              WHERE e.student_id    = ss.student_id 
-                AND e.subject_code  = ss.subject_code
-                AND e.faculty_id    = ss.faculty_id
-                AND e.school_year   = ?
-                AND e.semester      = ?
-            )";
-
-$stmt   = $conn->prepare($query);
-$stmt->bind_param("sss", $student_id, $school_year, $semester);
+// Fetch other faculty members from the same department
+$query = "SELECT idnumber, first_name, mid_name, last_name 
+          FROM register 
+          WHERE role = 'faculty' AND status = 'approved' 
+            AND department = ? AND idnumber != ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("ss", $department, $evaluator_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$subjects       = [];
-while ($row     = $result->fetch_assoc()) {
-    $subjects[] = $row;
+$faculty_list = [];
+while ($row = $result->fetch_assoc()) {
+    $faculty_list[] = $row;
 }
-
-
 
 // Display message if set
 if (isset($_SESSION['msg'])) {
     echo "<script>alert('" . addslashes($_SESSION['msg']) . "');</script>";
     unset($_SESSION['msg']);
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -60,7 +47,7 @@ if (isset($_SESSION['msg'])) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Student Evaluate </title>
+  <title>FEAST / Faculty Evaluate </title>
 
   <?php include 'header.php' ?>
 
@@ -90,7 +77,7 @@ if (isset($_SESSION['msg'])) {
   </head>
   <body>
 
-    <?php include 'student-header.php'?>
+    <?php include 'faculty-header.php'?>
 
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
@@ -98,7 +85,7 @@ if (isset($_SESSION['msg'])) {
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="student-dashboard.php">
+          <a class="nav-link collapsed" href="faculty-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -111,13 +98,13 @@ if (isset($_SESSION['msg'])) {
           </a>
           <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="student-evaluate.php" class="active">
+              <a href="faculty-peer-evaluate.php" class="active">
                 <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="student-evaluatedsubject.php">
-                <i class="bi bi-circle"></i><span>Evaluated Subject</span>
+              <a href="faculty-peer-evaluatedpeer.php">
+                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
               </a>
             </li>
           </ul>
@@ -126,7 +113,7 @@ if (isset($_SESSION['msg'])) {
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="student-user-profile.php">
+          <a class="nav-link collapsed" href="faculty-user-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -142,19 +129,19 @@ if (isset($_SESSION['msg'])) {
       </ul>
 
     </aside><!-- End Sidebar-->
-
+    
+    <!-- Start Main Content -->
     <main id="main" class="main">
-
       <div class="pagetitle">
-        <h1>Student Evaluation Form</h1>
+        <h1>Peer Evaluation Form</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item ">Evaluate</li>
-            <li class="breadcrumb-item active">Form</li>
+            <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Evaluate</li>
+            <li class="breadcrumb-item active">Peer Evaluation</li>
           </ol>
         </nav>
-      </div><!-- End Page Title -->
+      </div>
 
       <section class="section dashboard">
         <div class="container-fluid">
@@ -162,64 +149,60 @@ if (isset($_SESSION['msg'])) {
             <div class="col-lg-8 col-md-10 col-sm-12">
               <div class="card shadow-lg">
                 <div class="card-body">
-                  <h5 class="card-title text-center">Faculty Evaluation Form</h5>
+                  <h5 class="card-title text-center">Faculty-to-Faculty Evaluation</h5>
 
-                  <form action="submit-evaluation.php" method="POST">
+                  <form action="submit-peer-evaluation.php" method="POST">
 
-                  <div class="row">
-                    <!-- Subject Dropdown -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
-                          <option value="" disabled selected>-- Select a Subject --</option>
-                          <?php foreach ($subjects as $row): 
-                            $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
-                            $subjectTitle = htmlspecialchars($row['subject_title']);
-                            $subjectCode  = htmlspecialchars($row['subject_code']);
-                            $facultyId    = htmlspecialchars($row['faculty_id']);
-                          ?>
-                            <option value="<?= $subjectCode . '|' . $facultyId ?>">
-                              <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
-                            </option>
-                          <?php endforeach; ?>
-                        </select>
-                        <label for="subject_code" class="form-label">Subject</label>
+                    <!-- Faculty Dropdown -->
+                      <div class="row mb-3">
+                      <!-- Evaluatee (Faculty) -->
+                      <div class="col-md-6">
+                          <div class="form-floating">
+                          <select name="evaluatee_id" class="form-select text-capitalize" required>
+                              <option value="" disabled selected>-- Select Faculty --</option>
+                              <?php foreach ($faculty_list as $faculty): 
+                              $fullName = htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']);
+                              ?>
+                              <option value="<?= htmlspecialchars($faculty['idnumber']) ?>"><?= $fullName ?></option>
+                              <?php endforeach; ?>
+                          </select>
+                          <label for="evaluatee_id">Faculty to Evaluate</label>
+                          </div>
                       </div>
-                    </div>
-                    
-                      <!-- School Year Dropdown -->
-                      <div class="col-md-3 mb-3">
-                        <div class="form-floating">
+
+                      <!-- School Year -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
                           <select name="school_year" id="school_year" class="form-select" required>
-                            <option value="" disabled selected>-- Select School Year --</option>
-                            <?php
+                              <option value="" disabled selected>-- School Year --</option>
+                              <?php
                               $currentYear = date("Y");
                               for ($i = 0; $i < 5; $i++) {
-                                $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
-                                echo "<option value='$sy'>$sy</option>";
+                                  $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
+                                  echo "<option value='$sy'>$sy</option>";
                               }
-                            ?>
+                              ?>
                           </select>
-                          <label for="school_year" class="form-label">School Year</label>
-                        </div>
+                          <label for="school_year">School Year</label>
+                          </div>
                       </div>
 
-                      <!-- Semester Dropdown -->
-                      <div class="col-md-3 mb-3">
-                        <div class="form-floating">
+                      <!-- Semester -->
+                      <div class="col-md-3">
+                          <div class="form-floating">
                           <select name="semester" id="semester" class="form-select" required>
-                            <option value="" disabled selected>-- Select Semester --</option>
-                            <option value="1st Semester">1st Semester</option>
-                            <option value="2nd Semester">2nd Semester</option>
+                              <option value="" disabled selected>-- Semester --</option>
+                              <option value="1st Semester">1st Semester</option>
+                              <option value="2nd Semester">2nd Semester</option>
                           </select>
-                          <label for="semester" class="form-label">Semester</label>
-                        </div>
+                          <label for="semester">Semester</label>
+                          </div>
+                      </div>
                       </div>
 
-                    </div>
 
                     <!-- Evaluation Questions -->
-                    <div class="table-responsive ">
+                    <div class="table-responsive">
                       <table class="table table-bordered text-center align-middle">
                         <thead class="table-light">
                           <tr>
@@ -232,12 +215,12 @@ if (isset($_SESSION['msg'])) {
                         <tbody>
                           <?php
                           $questions = [
-                            "The instructor demonstrates mastery of the subject.",
-                            "The instructor encourages student participation.",
-                            "The instructor communicates clearly.",
-                            "The instructor is fair in grading.",
-                            "The instructor is punctual and prepared.",
-                            "The instructor provides timely feedback on assignments."
+                            "Demonstrates professional behavior in the workplace.",
+                            "Collaborates well with other faculty members.",
+                            "Is open to feedback and professional improvement.",
+                            "Shares knowledge and resources with colleagues.",
+                            "Contributes positively to department goals.",
+                            "Is punctual and consistent in work commitments."
                           ];
                           foreach ($questions as $index => $question):
                           ?>
@@ -245,7 +228,7 @@ if (isset($_SESSION['msg'])) {
                               <td class="text-start"><?= $index + 1 ?>. <?= $question ?></td>
                               <?php for ($i = 1; $i <= 5; $i++): ?>
                                 <td>
-                                  <input type="radio" name="q<?= $index ?>" id="q<?= $index ?>_<?= $i ?>" value="<?= $i ?>" required>
+                                  <input type="radio" name="q<?= $index ?>" value="<?= $i ?>" required>
                                 </td>
                               <?php endfor; ?>
                             </tr>
@@ -257,15 +240,15 @@ if (isset($_SESSION['msg'])) {
                     <!-- Comment Box -->
                     <div class="mb-3">
                       <label for="comment" class="form-label">Additional Comments (optional)</label>
-                      <textarea name="comment" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
+                      <textarea name="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
                     </div>
 
-                    <input type="hidden" name="student_id" value="<?= $_SESSION['idnumber'] ?>">
+                    <input type="hidden" name="evaluator_id" value="<?= $evaluator_id ?>">
 
-                    <div class="col-md-4 offset-md-4 mb3">
+                    <div class="col-md-4 offset-md-4 mb-3">
                       <button type="submit" class="btn btn-success btn-block w-100">Submit Evaluation</button>
                     </div>
-                    
+
                   </form>
 
                 </div>
@@ -274,8 +257,6 @@ if (isset($_SESSION['msg'])) {
           </div>
         </div>
       </section>
-
-
     </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->

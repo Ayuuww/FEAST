@@ -20,7 +20,7 @@ for ($i = 0; $i < $question_count; $i++) {
 
 $average_rating = round($total_rating / $question_count, 1);
 
-// ✅ Get subject title by subject_code AND faculty_id
+// Get subject title by subject_code AND faculty_id
 $subjectQuery = "SELECT title FROM subject WHERE code = ? AND faculty_id = ?";
 $stmt = $conn->prepare($subjectQuery);
 $stmt->bind_param("ss", $subject_code, $faculty_id);

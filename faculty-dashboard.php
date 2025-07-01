@@ -3,12 +3,12 @@ session_start();
 include 'conn/conn.php';// Connection to the database
 
 // Check if the user is logged in and is a student
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
     header("Location: pages-login.php");
     exit();
 }
 
-$query = "SELECT * FROM register WHERE role = 'student'";
+$query = "SELECT * FROM register WHERE role = 'faculty'";
 $result = mysqli_query($conn, $query);
 
 
@@ -27,7 +27,7 @@ $result = mysqli_query($conn, $query);
 
   </head>
   <body>
-    <?php include 'student-header.php'?>
+    <?php include 'faculty-header.php'?>
     
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
@@ -48,13 +48,13 @@ $result = mysqli_query($conn, $query);
           </a>
           <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="student-evaluate.php" >
+              <a href="faculty-peer-evaluate.php" >
                 <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="student-evaluatedsubject.php">
-                <i class="bi bi-circle"></i><span>Evaluated Subject</span>
+              <a href="faculty-peer-evaluatedpeer.php" >
+                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
               </a>
             </li>
           </ul>
@@ -63,7 +63,7 @@ $result = mysqli_query($conn, $query);
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="student-user-profile.php">
+          <a class="nav-link collapsed" href="faculty-user-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -87,7 +87,7 @@ $result = mysqli_query($conn, $query);
         <h1>Dashboard</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="student-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
             <li class="breadcrumb-item active">Dashboard</li>
           </ol>
         </nav>
