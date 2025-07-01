@@ -22,11 +22,14 @@ $query = "SELECT
             e.semester,
             e.created_at
           FROM evaluation e
-          JOIN subject s ON e.subject_code = s.code
+          JOIN subject s ON e.subject_code = s.code AND e.faculty_id = s.faculty_id
           JOIN register r ON s.faculty_id = r.idnumber
-          JOIN student_subject ss ON ss.subject_code = s.code AND ss.student_id = e.student_id
+          JOIN student_subject ss ON ss.subject_code = s.code 
+                                  AND ss.faculty_id = s.faculty_id 
+                                  AND ss.student_id = e.student_id
           WHERE e.student_id = ?
           ORDER BY e.created_at DESC";
+
 
 
 $stmt = $conn->prepare($query);

@@ -2,14 +2,13 @@
 session_start();
 include 'conn/conn.php';
 
-list($subject_code, $faculty_id) = explode('|', $_POST['subject_code']); // Extract from combined value
+list($subject_code, $faculty_id) = explode('|', $_POST['subject_code']); // Correct values from dropdown
 $student_id    = $_POST['student_id'];
 $comment       = $_POST['comment'] ?? '';
 $semester      = $_POST['semester'];
 $school_year   = $_POST['school_year'];
 $total_rating  = 0;
 $question_count = 6;
-
 
 // Calculate total score
 for ($i = 0; $i < $question_count; $i++) {
@@ -21,25 +20,24 @@ for ($i = 0; $i < $question_count; $i++) {
 
 $average_rating = round($total_rating / $question_count, 1);
 
-// Get faculty_id and subject_title from subject table
-$facultyQuery = "SELECT faculty_id, title FROM subject WHERE code = ?";
-$stmt = $conn->prepare($facultyQuery);
-$stmt->bind_param("s", $subject_code);
+// ✅ Get subject title by subject_code AND faculty_id
+$subjectQuery = "SELECT title FROM subject WHERE code = ? AND faculty_id = ?";
+$stmt = $conn->prepare($subjectQuery);
+$stmt->bind_param("ss", $subject_code, $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-    die("Subject not found.");
+    die("Subject with this instructor not found.");
 }
 
 $subject_row = $result->fetch_assoc();
-$faculty_id = $subject_row['faculty_id'];
 $subject_title = $subject_row['title'];
 
-// Insert into evaluation table (with subject_title)
+// Insert into evaluation table
 $insert = "INSERT INTO evaluation (
-                student_id, subject_code, subject_title, school_year, semester, faculty_id, rating, comment
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    student_id, subject_code, subject_title, school_year, semester, faculty_id, rating, comment
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
 $stmt = $conn->prepare($insert);
 $stmt->bind_param("ssssssds",
@@ -57,7 +55,6 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
     if ($stmt->execute()) {
-        // Save data for print preview
         $_SESSION['print_data'] = [
             'student_id'    => $student_id,
             'faculty_id'    => $faculty_id,

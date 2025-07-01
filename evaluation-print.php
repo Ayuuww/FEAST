@@ -1,5 +1,6 @@
 <?php
 session_start();
+include 'conn/conn.php';
 
 if (!isset($_SESSION['print_data'])) {
     header("Location: student-evaluate.php");
@@ -8,6 +9,23 @@ if (!isset($_SESSION['print_data'])) {
 
 $data = $_SESSION['print_data'];
 unset($_SESSION['print_data']); // Prevent reprint on refresh
+
+
+$faculty_name = '';
+$faculty_id = $data['faculty_id'];
+
+$fac_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM register WHERE idnumber = ?");
+$fac_stmt->bind_param("s", $faculty_id);
+$fac_stmt->execute();
+$fac_result = $fac_stmt->get_result();
+
+if ($fac_result->num_rows > 0) {
+    $fac = $fac_result->fetch_assoc();
+    $faculty_name = $fac['first_name'] . ' ' . $fac['mid_name'] . ' ' . $fac['last_name'];
+} else {
+    $faculty_name = 'Unknown Faculty';
+}
+
 
 // Define the questions (same order as in your form)
 $questions = [
@@ -54,10 +72,12 @@ $questions = [
         <div class="col-md-6">
           <p><strong>Student ID:</strong> <?= htmlspecialchars($data['student_id']) ?></p>
           <p><strong>School Year:</strong> <?= htmlspecialchars($data['school_year']) ?></p>
+          <p><strong>Semester:</strong> <?= htmlspecialchars($data['semester']) ?></p>
         </div>
         <div class="col-md-6">
-          <p><strong>Subject Code:</strong> <?= htmlspecialchars($data['subject_code'] . "-". $data['subject_title']) ?></p>
-          <p><strong>Semester:</strong> <?= htmlspecialchars($data['semester']) ?></p>
+          <p><strong>Subject Code: </strong> <?= htmlspecialchars($data['subject_code']) ?></p>
+          <p><strong>Descriptive Title: </strong> <?= htmlspecialchars($data['subject_title']) ?></p>
+          <p><strong>Instructor Name: </strong><span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
         </div>
       </div>
 
