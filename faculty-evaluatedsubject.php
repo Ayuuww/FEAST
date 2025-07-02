@@ -1,40 +1,38 @@
 <?php
 session_start();
-include 'conn/conn.php';
+include 'conn/conn.php';// Connection to the database
 
-// Check if the user is logged in and is a faculty
+// Check if the user is logged in and is a student
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
     header("Location: pages-login.php");
     exit();
 }
 
-$evaluator_id = $_SESSION['idnumber'];
+// Fetching the faculty subjects evaluated
+$faculty_id = $_SESSION['idnumber'];
 
-// Fetching peer evaluations done by the current faculty
 $query = "SELECT 
-            fpe.evaluated_faculty_id,
-            r.first_name, r.mid_name, r.last_name,
-            fpe.rating,
-            fpe.school_year,
-            fpe.semester,
-            fpe.created_at
-          FROM faculty_peer_evaluation fpe
-          JOIN register r ON fpe.evaluated_faculty_id = r.idnumber
-          WHERE fpe.evaluator_id = ?
-          ORDER BY fpe.created_at DESC";
+            e.subject_code,
+            s.title AS subject_title,
+            e.school_year,
+            e.semester,
+            COUNT(e.id) AS total_evaluations
+          FROM evaluation e
+          JOIN subject s ON e.subject_code = s.code AND e.faculty_id = s.faculty_id
+          WHERE e.faculty_id = ?
+          GROUP BY e.subject_code, s.title, e.school_year, e.semester
+          ORDER BY e.school_year DESC, e.semester DESC";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("s", $evaluator_id);
+$stmt->bind_param("s", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Display message if set
-if (isset($_SESSION['msg'])) {
-    echo "<script>alert('" . addslashes($_SESSION['msg']) . "');</script>";
-    unset($_SESSION['msg']);
-}
-?>
 
+
+
+
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -42,16 +40,15 @@ if (isset($_SESSION['msg'])) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Student Evaluate </title>
-  
+  <title>FEAST / Subjects </title>
 
   <?php include 'header.php' ?>
+  
 
   </head>
   <body>
-
     <?php include 'faculty-header.php'?>
-
+    
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
 
@@ -66,17 +63,17 @@ if (isset($_SESSION['msg'])) {
 
         <!-- Evaluate Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
               <a href="faculty-peer-evaluate.php" >
                 <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="faculty-peer-evaluatedpeer.php" class="active">
+              <a href="faculty-peer-evaluatedpeer.php" >
                 <i class="bi bi-circle"></i><span>Evaluated Peer</span>
               </a>
             </li>
@@ -84,7 +81,7 @@ if (isset($_SESSION['msg'])) {
         </li><!-- End Evaluate Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-evaluatedsubject.php">
+          <a class="nav-link collapse" href="faculty-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Subject</span>
           </a>
@@ -106,63 +103,67 @@ if (isset($_SESSION['msg'])) {
           </a>
         </li><!-- End Sign out Nav -->
 
+
       </ul>
 
     </aside><!-- End Sidebar-->
 
     <main id="main" class="main">
-        <div class="pagetitle">
-            <h1>Evaluated Peer</h1>
-            <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="student-dashboard.php">Home</a></li>
-                <li class="breadcrumb-item">Evaluate</li>
-                <li class="breadcrumb-item active">Evaluated Peer</li>
-            </ol>
-            </nav>
-        </div><!-- End Page Title -->
 
-        <section class="section">
+      <div class="pagetitle">
+        <h1>Subjects</h1>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active">Subject</li>
+          </ol>
+        </nav>
+      </div><!-- End Page Title -->
+
+      <section class="section dashboard">
+        <div class="row">
+
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Faculty You Have Evaluated</h5>
+                    <h5 class="card-title">Evaluated Subjects You Handle</h5>
 
                     <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Evaluatee Name</th>
-                                    <th>Rating</th>
-                                    <th>Semester</th>
-                                    <th>School Year</th>
-                                    <th>Evaluated On</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if ($result->num_rows > 0): ?>
-                                    <?php while ($row = $result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="text-capitalize"><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['rating']) ?></td>
-                                        <td><?= htmlspecialchars($row['semester']) ?></td>
-                                        <td><?= htmlspecialchars($row['school_year']) ?></td>
-                                        <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                                    </tr>
-                                    <?php endwhile; ?>
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Title</th>
+                            <th>Semester</th>
+                            <th>School Year</th>
+                            <th>Total Evaluations</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php if ($result->num_rows > 0): ?>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row['subject_code']) ?></td>
+                                <td><?= htmlspecialchars($row['subject_title']) ?></td>
+                                <td><?= htmlspecialchars($row['semester']) ?></td>
+                                <td><?= htmlspecialchars($row['school_year']) ?></td>
+                                <td><?= $row['total_evaluations'] ?></td>
+                            </tr>
+                            <?php endwhile; ?>
                                 <?php else: ?>
                                     <tr>
-                                    <td colspan="5" class="text-center">You have not evaluated any faculty peers yet.</td>
+                                    <td colspan="6" class="text-center">No evaluations have been submitted for your subjects yet.</td>
                                     </tr>
                                 <?php endif; ?>
-                            </tbody>
-                        </table>
+                        </tbody>
+                    </table>
                     </div>
-
                 </div>
             </div>
-        </section>
-    </main><!-- End #main -->
 
+        </div>
+      </section>
+
+    </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->
     <?php include'footer.php'?>

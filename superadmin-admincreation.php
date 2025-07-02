@@ -269,9 +269,9 @@ $query = "SELECT * FROM superadmin";
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                   <option value="" disabled selected>Select Department</option>
-                                  <option value="cis">CIS</option>
-                                  <option value="cas">CAS</option>
-                                  <option value="cvm">CVM</option>
+                                  <option value="CIS">CIS</option>
+                                  <option value="CAS">CAS</option>
+                                  <option value="CVM">CVM</option>
                               </select>
                               <label for="department">Department</label>
                           </div>

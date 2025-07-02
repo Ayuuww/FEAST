@@ -110,6 +110,13 @@ if (isset($_SESSION['msg'])) {
           </ul>
         </li><!-- End Evaluate Nav -->
 
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="faculty-evaluatedsubject.php">
+            <i class="bi bi-book-fill"></i>
+            <span>Subject</span>
+          </a>
+        </li><!-- End Profile Nav -->
+
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">

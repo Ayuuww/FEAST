@@ -43,49 +43,50 @@ $questions = [
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    @media print {
-  body {
-    font-size: 16px; /* increase base font */
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #fff;
-  }
+    
+        @media print {
+      body {
+        font-size: 16px; /* increase base font */
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background-color: #fff;
+      }
 
-  .container {
-    width: 100%;
-    padding: 1.5cm; /* more padding for space */
-  }
+      .container {
+        width: 100%;
+        padding: 1.5cm; /* more padding for space */
+      }
 
-  .card-body {
-    font-size: 16px; /* larger text inside card */
-  }
+      .card-body {
+        font-size: 16px; /* larger text inside card */
+      }
 
-  h3 {
-    font-size: 24px; /* bigger title */
-  }
+      h3 {
+        font-size: 24px; /* bigger title */
+      }
 
-  .table th, .table td {
-    padding: 12px;
-    font-size: 15px; /* increase table font */
-  }
+      .table th, .table td {
+        padding: 12px;
+        font-size: 15px; /* increase table font */
+      }
 
-  .table th:first-child,
-  .table td:first-child {
-    width: 75%;
-    text-align: left;
-  }
+      .table th:first-child,
+      .table td:first-child {
+        width: 75%;
+        text-align: left;
+      }
 
-  .table th:last-child,
-  .table td:last-child {
-    width: 25%;
-    text-align: center;
-  }
+      .table th:last-child,
+      .table td:last-child {
+        width: 25%;
+        text-align: center;
+      }
 
-  .no-print {
-    display: none !important;
-  }
-}
+      .no-print {
+        display: none !important;
+      }
+    }
 
   </style>
 </head>

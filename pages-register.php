@@ -135,11 +135,11 @@ if (isset($_SESSION['msg'])) {
                   <div class="col-md-6">
                       <div class="form-floating">
                           <select class="form-select" name="role" required>
-                              <option value="" disabled selected>Select Status</option>
+                              <option value="" disabled selected>Select Role</option>
                               <option value="student">Student</option>
                               <option value="faculty">Faculty</option>
                           </select>
-                      <label class="form-label">Status</label>
+                      <label class="form-label">Role</label>
                   </div>
                   </div>
 
