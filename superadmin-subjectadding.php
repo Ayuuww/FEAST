@@ -15,7 +15,7 @@ if (isset($_SESSION['msg'])) {
     unset($_SESSION['msg']);
   }
 
-$query = "SELECT * FROM register WHERE role = 'faculty' AND status = 'approved' ";
+$query = "SELECT * FROM faculty WHERE role = 'faculty'";
 $result = mysqli_query($conn, $query);
 
 
@@ -101,8 +101,8 @@ $result = mysqli_query($conn, $query);
             </a>
           </li>
           <li>
-            <a href="superadmin-facultyapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
+            <a href="superadmin-facultycreation.php">
+              <i class="bi bi-circle"></i><span>Add New Faculty</span>
             </a>
           </li>
         </ul>
@@ -227,7 +227,7 @@ $result = mysqli_query($conn, $query);
                     <!-- Faculty Name Dropdown -->
                     <div class="col-md-3">
                       <div class="form-floating">
-                        <select class="form-select text-capitalize" name="faculty_id" required>
+                        <select class="form-select text-capitalize" name="idnumber" required>
                           <option value="" disabled selected>Select Faculty Name</option>
                           <?php
                             while ($row = mysqli_fetch_assoc($result)) {

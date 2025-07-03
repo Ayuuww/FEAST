@@ -10,9 +10,9 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Fetching subjects and faculty names
-$query = "SELECT subject.*, register.first_name, register.mid_name, register.last_name 
+$query = "SELECT subject.*, faculty.first_name, faculty.mid_name, faculty.last_name 
           FROM subject 
-          JOIN register ON subject.faculty_id = register.idnumber";
+          JOIN faculty ON subject.faculty_id = faculty.idnumber";
 $result = mysqli_query($conn, $query);
 
 // Display messages if set
@@ -102,8 +102,8 @@ if (isset($_SESSION['msg'])) {
             </a>
           </li>
           <li>
-            <a href="superadmin-facultyapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
+            <a href="superadmin-facultycreation.php">
+              <i class="bi bi-circle"></i><span>Add New Faculty</span>
             </a>
           </li>
         </ul>

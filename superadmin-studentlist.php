@@ -9,7 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Fetch student data for listing
-$query = "SELECT * FROM register  WHERE role = 'student' AND status = 'approved'";
+$query = "SELECT * FROM student  WHERE role = 'student'";
 $result = mysqli_query($conn, $query);
 
 
@@ -92,8 +92,8 @@ $result = mysqli_query($conn, $query);
               </a>
             </li>
             <li>
-              <a href="superadmin-facultyapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
+              <a href="superadmin-facultycreation.php">
+                <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
           </ul>
@@ -111,8 +111,8 @@ $result = mysqli_query($conn, $query);
               </a>
             </li>
             <li>
-              <a href="superadmin-studentapproval.php" >
-                <i class="bi bi-circle"></i><span>Approval</span>
+              <a href="superadmin-studentcreation.php">
+                <i class="bi bi-circle"></i><span>Add New Student</span>
               </a>
             </li>
           </ul>
@@ -210,6 +210,7 @@ $result = mysqli_query($conn, $query);
                     <th>Last Name</th>
                     <th>Email</th>
                     <th>Department</th>
+                    <th>Section</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -224,6 +225,7 @@ $result = mysqli_query($conn, $query);
                         <td class="text-capitalize" ><?php echo $row['last_name'];?></td>
                         <td><?php echo $row['email'];?></td>
                         <td class="text-uppercase"><?php echo $row['department'];?></td>
+                        <td class="text-uppercase"><?php echo $row['section'];?></td> 
                         <td>
                           <a class="btn btn-primary btn-sm">View</a>
                           <a class="btn btn-warning btn-sm">Edit</a>

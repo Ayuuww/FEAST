@@ -88,8 +88,8 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
               </a>
             </li>
             <li>
-              <a href="superadmin-facultyapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
+              <a href="superadmin-facultycreation.php">
+                <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
           </ul>

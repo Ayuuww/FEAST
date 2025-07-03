@@ -5,7 +5,7 @@ include 'conn/conn.php';// Connection to the database
 if (isset($_POST['addsubject'])) {
     $subject_code   = $_POST['code'];
     $subject_title  = $_POST['title'];
-    $faculty_id     = $_POST['faculty_id'];
+    $faculty_id     = $_POST['idnumber'];
 
     // Check if subject with same code and faculty already exists
     $check_query = "SELECT * FROM subject WHERE code = '$subject_code' AND faculty_id = '$faculty_id'";

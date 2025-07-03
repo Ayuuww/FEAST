@@ -28,7 +28,7 @@ $query = "SELECT * FROM superadmin";
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>FEAST / Admin Creation  </title>
+    <title>FEAST / Student Creation  </title>
     <?php include 'header.php'?>
   </head>
 
@@ -98,7 +98,7 @@ $query = "SELECT * FROM superadmin";
             </li>
             <li>
               <a href="superadmin-facultycreation.php">
-                <i class="bi bi-circle"></i><span>Add New Student</span>
+                <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
           </ul>
@@ -106,17 +106,17 @@ $query = "SELECT * FROM superadmin";
         
         <!-- Student Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="forms-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-studentlist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-studentcreation.php">
+              <a href="superadmin-studentcreation.php" class="active">
                 <i class="bi bi-circle"></i><span>Add New Student</span>
               </a>
             </li>
@@ -125,17 +125,17 @@ $query = "SELECT * FROM superadmin";
 
         <!-- Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="admin-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
+          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-adminlist.php" >
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-admincreation.php" class="active">
+              <a href="superadmin-admincreation.php">
                 <i class="bi bi-circle"></i><span>Add New Admin</span>
               </a>
             </li>
@@ -203,7 +203,7 @@ $query = "SELECT * FROM superadmin";
               <div class="card">
                 <div class="card-body">
                   <h5 class="card-title">Create New Admin</h5>
-                    <form class="row g-3 needs-validation" novalidate method="post" action="admincreation.php">
+                    <form class="row g-3 needs-validation" novalidate method="post" action="studentcreation.php">
 
                       <!-- ID Number -->
                       <div class="col-md-3">
@@ -265,7 +265,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Department -->
-                      <div class="col-4 offset-4">
+                      <div class="col-4 offset-2">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                   <option value="" disabled selected>Select Department</option>
@@ -274,6 +274,19 @@ $query = "SELECT * FROM superadmin";
                                   <option value="CVM">CVM</option>
                               </select>
                               <label for="department">Department</label>
+                          </div>
+                      </div>
+
+                      <!-- Department -->
+                      <div class="col-4">
+                          <div class="form-floating">
+                              <select class="form-select" name="section" required>
+                                  <option value="" disabled selected>Select Section</option>
+                                  <option value="1-A">1-A</option>
+                                  <option value="1-B">1-B</option>
+                                  <option value="1-C">1-C</option>
+                              </select>
+                              <label for="department">Section</label>
                           </div>
                       </div>
 

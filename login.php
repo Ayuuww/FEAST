@@ -30,41 +30,43 @@ if ($row = mysqli_fetch_assoc($result3)) {
     $_SESSION['idnumber']   = $row['idnumber'];
     $_SESSION['first_name'] = $row['first_name'];
     $_SESSION['last_name']  = $row['last_name'];
+    $_SESSION['department']    = $row['department'];
     $_SESSION['role']       = 'admin';
     header("Location: admin-dashboard.php");
     exit();
 }
 
-// ---- Check Faculty/Student ----
-$query  = "SELECT * FROM register WHERE idnumber='$id' AND password='$password'";
+// ---- Check Faculty ----
+$query1  = "SELECT * FROM faculty WHERE idnumber='$id' AND password='$password'";
+$result1 = mysqli_query($conn, $query1);
+
+if ($row = mysqli_fetch_assoc($result1)) {
+    $_SESSION['idnumber']   = $row['idnumber'];
+    $_SESSION['first_name'] = $row['first_name'];
+    $_SESSION['last_name'] = $row['last_name'];
+    $_SESSION['department']    = $row['department'];
+    $_SESSION['role']       = $row['role'];
+
+    header("Location: faculty-dashboard.php");
+    exit();
+}
+
+// ---- Check Student ----
+$query  = "SELECT * FROM student WHERE idnumber='$id' AND password='$password'";
 $result = mysqli_query($conn, $query);
 
 if ($row = mysqli_fetch_assoc($result)) {
     $_SESSION['idnumber']   = $row['idnumber'];
     $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name'] = $row['last_name'];
+    $_SESSION['last_name']  = $row['last_name'];
     $_SESSION['role']       = $row['role'];
-    $_SESSION['status']     = $row['status'];
+    $_SESSION['section']    = $row['section'];
+    $_SESSION['department']    = $row['department'];
 
-    if ($row['status']      == 'pending') {
-        $_SESSION['msg'] = 'Your account is still in pending. Please contact the admin.';
-        header("Location: pages-login.php");
-        exit();
-        
-    } elseif ($row['status'] == 'disapproved') {
-        $_SESSION['msg'] = 'Your account has been rejected. Please contact the admin.';
-        header("Location: pages-login.php");
-        exit();
-    }
-
-    if ($row['role']        == 'faculty') {
-        header("Location: faculty-dashboard.php");
-    } elseif ($row['role']  == 'student') {
-        header("Location: student-dashboard.php");
-    }
-
+    header("Location: student-dashboard.php");
     exit();
 }
+
 
 // ---- Invalid Login ----
 $_SESSION['msg'] = 'Invalid ID or Password. Please try again.';

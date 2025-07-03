@@ -2,28 +2,26 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a student
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
     header("Location: pages-login.php");
     exit();
 }
 
-
-// Fetching subjects and their respective faculty
 $student_id = $_SESSION['idnumber'];
 
 $query = "SELECT 
             e.subject_code,
             s.title AS subject_title,
             s.faculty_id,
-            r.first_name, r.mid_name, r.last_name,
-            e.rating,
-            e.school_year,
+            f.first_name, f.mid_name, f.last_name,
+            e.total_score,
+            e.computed_rating,
+            e.academic_year,
             e.semester,
             e.created_at
           FROM evaluation e
           JOIN subject s ON e.subject_code = s.code AND e.faculty_id = s.faculty_id
-          JOIN register r ON s.faculty_id = r.idnumber
+          JOIN faculty f ON s.faculty_id = f.idnumber
           JOIN student_subject ss ON ss.subject_code = s.code 
                                   AND ss.faculty_id = s.faculty_id 
                                   AND ss.student_id = e.student_id
@@ -31,20 +29,15 @@ $query = "SELECT
           ORDER BY e.created_at DESC";
 
 
-
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-
-// Display message if set
 if (isset($_SESSION['msg'])) {
     echo "<script>alert('" . addslashes($_SESSION['msg']) . "');</script>";
     unset($_SESSION['msg']);
 }
-
-
 ?>
 
 <!DOCTYPE html>
@@ -115,60 +108,61 @@ if (isset($_SESSION['msg'])) {
     </aside><!-- End Sidebar-->
 
     <main id="main" class="main">
-    <div class="pagetitle">
+      <div class="pagetitle">
         <h1>Evaluated Subjects</h1>
         <nav>
-        <ol class="breadcrumb">
+          <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="student-dashboard.php">Home</a></li>
             <li class="breadcrumb-item">Evaluate</li>
             <li class="breadcrumb-item active">Evaluated Subjects</li>
-        </ol>
+          </ol>
         </nav>
-    </div><!-- End Page Title -->
+      </div>
 
-        <section class="section">
-            <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Subjects You Have Evaluated</h5>
+      <section class="section">
+        <div class="card">
+          <div class="card-body pt-4">
+            <h5 class="card-title">List of Subjects You Have Evaluated</h5>
 
-                <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+            <div class="table-responsive">
+              <table class="table table-bordered table-striped align-middle text-center">
+                <thead class="table-light">
+                  <tr>
+                    <th>Subject Code</th>
+                    <th>Title</th>
+                    <th>Faculty Name</th>
+                    <th>Total Score</th>
+                    <th>Computed Rating (%)</th>
+                    <th>Academic Year</th>
+                    <th>Evaluated On</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php if ($result->num_rows > 0): ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                      <tr>
+                        <td><?= htmlspecialchars($row['subject_code']) ?></td>
+                        <td><?= htmlspecialchars($row['subject_title']) ?></td>
+                        <td class="text-capitalize">
+                          <?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?>
+                        </td>
+                        <td><?= htmlspecialchars($row['total_score']) ?></td>
+                        <td><?= number_format($row['computed_rating'], 2) ?>%</td>
+                        <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                        <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                      </tr>
+                    <?php endwhile; ?>
+                  <?php else: ?>
                     <tr>
-                        <th>Subject Code</th>
-                        <th>Title</th>
-                        <th>Faculty Name</th>
-                        <th>Rating</th>
-                        <th>Semester</th>
-                        <th>School Year</th>
-                        <th>Evaluated On</th>
+                      <td colspan="8" class="text-center text-muted">No evaluations submitted yet.</td>
                     </tr>
-                    </thead>
-                    <tbody>
-                    <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($row['subject_code']) ?></td>
-                            <td><?= htmlspecialchars($row['subject_title']) ?></td>
-                            <td class="text-capitalize"><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
-                            <td><?= htmlspecialchars($row['rating']) ?></td>
-                            <td><?= htmlspecialchars($row['semester']) ?></td>
-                            <td><?= htmlspecialchars($row['school_year']) ?></td>
-                            <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                        <td colspan="7" class="text-center">You have not evaluated any subjects yet.</td>
-                        </tr>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
-                </div>
-
+                  <?php endif; ?>
+                </tbody>
+              </table>
             </div>
-            </div>
-        </section>
+          </div>
+        </div>
+      </section>
     </main><!-- End #main -->
 
 

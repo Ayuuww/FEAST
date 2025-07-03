@@ -12,29 +12,29 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
 // Fetching subjects and their respective faculty
 
 $student_id   = $_SESSION['idnumber'];
-$school_year  = $_GET['sy'] ?? '';
+$academic_year  = $_GET['sy'] ?? '';
 $semester     = $_GET['sem'] ?? '';
 
 $query = "SELECT 
             s.code AS subject_code,
             s.title AS subject_title,
             s.faculty_id,
-            r.first_name, r.mid_name, r.last_name
+            f.first_name, f.mid_name, f.last_name
           FROM student_subject ss
           JOIN subject s ON ss.subject_code = s.code AND ss.faculty_id = s.faculty_id
-          JOIN register r ON ss.faculty_id  = r.idnumber
+          JOIN faculty f ON ss.faculty_id  = f.idnumber
           WHERE ss.student_id = ?
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
               WHERE e.student_id    = ss.student_id 
                 AND e.subject_code  = ss.subject_code
                 AND e.faculty_id    = ss.faculty_id
-                AND e.school_year   = ?
+                AND e.academic_year   = ?
                 AND e.semester      = ?
             )";
 
 $stmt   = $conn->prepare($query);
-$stmt->bind_param("sss", $student_id, $school_year, $semester);
+$stmt->bind_param("sss", $student_id, $academic_year, $semester);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -42,6 +42,18 @@ $subjects       = [];
 while ($row     = $result->fetch_assoc()) {
     $subjects[] = $row;
 }
+
+$dept_query = "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC";
+$dept_result = mysqli_query($conn, $dept_query);
+$department = [];
+
+if ($dept_result && mysqli_num_rows($dept_result) > 0) {
+    while ($row = mysqli_fetch_assoc($dept_result)) {
+        $department[] = $row;
+    }
+}
+
+
 
 
 
@@ -166,105 +178,249 @@ if (isset($_SESSION['msg'])) {
 
                   <form action="submit-evaluation.php" method="POST">
 
-                  <div class="row">
-                    <!-- Subject Dropdown -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
-                          <option value="" disabled selected>-- Select a Subject --</option>
-                          <?php foreach ($subjects as $row): 
-                            $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
-                            $subjectTitle = htmlspecialchars($row['subject_title']);
-                            $subjectCode  = htmlspecialchars($row['subject_code']);
-                            $facultyId    = htmlspecialchars($row['faculty_id']);
-                          ?>
-                            <option value="<?= $subjectCode . '|' . $facultyId ?>">
-                              <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
-                            </option>
-                          <?php endforeach; ?>
-                        </select>
-                        <label for="subject_code" class="form-label">Subject</label>
-                      </div>
-                    </div>
-                    
-                      <!-- School Year Dropdown -->
-                      <div class="col-md-3 mb-3">
+                    <div class="row">
+                    <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
+                      <!-- Subject Dropdown -->
+                      <div class="col-md-6 mb-3">
                         <div class="form-floating">
-                          <select name="school_year" id="school_year" class="form-select" required>
-                            <option value="" disabled selected>-- Select School Year --</option>
-                            <?php
-                              $currentYear = date("Y");
-                              for ($i = 0; $i < 5; $i++) {
-                                $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
-                                echo "<option value='$sy'>$sy</option>";
-                              }
+                          <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
+                            <option value="" disabled selected>-- Select a Subject --</option>
+                            <?php foreach ($subjects as $row): 
+                              $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
+                              $subjectTitle = htmlspecialchars($row['subject_title']);
+                              $subjectCode  = htmlspecialchars($row['subject_code']);
+                              $facultyId    = htmlspecialchars($row['faculty_id']);
                             ?>
+                              <option value="<?= $subjectCode . '|' . $facultyId ?>">
+                                <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
+                              </option>
+                            <?php endforeach; ?>
                           </select>
-                          <label for="school_year" class="form-label">School Year</label>
+                          <label for="subject_code" class="form-label">Subject</label>
                         </div>
                       </div>
-
-                      <!-- Semester Dropdown -->
-                      <div class="col-md-3 mb-3">
-                        <div class="form-floating">
-                          <select name="semester" id="semester" class="form-select" required>
-                            <option value="" disabled selected>-- Select Semester --</option>
-                            <option value="1st Semester">1st Semester</option>
-                            <option value="2nd Semester">2nd Semester</option>
-                          </select>
-                          <label for="semester" class="form-label">Semester</label>
+                      
+                        <!-- School Year Dropdown -->
+                        <div class="col-md-3 mb-3">
+                          <div class="form-floating">
+                            <select name="academic_year" id="academic_year" class="form-select" required>
+                              <option value="" disabled selected>-- Select Academic Year --</option>
+                              <?php
+                                $currentYear = date("Y");
+                                for ($i = 0; $i < 5; $i++) {
+                                  $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
+                                  echo "<option value='$sy'>$sy</option>";
+                                }
+                              ?>
+                            </select>
+                            <label for="academic_year" class="form-label">Academic Year</label>
+                          </div>
                         </div>
+
+                        <!-- Department Dropdown -->
+                        <div class="col-md-3 mb-3">
+                          <div class="form-floating">
+                            <select name="department" id="department" class="form-select" required>
+                              <option value="" disabled selected>-- Select College --</option>
+                              <?php foreach ($department as $row): 
+                                $dept = htmlspecialchars($row['department']);
+                              ?>
+                                <option value="<?= $dept ?>"><?= $dept ?></option>
+                              <?php endforeach; ?>
+                            </select>
+                            <label for="department" class="form-label">Faculty College</label>
+                          </div>
+                        </div>
+
+
+
                       </div>
 
-                    </div>
-
-                    <!-- Evaluation Questions -->
-                    <div class="table-responsive ">
-                      <table class="table table-bordered text-center align-middle">
-                        <thead class="table-light">
-                          <tr>
-                            <th class="text-start">Questions</th>
-                            <?php for ($i = 1; $i <= 5; $i++): ?>
-                              <th><?= $i ?></th>
-                            <?php endfor; ?>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <?php
-                          $questions = [
-                            "The instructor demonstrates mastery of the subject.",
-                            "The instructor encourages student participation.",
-                            "The instructor communicates clearly.",
-                            "The instructor is fair in grading.",
-                            "The instructor is punctual and prepared.",
-                            "The instructor provides timely feedback on assignments."
-                          ];
-                          foreach ($questions as $index => $question):
-                          ?>
+                      <!-- Rating Scale -->
+                      <h5 class="mb-3"><strong>B. Rating Scale</strong></h5>
+                      <div class="table-responsive mb-4">
+                        <table class="table table-bordered text-center align-middle small">
+                          <thead class="table-light">
                             <tr>
-                              <td class="text-start"><?= $index + 1 ?>. <?= $question ?></td>
-                              <?php for ($i = 1; $i <= 5; $i++): ?>
-                                <td>
-                                  <input type="radio" name="q<?= $index ?>" id="q<?= $index ?>_<?= $i ?>" value="<?= $i ?>" required>
-                                </td>
+                              <th>Scale</th>
+                              <th>Qualitative Description</th>
+                              <th>Operational Definition</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><strong>5</strong></td>
+                              <td>Always manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is consistently and unfailling demostrated in all relevant situation or instances. There is no observed deviation from this pattern. Operationally, this could mean occurring in 95-100% of observed opportunities or instances.</td>
+                            </tr>
+                            <tr>
+                              <td><strong>4</strong></td>
+                              <td>Often manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated frequently, though occasional instances of non-manifestation may occur. Operationally, this could mean occurring in 60-94% of observed opportunities or instances.</td>
+                            </tr>
+                            <tr>
+                              <td><strong>3</strong></td>
+                              <td>Sometimes manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated intermittenly or irregulary, with an approximately equal likelihood occurrence and non-occurence. Operationally, this could mean occurring in 40-60% of observed opportunities or instances.</td>
+                            </tr>
+                            <tr>
+                              <td><strong>2</strong></td>
+                              <td>Seldom manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated infrequently and is generally absend in most relevant situation. Operationally, this could mean occurring in 25-40% of observed opportunities or instances.</td>
+                            </tr>
+                            <tr>
+                              <td><strong>1</strong></td>
+                              <td>Rarely manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is almost never demostrated, with only isolated or exceptional instances of occurrence. Operationally, this could mean occurring in 0-24% of observed opportunities or instances.</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      
+                      <h5 class="mb-3"><strong>c. Instruction: </strong>Read the benchmark statements carefully. Please rate the faculty on each of the following statements below using the above-listed rating scale</h5>
+                      <!-- Evaluation Questions -->
+                      <div class="table-responsive ">
+                        <table class="table table-bordered text-center align-middle">
+                          <tbody>
+                            <thead class="table-light">
+                              <tr class="text-start">
+                                <th>Benchmark Statement for Faculty Teaching Effectiveness</th>
+                              </tr>
+                          </thead>
+                          </tbody>
+                        </table>
+                        <table class="table table-bordered text-center align-middle">
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">A. Manage of Teacking and Learning</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
                               <?php endfor; ?>
                             </tr>
-                          <?php endforeach; ?>
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            <?php
+                              $questionIndex = 0;
+                              $questions = [
+                                "Comes to class on time regularly.",
+                                "Explains learning outcomes, expectations, grading system, and various requirements of the subject/course.",
+                                "Maximizes the allocated time/learning hours effectively.",
+                                "Facilitates students to think critically and creatively by providing appropriate learning activities.",
+                                "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+                                "Communicates constructive feedback to students for their academic growth."
+                              ];
+                              foreach ($questions as $question):
+                              ?>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                              <?php
+                              $questionIndex++;
+                              endforeach;
+                              ?>
+                          </tbody>
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">B. Content Knowledge, Pedagogy and Technology</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
+                              <?php endfor; ?>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                              $questions = [
+                                "Demonstrates extensive and broad knowledge of the subject/course.",
+                                "Simplifies complex ideas in the lesson for ease of understanding.",
+                                "Relates the subject matter to contemporary issues and developments in the discipline and/or daily life activities.",
+                                "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
+                                "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes"
+                              ];
+                              foreach ($questions as $question):
+                              ?>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                              <?php
+                              $questionIndex++;
+                              endforeach;
+                              ?>
+                          </tbody>
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">C. Commitment and Transparency</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
+                              <?php endfor; ?>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                              $questions = [
+                                "Recognizes and values the unique diversity and individuality difference among students.",
+                                "Assist students with their learning challenges during consultation hours.",
+                                "Provide immediate feedback on student outputs and performance.",
+                                "Provides transparent and clear criteria in rating student's performance."
+                              ];
+                              foreach ($questions as $question):
+                              ?>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                              <?php
+                              $questionIndex++;
+                              endforeach;
+                              ?>
+                              </thead>
+                              <thead class="table-light">
+                                <tr>
+                                  <th class="text-start">Total Score</th>
+                                  <th colspan="5" id="totalScore" class="text-center text-danger fs-5">0</th>
+                                </tr>
+                              </thead>
+                          </tbody>
+                        </table>
+                      </div>
 
-                    <!-- Comment Box -->
-                    <div class="mb-3">
-                      <label for="comment" class="form-label">Additional Comments (optional)</label>
-                      <textarea name="comment" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
-                    </div>
+                      <!-- Comment Box -->
+                      <div class="mb-3">
+                        <label for="comment" class="form-label">Other comments and suggestions (optional)</label>
+                        <textarea name="comment" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
+                      </div>
 
-                    <input type="hidden" name="student_id" value="<?= $_SESSION['idnumber'] ?>">
+                      <input type="hidden" name="student_id" value="<?= $_SESSION['idnumber'] ?>">
 
-                    <div class="col-md-4 offset-md-4 mb3">
-                      <button type="submit" class="btn btn-success btn-block w-100">Submit Evaluation</button>
-                    </div>
+                      <!-- Computed Rating and Date -->
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Computed Rating (%)</label>
+                          <input type="text" class="form-control text-danger fw-bold" id="computedRating" readonly>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Date of Evaluation</label>
+                          <input type="text" class="form-control" value="<?= date('F j, Y') ?>" readonly>
+                        </div>
+                      </div>
+
+
+                      <div class="col-md-4 offset-md-4 mb3">
+                        <button type="submit" class="btn btn-success btn-block w-100">Submit Evaluation</button>
+                      </div>
                     
                   </form>
 
@@ -297,6 +453,39 @@ if (isset($_SESSION['msg'])) {
 
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const inputs = document.querySelectorAll('input[type="radio"]');
+        const totalScoreDisplay = document.getElementById('totalScore');
+        const computedRatingDisplay = document.getElementById('computedRating');
+
+        function calculateScore() {
+          let total = 0;
+          const questionCount = new Set();
+
+          inputs.forEach(input => {
+            if (input.checked) {
+              total += parseInt(input.value);
+              questionCount.add(input.name);
+            }
+          });
+
+          totalScoreDisplay.textContent = total;
+
+          // Rating formula: (total / 75) * 100
+          const rating = ((total / 75) * 100).toFixed(2);
+          computedRatingDisplay.value = `${rating}%`;
+        }
+
+        inputs.forEach(input => {
+          input.addEventListener('change', calculateScore);
+        });
+
+        calculateScore(); // Initial calc on load
+      });
+
+    </script>
 
   </body>
 

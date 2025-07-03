@@ -7,34 +7,57 @@ if (!isset($_SESSION['print_data'])) {
     exit();
 }
 
-$data = $_SESSION['print_data'];
+$data = $_SESSION['print_data']; // Use before unsetting
 unset($_SESSION['print_data']); // Prevent reprint on refresh
 
+$student_name = 'Unknown Student';
+$student_id = $data['student_id'] ?? '';
 
-$faculty_name = '';
-$faculty_id = $data['faculty_id'];
+if ($student_id) {
+    $stu_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM student WHERE idnumber = ?");
+    $stu_stmt->bind_param("s", $student_id);
+    $stu_stmt->execute();
+    $stu_result = $stu_stmt->get_result();
 
-$fac_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM register WHERE idnumber = ?");
-$fac_stmt->bind_param("s", $faculty_id);
-$fac_stmt->execute();
-$fac_result = $fac_stmt->get_result();
-
-if ($fac_result->num_rows > 0) {
-    $fac = $fac_result->fetch_assoc();
-    $faculty_name = $fac['first_name'] . ' ' . $fac['mid_name'] . ' ' . $fac['last_name'];
-} else {
-    $faculty_name = 'Unknown Faculty';
+    if ($stu_result->num_rows > 0) {
+        $stu = $stu_result->fetch_assoc();
+        $student_name = $stu['first_name'] . ' ' . $stu['mid_name'] . ' ' . $stu['last_name'];
+    }
 }
 
 
-// Define the questions (same order as in your form)
+$faculty_name = 'Unknown Faculty';
+$faculty_id = $data['faculty_id'] ?? '';
+
+if ($faculty_id) {
+    $fac_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+    $fac_stmt->bind_param("s", $faculty_id);
+    $fac_stmt->execute();
+    $fac_result = $fac_stmt->get_result();
+
+    if ($fac_result->num_rows > 0) {
+        $fac = $fac_result->fetch_assoc();
+        $faculty_name = $fac['first_name'] . ' ' . $fac['mid_name'] . ' ' . $fac['last_name'];
+    }
+}
+
+// Questions list - must match the form
 $questions = [
-  "The instructor demonstrates mastery of the subject.",
-  "The instructor encourages student participation.",
-  "The instructor communicates clearly.",
-  "The instructor is fair in grading.",
-  "The instructor is punctual and prepared.",
-  "The instructor provides timely feedback on assignments."
+  "Comes to class on time regularly.",
+  "Explains learning outcomes, expectations, grading system, and various requirements of the subject/course.",
+  "Maximizes the allocated time/learning hours effectively.",
+  "Facilitates students to think critically and creatively by providing appropriate learning activities.",
+  "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+  "Communicates constructive feedback to students for their academic growth.",
+  "Demonstrates extensive and broad knowledge of the subject/course.",
+  "Simplifies complex ideas in the lesson for ease of understanding.",
+  "Relates the subject matter to contemporary issues and developments in the discipline and/or daily life activities.",
+  "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
+  "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes",
+  "Recognizes and values the unique diversity and individuality difference among students.",
+  "Assist students with their learning challenges during consultation hours.",
+  "Provide immediate feedback on student outputs and performance.",
+  "Provides transparent and clear criteria in rating student's performance."
 ];
 ?>
 
@@ -42,90 +65,34 @@ $questions = [
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Evaluation Print</title>
+  <title>Evaluation Summary</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Bootstrap CSS -->
   <link href="vendors/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  
   <style>
-      @media print {
-    .no-print {
-      display: none !important;
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; margin: 0; padding: 0; }
+      .container { width: 100% !important; max-width: none !important; padding: 0 1cm; }
+      .card { border: none !important; box-shadow: none !important; }
+      .table th, .table td { font-size: 13px; padding: 8px; }
     }
-
-    body {
-      background-color: #fff;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      width: 100% !important;
-      max-width: none !important;
-      padding: 0 1cm !important;
-    }
-
-    .card {
-      border: none !important;
-      box-shadow: none !important;
-    }
-
-    .card-body {
-      font-size: 14px;
-    }
-
-    .card-body p {
-      text-align: left;
-      margin: 4px 0;
-    }
-
-    .table {
-      width: 100% !important;
-      table-layout: fixed;
-    }
-
-    .table th:first-child,
-    .table td:first-child {
-      width: 80%;  /* Question column */
-      text-align: left;
-    }
-
-    .table th:last-child,
-    .table td:last-child {
-      width: 20%;  /* Rating column */
-      text-align: center;
-    }
-
-    .table th, .table td {
-      padding: 10px;
-      font-size: 13px;
-    }
-  }
-
   </style>
-
-
-
-  
 </head>
 <body onload="window.print()">
 
 <div class="container">
-  <div class="card shadow">
+  <div class="card shadow my-4">
     <div class="card-body">
-
       <div class="text-center mb-4">
         <h3 class="fw-bold text-primary">Faculty Evaluation Summary</h3>
       </div>
 
       <div class="row mb-3">
         <div class="col-12">
-          <p><strong>Student ID:</strong> <?= htmlspecialchars($data['student_id']) ?></p>
-          <p><strong>School Year:</strong> <?= htmlspecialchars($data['school_year']) ?></p>
-          <p><strong>Semester:</strong> <?= htmlspecialchars($data['semester']) ?></p>
-          <p><strong>Subject Code:</strong> <?= htmlspecialchars($data['subject_code']) ?></p>
-          <p><strong>Descriptive Title:</strong> <?= htmlspecialchars($data['subject_title']) ?></p>
-          <p><strong>Instructor Name:</strong> <span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
+          <p><strong>Name of Faculty being Evaluated:</strong> <span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
+          <p><strong>Department/College:</strong> <?= htmlspecialchars($data['department']) ?></p>
+          <p><strong>Subject Code/Title:</strong> <?= htmlspecialchars($data['subject_code'] . "-" . $data['subject_title']) ?></p>
+          <p><strong>Academic Year:</strong> <?= htmlspecialchars($data['academic_year']) ?></p>
         </div>
       </div>
 
@@ -133,7 +100,7 @@ $questions = [
         <table class="table table-bordered text-center align-middle">
           <thead class="table-light">
             <tr>
-              <th class="text-start">Question</th>
+              <th class="text-start">Benchmark Statement</th>
               <th>Rating (1-5)</th>
             </tr>
           </thead>
@@ -148,23 +115,34 @@ $questions = [
         </table>
       </div>
 
+      <div class="mb-1">
+        <p><strong>Total Score:</strong> <?= htmlspecialchars($data['total_score'] ?? '-') ?> / 75</p>
+        <p><strong>Computed Rating:</strong> <?= number_format($data['computed_rating'] ?? 0, 2) ?>%</p>
+      </div>
+
       <?php if (!empty($data['comment'])): ?>
-        <div class="mb-3">
+        <div class="mb-1">
           <h6><strong>Additional Comment:</strong></h6>
           <p class="border rounded p-2"><?= nl2br(htmlspecialchars($data['comment'])) ?></p>
         </div>
       <?php endif; ?>
 
+      <div class="row mb-1">
+        <div class="col-12">
+          <p><strong>Signature of Evaluator: </strong>__________________________________</p>
+          <p><strong>Name of Evaluator/ID Number: </strong> <?= htmlspecialchars($student_name . " / " . $student_id) ?></p>
+          <p><strong>Date of Evaluation: </strong> <?= date('F j, Y') ?></p>
+        </div>
+      </div>
+
       <div class="row">
         <div class="col-md-4 no-print">
-            <a href="student-evaluate.php" class="btn btn-secondary">Back to Evaluation</a>
+          <a href="student-evaluate.php" class="btn btn-secondary">Back to Evaluation</a>
         </div>
-
-        <!-- Print Button -->
-        <div class="col-md-4 mb-3 no-print">
-        <button type="button" class="btn btn-secondary btn-block w-50" onclick="window.print()">
-            <i class="bi bi-printer"></i> Print Form
-        </button>
+        <div class="col-md-4 no-print">
+          <button type="button" class="btn btn-secondary w-100" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Again
+          </button>
         </div>
       </div>
 
@@ -172,7 +150,6 @@ $questions = [
   </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

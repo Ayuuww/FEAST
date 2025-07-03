@@ -8,7 +8,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
     exit();
 }
 
-$query = "SELECT * FROM register WHERE role = 'student'";
+$query = "SELECT * FROM student WHERE role = 'student'";
 $result = mysqli_query($conn, $query);
 
 

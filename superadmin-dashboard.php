@@ -10,13 +10,13 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 
 // Get total approved faculty
-$faculty_query = "SELECT COUNT(*) AS total_faculty FROM register WHERE role = 'faculty' AND status = 'approved'";
+$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE role = 'faculty'";
 $faulty_result = mysqli_query($conn, $faculty_query);
 $data = mysqli_fetch_assoc($faulty_result);
 $totalfaculty = $data['total_faculty'];
 
 // Get total approved students
-$student_query = "SELECT COUNT(*) AS total_student FROM register WHERE role = 'student' AND status = 'approved'";
+$student_query = "SELECT COUNT(*) AS total_student FROM student WHERE role = 'student'";
 $student_result = mysqli_query($conn, $student_query);
 $data = mysqli_fetch_assoc($student_result );
 $totalstudent = $data['total_student'];
@@ -119,8 +119,8 @@ $totalsubject = $data['total_subject'];
               </a>
             </li>
             <li>
-              <a href="superadmin-facultyapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
+              <a href="superadmin-facultycreation.php">
+                <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
           </ul>
@@ -138,8 +138,8 @@ $totalsubject = $data['total_subject'];
               </a>
             </li>
             <li>
-              <a href="superadmin-studentapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
+              <a href="superadmin-studentcreation.php">
+                <i class="bi bi-circle"></i><span>Add New Student</span>
               </a>
             </li>
           </ul>

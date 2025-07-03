@@ -19,21 +19,21 @@ $max_subjects = 9; // example limit
 
 // Query to get students with less than the maximum number of subjects
 // This query counts the number of subjects each student is enrolled in and filters those with less than the maximum allowed
-$query = "  SELECT r.idnumber, r.first_name, r.mid_name, r.last_name, r.department, r.role, COUNT(ss.subject_code) AS subject_count
-            FROM register r
-            LEFT JOIN student_subject ss ON r.idnumber = ss.student_id
-            WHERE r.role = 'student' AND r.status = 'approved'
-            GROUP BY r.idnumber
+$query = "  SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.department, s.role, COUNT(ss.subject_code) AS subject_count
+            FROM student s
+            LEFT JOIN student_subject ss ON s.idnumber = ss.student_id
+            WHERE s.role = 'student'
+            GROUP BY s.idnumber
             HAVING subject_count < $max_subjects 
-            ORDER BY r.department";
+            ORDER BY s.department";
 
 $result = mysqli_query($conn, $query);
 
 // Query to get subjects and their associated faculty
 // This query retrieves all subjects along with the faculty who teaches them
-$subject_query = " SELECT s.code, s.title, s.faculty_id, r.first_name, r.last_name
-                    FROM subject s
-                    LEFT JOIN register r ON s.faculty_id = r.idnumber";
+$subject_query = " SELECT ss.code, ss.title, ss.faculty_id, f.first_name, f.last_name
+                    FROM subject ss
+                    LEFT JOIN faculty f ON ss.faculty_id = f.idnumber";
 
 $subject_result = mysqli_query($conn, $subject_query);
 
@@ -125,8 +125,8 @@ $subject_result = mysqli_query($conn, $subject_query);
             </a>
           </li>
           <li>
-            <a href="superadmin-facultyapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
+            <a href="superadmin-facultycreation.php">
+              <i class="bi bi-circle"></i><span>Add New Faculty</span>
             </a>
           </li>
         </ul>
