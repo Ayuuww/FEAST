@@ -31,9 +31,13 @@ $result = mysqli_query($conn, $query);
 
 // Query to get subjects and their associated faculty
 // This query retrieves all subjects along with the faculty who teaches them
-$subject_query = " SELECT ss.code, ss.title, ss.faculty_id, f.first_name, f.last_name
+$subject_query = "  SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
+                    COALESCE(f.first_name, a.first_name) AS first_name,
+                    COALESCE(f.last_name, a.last_name) AS last_name
                     FROM subject ss
-                    LEFT JOIN faculty f ON ss.faculty_id = f.idnumber";
+                    LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
+                    LEFT JOIN admin a ON ss.admin_id = a.idnumber";
+
 
 $subject_result = mysqli_query($conn, $subject_query);
 
@@ -278,13 +282,16 @@ $subject_result = mysqli_query($conn, $subject_query);
                           <?php
                           $subjects_by_faculty = [];
                           while ($subject = mysqli_fetch_assoc($subject_result)) {
-                              $faculty_name = $subject['first_name'] . ' ' . $subject['last_name'];
-                              $subjects_by_faculty[$faculty_name][] = $subject;
+                              $instructor_name = trim($subject['first_name'] . ' ' . $subject['last_name']);
+                              $subjects_by_faculty[$instructor_name][] = $subject;
+
                           }
                           foreach ($subjects_by_faculty as $faculty => $subjects): ?>
                             <optgroup label="Instructor: <?= htmlspecialchars($faculty) ?>">
                               <?php foreach ($subjects as $sub): ?>
-                                <option value="<?= $sub['code'] ?>" data-faculty-id="<?= $sub['faculty_id'] ?>">
+                                <option value="<?= $sub['code'] ?>" 
+                                  data-faculty-id="<?= $sub['faculty_id'] ?? '' ?>" 
+                                  data-admin-id="<?= $sub['admin_id'] ?? '' ?>">
                                   <?= $sub['code'] . ": " . $sub['title'] ?>
                                 </option>
                               <?php endforeach; ?>
@@ -295,7 +302,9 @@ $subject_result = mysqli_query($conn, $subject_query);
                       </div>
                     </div>
                     <!-- Hidden Faculty ID -->
-                    <input type="hidden" name="faculty_id" id="faculty_id_hidden">
+                     <input type="hidden" name="faculty_id" id="faculty_id_hidden">
+                     <input type="hidden" name="admin_id" id="admin_id_hidden">
+
                     <!-- End Subject Selection -->
 
 
@@ -345,41 +354,45 @@ $subject_result = mysqli_query($conn, $subject_query);
   <script src="assets/js/main.js"></script>
 
  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Department filter logic
-    const departmentFilter = document.getElementById("departmentFilter");
-    const studentSelect = document.getElementById("student_id");
-    const allGroups = Array.from(studentSelect.querySelectorAll("optgroup"));
+    document.addEventListener("DOMContentLoaded", function () {
+      // Elements
+      const departmentFilter = document.getElementById("departmentFilter");
+      const studentSelect = document.getElementById("student_id");
+      const allGroups = Array.from(studentSelect.querySelectorAll("optgroup"));
 
-    departmentFilter.addEventListener("change", function () {
-      const selectedDept = this.value;
+      const subjectSelect = document.getElementById("subject_code");
+      const hiddenFaculty = document.getElementById("faculty_id_hidden");
+      const hiddenAdmin = document.getElementById("admin_id_hidden");
 
-      allGroups.forEach(group => {
-        if (!selectedDept || group.getAttribute("data-department") === selectedDept) {
-          group.style.display = "";
-        } else {
-          group.style.display = "none";
-        }
+      // Department filtering logic
+      departmentFilter.addEventListener("change", function () {
+        const selectedDept = this.value;
+
+        allGroups.forEach(group => {
+          const groupDept = group.getAttribute("data-department");
+          group.style.display = (!selectedDept || selectedDept === groupDept) ? "block" : "none";
+        });
+
+        // Reset student selection
+        studentSelect.selectedIndex = 0;
       });
 
-      studentSelect.value = "";
+      // Subject selection logic
+      subjectSelect.addEventListener("change", function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const facultyId = selectedOption.getAttribute("data-faculty-id");
+        const adminId = selectedOption.getAttribute("data-admin-id");
+
+        hiddenFaculty.value = facultyId ?? "";
+        hiddenAdmin.value = adminId ?? "";
+
+        console.log("Selected subject:", selectedOption.value);
+        console.log("Faculty ID:", facultyId);
+        console.log("Admin ID:", adminId);
+      });
     });
+  </script>
 
-    // Subject selection logic to set hidden faculty_id
-    const subjectSelect = document.getElementById("subject_code");
-    const hiddenFaculty = document.getElementById("faculty_id_hidden");
-
-    subjectSelect.addEventListener("change", function () {
-      const selectedOption = this.options[this.selectedIndex];
-      const facultyId = selectedOption.getAttribute("data-faculty-id");
-      hiddenFaculty.value = facultyId;
-
-      // Debugging (optional)
-      console.log("Selected subject:", selectedOption.value);
-      console.log("Faculty ID set to:", facultyId);
-    });
-  });
-</script>
 
 
 

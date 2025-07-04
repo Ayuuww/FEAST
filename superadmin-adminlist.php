@@ -195,7 +195,7 @@ $result = mysqli_query($conn, $query);
           <div class="col-lg-12">
 
             <div class="card">
-              <div class="card-body">
+              <div class="card-body table-responsive">
                 <h5 class="card-title">Datatables</h5>
 
                 <!-- Table with stripped rows -->
@@ -210,6 +210,8 @@ $result = mysqli_query($conn, $query);
                       <th>Last Name</th>
                       <th>Email</th>
                       <th>Department</th>
+                      <th>Position</th>
+                      <th>Faculty?</th>
                       <th>Action</th>
                     </tr>
                   </thead>
@@ -224,6 +226,8 @@ $result = mysqli_query($conn, $query);
                           <td><?php echo $row['last_name'];?></td>
                           <td><?php echo $row['email'];?></td>
                           <td class="text-uppercase"><?php echo $row['department'];?></td>
+                          <td class="text-capitalize"><?php echo $row['position'];?></td>
+                          <td class="text-capitalize"><?php echo $row['faculty'];?></td>
                           <td>
                             <a class="btn btn-primary btn-sm">View</a>
                             <a class="btn btn-warning btn-sm">Edit</a>

@@ -11,6 +11,9 @@ if (isset($_POST['submit'])) {
     $email      = $_POST['email'];
     $password   = $_POST['password'];
     $department = $_POST['department'];
+    $position   = $_POST['position'];
+    $faculty    = $_POST['faculty'];
+
 
     // Check if admin with same ID already exists
     $check_query            = "SELECT * FROM admin WHERE idnumber = '$id'";
@@ -23,21 +26,25 @@ if (isset($_POST['submit'])) {
     }
 
     // Proceed with insertion
-    $sql    = "INSERT INTO admin   (   idnumber, 
-                                    first_name, 
-                                    mid_name, 
-                                    last_name, 
-                                    email, 
-                                    password, 
-                                    department)
+    $sql    = "INSERT INTO admin   (    idnumber, 
+                                        first_name, 
+                                        mid_name, 
+                                        last_name, 
+                                        email, 
+                                        password, 
+                                        department,
+                                        position,
+                                        faculty)
 
-                VALUES          (   '$id', 
-                                    '$first_name', 
-                                    '$mid_name', 
-                                    '$last_name', 
-                                    '$email', 
-                                    '$password', 
-                                    '$department')";
+                    VALUES          (   '$id', 
+                                        '$first_name', 
+                                        '$mid_name', 
+                                        '$last_name', 
+                                        '$email', 
+                                        '$password', 
+                                        '$department',
+                                        '$position',
+                                        '$faculty')";
 
     if (mysqli_query($conn, $sql)) {
         $_SESSION['msg']    = 'Admin account successfully created.';

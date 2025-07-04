@@ -10,9 +10,20 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Fetching subjects and faculty names
-$query = "SELECT subject.*, faculty.first_name, faculty.mid_name, faculty.last_name 
-          FROM subject 
-          JOIN faculty ON subject.faculty_id = faculty.idnumber";
+$query = "  SELECT subject.*,
+       COALESCE(faculty.first_name, admin.first_name) AS first_name,
+       COALESCE(faculty.mid_name, admin.mid_name) AS mid_name,
+       COALESCE(faculty.last_name, admin.last_name) AS last_name,
+       CASE
+           WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
+           WHEN subject.admin_id IS NOT NULL THEN 'Admin'
+           ELSE 'Unknown'
+       END AS handler_role
+FROM subject
+LEFT JOIN faculty ON subject.faculty_id = faculty.idnumber
+LEFT JOIN admin ON subject.admin_id = admin.idnumber
+ ";
+
 $result = mysqli_query($conn, $query);
 
 // Display messages if set
@@ -205,7 +216,7 @@ if (isset($_SESSION['msg'])) {
         <div class="col-lg-12">
 
           <div class="card">
-            <div class="card-body">
+            <div class="card-body table-responsive">
               <h5 class="card-title">Datatables</h5>
 
               <!-- Table with stripped rows -->
@@ -222,21 +233,22 @@ if (isset($_SESSION['msg'])) {
                 </thead>
                 <tbody>
                   <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td class="text-uppercase" ><?php echo $row['code'];?></td>
-                        <td class="text-capitalize" ><?php echo $row['title'];?></td>
-                        <td class="text-capitalize" ><?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name'];?></td>
+                    <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+                      <tr>
+                        <td class="text-uppercase"><?php echo $row['code']; ?></td>
+                        <td class="text-capitalize"><?php echo $row['title']; ?></td>
+                        <td class="text-capitalize">
+                          <?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name']; ?>
+                          <small class="text-muted">(<?php echo $row['handler_role']; ?>)</small>
+                        </td>
                         <td>
-                      <form method="post" style="display:inline;" action="deletesubject.php">
-                        <input type="hidden" name="code" value="<?php echo $row['code']; ?>">
-                        <button class="btn btn-danger btn-sm" name="delete" type="submit">Delete</button>
-                      </form>
-                        </tr>
-                    <?php
-                      }
-                       ?>
+                          <form method="post" style="display:inline;" action="deletesubject.php">
+                            <input type="hidden" name="code" value="<?php echo $row['code']; ?>">
+                            <button class="btn btn-danger btn-sm" name="delete" type="submit">Delete</button>
+                          </form>
+                        </td>
+                      </tr>
+                    <?php } ?>
                   </tr>
                 </tbody>
               </table>

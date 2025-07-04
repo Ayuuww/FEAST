@@ -239,7 +239,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Email -->
-                      <div class="col-4">
+                      <div class="col-md-4">
                           <div class="form-floating">
                               <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
                               <label for="yourEmail" class="form-label">Email</label>
@@ -247,7 +247,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Password -->
-                      <div class="col-2">
+                      <div class="col-md-2">
                           <div class="form-floating">
                               <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" readonly>
                               <label for="yourEmail" class="form-label">Default Password</label>
@@ -264,7 +264,7 @@ $query = "SELECT * FROM superadmin";
                       </div> -->
 
                       <!-- Faculty Rank -->
-                      <div class="col-3">
+                      <div class="col-md-2">
                           <div class="form-floating">
                               <select class="form-select" name="faculty_rank" required>
                                   <option value="" disabled selected>Select Rank</option>
@@ -292,7 +292,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Department -->
-                      <div class="col-3">
+                      <div class="col-md-3">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                   <option value="" disabled selected>Select Department</option>

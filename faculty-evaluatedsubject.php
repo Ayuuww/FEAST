@@ -14,14 +14,14 @@ $faculty_id = $_SESSION['idnumber'];
 $query = "SELECT 
             e.subject_code,
             s.title AS subject_title,
-            e.school_year,
+            e.academic_year,
             e.semester,
             COUNT(e.id) AS total_evaluations
           FROM evaluation e
           JOIN subject s ON e.subject_code = s.code AND e.faculty_id = s.faculty_id
           WHERE e.faculty_id = ?
-          GROUP BY e.subject_code, s.title, e.school_year, e.semester
-          ORDER BY e.school_year DESC, e.semester DESC";
+          GROUP BY e.subject_code, s.title, e.academic_year, e.semester
+          ORDER BY e.academic_year DESC, e.semester DESC";
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $faculty_id);
@@ -62,7 +62,7 @@ $result = $stmt->get_result();
         </li><!-- End Dashboard Nav -->
 
         <!-- Evaluate Nav -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -78,7 +78,7 @@ $result = $stmt->get_result();
               </a>
             </li>
           </ul>
-        </li><!-- End Evaluate Nav -->
+        </li>End Evaluate Nav -->
 
         <li class="nav-item">
           <a class="nav-link collapse" href="faculty-evaluatedsubject.php">
@@ -145,7 +145,7 @@ $result = $stmt->get_result();
                                 <td><?= htmlspecialchars($row['subject_code']) ?></td>
                                 <td><?= htmlspecialchars($row['subject_title']) ?></td>
                                 <td><?= htmlspecialchars($row['semester']) ?></td>
-                                <td><?= htmlspecialchars($row['school_year']) ?></td>
+                                <td><?= htmlspecialchars($row['academic_year']) ?></td>
                                 <td><?= $row['total_evaluations'] ?></td>
                             </tr>
                             <?php endwhile; ?>

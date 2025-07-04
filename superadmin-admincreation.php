@@ -239,7 +239,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Email -->
-                      <div class="col-6">
+                      <div class="col-md-4">
                           <div class="form-floating">
                               <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
                               <label for="yourEmail" class="form-label">Email</label>
@@ -247,25 +247,39 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Password -->
-                      <div class="col-md-3">
+                      <div class="col-md-2">
                           <div class="form-floating">
-                              <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
-                              <label class="form-label">Password</label>
-                              <div class="invalid-feedback">Password must be at least 8 characters!</div>
+                              <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" readonly>
+                              <label for="yourEmail" class="form-label">Default Password</label>
                           </div>
                       </div>
 
-                      <!-- Confirm Password -->
+                      <!-- Confirm Password
                       <div class="col-md-3">
                           <div class="form-floating">
                               <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
                               <div class="invalid-feedback" id="mess">Password do not match</div>
                               <label class="form-label">Confirm Password</label>
                           </div>
+                      </div> -->
+
+                      <!-- Department -->
+                      <div class="col-md-4">
+                          <div class="form-floating">
+                              <select class="form-select" name="position" required>
+                                  <option value="" disabled selected>-- Select Position --</option>
+                                  <option value="Vice-President">Vice-President</option>
+                                  <option value="Chancelor">Chancelor</option>
+                                  <option value="Campus-Administrator">Campus-Administrator</option>
+                                  <option value="Dean">Dean</option>
+                                  <option value="Director">Director</option>
+                              </select>
+                              <label for="department">Position</label>
+                          </div>
                       </div>
 
                       <!-- Department -->
-                      <div class="col-4 offset-4">
+                      <div class="col-md-2">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                   <option value="" disabled selected>Select Department</option>
@@ -274,6 +288,18 @@ $query = "SELECT * FROM superadmin";
                                   <option value="CVM">CVM</option>
                               </select>
                               <label for="department">Department</label>
+                          </div>
+                      </div>
+
+                      <!-- Is it Faculty? -->
+                      <div class="col-md-2 offset-5">
+                          <div class="form-floating">
+                              <select class="form-select" name="faculty" required>
+                                  <option value="" disabled selected>-- Select --</option>
+                                  <option value="yes">Yes</option>
+                                  <option value="no">No</option>
+                              </select>
+                              <label for="department">Is it Faculty Member?</label>
                           </div>
                       </div>
 

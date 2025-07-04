@@ -8,7 +8,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
     exit();
 }
 
-$query = "SELECT * FROM register WHERE role = 'faculty'";
+$query = "SELECT * FROM faculty WHERE role = 'faculty'";
 $result = mysqli_query($conn, $query);
 
 
@@ -42,7 +42,7 @@ $result = mysqli_query($conn, $query);
         </li><!-- End Dashboard Nav -->
 
         <!-- Evaluate Nav -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -58,7 +58,7 @@ $result = mysqli_query($conn, $query);
               </a>
             </li>
           </ul>
-        </li><!-- End Evaluate Nav -->
+        </li>End Evaluate Nav -->
 
         <li class="nav-item">
           <a class="nav-link collapsed" href="faculty-evaluatedsubject.php">

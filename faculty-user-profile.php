@@ -28,14 +28,14 @@ include 'conn/conn.php';// Connection to the database
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="student-dashboard.php">
+          <a class="nav-link collapsed" href="faculty-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
         </li><!-- End Dashboard Nav -->
 
         <!-- Evaluate Nav -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -51,7 +51,7 @@ include 'conn/conn.php';// Connection to the database
               </a>
             </li>
           </ul>
-        </li><!-- End Evaluate Nav -->
+        </li>End Evaluate Nav -->
 
         <li class="nav-item">
           <a class="nav-link collapsed" href="faculty-evaluatedsubject.php">

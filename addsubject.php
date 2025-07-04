@@ -5,37 +5,38 @@ include 'conn/conn.php';// Connection to the database
 if (isset($_POST['addsubject'])) {
     $subject_code   = $_POST['code'];
     $subject_title  = $_POST['title'];
-    $faculty_id     = $_POST['idnumber'];
+    $faculty_id = $_POST['faculty_id'] ?? null;
+    $admin_id = $_POST['admin_id'] ?? null;
 
-    // Check if subject with same code and faculty already exists
-    $check_query = "SELECT * FROM subject WHERE code = '$subject_code' AND faculty_id = '$faculty_id'";
-    $check_result = mysqli_query($conn, $check_query);
+    // Validate: Only one of them should be filled
+    if ($faculty_id && $admin_id) {
+        $_SESSION['msg'] = 'Select either Faculty or Admin, not both.';
+        header("Location: superadmin-subjectadding.php");
+        exit;
+    }
 
-    if (mysqli_num_rows($check_result) > 0) {
-        $_SESSION['msg'] = 'Subject already exists for this faculty!';
-                    header("Location: superadmin-subjectadding.php");
-                    exit;
-    }  else {
-            // Inserting new subject 
-            $query = "INSERT INTO subject ( code, 
-                                            title, 
-                                            faculty_id)
-                                            
-                                VALUES (    '$subject_code', 
-                                            '$subject_title', 
-                                            '$faculty_id')";
-            
-            if (mysqli_query($conn, $query)) {
-                $_SESSION['msg'] = 'Subject added successfully!';
-                    header("Location: superadmin-subjectadding.php");
-                    exit;
+    // Determine which column to insert
+    if ($faculty_id) {
+        $stmt = $conn->prepare("INSERT INTO subject (code, title, faculty_id) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $subject_code, $subject_title, $faculty_id);
+    } elseif ($admin_id) {
+        $stmt = $conn->prepare("INSERT INTO subject (code, title, admin_id) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $subject_code, $subject_title, $admin_id);
+    } else {
+        $_SESSION['msg'] = 'Please select a faculty or admin.';
+        header("Location: superadmin-subjectadding.php");
+        exit;
+    }
 
-            } else {
-                $_SESSION['msg'] = 'Error Adding Subject!';
-                    header("Location: superadmin-subjectadding.php");
-                    exit;
-            }
-        }
-    
+    // Execute
+    if ($stmt->execute()) {
+        $_SESSION['msg'] = 'Subject added successfully!';
+    } else {
+        $_SESSION['msg'] = 'Error Adding Subject!';
+    }
+    header("Location: superadmin-subjectadding.php");
+    exit;
+
 }
+
 ?>

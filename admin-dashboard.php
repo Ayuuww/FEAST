@@ -21,12 +21,12 @@ if ($res->num_rows > 0) {
     $admin_department = $admin_data['department'];
 } else {
     $_SESSION['msg'] = "Admin department not found.";
-    header("Location: logout.php");
+    header("Location: pages-login.php");
     exit();
 }
 
 // Total faculty
-$faculty_query = "SELECT COUNT(*) AS total_faculty FROM register WHERE role = 'faculty' AND department = ?";
+$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE department = ?";
 $stmt = $conn->prepare($faculty_query);
 $stmt->bind_param("s", $admin_department);
 $stmt->execute();
@@ -34,7 +34,7 @@ $faculty_result = $stmt->get_result();
 $totalfaculty = $faculty_result->fetch_assoc()['total_faculty'];
 
 // Total students
-$student_query = "SELECT COUNT(*) AS total_student FROM register WHERE role = 'student' AND department = ?";
+$student_query = "SELECT COUNT(*) AS total_student FROM student WHERE department = ?";
 $stmt = $conn->prepare($student_query);
 $stmt->bind_param("s", $admin_department);
 $stmt->execute();
@@ -65,7 +65,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapse" href="admin-dashboard.php">
+          <a class="nav-link" href="admin-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -146,7 +146,8 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
                             <img src="icons/teacher.png" alt="Faculty Icon" class="img-fluid" style="max-height: 50px;">
                             </div>
                             <div class="ps-3">
-                            <h6><?php echo $totalfaculty; ?></h6>
+                            <h6><?php echo number_format($totalfaculty); ?></h6>
+
                             </div>
                         </div>
                     </div>
@@ -156,7 +157,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
 
             <!-- Total Student Card -->
             <div class="col-xxl-4 col-xl-12">
-                <div class="card info-card ">
+                <div class="card info-card shadow-sm">
                     <div class="card-body">
                     <h5 class="card-title">Total<span> | Students</span></h5>
                         <div class="d-flex align-items-center">
@@ -164,7 +165,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
                             <img src="icons/students.png" alt="Student Icon" class="img-fluid" style="max-height: 50px;">
                             </div>
                             <div class="ps-3">
-                            <h6><?php echo $totalstudent; ?></h6>
+                            <h6><?php echo number_format($totalstudent); ?></h6>
                             </div>
                         </div>
                     </div>

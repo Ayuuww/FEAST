@@ -195,7 +195,7 @@ $result = mysqli_query($conn, $query);
         <div class="col-lg-12">
 
           <div class="card">
-            <div class="card-body">
+            <div class="card-body table-responsive">
               <h5 class="card-title">Datatables</h5>
 
               <!-- Table with stripped rows -->

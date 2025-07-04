@@ -92,9 +92,9 @@ if (isset($_SESSION['msg'])) {
                     <button class="btn btn-success w-100" name="login">Login</button>
                   </div>
 
-                  <div class="col-12 text-center">
+                  <!-- <div class="col-12 text-center">
                     <p class="small">Don't have account? <a href="pages-register.php">Create an account</a></p>
-                  </div>
+                  </div> -->
 
                 </form>
               </div>

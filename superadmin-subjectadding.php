@@ -15,8 +15,12 @@ if (isset($_SESSION['msg'])) {
     unset($_SESSION['msg']);
   }
 
-$query = "SELECT * FROM faculty WHERE role = 'faculty'";
-$result = mysqli_query($conn, $query);
+// Get real faculty
+$faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM faculty");
+
+// Get admin-as-faculty
+$admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM admin WHERE faculty = 'yes'");
+
 
 
 
@@ -209,7 +213,7 @@ $result = mysqli_query($conn, $query);
                   <form class="row g-3 needs-validation" novalidate method="post" action="addsubject.php">
 
                     <!-- Subject Code -->
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                       <div class="form-floating">
                         <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
                         <label for="idnumber" class="form-label">Subject Code</label>
@@ -225,21 +229,31 @@ $result = mysqli_query($conn, $query);
                     </div>
 
                     <!-- Faculty Name Dropdown -->
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                       <div class="form-floating">
-                        <select class="form-select text-capitalize" name="idnumber" required>
-                          <option value="" disabled selected>Select Faculty Name</option>
-                          <?php
-                            while ($row = mysqli_fetch_assoc($result)) {
-                              $faculty_name = $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name'];
-                              $faculty_id = $row['idnumber']; // The correct foreign key
-                              echo "<option value='$faculty_id'>$faculty_name</option>";
-                            }
-                          ?>
+                        <select name="faculty_id" class="form-select">
+                          <option value="">-- Select Faculty --</option>
+                          <?php while ($f = mysqli_fetch_assoc($faculty_result)): ?>
+                            <option value="<?= $f['idnumber'] ?>"><?= $f['first_name'] ?> <?= $f['last_name'] ?></option>
+                          <?php endwhile; ?>
                         </select>
-                        <label for="faculty_id">Faculty Name</label>
+                        <label for="faculty_id">Faculty</label>
                       </div>
                     </div>
+
+                    <!-- Admin-as-Faculty Dropdown -->
+                    <div class="col-md-2">
+                      <div class="form-floating">
+                        <select name="admin_id" class="form-select">
+                          <option value="">-- Select Admin as Faculty --</option>
+                          <?php while ($a = mysqli_fetch_assoc($admin_result)): ?>
+                            <option value="<?= $a['idnumber'] ?>"><?= $a['first_name'] ?> <?= $a['last_name'] ?></option>
+                          <?php endwhile; ?>
+                        </select>
+                        <label for="admin_id">Faculty as Admin</label>
+                      </div>
+                    </div>
+
                     
                     <!-- Submit -->
                     <div class="col-4 offset-4">
@@ -285,6 +299,27 @@ $result = mysqli_query($conn, $query);
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    const facultySelect = document.querySelector('select[name="faculty_id"]');
+    const adminSelect = document.querySelector('select[name="admin_id"]');
+
+    facultySelect.addEventListener('change', () => {
+      if (facultySelect.value) {
+        adminSelect.disabled = true;
+      } else {
+        adminSelect.disabled = false;
+      }
+    });
+
+    adminSelect.addEventListener('change', () => {
+      if (adminSelect.value) {
+        facultySelect.disabled = true;
+      } else {
+        facultySelect.disabled = false;
+      }
+    });
+  </script>
 
 </body>
 

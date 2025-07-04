@@ -199,7 +199,7 @@ if (isset($_SESSION['msg'])) {
       <div class="row">
         <div class="col-lg-12">
           <div class="card">
-            <div class="card-body">
+            <div class="card-body ">
               <h5 class="card-title">Create New Super Admin</h5>
                 <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
@@ -237,7 +237,7 @@ if (isset($_SESSION['msg'])) {
                   </div>
 
                   <!-- Email -->
-                  <div class="col-6">
+                  <div class="col-md-6">
                       <div class="form-floating">
                           <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
                           <label for="yourEmail" class="form-label">Email</label>
