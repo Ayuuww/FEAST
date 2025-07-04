@@ -179,29 +179,29 @@ if (isset($_SESSION['msg'])) {
                   <form action="submit-evaluation.php" method="POST">
 
                     <div class="row">
-                    <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
-                      <!-- Subject Dropdown -->
-                      <div class="col-md-6 mb-3">
-                        <div class="form-floating">
-                          <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
-                            <option value="" disabled selected>-- Select a Subject --</option>
-                            <?php foreach ($subjects as $row): 
-                              $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
-                              $subjectTitle = htmlspecialchars($row['subject_title']);
-                              $subjectCode  = htmlspecialchars($row['subject_code']);
-                              $facultyId    = htmlspecialchars($row['faculty_id']);
-                            ?>
-                              <option value="<?= $subjectCode . '|' . $facultyId ?>">
-                                <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
-                              </option>
-                            <?php endforeach; ?>
-                          </select>
-                          <label for="subject_code" class="form-label">Subject</label>
+                      <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
+                        <!-- Subject Dropdown -->
+                        <div class="col-md-12 mb-3">
+                          <div class="form-floating">
+                            <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
+                              <option value="" disabled selected>-- Select a Subject --</option>
+                              <?php foreach ($subjects as $row): 
+                                $facultyName  = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
+                                $subjectTitle = htmlspecialchars($row['subject_title']);
+                                $subjectCode  = htmlspecialchars($row['subject_code']);
+                                $facultyId    = htmlspecialchars($row['faculty_id']);
+                              ?>
+                                <option value="<?= $subjectCode . '|' . $facultyId ?>">
+                                  <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
+                                </option>
+                              <?php endforeach; ?>
+                            </select>
+                            <label for="subject_code" class="form-label">Subject</label>
+                          </div>
                         </div>
-                      </div>
                       
                         <!-- School Year Dropdown -->
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                           <div class="form-floating">
                             <select name="academic_year" id="academic_year" class="form-select" required>
                               <option value="" disabled selected>-- Select Academic Year --</option>
@@ -218,7 +218,7 @@ if (isset($_SESSION['msg'])) {
                         </div>
 
                         <!-- Department Dropdown -->
-                        <div class="col-md-3 mb-3">
+                        <div class="col-md-4 mb-3">
                           <div class="form-floating">
                             <select name="department" id="department" class="form-select" required>
                               <option value="" disabled selected>-- Select College --</option>
@@ -229,6 +229,17 @@ if (isset($_SESSION['msg'])) {
                               <?php endforeach; ?>
                             </select>
                             <label for="department" class="form-label">Faculty College</label>
+                          </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                          <div class="form-floating">
+                            <select name="semester" id="semester" class="form-select" required>
+                              <option value="" disabled selected>-- Select Semester --</option>
+                              <option value="1st Semester">1st Semester</option>
+                              <option value="2nd Semester">2nd Semester</option>
+                            </select>
+                            <label for="department" class="form-label">Semester</label>
                           </div>
                         </div>
 

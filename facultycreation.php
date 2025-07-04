@@ -11,6 +11,7 @@ if (isset($_POST['submit'])) {
     $email      = $_POST['email'];
     $password   = $_POST['password'];
     $department = $_POST['department'];
+    $faculty_rank = $_POST['faculty_rank'];
 
     // Check if admin with same ID already exists
     $check_query            = "SELECT * FROM faculty WHERE idnumber = '$id'";
@@ -23,21 +24,23 @@ if (isset($_POST['submit'])) {
     }
 
     // Proceed with insertion
-    $sql    = "INSERT INTO faculty   (   idnumber, 
-                                    first_name, 
-                                    mid_name, 
-                                    last_name, 
-                                    email, 
-                                    password, 
-                                    department)
+    $sql    = "INSERT INTO faculty   (  idnumber, 
+                                        first_name, 
+                                        mid_name, 
+                                        last_name, 
+                                        email, 
+                                        password, 
+                                        department,
+                                        faculty_rank)
 
-                VALUES          (   '$id', 
-                                    '$first_name', 
-                                    '$mid_name', 
-                                    '$last_name', 
-                                    '$email', 
-                                    '$password', 
-                                    '$department')";
+                    VALUES          (   '$id', 
+                                        '$first_name', 
+                                        '$mid_name', 
+                                        '$last_name', 
+                                        '$email', 
+                                        '$password', 
+                                        '$department',
+                                        '$faculty_rank')";
 
     if (mysqli_query($conn, $sql)) {
         $_SESSION['msg']    = 'faculty account successfully created.';

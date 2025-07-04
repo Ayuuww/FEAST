@@ -186,12 +186,12 @@ $query = "SELECT * FROM superadmin";
     <main id="main" class="main">
 
       <div class="pagetitle">
-        <h1>Admin</h1>
+        <h1>Faculty</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-            <li class="breadcrumb-item ">Admin</li>
-            <li class="breadcrumb-item active">Add New Admin</li>
+            <li class="breadcrumb-item ">Faculty</li>
+            <li class="breadcrumb-item active">Add New Faculty</li>
           </ol>
         </nav>
       </div><!-- End Page Title -->
@@ -202,13 +202,13 @@ $query = "SELECT * FROM superadmin";
             <div class="col-lg-12">
               <div class="card">
                 <div class="card-body">
-                  <h5 class="card-title">Create New Admin</h5>
+                  <h5 class="card-title">Create New Faculty</h5>
                     <form class="row g-3 needs-validation" novalidate method="post" action="facultycreation.php">
 
                       <!-- ID Number -->
                       <div class="col-md-3">
                         <div class="form-floating">
-                          <input type="text" name="faculty_id" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
+                          <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
                           <label for="idnumber" class="form-label">ID Number</label>
                           <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
                         </div>
@@ -239,7 +239,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Email -->
-                      <div class="col-6">
+                      <div class="col-4">
                           <div class="form-floating">
                               <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
                               <label for="yourEmail" class="form-label">Email</label>
@@ -247,25 +247,52 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Password -->
-                      <div class="col-md-3">
+                      <div class="col-2">
                           <div class="form-floating">
-                              <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
-                              <label class="form-label">Password</label>
-                              <div class="invalid-feedback">Password must be at least 8 characters!</div>
+                              <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" readonly>
+                              <label for="yourEmail" class="form-label">Default Password</label>
                           </div>
                       </div>
 
-                      <!-- Confirm Password -->
+                      <!-- Confirm Password
                       <div class="col-md-3">
                           <div class="form-floating">
                               <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
                               <div class="invalid-feedback" id="mess">Password do not match</div>
                               <label class="form-label">Confirm Password</label>
                           </div>
+                      </div> -->
+
+                      <!-- Faculty Rank -->
+                      <div class="col-3">
+                          <div class="form-floating">
+                              <select class="form-select" name="faculty_rank" required>
+                                  <option value="" disabled selected>Select Rank</option>
+                                  <option value="Instructor I">Instructor I</option>
+                                  <option value="Instructor II">Instructor II</option>
+                                  <option value="Instructor III">Instructor III</option>
+                                  <option value="Assistant Professor I">Assistant Professor I</option>
+                                  <option value="Assistant Professor II">Assistant Professor II</option>
+                                  <option value="Assistant Professor III">Assistant Professor III</option>
+                                  <option value="Assistant Professor IV">Assistant Professor IV</option>
+                                  <option value="Associate Professor I">Associate Professor I</option>
+                                  <option value="Associate Professor II">Associate Professor II</option>
+                                  <option value="Associate Professor III">Associate Professor III</option>
+                                  <option value="Associate Professor IV">Associate Professor IV</option>
+                                  <option value="Associate Professor V">Associate Professor V</option>
+                                  <option value="Professor I">Professor I</option>
+                                  <option value="Professor II">Professor II</option>
+                                  <option value="Professor III">Professor III</option>
+                                  <option value="Professor IV">Professor IV</option>
+                                  <option value="Professor V">Professor V</option>
+                                  <option value="Professor VI">Professor VI</option>
+                              </select>
+                              <label for="department">Faculty Rank</label>
+                          </div>
                       </div>
 
                       <!-- Department -->
-                      <div class="col-4 offset-4">
+                      <div class="col-3">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                   <option value="" disabled selected>Select Department</option>

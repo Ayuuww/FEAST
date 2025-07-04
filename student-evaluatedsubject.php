@@ -134,6 +134,7 @@ if (isset($_SESSION['msg'])) {
                     <th>Total Score</th>
                     <th>Computed Rating (%)</th>
                     <th>Academic Year</th>
+                    <th>Semester</th>
                     <th>Evaluated On</th>
                   </tr>
                 </thead>
@@ -149,6 +150,7 @@ if (isset($_SESSION['msg'])) {
                         <td><?= htmlspecialchars($row['total_score']) ?></td>
                         <td><?= number_format($row['computed_rating'], 2) ?>%</td>
                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                        <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
                       </tr>
                     <?php endwhile; ?>
