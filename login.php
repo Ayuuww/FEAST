@@ -30,7 +30,7 @@ if ($row = mysqli_fetch_assoc($result3)) {
     $_SESSION['idnumber']   = $row['idnumber'];
     $_SESSION['first_name'] = $row['first_name'];
     $_SESSION['last_name']  = $row['last_name'];
-    $_SESSION['department']    = $row['department'];
+    $_SESSION['department'] = $row['department'];
     $_SESSION['role']       = 'admin';
     header("Location: admin-dashboard.php");
     exit();
@@ -41,11 +41,11 @@ $query1  = "SELECT * FROM faculty WHERE idnumber='$id' AND password='$password'"
 $result1 = mysqli_query($conn, $query1);
 
 if ($row = mysqli_fetch_assoc($result1)) {
-    $_SESSION['idnumber']   = $row['idnumber'];
-    $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name'] = $row['last_name'];
-    $_SESSION['department']    = $row['department'];
-    $_SESSION['role']       = $row['role'];
+    $_SESSION['idnumber']       = $row['idnumber'];
+    $_SESSION['first_name']     = $row['first_name'];
+    $_SESSION['last_name']      = $row['last_name'];
+    $_SESSION['department']     = $row['department'];
+    $_SESSION['role']           = $row['role'];
 
     header("Location: faculty-dashboard.php");
     exit();
@@ -61,7 +61,7 @@ if ($row = mysqli_fetch_assoc($result)) {
     $_SESSION['last_name']  = $row['last_name'];
     $_SESSION['role']       = $row['role'];
     $_SESSION['section']    = $row['section'];
-    $_SESSION['department']    = $row['department'];
+    $_SESSION['department'] = $row['department'];
 
     header("Location: student-dashboard.php");
     exit();

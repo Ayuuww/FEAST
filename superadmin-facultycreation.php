@@ -264,7 +264,7 @@ $query = "SELECT * FROM superadmin";
                       </div> -->
 
                       <!-- Faculty Rank -->
-                      <div class="col-md-2">
+                      <div class="col-md-3">
                           <div class="form-floating">
                               <select class="form-select" name="faculty_rank" required>
                                   <option value="" disabled selected>Select Rank</option>

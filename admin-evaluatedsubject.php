@@ -1,47 +1,41 @@
-<<?php
+<?php
 session_start();
-include 'conn/conn.php'; // DB connection
+include 'conn/conn.php';// Connection to the database
 
-// Check if the user is logged in and is an admin
+// Check if the user is logged in and is a student
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Get admin department
-$admin_id = $_SESSION['idnumber'];
-$dept_query = "SELECT department FROM admin WHERE idnumber = ?";
-$stmt = $conn->prepare($dept_query);
-$stmt->bind_param("s", $admin_id);
-$stmt->execute();
-$res = $stmt->get_result();
+// Fetching the faculty subjects evaluated
+$faculty_id = $_SESSION['idnumber'];
 
-if ($res->num_rows > 0) {
-    $admin_data = $res->fetch_assoc();
-    $admin_department = $admin_data['department'];
-} else {
-    $_SESSION['msg'] = "Admin department not found.";
-    header("Location: pages-login.php");
-    exit();
-}
+$query = "  SELECT 
+                e.subject_code,
+                s.title AS subject_title,
+                e.academic_year,
+                e.semester,
+                COUNT(e.id) AS total_evaluations
+            FROM evaluation e
+            JOIN subject s 
+                ON e.subject_code = s.code 
+                AND (e.faculty_id = s.faculty_id OR e.faculty_id = s.admin_id)
+            WHERE e.faculty_id = ?
+            GROUP BY e.subject_code, s.title, e.academic_year, e.semester
+            ORDER BY e.academic_year DESC, e.semester DESC";
 
-// Total faculty
-$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE department = ?";
-$stmt = $conn->prepare($faculty_query);
-$stmt->bind_param("s", $admin_department);
-$stmt->execute();
-$faculty_result = $stmt->get_result();
-$totalfaculty = $faculty_result->fetch_assoc()['total_faculty'];
 
-// Total students
-$student_query = "SELECT COUNT(*) AS total_student FROM student WHERE department = ?";
-$stmt = $conn->prepare($student_query);
-$stmt->bind_param("s", $admin_department);
+$stmt = $conn->prepare($query);
+$stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$student_result = $stmt->get_result();
-$totalstudent = $student_result->fetch_assoc()['total_student'];
+$result = $stmt->get_result();
+
+
+
+
+
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -49,14 +43,13 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Home </title>
+  <title>FEAST / Subjects </title>
 
   <?php include 'header.php' ?>
   
 
   </head>
   <body>
-    
     <?php include 'admin-header.php'?>
     
     <!-- ======= Sidebar ======= -->
@@ -65,7 +58,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link" href="admin-dashboard.php">
+          <a class="nav-link collapsed" href="admin-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -91,7 +84,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
         </li><!-- End Evaluate Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
+          <a class="nav-link collapse" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Subject</span>
           </a>
@@ -114,6 +107,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
         </li><!-- End Sign out Nav -->
 
 
+
       </ul>
 
     </aside><!-- End Sidebar-->
@@ -121,56 +115,54 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
     <main id="main" class="main">
 
       <div class="pagetitle">
-        <h1>Dashboard</h1>
-
+        <h1>Subjects</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item active">Dashboard</li>
+            <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active">Subject</li>
           </ol>
         </nav>
       </div><!-- End Page Title -->
 
       <section class="section dashboard">
         <div class="row">
-            
 
-            <!-- Total Faculty Card -->
-            <div class="col-xxl-4 col-md-6">
-                <div class="card info-card ">
-                    
-                    <div class="card-body">
-                    <h5 class="card-title">Total<span> | Faculty Members</span></h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                            <img src="icons/teacher.png" alt="Faculty Icon" class="img-fluid" style="max-height: 50px;">
-                            </div>
-                            <div class="ps-3">
-                            <h6><?php echo number_format($totalfaculty); ?></h6>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Evaluated Subjects You Handle</h5>
 
-                            </div>
-                        </div>
+                    <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <th>Subject Code</th>
+                            <th>Title</th>
+                            <th>Semester</th>
+                            <th>School Year</th>
+                            <th>Total Evaluations</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php if ($result->num_rows > 0): ?>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($row['subject_code']) ?></td>
+                                <td><?= htmlspecialchars($row['subject_title']) ?></td>
+                                <td><?= htmlspecialchars($row['semester']) ?></td>
+                                <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                                <td><?= $row['total_evaluations'] ?></td>
+                            </tr>
+                            <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                    <td colspan="6" class="text-center">No evaluations have been submitted for your subjects yet. ( For Admin-as-FacultyOnly )</td>
+                                    </tr>
+                                <?php endif; ?>
+                        </tbody>
+                    </table>
                     </div>
-
                 </div>
-            </div><!-- End Total Faculty Card -->
-
-            <!-- Total Student Card -->
-            <div class="col-xxl-4 col-xl-12">
-                <div class="card info-card shadow-sm">
-                    <div class="card-body">
-                    <h5 class="card-title">Total<span> | Students</span></h5>
-                        <div class="d-flex align-items-center">
-                            <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-                            <img src="icons/students.png" alt="Student Icon" class="img-fluid" style="max-height: 50px;">
-                            </div>
-                            <div class="ps-3">
-                            <h6><?php echo number_format($totalstudent); ?></h6>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div><!-- End Total Student Card -->
+            </div>
 
         </div>
       </section>

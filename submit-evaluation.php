@@ -29,6 +29,16 @@ $sub_stmt->bind_result($subject_title);
 $sub_stmt->fetch();
 $sub_stmt->close();
 
+$student_section = '';
+$sec_query = "SELECT section FROM student WHERE idnumber = ?";
+$sec_stmt = $conn->prepare($sec_query);
+$sec_stmt->bind_param("s", $student_id);
+$sec_stmt->execute();
+$sec_stmt->bind_result($student_section);
+$sec_stmt->fetch();
+$sec_stmt->close();
+
+
 // Compute total score and check all answered
 $total_score = 0;
 $question_count = 0;
@@ -53,12 +63,13 @@ $percentage = ($total_score / 75) * 100;
 $query = "INSERT INTO evaluation (
     student_id, faculty_id, subject_code, subject_title,
     department, academic_year, semester,
-    total_score, computed_rating, comment
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    total_score, computed_rating, comment, student_section
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param(
-    "sssssssdds",
+    "sssssssddss",
     $student_id,
     $faculty_id,
     $subject_code,
@@ -68,8 +79,10 @@ $stmt->bind_param(
     $semester,
     $total_score,
     $percentage,
-    $comment
+    $comment,
+    $student_section
 );
+
 
 if ($stmt->execute()) {
     // Store data for evaluated-print.php

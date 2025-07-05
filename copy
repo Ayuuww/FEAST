@@ -1,0 +1,182 @@
+<div class="table-responsive ">
+                      <table class="table table-bordered text-center align-middle small">
+                        <thead class="table-light">
+                          <tr>
+                            <th class="text-start">Benchmark Statements</th>
+                            <th class="text-start">Suggested Means of Verification</th>
+                            <?php for ($i = 5; $i >= 1; $i--): ?>
+                              <th><?= $i ?></th>
+                            <?php endfor; ?>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th>A. Management of Teaching and Learning</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                          </tr>
+                        </tbody>
+                        <tbody>
+                          <?php
+                          $benchmarks = [
+                            [
+                              'statement' => '1. Comes to class on time regularly.',
+                              'verification' => '• Daily time record<br>• Faculty schedule and timetable<br>• Informal interview with students',
+                              'name' => 'q1'
+                            ],
+                            [
+                              'statement' => '2. Submits updated syllabus, grade sheets, and other required reports on time.',
+                              'verification' => '• Documents submission log<br>• Submission Receipts or Acknowledgment Emails',
+                              'name' => 'q2'
+                            ],
+                            [
+                              'statement' => '3. Maximizes the allocated time/learning hours effectively.',
+                              'verification' => '• Course syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs',
+                              'name' => 'q3'
+                            ],
+                            [
+                              'statement' => '4. Provide appropriate learning activities that facilitate critical thinking and creativity of students.',
+                              'verification' => '• Course Syllabus<br>• LMS Logs<br>• Informal interview with students',
+                              'name' => 'q4'
+                            ],
+                            [
+                              'statement' => '5. Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.',
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• Student Work Samples<br>• Classroom Observation<br>• LMS Logs<br>• Informal interview with students<br>• Faculty Consultation Log<br>',
+                              'name' => 'q5'
+                            ],
+                            [
+                              'statement' => '6. Communicates constructive feedback to students for their academic growth.',
+                              'verification' => '• Graded Student Work with Feedback<br>• Faculty Consultation Log<br>• Informal interview with students<br>• Emails or Official correspondence<br>• LMS Logs<br>•',
+                              'name' => 'q6'
+                            ]
+                            
+                          ];
+                          foreach ($benchmarks as $item):
+                          ?>
+                            <tr>
+                              <td class="text-start"><?= $item['statement'] ?></td>
+                              <td class="text-start"><?= $item['verification'] ?></td>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <td>
+                                  <input type="radio" name="<?= $item['name'] ?>" value="<?= $i ?>" required>
+                                </td>
+                              <?php endfor; ?>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                        <tbody>
+                          <tr>
+                            <th>B. Content Knowledge, Pedagogy and Technology</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                          </tr>
+                        </tbody>
+                        <tbody>
+                          <?php
+                          $benchmarks = [
+                            [
+                              'statement' => '7. Demonstrates extensive and broad knowledge of the subject/course.',
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• IMs developed by the faculty<br>• Informal interview with students<br>• Mentorship or Thesis/Dissertation Advisory records',
+                              'name' => 'q7'
+                            ],
+                            [
+                              'statement' => '8. Simplifies complex ideas in the lesson for ease of understanding.',
+                              'verification' => '• Learning Plan<br>• Course Syllabus<br>• Classroom Observation<br>• Informal interview with students<br>• Lecture notes and presentations<br>• LMS Logs',
+                              'name' => 'q8'
+                            ],
+                            [
+                              'statement' => '9. Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.',
+                              'verification' => '• Course syllabus<br>• Learning Plan<br>• Classroom Observation<br>• LMS Logs<br>• IMs developed by the faculty<br>• Participation in Conferences, Webinars, and Training',
+                              'name' => 'q9'
+                            ],
+                            [
+                              'statement' => '10. Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT tools and platforms.',
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs<br>• Multimedia Lecture Materials<br>• Student Work Samples<br>',
+                              'name' => 'q10'
+                            ],
+                            [
+                              'statement' => '11. Uses appropriate assessments (projects, exams, quizzes, assignments, etc.) aligned with the learning outcomes.',
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• Informal interview with students<br>• Assessment tools and rubrics<br>• Exam and Quiz Samples<br>• Graded Student Work Samples<br>• LMS records',
+                              'name' => 'q11'
+                            ]
+                            
+                          ];
+                          foreach ($benchmarks as $item):
+                          ?>
+                            <tr>
+                              <td class="text-start"><?= $item['statement'] ?></td>
+                              <td class="text-start"><?= $item['verification'] ?></td>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <td>
+                                  <input type="radio" name="<?= $item['name'] ?>" value="<?= $i ?>" required>
+                                </td>
+                              <?php endfor; ?>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                        <tbody>
+                          <tr>
+                            <th>C. Commitment and Transparency</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                          </tr>
+                        </tbody>
+                        <tbody>
+                          <?php
+                          $benchmarks = [
+                            [
+                              'statement' => '12. Recognizes and values the unique diversity and individual differences among students.',
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• IMs developed by the faculty<br>• Classroom Observation <br>•  Informal interview with students',
+                              'name' => 'q12'
+                            ],
+                            [
+                              'statement' => '13. Assists students with their learning challenges during consultation hours.',
+                              'verification' => '• Course Syllabus<br>• Faculty Consultation Log<br>• Advisory Records<br>• LMS Logs<br>• Emails or Official Correspondence',
+                              'name' => 'q13'
+                            ],
+                            [
+                              'statement' => '14. Provides immediate feedback on student outputs and performance.',
+                              'verification' => '• Graded Student Work Samples<br>• Assessment tools and rubrics<br>• Informal interview with students<br>• LMS Logs<br>• Emails or Official Correspondence<br>• Faculty Consultation Log<br>• Advising Reports',
+                              'name' => 'q14'
+                            ],
+                            [
+                              'statement' => "15. Provides transparent and clear criteria in rating student's performance.",
+                              'verification' => '• Course Syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs<br>• Multimedia Lecture Materials<br>• Student Work Samples<br>',
+                              'name' => 'q15'
+                            ]
+                            
+                          ];
+                          foreach ($benchmarks as $item):
+                          ?>
+                            <tr>
+                              <td class="text-start"><?= $item['statement'] ?></td>
+                              <td class="text-start"><?= $item['verification'] ?></td>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <td>
+                                  <input type="radio" name="<?= $item['name'] ?>" value="<?= $i ?>" required>
+                                </td>
+                              <?php endfor; ?>
+                            </tr>
+                          <?php endforeach; ?>
+                        </tbody>
+                        <thead class="table-light">
+                                <tr>
+                                  <th class="text-start">Total Score</th>
+                                  <th></th>
+                                  <th colspan="5" id="totalScore" class="text-center text-danger fs-5">0</th>
+                                </tr>
+                        </thead>
+                      </table>
+                    </div>

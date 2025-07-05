@@ -15,23 +15,36 @@ $student_id   = $_SESSION['idnumber'];
 $academic_year  = $_GET['sy'] ?? '';
 $semester     = $_GET['sem'] ?? '';
 
-$query = "SELECT 
+$query = "  SELECT 
             s.code AS subject_code,
             s.title AS subject_title,
-            s.faculty_id,
-            f.first_name, f.mid_name, f.last_name
+            COALESCE(f.idnumber, a.idnumber) AS faculty_id,
+            COALESCE(f.first_name, a.first_name) AS first_name,
+            COALESCE(f.mid_name, a.mid_name) AS mid_name,
+            COALESCE(f.last_name, a.last_name) AS last_name,
+            CASE 
+              WHEN f.idnumber IS NOT NULL THEN 'faculty'
+              WHEN a.idnumber IS NOT NULL THEN 'admin'
+              ELSE 'unknown'
+            END AS role
           FROM student_subject ss
-          JOIN subject s ON ss.subject_code = s.code AND ss.faculty_id = s.faculty_id
-          JOIN faculty f ON ss.faculty_id  = f.idnumber
+          JOIN subject s 
+            ON ss.subject_code = s.code 
+          LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
+          LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.faculty = 'yes'
           WHERE ss.student_id = ?
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
               WHERE e.student_id    = ss.student_id 
                 AND e.subject_code  = ss.subject_code
-                AND e.faculty_id    = ss.faculty_id
-                AND e.academic_year   = ?
+                AND e.faculty_id    = COALESCE(ss.faculty_id, ss.admin_id)
+                AND e.academic_year = ?
                 AND e.semester      = ?
             )";
+
+
+
+
 
 $stmt   = $conn->prepare($query);
 $stmt->bind_param("sss", $student_id, $academic_year, $semester);
@@ -190,10 +203,16 @@ if (isset($_SESSION['msg'])) {
                                 $subjectTitle = htmlspecialchars($row['subject_title']);
                                 $subjectCode  = htmlspecialchars($row['subject_code']);
                                 $facultyId    = htmlspecialchars($row['faculty_id']);
+                                $tag          = $row['role'] === 'admin' ? ' (Admin)' : '';
+
                               ?>
-                                <option value="<?= $subjectCode . '|' . $facultyId ?>">
-                                  <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
-                                </option>
+                                <?php
+                                $isAdminFaculty = empty($row['first_name']) && !empty($row['last_name']); // crude check
+                                $tag = isset($row['role']) && $row['role'] === 'admin' ? ' (Admin)' : '';
+                              ?>
+                              <option value="<?= $subjectCode . '|' . $facultyId ?>">
+                                <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName . $tag ?>
+                              </option>
                               <?php endforeach; ?>
                             </select>
                             <label for="subject_code" class="form-label">Subject</label>
@@ -221,14 +240,14 @@ if (isset($_SESSION['msg'])) {
                         <div class="col-md-4 mb-3">
                           <div class="form-floating">
                             <select name="department" id="department" class="form-select" required>
-                              <option value="" disabled selected>-- Select College --</option>
+                              <option value="" disabled selected>-- Select Instructor College --</option>
                               <?php foreach ($department as $row): 
                                 $dept = htmlspecialchars($row['department']);
                               ?>
                                 <option value="<?= $dept ?>"><?= $dept ?></option>
                               <?php endforeach; ?>
                             </select>
-                            <label for="department" class="form-label">Faculty College</label>
+                            <label for="department" class="form-label">Instructor College</label>
                           </div>
                         </div>
 
@@ -427,6 +446,9 @@ if (isset($_SESSION['msg'])) {
                           <input type="text" class="form-control" value="<?= date('F j, Y') ?>" readonly>
                         </div>
                       </div>
+
+                      <input type="hidden" name="student_section" value="<?= htmlspecialchars($student_section) ?>">
+
 
 
                       <div class="col-md-4 offset-md-4 mb3">

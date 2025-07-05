@@ -10,29 +10,33 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
 $student_id = $_SESSION['idnumber'];
 
 $query = "SELECT 
-            e.subject_code,
-            s.title AS subject_title,
-            s.faculty_id,
-            f.first_name, f.mid_name, f.last_name,
-            e.total_score,
-            e.computed_rating,
-            e.academic_year,
-            e.semester,
-            e.created_at
+              e.subject_code,
+              s.title AS subject_title,
+              e.faculty_id,
+              COALESCE(f.first_name, a.first_name) AS first_name,
+              COALESCE(f.mid_name, a.mid_name) AS mid_name,
+              COALESCE(f.last_name, a.last_name) AS last_name,
+              e.total_score,
+              e.computed_rating,
+              e.academic_year,
+              e.semester,
+              e.created_at
           FROM evaluation e
-          JOIN subject s ON e.subject_code = s.code AND e.faculty_id = s.faculty_id
-          JOIN faculty f ON s.faculty_id = f.idnumber
-          JOIN student_subject ss ON ss.subject_code = s.code 
-                                  AND ss.faculty_id = s.faculty_id 
-                                  AND ss.student_id = e.student_id
+          JOIN subject s ON e.subject_code = s.code
+          LEFT JOIN faculty f ON e.faculty_id = f.idnumber
+          LEFT JOIN admin a ON e.faculty_id = a.idnumber AND a.faculty = 'yes'
+          LEFT JOIN student_subject ss 
+              ON ss.subject_code = s.code 
+            AND ss.student_id = e.student_id
+            AND ss.faculty_id = e.faculty_id
           WHERE e.student_id = ?
-          ORDER BY e.created_at DESC";
+          ORDER BY e.created_at DESC ";
 
-
-$stmt = $conn->prepare($query);
+$stmt = $conn->prepare($query); // FIXED: prepare the statement
 $stmt->bind_param("s", $student_id);
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 if (isset($_SESSION['msg'])) {
     echo "<script>alert('" . addslashes($_SESSION['msg']) . "');</script>";
@@ -145,7 +149,12 @@ if (isset($_SESSION['msg'])) {
                         <td><?= htmlspecialchars($row['subject_code']) ?></td>
                         <td><?= htmlspecialchars($row['subject_title']) ?></td>
                         <td class="text-capitalize">
-                          <?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?>
+                          <?= htmlspecialchars(
+                                $row['first_name'] . ' ' .
+                                $row['mid_name'] . ' ' .
+                                $row['last_name'] .
+                                ($row['faculty_id'][0] === 'A' ? ' (Admin)' : '')
+                            ) ?>
                         </td>
                         <td><?= htmlspecialchars($row['total_score']) ?></td>
                         <td><?= number_format($row['computed_rating'], 2) ?>%</td>

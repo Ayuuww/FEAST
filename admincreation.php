@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Submit form data
 if (isset($_POST['submit'])) {
@@ -12,44 +12,58 @@ if (isset($_POST['submit'])) {
     $password   = $_POST['password'];
     $department = $_POST['department'];
     $position   = $_POST['position'];
-    $faculty    = $_POST['faculty'];
-
+    $faculty    = $_POST['faculty']; // 'yes' or 'no'
 
     // Check if admin with same ID already exists
-    $check_query            = "SELECT * FROM admin WHERE idnumber = '$id'";
-    $check_result           = mysqli_query($conn, $check_query);
+    $check_query = "SELECT * FROM admin WHERE idnumber = '$id'";
+    $check_result = mysqli_query($conn, $check_query);
 
     if (mysqli_num_rows($check_result) > 0) {
-        $_SESSION['msg']    = 'Admin with this ID already exists!';
+        $_SESSION['msg'] = 'Admin with this ID already exists!';
         header("Location: superadmin-admincreation.php");
         exit();
     }
 
-    // Proceed with insertion
-    $sql    = "INSERT INTO admin   (    idnumber, 
-                                        first_name, 
-                                        mid_name, 
-                                        last_name, 
-                                        email, 
-                                        password, 
-                                        department,
-                                        position,
-                                        faculty)
-
-                    VALUES          (   '$id', 
-                                        '$first_name', 
-                                        '$mid_name', 
-                                        '$last_name', 
-                                        '$email', 
-                                        '$password', 
-                                        '$department',
-                                        '$position',
-                                        '$faculty')";
+    // Proceed with insertion to admin table
+    $sql = "INSERT INTO admin ( idnumber, 
+                                first_name, 
+                                mid_name, 
+                                last_name, 
+                                email, 
+                                password,
+                                department, 
+                                position, 
+                                faculty) 
+                    VALUES (    '$id', 
+                                '$first_name', 
+                                '$mid_name', 
+                                '$last_name', 
+                                '$email', 
+                                '$password',
+                                '$department', 
+                                '$position', 
+                                '$faculty')";
 
     if (mysqli_query($conn, $sql)) {
-        $_SESSION['msg']    = 'Admin account successfully created.';
+
+        // IF marked as faculty, also insert into faculty table (if not already present)
+        if (strtolower($faculty) === 'yes') {
+            $faculty_check = "SELECT idnumber FROM faculty WHERE idnumber = '$id'";
+            $faculty_result = mysqli_query($conn, $faculty_check);
+
+            if (mysqli_num_rows($faculty_result) == 0) {
+                $faculty_insert = "INSERT INTO faculty (
+                    idnumber, first_name, mid_name, last_name, department
+                ) VALUES (
+                    '$id', '$first_name', '$mid_name', '$last_name', '$department'
+                )";
+                mysqli_query($conn, $faculty_insert);
+            }
+        }
+
+        $_SESSION['msg'] = 'Admin account successfully created.';
     } else {
-        $_SESSION['msg']    = 'Error creating admin account: ' . mysqli_error($conn);
+        $_SESSION['msg'] = 'Error creating admin account: ' . mysqli_error($conn);
     }
 
     header("Location: superadmin-admincreation.php");
@@ -57,5 +71,4 @@ if (isset($_POST['submit'])) {
 } else {
     echo "<script>alert('Please fill in all fields.');</script>";
 }
-
 ?>
