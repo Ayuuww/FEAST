@@ -3,7 +3,7 @@ session_start();
 include 'conn/conn.php';
 
 // Check if the user is logged in and is a faculty
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     header("Location: pages-login.php");
     exit();
 }
@@ -12,16 +12,16 @@ $evaluator_id = $_SESSION['idnumber'];
 
 // Fetching peer evaluations done by the current faculty
 $query = "SELECT 
-            fpe.evaluated_faculty_id,
-            r.first_name, r.mid_name, r.last_name,
-            fpe.rating,
-            fpe.school_year,
-            fpe.semester,
-            fpe.created_at
-          FROM faculty_peer_evaluation fpe
-          JOIN register r ON fpe.evaluated_faculty_id = r.idnumber
-          WHERE fpe.evaluator_id = ?
-          ORDER BY fpe.created_at DESC";
+            ae.evaluatee_id,
+            f.first_name, f.mid_name, f.last_name,
+            ae.total_score,
+            ae.computed_rating,
+            ae.academic_year,
+            ae.semester
+          FROM admin_evaluation ae
+          JOIN faculty f ON ae.evaluatee_id = f.idnumber
+          WHERE ae.evaluator_id = ?
+          ORDER BY ae.evaluation_date DESC";
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $evaluator_id);
@@ -50,7 +50,7 @@ if (isset($_SESSION['msg'])) {
   </head>
   <body>
 
-    <?php include 'faculty-header.php'?>
+    <?php include 'admin-header.php'?>
 
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
@@ -58,7 +58,7 @@ if (isset($_SESSION['msg'])) {
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-dashboard.php">
+          <a class="nav-link collapsed" href="admin-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -71,20 +71,20 @@ if (isset($_SESSION['msg'])) {
           </a>
           <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="faculty-peer-evaluate.php" >
+              <a href="admin-evaluate.php" >
                 <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="faculty-peer-evaluatedpeer.php" class="active">
-                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
+              <a href="admin-evaluatedfaculty.php" class="active">
+                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
         </li><!-- End Evaluate Nav -->
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-evaluatedsubject.php">
+          <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Subject</span>
           </a>
@@ -93,7 +93,7 @@ if (isset($_SESSION['msg'])) {
         <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-user-profile.php">
+          <a class="nav-link collapsed" href="admin-user-profile.php">
             <i class="bi bi-person"></i>
             <span>Profile</span>
           </a>
@@ -112,12 +112,12 @@ if (isset($_SESSION['msg'])) {
 
     <main id="main" class="main">
         <div class="pagetitle">
-            <h1>Evaluated Peer</h1>
+            <h1>Evaluated Faculty</h1>
             <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="student-dashboard.php">Home</a></li>
+                <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
                 <li class="breadcrumb-item">Evaluate</li>
-                <li class="breadcrumb-item active">Evaluated Peer</li>
+                <li class="breadcrumb-item active">Evaluated Faculty</li>
             </ol>
             </nav>
         </div><!-- End Page Title -->
@@ -128,7 +128,7 @@ if (isset($_SESSION['msg'])) {
                     <h5 class="card-title">Faculty You Have Evaluated</h5>
 
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped datatable">
                             <thead>
                                 <tr>
                                     <th>Evaluatee Name</th>
@@ -143,10 +143,11 @@ if (isset($_SESSION['msg'])) {
                                     <?php while ($row = $result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="text-capitalize"><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
-                                        <td><?= htmlspecialchars($row['rating']) ?></td>
+                                        <td><?= htmlspecialchars($row['total_score']) ?></td>
+                                        <td><?= htmlspecialchars($row['computed_rating']) ?></td>
                                         <td><?= htmlspecialchars($row['semester']) ?></td>
-                                        <td><?= htmlspecialchars($row['school_year']) ?></td>
-                                        <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                                        <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                                        <!-- <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td> -->
                                     </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>

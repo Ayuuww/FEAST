@@ -20,132 +20,60 @@ include 'conn/conn.php';// Connection to the database
   <body>
 
     <?php include 'admin-header.php'?>
-
+    
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
 
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link collapsed" href="index.html">
+          <a class="nav-link collapsed" href="admin-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
         </li><!-- End Dashboard Nav -->
 
-        <!-- Subject Nav -->
+        <!-- Evaluate Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+            <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
           <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-subjectlist.php" >
-                <i class="bi bi-circle"></i><span>List</span>
+              <a href="admin-evaluate.php" >
+                <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-subjectadding.php">
-                <i class="bi bi-circle"></i><span>Add Subject</span>
+              <a href="admin-evaluatedfaculy.php" >
+                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
-        </li><!-- End Subject Nav -->
+        </li><!-- End Evaluate Nav -->
 
-        <!-- Student Subject Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-studentsubject.php">
+          <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
-            <span>Assign Subject</span>
+            <span>Subject</span>
           </a>
-        </li><!-- End Student Subject Nav -->
+        </li><!-- End Profile Nav -->
 
-        <!-- Report Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-reports.php">
-            <i class="bi bi-journal-text"></i>
-            <span>Reports</span>
-          </a>
-        </li><!-- End Report Nav -->
-        
-        <li class="nav-heading">Account Management</li>
+        <li class="nav-heading">Pages</li>
 
-        <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
+          <a class="nav-link collapse" href="admin-user-profile.php">
+            <i class="bi bi-person"></i>
+            <span>Profile</span>
           </a>
-          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-facultylist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-facultyapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Faculty Nav -->
-        
-        <!-- Student Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-studentlist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-studentapproval.php">
-                <i class="bi bi-circle"></i><span>Approval</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Student Nav -->
+        </li><!-- End Profile Nav -->
 
-        <!-- Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+          <a class="nav-link collapsed" href="logout.php">
+            <i class="bi bi-box-arrow-right"></i>
+            <span>Sign Out</span>
           </a>
-          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-adminlist.php" >
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-admincreation.php">
-                <i class="bi bi-circle"></i><span>Add New Admin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Admin Nav -->
-
-        <!-- Super Admin Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person-fill"></i><span>Super Admin</span><i
-              class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-superadminlist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-superadmincreation.php">
-                <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Super Admin Nav -->
+        </li><!-- End Sign out Nav -->
 
       </ul>
 
@@ -157,7 +85,7 @@ include 'conn/conn.php';// Connection to the database
         <h1>Profile</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
             <li class="breadcrumb-item">Users</li>
             <li class="breadcrumb-item active">Profile</li>
           </ol>

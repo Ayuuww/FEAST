@@ -76,8 +76,8 @@ $result = $stmt->get_result();
               </a>
             </li>
             <li>
-              <a href="faculty-peer-evaluatedpeer.php" >
-                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
+              <a href="admin-evaluatedfaculty.php" >
+                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
@@ -118,7 +118,7 @@ $result = $stmt->get_result();
         <h1>Subjects</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
             <li class="breadcrumb-item active">Subject</li>
           </ol>
         </nav>
@@ -132,7 +132,7 @@ $result = $stmt->get_result();
                     <h5 class="card-title">Evaluated Subjects You Handle</h5>
 
                     <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
+                    <table class="table table-bordered table-striped datatable">
                         <thead>
                         <tr>
                             <th>Subject Code</th>

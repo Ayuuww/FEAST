@@ -2,7 +2,6 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a faculty
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     header("Location: pages-login.php");
     exit();
@@ -10,7 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $evaluator_id = $_SESSION['idnumber'];
 
-// Get current faculty's department
+// Get current admin's department
 $dept_query = "SELECT department FROM admin WHERE idnumber = ?";
 $stmt = $conn->prepare($dept_query);
 $stmt->bind_param("s", $evaluator_id);
@@ -19,11 +18,18 @@ $dept_result = $stmt->get_result();
 $dept_row = $dept_result->fetch_assoc();
 $department = $dept_row['department'] ?? '';
 
-// Fetch other faculty members from the same department
+// Fetch admin's position
+$admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ?");
+$admin_info_stmt->bind_param("s", $evaluator_id);
+$admin_info_stmt->execute();
+$admin_result = $admin_info_stmt->get_result();
+$admin_data = $admin_result->fetch_assoc();
+$evaluator_position = $admin_data['position'] ?? 'Not Set';
+
+// Fetch other faculty members in the same department
 $query = "SELECT idnumber, first_name, mid_name, last_name, faculty_rank, department 
           FROM faculty 
-          WHERE role = 'faculty' AND department = ? AND idnumber != ?";
-
+          WHERE department = ? AND idnumber != ?";
 
 $stmt = $conn->prepare($query);
 $stmt->bind_param("ss", $department, $evaluator_id);
@@ -34,6 +40,7 @@ $faculty_list = [];
 while ($row = $result->fetch_assoc()) {
     $faculty_list[] = $row;
 }
+
 
 
 // Display message if set
@@ -79,7 +86,7 @@ if (isset($_SESSION['msg'])) {
   </head>
   <body>
 
-    <?php include 'faculty-header.php'?>
+    <?php include 'admin-header.php'?>
 
     <!-- ======= Sidebar ======= -->
     <aside id="sidebar" class="sidebar">
@@ -105,8 +112,8 @@ if (isset($_SESSION['msg'])) {
               </a>
             </li>
             <li>
-              <a href="admin-faculty-evaluated.php">
-                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
+              <a href="admin-evaluatedfaculty.php">
+                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
@@ -142,12 +149,12 @@ if (isset($_SESSION['msg'])) {
     <!-- Start Main Content -->
     <main id="main" class="main">
       <div class="pagetitle">
-        <h1>Peer Evaluation Form</h1>
+        <h1>Faculty Evaluation Form</h1>
         <nav>
           <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
             <li class="breadcrumb-item">Evaluate</li>
-            <li class="breadcrumb-item active">Peer Evaluation</li>
+            <li class="breadcrumb-item active">Faculty Evaluation</li>
           </ol>
         </nav>
       </div>
@@ -157,7 +164,7 @@ if (isset($_SESSION['msg'])) {
           <div class="row justify-content-center">
             <div class="col-lg-8 col-md-10 col-sm-12">
               <div class="card shadow-lg">
-                <div class="card-body">
+                <div class="card-body table-responsive">
                   <h5 class="card-title text-center">Supervisor-to-Faculty Evaluation</h5>
 
                   <form action="submit-admin-evaluation.php" method="POST">
@@ -187,7 +194,7 @@ if (isset($_SESSION['msg'])) {
                     <!-- School Year -->
                     <div class="col-md-3">
                         <div class="form-floating">
-                        <select name="school_year" id="school_year" class="form-select" required>
+                        <select name="academic_year" id="academic_year" class="form-select" required>
                             <option value="" disabled selected>-- Academic Year --</option>
                             <?php
                             $currentYear = date("Y");
@@ -197,7 +204,7 @@ if (isset($_SESSION['msg'])) {
                             }
                             ?>
                         </select>
-                        <label for="school_year">Academic Year</label>
+                        <label for="academic_year">Academic Year</label>
                         </div>
                     </div>
 

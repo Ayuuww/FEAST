@@ -39,12 +39,7 @@ $query = "  SELECT
                 AND e.subject_code  = ss.subject_code
                 AND e.faculty_id    = COALESCE(ss.faculty_id, ss.admin_id)
                 AND e.academic_year = ?
-                AND e.semester      = ?
-            )";
-
-
-
-
+                AND e.semester      = ? )";
 
 $stmt   = $conn->prepare($query);
 $stmt->bind_param("sss", $student_id, $academic_year, $semester);
@@ -281,33 +276,50 @@ if (isset($_SESSION['msg'])) {
                             <tr>
                               <td><strong>5</strong></td>
                               <td>Always manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is consistently and unfailling demostrated in all relevant situation or instances. There is no observed deviation from this pattern. Operationally, this could mean occurring in 95-100% of observed opportunities or instances.</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is 
+                                consistently and unfailling demostrated in all relevant situation or instances. 
+                                There is no observed deviation from this pattern. Operationally, this could mean 
+                                occurring in 95-100% of observed opportunities or instances.</td>
                             </tr>
                             <tr>
                               <td><strong>4</strong></td>
                               <td>Often manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated frequently, though occasional instances of non-manifestation may occur. Operationally, this could mean occurring in 60-94% of observed opportunities or instances.</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is 
+                                demostrated frequently, though occasional instances of non-manifestation may occur. 
+                                Operationally, this could mean occurring in 60-94% of 
+                                observed opportunities or instances.</td>
                             </tr>
                             <tr>
                               <td><strong>3</strong></td>
                               <td>Sometimes manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated intermittenly or irregulary, with an approximately equal likelihood occurrence and non-occurence. Operationally, this could mean occurring in 40-60% of observed opportunities or instances.</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is 
+                                demostrated intermittenly or irregulary, with an approximately equal likelihood 
+                                occurrence and non-occurence. Operationally, this could mean occurring in 40-60% 
+                                of observed opportunities or instances.</td>
                             </tr>
                             <tr>
                               <td><strong>2</strong></td>
                               <td>Seldom manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated infrequently and is generally absend in most relevant situation. Operationally, this could mean occurring in 25-40% of observed opportunities or instances.</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is 
+                                demostrated infrequently and is generally absend in most relevant situation. 
+                                Operationally, this could mean occurring in 25-40% of 
+                                observed opportunities or instances.</td>
                             </tr>
                             <tr>
                               <td><strong>1</strong></td>
                               <td>Rarely manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is almost never demostrated, with only isolated or exceptional instances of occurrence. Operationally, this could mean occurring in 0-24% of observed opportunities or instances.</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is 
+                                almost never demostrated, with only isolated or exceptional instances of occurrence. 
+                                Operationally, this could mean occurring in 0-24% of 
+                                observed opportunities or instances.</td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
                       
-                      <h5 class="mb-3"><strong>c. Instruction: </strong>Read the benchmark statements carefully. Please rate the faculty on each of the following statements below using the above-listed rating scale</h5>
+                      <h5 class="mb-3"><strong>c. Instruction: </strong>Read the benchmark statements carefully. 
+                      Please rate the faculty on each of the following 
+                      statements below using the above-listed rating scale</h5>
                       <!-- Evaluation Questions -->
                       <div class="table-responsive ">
                         <table class="table table-bordered text-center align-middle">

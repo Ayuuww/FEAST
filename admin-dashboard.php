@@ -8,38 +8,37 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-// Get admin department
+// 
+
 $admin_id = $_SESSION['idnumber'];
+
+// Get admin's department
 $dept_query = "SELECT department FROM admin WHERE idnumber = ?";
 $stmt = $conn->prepare($dept_query);
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$res = $stmt->get_result();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$department = $row['department'] ?? '';
 
-if ($res->num_rows > 0) {
-    $admin_data = $res->fetch_assoc();
-    $admin_department = $admin_data['department'];
-} else {
-    $_SESSION['msg'] = "Admin department not found.";
-    header("Location: pages-login.php");
-    exit();
-}
-
-// Total faculty
-$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE department = ?";
+// Count faculty in same department
+$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department = ?";
 $stmt = $conn->prepare($faculty_query);
-$stmt->bind_param("s", $admin_department);
+$stmt->bind_param("s", $department);
 $stmt->execute();
 $faculty_result = $stmt->get_result();
-$totalfaculty = $faculty_result->fetch_assoc()['total_faculty'];
+$faculty_row = $faculty_result->fetch_assoc();
+$totalfaculty = $faculty_row['total'] ?? 0;
 
-// Total students
-$student_query = "SELECT COUNT(*) AS total_student FROM student WHERE department = ?";
+// Count students in same department
+$student_query = "SELECT COUNT(*) AS total FROM student WHERE department = ?";
 $stmt = $conn->prepare($student_query);
-$stmt->bind_param("s", $admin_department);
+$stmt->bind_param("s", $department);
 $stmt->execute();
 $student_result = $stmt->get_result();
-$totalstudent = $student_result->fetch_assoc()['total_student'];
+$student_row = $student_result->fetch_assoc();
+$totalstudent = $student_row['total'] ?? 0;
+
 ?>
 
 
@@ -83,8 +82,8 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
               </a>
             </li>
             <li>
-              <a href="faculty-peer-evaluatedpeer.php" >
-                <i class="bi bi-circle"></i><span>Evaluated Peer</span>
+              <a href="admin-evaluatedfaculy.php" >
+                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
@@ -156,7 +155,7 @@ $totalstudent = $student_result->fetch_assoc()['total_student'];
             </div><!-- End Total Faculty Card -->
 
             <!-- Total Student Card -->
-            <div class="col-xxl-4 col-xl-12">
+            <div class="col-xxl-4 col-md-6">
                 <div class="card info-card shadow-sm">
                     <div class="card-body">
                     <h5 class="card-title">Total<span> | Students</span></h5>

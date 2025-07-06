@@ -44,6 +44,24 @@ $questions = [
     "Provide immediate feedback on student outputs and performance.",
     "Provides transparent and clear criteria in rating student's performance."
 ];
+
+$verification = [
+    "• Daily time record<br>• Faculty schedule and timetable<br>• Informal interview with students",
+    '• Documents submission log<br>• Submission Receipts or Acknowledgment Emails',
+    '• Course syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs',
+    '• Course Syllabus<br>• LMS Logs<br>• Informal interview with students',
+    '• Course Syllabus<br>• Learning Plan<br>• Student Work Samples<br>• Classroom Observation<br>• LMS Logs<br>• Informal interview with students<br>• Faculty Consultation Log<br>',
+    '• Graded Student Work with Feedback<br>• Faculty Consultation Log<br>• Informal interview with students<br>• Emails or Official correspondence<br>• LMS Logs<br>•',
+    '• Course Syllabus<br>• Learning Plan<br>• IMs developed by the faculty<br>• Informal interview with students<br>• Mentorship or Thesis/Dissertation Advisory records',
+    '• Learning Plan<br>• Course Syllabus<br>• Classroom Observation<br>• Informal interview with students<br>• Lecture notes and presentations<br>• LMS Logs',
+    '• Course syllabus<br>• Learning Plan<br>• Classroom Observation<br>• LMS Logs<br>• IMs developed by the faculty<br>• Participation in Conferences, Webinars, and Training',
+    '• Course Syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs<br>• Multimedia Lecture Materials<br>• Student Work Samples<br>',
+    '• Course Syllabus<br>• Learning Plan<br>• Informal interview with students<br>• Assessment tools and rubrics<br>• Exam and Quiz Samples<br>• Graded Student Work Samples<br>• LMS records',
+    '• Course Syllabus<br>• Learning Plan<br>• IMs developed by the faculty<br>• Classroom Observation <br>•  Informal interview with students',
+    '• Course Syllabus<br>• Faculty Consultation Log<br>• Advisory Records<br>• LMS Logs<br>• Emails or Official Correspondence',
+    '• Graded Student Work Samples<br>• Assessment tools and rubrics<br>• Informal interview with students<br>• LMS Logs<br>• Emails or Official Correspondence<br>• Faculty Consultation Log<br>• Advising Reports',
+    '• Course Syllabus<br>• Learning Plan<br>• Classroom Observation<br>• Informal interview with students<br>• LMS Logs<br>• Multimedia Lecture Materials<br>• Student Work Samples<br>'
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -106,12 +124,12 @@ $questions = [
   <div class="card shadow">
     <div class="card-body">
       <div class="text-center mb-4">
-        <h3 class="fw-bold text-primary">Faculty Peer Evaluation Summary</h3>
+        <h3 class="fw-bold text-primary">Supervisor-to-Faculty Evaluation Summary</h3>
       </div>
 
       <p><strong>Evaluatee:</strong> <?= htmlspecialchars($evaluateeName) ?></p>
       <p><strong>Academic Rank:</strong> <?= htmlspecialchars($data['faculty_rank']) ?></p>
-      <p><strong>College</strong> <?= htmlspecialchars($data['department']) ?></p>
+      <p><strong>College:</strong> <?= htmlspecialchars($data['department']) ?></p>
       <p><strong>Rating Period(Academic Year):</strong> <?= htmlspecialchars($data['semester']) ?></p>
 
       <div class="table-responsive mb-4">
@@ -119,6 +137,7 @@ $questions = [
           <thead class="table-light">
             <tr>
               <th class="text-start">Question</th>
+              <th>Suggested Means of Verification</th>
               <th>Rating</th>
             </tr>
           </thead>
@@ -126,6 +145,7 @@ $questions = [
             <?php foreach ($questions as $index => $question): ?>
               <tr>
                 <td class="text-start"><?= ($index + 1) . '. ' . htmlspecialchars($question) ?></td>
+                <td class="text-start"><?= $verification[$index] ?></td>
                 <td><?= htmlspecialchars($data['answers']["q$index"] ?? '-') ?></td>
               </tr>
             <?php endforeach; ?>
@@ -149,13 +169,14 @@ $questions = [
         <div class="col-12">
           <p><strong>Signature of Supervisor: </strong>__________________________________</p>
           <p><strong>Name of Supervisor: </strong> <?= htmlspecialchars($evaluatorName) ?></p>
+          <p><strong>Position of Supervisor: </strong> <?= htmlspecialchars($data['evaluator_position'] ?? 'Not Set') ?></p>
           <p><strong>Date of Evaluation: </strong> <?= date('F j, Y') ?></p>
         </div>
       </div>
 
       <div class="row">
         <div class="col-md-4 no-print">
-          <a href="student-evaluate.php" class="btn btn-secondary">Back to Evaluation</a>
+          <a href="admin-evaluate.php" class="btn btn-secondary">Back to Evaluation</a>
         </div>
         <div class="col-md-4 no-print">
           <button type="button" class="btn btn-secondary w-100" onclick="window.print()">
