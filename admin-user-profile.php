@@ -1,8 +1,69 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
+// Check if the user is logged in and is a admin
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+    header("Location: pages-login.php");
+    exit();
+}
 
+$idnumber = $_SESSION['idnumber'];
+$success_msg = "";
+$error_msg = "";
+
+// Handle profile update
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (isset($_POST['update_profile'])) {
+        $first_name = $_POST['first_name'];
+        $mid_name = $_POST['mid_name'];
+        $last_name = $_POST['last_name'];
+        $email = $_POST['email'];
+
+        $stmt = $conn->prepare("UPDATE admin SET first_name=?, mid_name=?, last_name=?, email=? WHERE idnumber=?");
+        $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $email, $idnumber);
+        if ($stmt->execute()) {
+            $success_msg = "Profile updated successfully.";
+        } else {
+            $error_msg = "Failed to update profile.";
+        }
+    }
+
+    if (isset($_POST['change_password'])) {
+        $current = $_POST['current_password'];
+        $new = $_POST['new_password'];
+        $retype = $_POST['renew_password'];
+
+        $query = $conn->prepare("SELECT password FROM admin WHERE idnumber = ?");
+        $query->bind_param("s", $idnumber);
+        $query->execute();
+        $query->bind_result($db_password);
+        $query->fetch();
+        $query->close();
+
+        if ($current !== $db_password) {
+            $error_msg = "Incorrect current password.";
+        } elseif ($new !== $retype) {
+            $error_msg = "New passwords do not match.";
+        } else {
+            $update = $conn->prepare("UPDATE admin SET password=? WHERE idnumber=?");
+            $update->bind_param("ss", $new, $idnumber);
+            if ($update->execute()) {
+                $success_msg = "Password updated successfully.";
+            } else {
+                $error_msg = "Failed to update password.";
+            }
+        }
+    }
+}
+
+// Fetch current profile data
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, email, role, position, department FROM admin WHERE idnumber = ?");
+$stmt->bind_param("s", $idnumber);
+$stmt->execute();
+$result = $stmt->get_result();
+$data = $result->fetch_assoc();
+$stmt->close();
 ?>
 
 
@@ -75,318 +136,95 @@ include 'conn/conn.php';// Connection to the database
           </a>
         </li><!-- End Sign out Nav -->
 
+
       </ul>
 
     </aside><!-- End Sidebar-->
 
     <main id="main" class="main">
-
       <div class="pagetitle">
         <h1>Profile</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item">Users</li>
-            <li class="breadcrumb-item active">Profile</li>
-          </ol>
-        </nav>
-      </div><!-- End Page Title -->
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li><li class="breadcrumb-item active">Profile</li></ol></nav>
+      </div>
 
       <section class="section profile">
         <div class="row">
-          <div class="col-xl-4">
-
-            <div class="card">
-              <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
-
-                <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-                <h2>Kevin Anderson</h2>
-                <h3>Web Designer</h3>
-                <div class="social-links mt-2">
-                  <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
-                  <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-                  <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-                  <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
           <div class="col-xl-8">
+            <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
+            <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
 
             <div class="card">
               <div class="card-body pt-3">
-                <!-- Bordered Tabs -->
                 <ul class="nav nav-tabs nav-tabs-bordered">
-
-                  <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="tab"
-                      data-bs-target="#profile-overview">Overview</button>
-                  </li>
-
-                  <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button>
-                  </li>
-
-                  <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-settings">Settings</button>
-                  </li>
-
-                  <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change
-                      Password</button>
-                  </li>
-
+                  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button></li>
+                  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button></li>
                 </ul>
+
                 <div class="tab-content pt-2">
-
-                  <div class="tab-pane fade show active profile-overview" id="profile-overview">
-                    <h5 class="card-title">About</h5>
-                    <p class="small fst-italic">Sunt est soluta temporibus accusantium neque nam maiores cumque
-                      temporibus. Tempora libero non est unde veniam est qui dolor. Ut sunt iure rerum quae quisquam
-                      autem eveniet perspiciatis odit. Fuga sequi sed ea saepe at unde.</p>
-
-                    <h5 class="card-title">Profile Details</h5>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label ">Full Name</div>
-                      <div class="col-lg-9 col-md-8">Kevin Anderson</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Company</div>
-                      <div class="col-lg-9 col-md-8">Lueilwitz, Wisoky and Leuschke</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Job</div>
-                      <div class="col-lg-9 col-md-8">Web Designer</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Country</div>
-                      <div class="col-lg-9 col-md-8">USA</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Address</div>
-                      <div class="col-lg-9 col-md-8">A108 Adam Street, New York, NY 535022</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Phone</div>
-                      <div class="col-lg-9 col-md-8">(436) 486-3538 x29071</div>
-                    </div>
-
-                    <div class="row">
-                      <div class="col-lg-3 col-md-4 label">Email</div>
-                      <div class="col-lg-9 col-md-8"><a href="/cdn-cgi/l/email-protection" class="__cf_email__"
-                          data-cfemail="d9b2f7b8b7bdbcabaab6b799bca1b8b4a9b5bcf7bab6b4">[email&#160;protected]</a></div>
-                    </div>
-
-                  </div>
-
-                  <div class="tab-pane fade profile-edit pt-3" id="profile-edit">
-
-                    <!-- Profile Edit Form -->
-                    <form>
+                  <!-- Profile Edit Tab -->
+                  <div class="tab-pane fade show active pt-3" id="profile-edit">
+                    <form method="POST">
                       <div class="row mb-3">
-                        <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">Profile Image</label>
-                        <div class="col-md-8 col-lg-9">
-                          <img src="assets/img/profile-img.jpg" alt="Profile">
-                          <div class="pt-2">
-                            <a href="#" class="btn btn-primary btn-sm" title="Upload new profile image"><i
-                                class="bi bi-upload"></i></a>
-                            <a href="#" class="btn btn-danger btn-sm" title="Remove my profile image"><i
-                                class="bi bi-trash"></i></a>
-                          </div>
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Full Name</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="fullName" type="text" class="form-control" id="fullName" value="Kevin Anderson">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="first_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['first_name']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="about" class="col-md-4 col-lg-3 col-form-label">About</label>
-                        <div class="col-md-8 col-lg-9">
-                          <textarea name="about" class="form-control" id="about"
-                            style="height: 100px">Sunt est soluta temporibus accusantium neque nam maiores cumque temporibus. Tempora libero non est unde veniam est qui dolor. Ut sunt iure rerum quae quisquam autem eveniet perspiciatis odit. Fuga sequi sed ea saepe at unde.</textarea>
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Middle Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="company" class="col-md-4 col-lg-3 col-form-label">Company</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="company" type="text" class="form-control" id="company"
-                            value="Lueilwitz, Wisoky and Leuschke">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Email</label>
+                        <div class="col-md-8 col-lg-9"><input name="email" type="email" class="form-control" value="<?= htmlspecialchars($data['email']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="Job" class="col-md-4 col-lg-3 col-form-label">Job</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="job" type="text" class="form-control" id="Job" value="Web Designer">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Department/College</label>
+                        <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="Country" class="col-md-4 col-lg-3 col-form-label">Country</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="country" type="text" class="form-control" id="Country" value="USA">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Designation</label>
+                        <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['position']) ?>"></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="Address" class="col-md-4 col-lg-3 col-form-label">Address</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="address" type="text" class="form-control" id="Address"
-                            value="A108 Adam Street, New York, NY 535022">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Role</label>
+                        <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['role']) ?>"></div>
                       </div>
-
-                      <div class="row mb-3">
-                        <label for="Phone" class="col-md-4 col-lg-3 col-form-label">Phone</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="phone" type="text" class="form-control" id="Phone" value="(436) 486-3538 x29071">
-                        </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <label for="Email" class="col-md-4 col-lg-3 col-form-label">Email</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="email" type="email" class="form-control" id="Email"
-                            value="k.anderson@example.com">
-                        </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <label for="Twitter" class="col-md-4 col-lg-3 col-form-label">Twitter Profile</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="twitter" type="text" class="form-control" id="Twitter"
-                            value="https://twitter.com/#">
-                        </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <label for="Facebook" class="col-md-4 col-lg-3 col-form-label">Facebook Profile</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="facebook" type="text" class="form-control" id="Facebook"
-                            value="https://facebook.com/#">
-                        </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <label for="Instagram" class="col-md-4 col-lg-3 col-form-label">Instagram Profile</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="instagram" type="text" class="form-control" id="Instagram"
-                            value="https://instagram.com/#">
-                        </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <label for="Linkedin" class="col-md-4 col-lg-3 col-form-label">Linkedin Profile</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="linkedin" type="text" class="form-control" id="Linkedin"
-                            value="https://linkedin.com/#">
-                        </div>
-                      </div>
-
                       <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="submit" name="update_profile" class="btn btn-success">Save Changes</button>
                       </div>
-                    </form><!-- End Profile Edit Form -->
-
+                    </form>
                   </div>
 
-                  <div class="tab-pane fade pt-3" id="profile-settings">
-
-                    <!-- Settings Form -->
-                    <form>
-
-                      <div class="row mb-3">
-                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email Notifications</label>
-                        <div class="col-md-8 col-lg-9">
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="changesMade" checked>
-                            <label class="form-check-label" for="changesMade">
-                              Changes made to your account
-                            </label>
-                          </div>
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="newProducts" checked>
-                            <label class="form-check-label" for="newProducts">
-                              Information on new products and services
-                            </label>
-                          </div>
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="proOffers">
-                            <label class="form-check-label" for="proOffers">
-                              Marketing and promo offers
-                            </label>
-                          </div>
-                          <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="securityNotify" checked disabled>
-                            <label class="form-check-label" for="securityNotify">
-                              Security alerts
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                      </div>
-                    </form><!-- End settings Form -->
-
-                  </div>
-
+                  <!-- Change Password Tab -->
                   <div class="tab-pane fade pt-3" id="profile-change-password">
-                    <!-- Change Password Form -->
-                    <form>
-
+                    <form method="POST">
                       <div class="row mb-3">
-                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="password" type="password" class="form-control" id="currentPassword">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="current_password" type="password" class="form-control" required></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="newpassword" type="password" class="form-control" id="newPassword">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="new_password" type="password" class="form-control" required></div>
                       </div>
-
                       <div class="row mb-3">
-                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New
-                          Password</label>
-                        <div class="col-md-8 col-lg-9">
-                          <input name="renewpassword" type="password" class="form-control" id="renewPassword">
-                        </div>
+                        <label class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="renew_password" type="password" class="form-control" required></div>
                       </div>
-
                       <div class="text-center">
-                        <button type="submit" class="btn btn-primary">Change Password</button>
+                        <button type="submit" name="change_password" class="btn btn-success">Change Password</button>
                       </div>
-                    </form><!-- End Change Password Form -->
-
+                    </form>
                   </div>
 
-                </div><!-- End Bordered Tabs -->
-
+                </div><!-- End tab-content -->
               </div>
             </div>
-
           </div>
         </div>
       </section>
-
     </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->

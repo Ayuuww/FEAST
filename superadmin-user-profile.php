@@ -231,93 +231,77 @@ $stmt->close();
     <main id="main" class="main">
       <div class="pagetitle">
         <h1>Profile</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item active">Profile</li>
-          </ol>
-        </nav>
+        <nav><ol class="breadcrumb"><li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li><li class="breadcrumb-item active">Profile</li></ol></nav>
       </div>
 
       <section class="section profile">
         <div class="row">
+          <div class="col-xl-8">
+            <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
+            <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
 
-          <!-- EDIT PROFILE - LEFT -->
-          <div class="col-lg-6">
             <div class="card">
               <div class="card-body pt-3">
-                <h5 class="card-title">Edit Profile</h5>
-                <form method="POST">
-                  <div class="row mb-3">
-                    <label class="col-sm-4 col-form-label">Last Name</label>
-                    <div class="col-sm-8">
-                      <input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>">
-                    </div>
+                <ul class="nav nav-tabs nav-tabs-bordered">
+                  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button></li>
+                  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button></li>
+                </ul>
+
+                <div class="tab-content pt-2">
+                  <!-- Profile Edit Tab -->
+                  <div class="tab-pane fade show active pt-3" id="profile-edit">
+                    <form method="POST">
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>"></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="first_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['first_name']) ?>"></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Middle Name</label>
+                        <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Role</label>
+                        <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['role']) ?>"></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Email</label>
+                        <div class="col-md-8 col-lg-9"><input name="email" type="email" class="form-control" value="<?= htmlspecialchars($data['email']) ?>"></div>
+                      </div>
+                      <div class="text-center">
+                        <button type="submit" name="update_profile" class="btn btn-success">Save Changes</button>
+                      </div>
+                    </form>
                   </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-4 col-form-label">First Name</label>
-                    <div class="col-sm-8">
-                      <input name="first_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['first_name']) ?>">
-                    </div>
+
+                  <!-- Change Password Tab -->
+                  <div class="tab-pane fade pt-3" id="profile-change-password">
+                    <form method="POST">
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="current_password" type="password" class="form-control" required></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="new_password" type="password" class="form-control" required></div>
+                      </div>
+                      <div class="row mb-3">
+                        <label class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                        <div class="col-md-8 col-lg-9"><input name="renew_password" type="password" class="form-control" required></div>
+                      </div>
+                      <div class="text-center">
+                        <button type="submit" name="change_password" class="btn btn-success">Change Password</button>
+                      </div>
+                    </form>
                   </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-4 col-form-label">Middle Name</label>
-                    <div class="col-sm-8">
-                      <input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>">
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-4 col-form-label">Email</label>
-                    <div class="col-sm-8">
-                      <input name="email" type="email" class="form-control" value="<?= htmlspecialchars($data['email']) ?>">
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-4 col-form-label">Role</label>
-                    <div class="col-sm-8">
-                      <input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['role']) ?>">
-                    </div>
-                  </div>
-                  <div class="text-center">
-                    <button type="submit" name="update_profile" class="btn btn-success">Save Changes</button>
-                  </div>
-                </form>
+
+                </div><!-- End tab-content -->
               </div>
             </div>
           </div>
-
-          <!-- CHANGE PASSWORD - RIGHT -->
-          <div class="col-lg-6">
-            <div class="card">
-              <div class="card-body pt-3">
-                <h5 class="card-title">Change Password</h5>
-                <form method="POST">
-                  <div class="row mb-3">
-                    <label class="col-sm-5 col-form-label">Current Password</label>
-                    <div class="col-sm-7">
-                      <input name="current_password" type="password" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-5 col-form-label">New Password</label>
-                    <div class="col-sm-7">
-                      <input name="new_password" type="password" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <label class="col-sm-5 col-form-label">Re-enter New Password</label>
-                    <div class="col-sm-7">
-                      <input name="renew_password" type="password" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="text-center" style="margin-top: 123px;">
-                    <button type="submit" name="change_password" class="btn btn-success">Change Password</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
         </div>
       </section>
     </main><!-- End #main -->

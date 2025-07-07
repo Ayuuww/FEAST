@@ -31,6 +31,8 @@ if ($row = mysqli_fetch_assoc($result3)) {
     $_SESSION['first_name'] = $row['first_name'];
     $_SESSION['last_name']  = $row['last_name'];
     $_SESSION['department'] = $row['department'];
+    $_SESSION['position']   = $row['position'];
+    $_SESSION['email']      = $row['email'];
     $_SESSION['role']       = 'admin';
     header("Location: admin-dashboard.php");
     exit();

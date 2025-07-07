@@ -286,6 +286,7 @@ $query = "SELECT * FROM superadmin";
                                   <option value="CIS">CIS</option>
                                   <option value="CAS">CAS</option>
                                   <option value="CVM">CVM</option>
+                                  <option value="CAFF">CAFF</option>
                               </select>
                               <label for="department">Department</label>
                           </div>

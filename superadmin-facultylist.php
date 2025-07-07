@@ -209,6 +209,7 @@ $result = mysqli_query($conn, $query);
                     <th>Middle Name</th>
                     <th>Last Name</th>
                     <th>Email</th>
+                    <th>Academic Rank</th>
                     <th>Department</th>
                     <th>Action</th>
                   </tr>
@@ -223,6 +224,7 @@ $result = mysqli_query($conn, $query);
                         <td><?php echo $row['mid_name'];?></td>
                         <td><?php echo $row['last_name'];?></td>
                         <td><?php echo $row['email'];?></td>
+                        <td><?php echo $row['faculty_rank'];?></td>
                         <td class="text-uppercase"><?php echo $row['department'];?></td>
                         <td>
                           <a class="btn btn-primary btn-sm">View</a>

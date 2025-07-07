@@ -53,9 +53,9 @@ if (isset($_POST['submit'])) {
 
             if (mysqli_num_rows($faculty_result) == 0) {
                 $faculty_insert = "INSERT INTO faculty (
-                    idnumber, first_name, mid_name, last_name, department
+                    idnumber, first_name, mid_name, last_name, department, faculty_rank
                 ) VALUES (
-                    '$id', '$first_name', '$mid_name', '$last_name', '$department'
+                    '$id', '$first_name', '$mid_name', '$last_name', '$department', '$position' 
                 )";
                 mysqli_query($conn, $faculty_insert);
             }
