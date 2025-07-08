@@ -135,8 +135,8 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
             </a>
           </li>
           <li>
-            <a href="superadmin-studentapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
+            <a href="superadmin-studentcreation.php">
+              <i class="bi bi-circle"></i><span>Add New Student</span>
             </a>
           </li>
         </ul>

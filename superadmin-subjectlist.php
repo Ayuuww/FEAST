@@ -143,8 +143,8 @@ if (isset($_SESSION['msg'])) {
             </a>
           </li>
           <li>
-            <a href="superadmin-studentapproval.php">
-              <i class="bi bi-circle"></i><span>Approval</span>
+            <a href="superadmin-studentcreation.php">
+              <i class="bi bi-circle"></i><span>Add New Student</span>
             </a>
           </li>
         </ul>
