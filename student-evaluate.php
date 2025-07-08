@@ -182,7 +182,7 @@ if (isset($_SESSION['msg'])) {
             <div class="col-lg-8 col-md-10 col-sm-12">
               <div class="card shadow-lg">
                 <div class="card-body">
-                  <h5 class="card-title text-center">Faculty Evaluation Form</h5>
+                  <h5 class="card-title text-center">Student Evaluation of Teachers (SET)</h5>
 
                   <form action="submit-evaluation.php" method="POST">
 

@@ -165,7 +165,7 @@ if (isset($_SESSION['msg'])) {
             <div class="col-lg-8 col-md-10 col-sm-12">
               <div class="card shadow-lg">
                 <div class="card-body table-responsive">
-                  <h5 class="card-title text-center">Supervisor-to-Faculty Evaluation</h5>
+                  <h5 class="card-title text-center">Supervisor's Evaulation of Faculty (SEF)</h5>
 
                   <form action="submit-admin-evaluation.php" method="POST">
 

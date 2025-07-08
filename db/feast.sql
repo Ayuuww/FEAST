@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 06, 2025 at 03:08 PM
+-- Generation Time: Jul 08, 2025 at 03:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -45,10 +45,11 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`) VALUES
-('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', 'sampleadmin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin'),
+('000-0000-0', 'Ma\'amEdith', 'Admin', 'Faculty', 'sampleadmin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin'),
 ('001-0000-1', 'Sample', 'Admin', '!Faculty', 'sampleadmin2@email.com', 'ILOVEDMMMSU', 'CAS', 'Campus-Administrator', 'no', 'admin'),
 ('002-0000-2', 'Admin', 'Sample', 'Faculty', 'sampleadmin3@email.com', 'ILOVEDMMMSU', 'CAS', 'Dean', 'yes', 'admin'),
-('003-0000-3', 'AdminAs', 'Faculty', 'Sample', 'sampleadmin4@emial.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'yes', 'admin');
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', 'sampleadmin4@emial.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'yes', 'admin'),
+('004-0000-4', 'Admin', 'As', 'Faculty', 'adminasfaculty@email.com', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'yes', 'admin');
 
 -- --------------------------------------------------------
 
@@ -75,7 +76,8 @@ CREATE TABLE `admin_evaluation` (
 --
 
 INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
-(12, '000-0000-0', '000-0000-3', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-06 20:52:13');
+(12, '000-0000-0', '000-0000-3', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-06 20:52:13'),
+(13, '000-0000-0', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 73, 97.33, 'very good teacher', 'CIS', '2025-07-08 20:44:00');
 
 -- --------------------------------------------------------
 
@@ -104,7 +106,10 @@ CREATE TABLE `evaluation` (
 --
 
 INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`) VALUES
-(55, '111-1111-1', 'CIS', 'ISBA-101', 'Business Again', '2025-2026', '000-0000-0', 75.00, 100.00, '', '2025-07-05 12:26:31', '1st Semester', '1-B');
+(55, '111-1111-1', 'CIS', 'ISBA-101', 'Business Again', '2025-2026', '000-0000-0', 75.00, 100.00, '', '2025-07-05 12:26:31', '1st Semester', '4-B'),
+(56, '111-1111-1', 'CIS', 'ISBA-101', 'Business Again', '2023-2024', '000-0000-0', 42.00, 56.00, '', '2025-07-07 13:45:47', '1st Semester', '4-B'),
+(57, '123-4567-8', 'CIS', 'ISBA-101', 'Business Again', '2025-2026', '000-0000-0', 59.00, 78.67, '', '2025-07-08 12:33:55', '1st Semester', '1-A'),
+(61, '111-1111-1', 'CIS', 'ISPC-101', 'Computer Programmerist', '2025-2026', '000-0000-1', 61.00, 81.33, '', '2025-07-08 12:42:58', '1st Semester', '4-B');
 
 -- --------------------------------------------------------
 
@@ -129,12 +134,13 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `faculty_rank`, `role`) VALUES
-('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', '', '', 'CIS', '', 'faculty'),
-('000-0000-1', 'Maricel', 'O', 'Pre', 'email@email.com', '12345678', 'CAS', '', 'faculty'),
+('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', '', '', 'CIS', 'Dean', 'faculty'),
+('000-0000-1', 'Maricel', 'Omagad', 'Pre', 'email@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty'),
 ('000-0000-2', 'Faculty', 'Sample', 'Value', 'samplefaculty@email.com', 'ILOVEDMMMSU', 'CVM', 'Assistant Professor I', 'faculty'),
 ('000-0000-3', 'First', 'Middle', 'Last', 'samplefaculty2@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty'),
 ('002-0000-2', 'Admin', 'Sample', 'Faculty', '', '', 'CAS', '', 'faculty'),
-('003-0000-3', 'AdminAs', 'Faculty', 'Sample', '', '', 'CVM', '', 'faculty');
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', '', '', 'CVM', '', 'faculty'),
+('004-0000-4', 'Admin', 'As', 'Faculty', '', '', 'CAFF', 'Dean', 'faculty');
 
 -- --------------------------------------------------------
 
@@ -176,7 +182,7 @@ CREATE TABLE `student` (
 --
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `section`, `role`) VALUES
-('111-1111-1', 'Student', 'Sample', 'Value', 'sample@email.com', 'ILOVEDMMMSU', 'CVM', '1-B', 'student'),
+('111-1111-1', 'Student', 'Sample', 'Value', 'sample@email.com', 'ILOVEDMMMSU', 'CVM', '4-B', 'student'),
 ('111-2222-3', 'Kulark', 'Juswa', 'Rujas', 'email@email.com', '12345678', 'CAS', '1-B', 'student'),
 ('123-4567-8', 'Clark Joshua', 'Velasco', 'Rojas', 'email@email.com', '12345678', 'CIS', '1-A', 'student');
 
@@ -203,7 +209,9 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `facult
 (15, '111-2222-3', 'ISBA-101', NULL, '000-0000-0'),
 (16, '111-1111-1', 'ISBA-101', NULL, '000-0000-0'),
 (17, '111-1111-1', 'PATHFIT-2', NULL, '002-0000-2'),
-(18, '123-4567-8', 'ISBA-102', '000-0000-0', NULL);
+(18, '123-4567-8', 'ISBA-102', '000-0000-0', NULL),
+(19, '123-4567-8', 'ISBA-101', NULL, '000-0000-0'),
+(20, '111-1111-1', 'ISPC-101', '000-0000-1', NULL);
 
 -- --------------------------------------------------------
 
@@ -339,13 +347,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
 -- AUTO_INCREMENT for table `faculty_peer_evaluation`
@@ -357,7 +365,7 @@ ALTER TABLE `faculty_peer_evaluation`
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `subject`

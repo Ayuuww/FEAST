@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'conn/conn.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Check if student is logged in
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
@@ -21,25 +22,23 @@ $faculty_id    = mysqli_real_escape_string($conn, $subject_parts[1]);
 
 // Get subject title
 $subject_title = '';
-$sub_query = "SELECT title FROM subject WHERE code = ?";
-$sub_stmt = $conn->prepare($sub_query);
+$sub_stmt = $conn->prepare("SELECT title FROM subject WHERE code = ?");
 $sub_stmt->bind_param("s", $subject_code);
 $sub_stmt->execute();
 $sub_stmt->bind_result($subject_title);
 $sub_stmt->fetch();
 $sub_stmt->close();
 
+// Get student section
 $student_section = '';
-$sec_query = "SELECT section FROM student WHERE idnumber = ?";
-$sec_stmt = $conn->prepare($sec_query);
+$sec_stmt = $conn->prepare("SELECT section FROM student WHERE idnumber = ?");
 $sec_stmt->bind_param("s", $student_id);
 $sec_stmt->execute();
 $sec_stmt->bind_result($student_section);
 $sec_stmt->fetch();
 $sec_stmt->close();
 
-
-// Compute total score and check all answered
+// Compute score
 $total_score = 0;
 $question_count = 0;
 
@@ -59,40 +58,38 @@ if ($question_count !== 15) {
 
 $percentage = ($total_score / 75) * 100;
 
-// Insert to evaluation table
-$query = "INSERT INTO evaluation (
-    student_id, faculty_id, subject_code, subject_title,
-    department, academic_year, semester,
-    total_score, computed_rating, comment, student_section
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+try {
+    $stmt = $conn->prepare("INSERT INTO evaluation (
+        student_id, faculty_id, subject_code, subject_title,
+        department, academic_year, semester,
+        total_score, computed_rating, comment, student_section
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
+    $stmt->bind_param(
+        "sssssssddss",
+        $student_id,
+        $faculty_id,
+        $subject_code,
+        $subject_title,
+        $department,
+        $academic_year,
+        $semester,
+        $total_score,
+        $percentage,
+        $comment,
+        $student_section
+    );
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param(
-    "sssssssddss",
-    $student_id,
-    $faculty_id,
-    $subject_code,
-    $subject_title,
-    $department,
-    $academic_year,
-    $semester,
-    $total_score,
-    $percentage,
-    $comment,
-    $student_section
-);
+    $stmt->execute();
 
-
-if ($stmt->execute()) {
-    // Store data for evaluated-print.php
+    // Store data for print
     $_SESSION['print_data'] = [
         'student_id'      => $student_id,
         'faculty_id'      => $faculty_id,
         'subject_code'    => $subject_code,
         'subject_title'   => $subject_title,
         'department'      => $department,
-        'academic_year'     => $academic_year,
+        'academic_year'   => $academic_year,
         'semester'        => $semester,
         'total_score'     => $total_score,
         'computed_rating' => $percentage,
@@ -100,21 +97,20 @@ if ($stmt->execute()) {
         'answers'         => []
     ];
 
-    // Collect answers
     for ($i = 0; $i < 15; $i++) {
         $_SESSION['print_data']['answers']["q$i"] = $_POST["q$i"] ?? null;
     }
 
-    // Redirect to print page
     header("Location: evaluation-print.php");
     exit();
 
-} else {
-    $_SESSION['msg'] = "Error submitting evaluation: " . $stmt->error;
-    header("Location: student-evaluate.php");
+} catch (mysqli_sql_exception $e) {
+    if (str_contains($e->getMessage(), 'Duplicate entry')) {
+        $_SESSION['error_message'] = "You've already submitted an evaluation for this subject and semester.";
+    } else {
+        $_SESSION['error_message'] = "An unexpected error occurred: " . $e->getMessage();
+    }
+    header("Location: error-page.php");
     exit();
 }
-
-$stmt->close();
-$conn->close();
 ?>
