@@ -16,7 +16,7 @@ if (isset($_SESSION['msg'])) {
   }
 
 // Get real faculty
-$faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM faculty");
+$faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM faculty WHERE status = 'active'");
 
 // Get admin-as-faculty
 $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM admin WHERE faculty = 'yes'");
@@ -101,6 +101,25 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
           </li>
         </ul>
       </li><!-- End Reports Nav -->
+      
+      <!-- Evaluation Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-evaluationsetting.php" >
+              <i class="bi bi-circle"></i><span>Setting</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-evaluationswitch.php">
+              <i class="bi bi-circle"></i><span>On/Off</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Evalutaion Nav -->
 
       <li class="nav-heading">Account Management</li>
 
@@ -220,7 +239,7 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
           <div class="col-lg-12">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title">Create New Super Admin</h5>
+                <h5 class="card-title">Add New Subject</h5>
                   <form class="row g-3 needs-validation" novalidate method="post" action="addsubject.php">
 
                     <!-- Subject Code -->
@@ -240,7 +259,7 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
                     </div>
 
                     <!-- Faculty Name Dropdown -->
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                       <div class="form-floating">
                         <select name="faculty_id" class="form-select">
                           <option value="">-- Select Faculty --</option>
@@ -253,7 +272,7 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
                     </div>
 
                     <!-- Admin-as-Faculty Dropdown -->
-                    <div class="col-md-2">
+                    <!-- <div class="col-md-2">
                       <div class="form-floating">
                         <select name="admin_id" class="form-select">
                           <option value="">-- Select Admin as Faculty --</option>
@@ -263,7 +282,7 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
                         </select>
                         <label for="admin_id">Faculty as Admin</label>
                       </div>
-                    </div>
+                    </div> -->
 
                     
                     <!-- Submit -->

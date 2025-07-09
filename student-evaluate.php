@@ -2,6 +2,12 @@
 session_start();
 include 'conn/conn.php';
 
+// Check evaluation switch status
+$evalRes = mysqli_query($conn, "SELECT status FROM evaluation_switch LIMIT 1");
+$evalStatus = mysqli_fetch_assoc($evalRes)['status'] ?? 'off';
+$evaluation_closed = $evalStatus === 'off';
+
+
 // Check if the user is logged in and is a student
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
     header("Location: pages-login.php");
@@ -15,23 +21,24 @@ $student_id   = $_SESSION['idnumber'];
 $academic_year  = $_GET['sy'] ?? '';
 $semester     = $_GET['sem'] ?? '';
 
-$query = "  SELECT 
+$query = "SELECT 
             s.code AS subject_code,
             s.title AS subject_title,
             COALESCE(f.idnumber, a.idnumber) AS faculty_id,
             COALESCE(f.first_name, a.first_name) AS first_name,
             COALESCE(f.mid_name, a.mid_name) AS mid_name,
             COALESCE(f.last_name, a.last_name) AS last_name,
+            COALESCE(f.status, a.status) AS status,
+            COALESCE(f.department, a.department) AS department,
             CASE 
               WHEN f.idnumber IS NOT NULL THEN 'faculty'
               WHEN a.idnumber IS NOT NULL THEN 'admin'
               ELSE 'unknown'
             END AS role
           FROM student_subject ss
-          JOIN subject s 
-            ON ss.subject_code = s.code 
-          LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
-          LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.faculty = 'yes'
+          JOIN subject s ON ss.subject_code = s.code 
+          LEFT JOIN faculty f ON ss.faculty_id = f.idnumber AND f.status = 'active'
+          LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.faculty = 'yes' AND a.status = 'active'
           WHERE ss.student_id = ?
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
@@ -39,7 +46,8 @@ $query = "  SELECT
                 AND e.subject_code  = ss.subject_code
                 AND e.faculty_id    = COALESCE(ss.faculty_id, ss.admin_id)
                 AND e.academic_year = ?
-                AND e.semester      = ? )";
+                AND e.semester      = ?
+            )";
 
 $stmt   = $conn->prepare($query);
 $stmt->bind_param("sss", $student_id, $academic_year, $semester);
@@ -51,6 +59,7 @@ while ($row     = $result->fetch_assoc()) {
     $subjects[] = $row;
 }
 
+// Fetching faculty deparment
 $dept_query = "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC";
 $dept_result = mysqli_query($conn, $dept_query);
 $department = [];
@@ -61,6 +70,17 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
     }
 }
 
+
+$setting_query = "SELECT semester, academic_year FROM evaluation_settings WHERE id = 1 LIMIT 1";
+$setting_result = $conn->query($setting_query);
+$default_semester = '';
+$default_year = '';
+
+if ($setting_result && $setting_result->num_rows > 0) {
+    $setting_row = $setting_result->fetch_assoc();
+    $default_semester = $setting_row['semester'];
+    $default_year = $setting_row['academic_year'];
+}
 
 
 
@@ -184,12 +204,42 @@ if (isset($_SESSION['msg'])) {
                 <div class="card-body">
                   <h5 class="card-title text-center">Student Evaluation of Teachers (SET)</h5>
 
+                  
+                    <?php if ($evalStatus === 'off'): ?>
+                      <div class="alert alert-warning text-center fs-5 mt-4">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Evaluation period is currently <strong>CLOSED</strong>. You may view the form but cannot submit.
+                      </div>
+                      <style>
+                        .overlay-block {
+                          position: absolute;
+                          top: 0; left: 0;
+                          width: 100%; height: 100%;
+                          background: rgba(255,255,255,0.6);
+                          z-index: 10;
+                        }
+                        .form-disabled {
+                          pointer-events: none;
+                          opacity: 0.6;
+                        }
+                        .disabled-button {
+                          pointer-events: none;
+                          opacity: 0.5;
+                        }
+                      </style>
+                    <?php endif; ?>
+
                   <form action="submit-evaluation.php" method="POST">
 
+                  <div class="<?= $evaluation_closed ? 'position-relative form-disabled' : '' ?>">
+                  <?php if ($evaluation_closed): ?>
+                    <div class="overlay-block rounded"></div>
+                  <?php endif; ?>
+                    
                     <div class="row">
                       <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
                         <!-- Subject Dropdown -->
-                        <div class="col-md-12 mb-3">
+                        <div class="col-md-6 mb-3">
                           <div class="form-floating">
                             <select name="subject_code" id="subject_code" class="form-select text-capitalize" required>
                               <option value="" disabled selected>-- Select a Subject --</option>
@@ -205,7 +255,8 @@ if (isset($_SESSION['msg'])) {
                                 $isAdminFaculty = empty($row['first_name']) && !empty($row['last_name']); // crude check
                                 $tag = isset($row['role']) && $row['role'] === 'admin' ? ' (Admin)' : '';
                               ?>
-                              <option value="<?= $subjectCode . '|' . $facultyId ?>">
+                              <option value="<?= $subjectCode . '|' . $facultyId ?>" 
+                                      data-department="<?= htmlspecialchars($row['department']) ?>">
                                 <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName . $tag ?>
                               </option>
                               <?php endforeach; ?>
@@ -215,49 +266,26 @@ if (isset($_SESSION['msg'])) {
                         </div>
                       
                         <!-- School Year Dropdown -->
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-3 mb-3">
                           <div class="form-floating">
-                            <select name="academic_year" id="academic_year" class="form-select" required>
-                              <option value="" disabled selected>-- Select Academic Year --</option>
-                              <?php
-                                $currentYear = date("Y");
-                                for ($i = 0; $i < 5; $i++) {
-                                  $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
-                                  echo "<option value='$sy'>$sy</option>";
-                                }
-                              ?>
+                            <select class="form-select" disabled>
+                              <option value="<?= $default_year ?>" selected><?= $default_year ?></option>
                             </select>
                             <label for="academic_year" class="form-label">Academic Year</label>
+                            <input type="hidden" name="academic_year" value="<?= $default_year ?>">
                           </div>
                         </div>
 
-                        <!-- Department Dropdown -->
-                        <div class="col-md-4 mb-3">
+                        <!-- Semester Dropdown -->
+                        <div class="col-md-3 mb-3">
                           <div class="form-floating">
-                            <select name="department" id="department" class="form-select" required>
-                              <option value="" disabled selected>-- Select Instructor College --</option>
-                              <?php foreach ($department as $row): 
-                                $dept = htmlspecialchars($row['department']);
-                              ?>
-                                <option value="<?= $dept ?>"><?= $dept ?></option>
-                              <?php endforeach; ?>
+                            <select class="form-select" disabled>
+                              <option value="<?= $default_semester ?>" selected><?= $default_semester ?></option>
                             </select>
-                            <label for="department" class="form-label">Instructor College</label>
+                            <label for="semester" class="form-label">Semester</label>
+                            <input type="hidden" name="semester" value="<?= $default_semester ?>">
                           </div>
                         </div>
-
-                        <div class="col-md-4 mb-3">
-                          <div class="form-floating">
-                            <select name="semester" id="semester" class="form-select" required>
-                              <option value="" disabled selected>-- Select Semester --</option>
-                              <option value="1st Semester">1st Semester</option>
-                              <option value="2nd Semester">2nd Semester</option>
-                            </select>
-                            <label for="department" class="form-label">Semester</label>
-                          </div>
-                        </div>
-
-
 
                       </div>
 
@@ -459,15 +487,24 @@ if (isset($_SESSION['msg'])) {
                         </div>
                       </div>
 
+                      <!-- hidden inputs -->
                       <input type="hidden" name="student_section" value="<?= htmlspecialchars($student_section) ?>">
+                      <input type="hidden" name="department" id="department_hidden">
 
 
 
-                      <div class="col-md-4 offset-md-4 mb3">
-                        <button type="submit" class="btn btn-success btn-block w-100">Submit Evaluation</button>
+
+                      <div class="col-md-4 offset-md-4 mb-3">
+                          <button type="submit" class="btn btn-success btn-block w-100 <?= $evaluation_closed ? 'disabled-button' : '' ?>">
+                            Submit Evaluation
+                          </button>
+                        </div>
                       </div>
                     
                   </form>
+                  <?php if ($evalStatus === 'off'): ?>
+                    </fieldset>
+                  <?php endif; ?>
 
                 </div>
               </div>
@@ -528,6 +565,16 @@ if (isset($_SESSION['msg'])) {
         });
 
         calculateScore(); // Initial calc on load
+
+        const subjectSelect = document.getElementById('subject_code');
+        const deptHiddenInput = document.getElementById('department_hidden');
+
+        subjectSelect.addEventListener('change', function () {
+          const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+          const department = selectedOption.getAttribute('data-department') || '';
+          deptHiddenInput.value = department;
+        });
+
       });
 
     </script>

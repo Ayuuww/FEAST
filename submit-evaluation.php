@@ -9,6 +9,13 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
     exit();
 }
 
+// Superadmin Set the default semester and academic year
+$setting = mysqli_query($conn, "SELECT semester, academic_year FROM evaluation_settings WHERE id = 1");
+$row = mysqli_fetch_assoc($setting);
+$current_semester = $row['semester'];
+$current_year = $row['academic_year'];
+
+
 // Sanitize inputs
 $student_id    = mysqli_real_escape_string($conn, $_POST['student_id']);
 $academic_year = mysqli_real_escape_string($conn, $_POST['academic_year']);
@@ -16,6 +23,7 @@ $semester      = mysqli_real_escape_string($conn, $_POST['semester'] ?? '');
 $department    = mysqli_real_escape_string($conn, $_POST['department']);
 $comment       = mysqli_real_escape_string($conn, $_POST['comment'] ?? '');
 
+// 
 $subject_parts = explode('|', $_POST['subject_code']);
 $subject_code  = mysqli_real_escape_string($conn, $subject_parts[0]);
 $faculty_id    = mysqli_real_escape_string($conn, $subject_parts[1]);

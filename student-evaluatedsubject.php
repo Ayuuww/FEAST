@@ -129,7 +129,7 @@ if (isset($_SESSION['msg'])) {
             <h5 class="card-title">List of Subjects You Have Evaluated</h5>
 
             <div class="table-responsive">
-              <table class="table table-bordered table-striped align-middle text-center">
+              <table class="table table-bordered table-striped align-middle text-center datatable">
                 <thead class="table-light">
                   <tr>
                     <th>Subject Code</th>

@@ -48,7 +48,7 @@ if ($row = mysqli_fetch_assoc($result1)) {
     $_SESSION['last_name']      = $row['last_name'];
     $_SESSION['department']     = $row['department'];
     $_SESSION['role']           = $row['role'];
-
+    $_SESSION['status']         = $row['status'];
     header("Location: faculty-dashboard.php");
     exit();
 }

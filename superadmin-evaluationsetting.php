@@ -8,42 +8,59 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
-// Fetch student data for listing
-$query = "SELECT * FROM faculty  WHERE role = 'faculty'";
-$result = mysqli_query($conn, $query);
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $semester = $_POST['semester'];
+    $academic_year = $_POST['academic_year'];
 
+    // Replace old setting or insert new one
+    $stmt = $conn->prepare("REPLACE INTO evaluation_settings (id, semester, academic_year) VALUES (1, ?, ?)");
+    $stmt->bind_param("ss", $semester, $academic_year);
+    $stmt->execute();
+
+    $_SESSION['msg'] = "Evaluation settings updated!";
+    header("Location: superadmin-evaluationsetting.php");
+    exit();
+}
+
+// Fetch current settings
+$current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
+$setting = mysqli_fetch_assoc($current);
+$current_semester = $setting['semester'];
+$current_year = $setting['academic_year'];
 
 
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / FacultyList</title>
-  <?php include 'header.php'?>
-</head>
+  <title>FEAST / Evaluation Setting </title>
 
-<body>
+  <?php include 'header.php' ?>
 
-  <?php include 'superadmin-header.php'?>
+  </head>
+  <body>
 
-  <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
+    <?php include 'superadmin-header.php'?>
 
-    <ul class="sidebar-nav" id="sidebar-nav">
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="superadmin-dashboard.php">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
+      <ul class="sidebar-nav" id="sidebar-nav">
 
-      <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-dashboard.php">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li><!-- End Dashboard Nav -->
+
+        <!-- Subject Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -91,12 +108,12 @@ $result = mysqli_query($conn, $query);
 
         <!-- Evaluation Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
             <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="evaluation" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-evaluationsetting.php" >
+              <a href="superadmin-evaluationsetting.php" class="active">
                 <i class="bi bi-circle"></i><span>Setting</span>
               </a>
             </li>
@@ -107,22 +124,22 @@ $result = mysqli_query($conn, $query);
             </li>
           </ul>
         </li><!-- End Evalutaion Nav -->
-
+        
         <li class="nav-heading">Account Management</li>
 
         <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-facultylist.php" class="active">
+              <a href="superadmin-facultylist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-facultycreation.php" >
+              <a href="superadmin-facultycreation.php">
                 <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
@@ -187,7 +204,7 @@ $result = mysqli_query($conn, $query);
           </ul>
         </li><!-- End Super Admin Nav -->
 
-      <li class="nav-heading">Pages</li>
+        <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-user-profile.php">
@@ -203,111 +220,70 @@ $result = mysqli_query($conn, $query);
           </a>
         </li><!-- End Sign Out Page Nav -->
 
-    </ul>
+      </ul>
 
-  </aside><!-- End Sidebar-->
+    </aside><!-- End Sidebar-->
 
-  <main id="main" class="main">
+    <main id="main" class="main">
 
-    <div class="pagetitle">
-      <h1>List of Faculty Members</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Faculty</li>
-          <li class="breadcrumb-item active">List</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
+      <div class="pagetitle">
+        <h1>Setting of Evaluation</h1>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Evaluation</li>
+            <li class="breadcrumb-item active">Setting</li>
+          </ol>
+        </nav>
+      </div><!-- End Page Title -->
 
-    <section class="section ">
-      <div class="row">
-        <div class="col-lg-12">
-
-          <div class="card">
-            <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
-
-              <!-- Table with stripped rows -->
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Academic Rank</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                        <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-capitalize"><?php echo $row['faculty_rank'];?></td>
-                        <td class="text-uppercase"><?php echo $row['department'];?></td>
-                        <td class="text-capitalize"><?php echo $row['status'];?></td>
-                        <td>
-                          <a class="btn btn-primary btn-sm">View</a>
-                          <a class="btn btn-warning btn-sm">Edit</a>
-                      </tr>
-                    <?php
-                      }
-                       ?>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- End Table with stripped rows -->
-
+      <section class="section dashboard">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card p-4">
+                    <h5>Set Default Evaluation Period</h5>
+                    <form method="POST" action="">
+                    <div class="mb-3">
+                        <label for="semester" class="form-label">Semester</label>
+                            <select class="form-select" id="semester" name="semester" required>
+                            <option value="1st Semester" <?= $current_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
+                            <option value="2nd Semester" <?= $current_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
+                            <option value="Summer" <?= $current_semester == 'Summer' ? 'selected' : '' ?>>Summer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                        <input type="text" class="form-control" id="academic_year" name="academic_year" required placeholder="e.g. 2025-2026" value="<?= $current_year ?>">
+                    </div>
+                        <button type="submit" class="btn btn-success">Save Settings</button>
+                    </form>
+                </div>
             </div>
-          </div>
-
         </div>
-      </div>
-    </section>
+      </section>
 
-  </main><!-- End #main -->
+    </main><!-- End #main -->
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer" class="footer">
-    <div class="copyright">
-      &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-      <!-- All the links in the footer should remain intact. -->
-      <!-- You can delete the links only if you purchased the pro version. -->
-      <!-- Licensing information: https://bootstrapmade.com/license/ -->
-      <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-      Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-    </div>
-  </footer><!-- End Footer -->
+    <!-- ======= Footer ======= -->
+    <?php include'footer.php'?>
+    <!-- End Footer -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+        class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
-  <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
+    <!-- Vendor JS Files -->
+    <script src="vendors/apexcharts/apexcharts.min.js"></script>
+    <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendors/chart.js/chart.umd.js"></script>
+    <script src="vendors/echarts/echarts.min.js"></script>
+    <script src="vendors/quill/quill.js"></script>
+    <script src="vendors/simple-datatables/simple-datatables.js"></script>
+    <script src="vendors/tinymce/tinymce.min.js"></script>
+    <script src="vendors/php-email-form/validate.js"></script>
 
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
+    <!-- Template Main JS File -->
+    <script src="assets/js/main.js"></script>
 
-</body>
+  </body>
 
 </html>

@@ -71,13 +71,22 @@ if (isset($_SESSION['msg'])) {
 
                   
                   <!-- Password -->
-                  <div class="col-12">
+                  <div class="col-12 position-relative">
                     <div class="form-floating">
                       <input type="password" name="password" class="form-control" placeholder="Password" id="password" required>
                       <label for="floatingPassword">Password</label>
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
+
+                    <!-- Show Password Toggle -->
+                    <button type="button"
+                            class="position-absolute top-50 end-0 translate-middle-y me-2"
+                            style="border: none; background: transparent; z-index: 2;"
+                            onclick="togglePassword()" tabindex="-1">
+                      <i id="eyeIcon" class="bi bi-eye-slash fs-5"></i>
+                    </button>
                   </div>
+
 
                   <!-- Remember Me -->
                    <div class="col-12">
@@ -124,6 +133,24 @@ if (isset($_SESSION['msg'])) {
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const icon = document.getElementById("eyeIcon");
+
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+      } else {
+        passwordInput.type = "password";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+      }
+    }
+  </script>
+
 
 </body>
 

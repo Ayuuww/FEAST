@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 08, 2025 at 03:36 PM
+-- Generation Time: Jul 09, 2025 at 05:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -37,19 +37,20 @@ CREATE TABLE `admin` (
   `department` varchar(255) NOT NULL,
   `position` varchar(50) NOT NULL,
   `faculty` varchar(11) NOT NULL,
-  `role` varchar(255) NOT NULL DEFAULT 'admin'
+  `role` varchar(255) NOT NULL DEFAULT 'admin',
+  `status` varchar(11) NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`) VALUES
-('000-0000-0', 'Ma\'amEdith', 'Admin', 'Faculty', 'sampleadmin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin'),
-('001-0000-1', 'Sample', 'Admin', '!Faculty', 'sampleadmin2@email.com', 'ILOVEDMMMSU', 'CAS', 'Campus-Administrator', 'no', 'admin'),
-('002-0000-2', 'Admin', 'Sample', 'Faculty', 'sampleadmin3@email.com', 'ILOVEDMMMSU', 'CAS', 'Dean', 'yes', 'admin'),
-('003-0000-3', 'AdminAs', 'Faculty', 'Sample', 'sampleadmin4@emial.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'yes', 'admin'),
-('004-0000-4', 'Admin', 'As', 'Faculty', 'adminasfaculty@email.com', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'yes', 'admin');
+INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`, `status`) VALUES
+('000-0000-0', 'Ma\'amEdith', 'Admin', 'Faculty', 'sampleadmin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active'),
+('001-0000-1', 'Sample', 'Admin', '!Faculty', 'sampleadmin2@email.com', 'ILOVEDMMMSU', 'CAS', 'Campus-Administrator', 'no', 'admin', 'active'),
+('002-0000-2', 'Admin', 'Sample', 'Faculty', 'sampleadmin3@email.com', 'ILOVEDMMMSU', 'CAS', 'Dean', 'yes', 'admin', 'active'),
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', 'sampleadmin4@emial.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'yes', 'admin', 'active'),
+('004-0000-4', 'Admin', 'As', 'Faculty', 'adminasfaculty@email.com', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'yes', 'admin', 'active');
 
 -- --------------------------------------------------------
 
@@ -77,7 +78,8 @@ CREATE TABLE `admin_evaluation` (
 
 INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
 (12, '000-0000-0', '000-0000-3', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-06 20:52:13'),
-(13, '000-0000-0', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 73, 97.33, 'very good teacher', 'CIS', '2025-07-08 20:44:00');
+(16, '000-0000-0', '000-0000-1', 'Dean', '2024-2025', '2nd Semester', 69, 92.00, '', 'CIS', '2025-07-09 18:11:10'),
+(17, '000-0000-0', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-09 19:48:25');
 
 -- --------------------------------------------------------
 
@@ -109,7 +111,46 @@ INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `sub
 (55, '111-1111-1', 'CIS', 'ISBA-101', 'Business Again', '2025-2026', '000-0000-0', 75.00, 100.00, '', '2025-07-05 12:26:31', '1st Semester', '4-B'),
 (56, '111-1111-1', 'CIS', 'ISBA-101', 'Business Again', '2023-2024', '000-0000-0', 42.00, 56.00, '', '2025-07-07 13:45:47', '1st Semester', '4-B'),
 (57, '123-4567-8', 'CIS', 'ISBA-101', 'Business Again', '2025-2026', '000-0000-0', 59.00, 78.67, '', '2025-07-08 12:33:55', '1st Semester', '1-A'),
-(61, '111-1111-1', 'CIS', 'ISPC-101', 'Computer Programmerist', '2025-2026', '000-0000-1', 61.00, 81.33, '', '2025-07-08 12:42:58', '1st Semester', '4-B');
+(61, '111-1111-1', 'CIS', 'ISPC-101', 'Computer Programmerist', '2025-2026', '000-0000-1', 61.00, 81.33, '', '2025-07-08 12:42:58', '1st Semester', '4-B'),
+(62, '111-1111-1', 'CAS', 'PATHFIT-2', 'Physical Damage', '2025-2026', '002-0000-2', 73.00, 97.33, '', '2025-07-09 11:42:43', '1st Semester', '4-B');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `evaluation_settings`
+--
+
+CREATE TABLE `evaluation_settings` (
+  `id` int(11) NOT NULL,
+  `semester` varchar(50) NOT NULL,
+  `academic_year` varchar(20) NOT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `evaluation_settings`
+--
+
+INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_at`) VALUES
+(1, '1st Semester', '2025-2026', '2025-07-09 14:39:37');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `evaluation_switch`
+--
+
+CREATE TABLE `evaluation_switch` (
+  `id` int(11) NOT NULL,
+  `status` enum('on','off') NOT NULL DEFAULT 'off'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `evaluation_switch`
+--
+
+INSERT INTO `evaluation_switch` (`id`, `status`) VALUES
+(1, 'off');
 
 -- --------------------------------------------------------
 
@@ -126,21 +167,22 @@ CREATE TABLE `faculty` (
   `password` varchar(50) NOT NULL,
   `department` varchar(50) NOT NULL,
   `faculty_rank` varchar(50) NOT NULL,
-  `role` varchar(50) NOT NULL DEFAULT 'faculty'
+  `role` varchar(50) NOT NULL DEFAULT 'faculty',
+  `status` varchar(11) NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `faculty`
 --
 
-INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `faculty_rank`, `role`) VALUES
-('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', '', '', 'CIS', 'Dean', 'faculty'),
-('000-0000-1', 'Maricel', 'Omagad', 'Pre', 'email@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty'),
-('000-0000-2', 'Faculty', 'Sample', 'Value', 'samplefaculty@email.com', 'ILOVEDMMMSU', 'CVM', 'Assistant Professor I', 'faculty'),
-('000-0000-3', 'First', 'Middle', 'Last', 'samplefaculty2@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty'),
-('002-0000-2', 'Admin', 'Sample', 'Faculty', '', '', 'CAS', '', 'faculty'),
-('003-0000-3', 'AdminAs', 'Faculty', 'Sample', '', '', 'CVM', '', 'faculty'),
-('004-0000-4', 'Admin', 'As', 'Faculty', '', '', 'CAFF', 'Dean', 'faculty');
+INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `faculty_rank`, `role`, `status`) VALUES
+('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', '', '', 'CIS', 'Dean', 'faculty', 'active'),
+('000-0000-1', 'Maricel', 'Omagad', 'Pre', 'email@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty', 'active'),
+('000-0000-2', 'Faculty', 'Sample', 'Value', 'samplefaculty@email.com', 'ILOVEDMMMSU', 'CVM', 'Assistant Professor I', 'faculty', 'active'),
+('000-0000-3', 'First', 'Middle', 'Last', 'samplefaculty2@email.com', 'ILOVEDMMMSU', 'CIS', 'Assistant Professor I', 'faculty', 'inactive'),
+('002-0000-2', 'Admin', 'Sample', 'Faculty', '', '', 'CAS', '', 'faculty', 'inactive'),
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', '', '', 'CVM', '', 'faculty', 'inactive'),
+('004-0000-4', 'Admin', 'As', 'Faculty', '', '', 'CAFF', 'Dean', 'faculty', 'active');
 
 -- --------------------------------------------------------
 
@@ -293,6 +335,18 @@ ALTER TABLE `evaluation`
   ADD KEY `evaluation_student_section` (`student_section`);
 
 --
+-- Indexes for table `evaluation_settings`
+--
+ALTER TABLE `evaluation_settings`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `evaluation_switch`
+--
+ALTER TABLE `evaluation_switch`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `faculty`
 --
 ALTER TABLE `faculty`
@@ -347,13 +401,25 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+
+--
+-- AUTO_INCREMENT for table `evaluation_settings`
+--
+ALTER TABLE `evaluation_settings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `evaluation_switch`
+--
+ALTER TABLE `evaluation_switch`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `faculty_peer_evaluation`

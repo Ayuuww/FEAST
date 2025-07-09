@@ -95,6 +95,8 @@ $comments_q = mysqli_query($conn, "SELECT comment FROM evaluation WHERE faculty_
         th, td { border: 1px solid #000; padding: 8px; }
         @media print {
             button { display: none; }
+           .no-print { display: none !important; }
+            
         }
 
         table {
@@ -122,78 +124,79 @@ $comments_q = mysqli_query($conn, "SELECT comment FROM evaluation WHERE faculty_
 </head>
 <body onload="window.print()">
 
-<button onclick="window.print()" class="btn btn-secondary w-100">
-    <i class="bi bi-printer"></i> Print Again
-</button>
+    <button onclick="window.print()" class="btn btn-secondary w-20 no-print">
+        <i class="bi bi-printer"></i> Print Again
+    </button>
 
-<h3>INDIVIDUAL FACULTY EVALUATION REPORT</h3>
+        <h3>INDIVIDUAL FACULTY EVALUATION REPORT</h3>
 
-<h5>A. Faculty Information</h5>
-<table>
-    <tr><th>Name of Faculty Evaluated:</th><td><?= htmlspecialchars($faculty_name) ?></td></tr>
-    <tr><th>Department/College:</th><td><?= htmlspecialchars($department) ?></td></tr>
-    <tr><th>Current Faculty Rank:</th><td><?= htmlspecialchars($faculty_rank) ?></td></tr>
-    <tr><th>Semester/Term & Academic Year:</th><td><?= htmlspecialchars($semester . ' / ' . $academic_year) ?></td></tr>
-</table>
+        <h5>A. Faculty Information</h5>
+        <table>
+            <tr><th>Name of Faculty Evaluated:</th><td><?= htmlspecialchars($faculty_name) ?></td></tr>
+            <tr><th>Department/College:</th><td><?= htmlspecialchars($department) ?></td></tr>
+            <tr><th>Current Faculty Rank:</th><td><?= htmlspecialchars($faculty_rank) ?></td></tr>
+            <tr><th>Semester/Term & Academic Year:</th><td><?= htmlspecialchars($semester . ' / ' . $academic_year) ?></td></tr>
+        </table>
 
-<h5>B. Summary of Average SET Rating</h5>
-<table>
-    <thead>
-        <tr><th>Course Code</th><th>Section</th><th>No. of Students</th><th>Avg. SET Rating</th><th>Weighted Value</th></tr>
-    </thead>
-    <tbody>
-        <?= $table_rows ?>
-        <tr><th colspan="2">TOTAL</th><td><?= $total_students ?></td><td></td><td><?= number_format($total_weighted_value, 2) ?></td></tr>
-    </tbody>
-</table>
+        <h5>B. Summary of Average SET Rating</h5>
+        <table>
+            <thead>
+                <tr><th>Course Code</th><th>Section</th><th>No. of Students</th><th>Avg. SET Rating</th><th>Weighted Value</th></tr>
+            </thead>
+            <tbody>
+                <?= $table_rows ?>
+                <tr><th colspan="2">TOTAL</th><td><?= $total_students ?></td><td></td><td><?= number_format($total_weighted_value, 2) ?></td></tr>
+            </tbody>
+        </table>
 
-<h5>C. SET and SEF Ratings</h5>
-<table>
-    <tr><th>OVERALL SET Rating</th><td><?= $overall_set ?></td></tr>
-    <tr><th>Supervisor (SEF) Rating</th><td><?= $sef_rating ?></td></tr>
-</table>
+        <h5>C. SET and SEF Ratings</h5>
+        <table>
+            <tr><th>OVERALL SET Rating</th><td><?= $overall_set ?></td></tr>
+            <tr><th>Supervisor (SEF) Rating</th><td><?= $sef_rating ?></td></tr>
+        </table>
 
-<h5>D. Summary of Qualitative Comments and Suggestions</h5>
-<table>
-    <tr><th>#</th><th>Comments</th></tr>
-    <?php
-    $count = 1;
-    while ($row = mysqli_fetch_assoc($comments_q)) {
-        echo "<tr><td>{$count}</td><td>" . htmlspecialchars($row['comment']) . "</td></tr>";
-        $count++;
-    }
-    if ($count == 1) echo "<tr><td colspan='2'>No comments available.</td></tr>";
-    ?>
-</table>
+        <h5>D. Summary of Qualitative Comments and Suggestions</h5>
+        <table>
+            <tr><th>#</th><th>Comments</th></tr>
+            <?php
+            $count = 1;
+            while ($row = mysqli_fetch_assoc($comments_q)) {
+                echo "<tr><td>{$count}</td><td>" . htmlspecialchars($row['comment']) . "</td></tr>";
+                $count++;
+            }
+            if ($count == 1) echo "<tr><td colspan='2'>No comments available.</td></tr>";
+            ?>
+        </table>
 
-<h5>E. Development Plan</h5>
-<table>
-    <tr><th>Areas for Improvement</th></tr>
-    <tr><td style="height:60px;"></td></tr>
-    <tr><th>Proposed Learning and Development Activities</th></tr>
-    <tr><td style="height:60px;"></td></tr>
-    <tr><th>Action Plan</th></tr>
-    <tr><td style="height:60px;"></td></tr>
-</table>
+        <h5>E. Development Plan</h5>
+        <table>
+            <tr><th>Areas for Improvement</th></tr>
+            <tr><td style="height:60px;"></td></tr>
+            <tr><th>Proposed Learning and Development Activities</th></tr>
+            <tr><td style="height:60px;"></td></tr>
+            <tr><th>Action Plan</th></tr>
+            <tr><td style="height:60px;"></td></tr>
+        </table>
 
-<table class="table table-bordered">
-  <tr>
-    <th class="wide-cell">Prepared by (Staff Signature)</th>
-    <td class="signature-cell"></td>
-    <th class="wide-cell">Name:</th>
-    <td class="signature-cell"></td>
-    <th class="wide-cell">Date:</th>
-    <td class="signature-cell"></td>
-  </tr>
-  <tr>
-    <th class="wide-cell">Reviewed by (Authorized Official)</th>
-    <td class="signature-cell"></td>
-    <th class="wide-cell">Name:</th>
-    <td class="signature-cell"></td>
-    <th class="wide-cell">Date:</th>
-    <td class="signature-cell"></td>
-  </tr>
-</table>
+        <table class="table table-bordered">
+        <tr>
+            <th class="wide-cell">Prepared by (Staff Signature)</th>
+            <td class="signature-cell"></td>
+            <th class="wide-cell">Name:</th>
+            <td class="signature-cell"></td>
+            <th class="wide-cell">Date:</th>
+            <td class="signature-cell"></td>
+        </tr>
+        <tr>
+            <th class="wide-cell">Reviewed by (Authorized Official)</th>
+            <td class="signature-cell"></td>
+            <th class="wide-cell">Name:</th>
+            <td class="signature-cell"></td>
+            <th class="wide-cell">Date:</th>
+            <td class="signature-cell"></td>
+        </tr>
+        </table>
+
 
 
 

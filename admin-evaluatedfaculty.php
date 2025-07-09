@@ -17,7 +17,8 @@ $query = "SELECT
             ae.total_score,
             ae.computed_rating,
             ae.academic_year,
-            ae.semester
+            ae.semester,
+            ae.evaluation_date
           FROM admin_evaluation ae
           JOIN faculty f ON ae.evaluatee_id = f.idnumber
           WHERE ae.evaluator_id = ?
@@ -132,9 +133,10 @@ if (isset($_SESSION['msg'])) {
                             <thead>
                                 <tr>
                                     <th>Evaluatee Name</th>
-                                    <th>Rating</th>
+                                    <th>Total Score</th>
+                                    <th>Computed Rating</th>
                                     <th>Semester</th>
-                                    <th>School Year</th>
+                                    <th>Academic Year</th>
                                     <th>Evaluated On</th>
                                 </tr>
                             </thead>
@@ -147,7 +149,7 @@ if (isset($_SESSION['msg'])) {
                                         <td><?= htmlspecialchars($row['computed_rating']) ?></td>
                                         <td><?= htmlspecialchars($row['semester']) ?></td>
                                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
-                                        <!-- <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td> -->
+                                        <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
                                     </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>

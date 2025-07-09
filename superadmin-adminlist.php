@@ -88,6 +88,25 @@ $result = mysqli_query($conn, $query);
           </ul>
         </li><!-- End Reports Nav -->
 
+        <!-- Evaluation Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+            <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-evaluationsetting.php" >
+                <i class="bi bi-circle"></i><span>Setting</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-evaluationswitch.php">
+                <i class="bi bi-circle"></i><span>On/Off</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Evalutaion Nav -->
+
         <li class="nav-heading">Account Management</li>
 
         <!-- Faculty Nav -->
@@ -231,10 +250,10 @@ $result = mysqli_query($conn, $query);
                       <?php
                         while ($row = mysqli_fetch_assoc($result)) {
                           ?>
-                          <td><?php echo $row['idnumber'];?></td>
-                          <td><?php echo $row['first_name'];?></td>
-                          <td><?php echo $row['mid_name'];?></td>
-                          <td><?php echo $row['last_name'];?></td>
+                          <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
+                          <td class="text-capitalize"><?php echo $row['first_name'];?></td>
+                          <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
+                          <td class="text-capitalize"><?php echo $row['last_name'];?></td>
                           <td><?php echo $row['email'];?></td>
                           <td class="text-uppercase"><?php echo $row['department'];?></td>
                           <td class="text-capitalize"><?php echo $row['position'];?></td>

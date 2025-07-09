@@ -91,6 +91,25 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
             </li>
           </ul>
         </li><!-- End Reports Nav -->
+
+        <!-- Evaluation Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+            <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-evaluationsetting.php" >
+                <i class="bi bi-circle"></i><span>Setting</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-evaluationswitch.php">
+                <i class="bi bi-circle"></i><span>On/Off</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Evalutaion Nav -->
         
         <li class="nav-heading">Account Management</li>
 

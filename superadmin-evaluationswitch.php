@@ -1,49 +1,64 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Fetch student data for listing
-$query = "SELECT * FROM faculty  WHERE role = 'faculty'";
-$result = mysqli_query($conn, $query);
+// Fetch current evaluation status
+$eval_status = 'off';
+$status_query = mysqli_query($conn, "SELECT status FROM evaluation_switch LIMIT 1");
+if ($row = mysqli_fetch_assoc($status_query)) {
+    $eval_status = $row['status'];
+}
 
+// Handle toggle submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $new_status = isset($_POST['status']) && $_POST['status'] === 'on' ? 'on' : 'off';
 
+    // Update or insert into evaluation_switch
+    $check = mysqli_query($conn, "SELECT id FROM evaluation_switch LIMIT 1");
+    if (mysqli_num_rows($check) > 0) {
+        mysqli_query($conn, "UPDATE evaluation_switch SET status = '$new_status'");
+    } else {
+        mysqli_query($conn, "INSERT INTO evaluation_switch (status) VALUES ('$new_status')");
+    }
 
-
+    $eval_status = $new_status; // Update local variable
+}
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / FacultyList</title>
-  <?php include 'header.php'?>
-</head>
+  <title>FEAST / Evaluation On/Off </title>
 
-<body>
+  <?php include 'header.php' ?>
 
-  <?php include 'superadmin-header.php'?>
+  </head>
+  <body>
 
-  <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
+    <?php include 'superadmin-header.php'?>
 
-    <ul class="sidebar-nav" id="sidebar-nav">
+    <!-- ======= Sidebar ======= -->
+    <aside id="sidebar" class="sidebar">
 
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="superadmin-dashboard.php">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
+      <ul class="sidebar-nav" id="sidebar-nav">
 
-      <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-dashboard.php">
+            <i class="bi bi-grid"></i>
+            <span>Dashboard</span>
+          </a>
+        </li><!-- End Dashboard Nav -->
+
+        <!-- Subject Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -91,38 +106,38 @@ $result = mysqli_query($conn, $query);
 
         <!-- Evaluation Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
             <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="evaluation" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-evaluationsetting.php" >
                 <i class="bi bi-circle"></i><span>Setting</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-evaluationswitch.php">
+              <a href="superadmin-evaluationswitch.php" class="active">
                 <i class="bi bi-circle"></i><span>On/Off</span>
               </a>
             </li>
           </ul>
         </li><!-- End Evalutaion Nav -->
-
+        
         <li class="nav-heading">Account Management</li>
 
         <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-facultylist.php" class="active">
+              <a href="superadmin-facultylist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-facultycreation.php" >
+              <a href="superadmin-facultycreation.php">
                 <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
@@ -187,7 +202,7 @@ $result = mysqli_query($conn, $query);
           </ul>
         </li><!-- End Super Admin Nav -->
 
-      <li class="nav-heading">Pages</li>
+        <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-user-profile.php">
@@ -203,111 +218,84 @@ $result = mysqli_query($conn, $query);
           </a>
         </li><!-- End Sign Out Page Nav -->
 
-    </ul>
+      </ul>
 
-  </aside><!-- End Sidebar-->
+    </aside><!-- End Sidebar-->
 
-  <main id="main" class="main">
+    <main id="main" class="main">
 
-    <div class="pagetitle">
-      <h1>List of Faculty Members</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Faculty</li>
-          <li class="breadcrumb-item active">List</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
+      <div class="pagetitle">
+        <h1>Evaluation On/Off</h1>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Evaluation</li>
+            <li class="breadcrumb-item active">On/Off</li>
+          </ol>
+        </nav>
+      </div><!-- End Page Title -->
 
-    <section class="section ">
-      <div class="row">
-        <div class="col-lg-12">
+        <section class="section dashboard">
+            <div class="row justify-content-center">
+                <div class="col-lg-6 col-md-8 col-sm-12">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center p-4">
+                    <h5 class="card-title">Evaluation Switch</h5>
 
-          <div class="card">
-            <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
+                    <!-- Status Message -->
+                    <?php if ($eval_status === 'off'): ?>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Evaluation is currently <strong>CLOSED</strong>.
+                        </div>
+                    <?php else: ?>
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            Evaluation is currently <strong>OPEN</strong>.
+                        </div>
+                    <?php endif; ?>
 
-              <!-- Table with stripped rows -->
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Academic Rank</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                        <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-capitalize"><?php echo $row['faculty_rank'];?></td>
-                        <td class="text-uppercase"><?php echo $row['department'];?></td>
-                        <td class="text-capitalize"><?php echo $row['status'];?></td>
-                        <td>
-                          <a class="btn btn-primary btn-sm">View</a>
-                          <a class="btn btn-warning btn-sm">Edit</a>
-                      </tr>
-                    <?php
-                      }
-                       ?>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- End Table with stripped rows -->
-
+                    <!-- Toggle Form -->
+                    <form method="POST">
+                        <div class="form-check form-switch d-flex justify-content-center align-items-center gap-3 mt-3">
+                            <input class="form-check-input fs-4" type="checkbox" name="status" id="evaluationToggle"
+                                onchange="this.form.submit()" <?= $eval_status === 'on' ? 'checked' : '' ?>>
+                            <label class="form-check-label fs-5" for="evaluationToggle">
+                                <?= $eval_status === 'on' ? 'Turn OFF Evaluation' : 'Turn ON Evaluation' ?>
+                            </label>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+                </div>
             </div>
-          </div>
+        </section>
 
-        </div>
-      </div>
-    </section>
 
-  </main><!-- End #main -->
 
-  <!-- ======= Footer ======= -->
-  <footer id="footer" class="footer">
-    <div class="copyright">
-      &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-    </div>
-    <div class="credits">
-      <!-- All the links in the footer should remain intact. -->
-      <!-- You can delete the links only if you purchased the pro version. -->
-      <!-- Licensing information: https://bootstrapmade.com/license/ -->
-      <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-      Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-    </div>
-  </footer><!-- End Footer -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+    </main><!-- End #main -->
 
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
-  <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
+    <!-- ======= Footer ======= -->
+    <?php include'footer.php'?>
+    <!-- End Footer -->
 
-  <!-- Template Main JS File -->
-  <script src="assets/js/main.js"></script>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+        class="bi bi-arrow-up-short"></i></a>
 
-</body>
+    <!-- Vendor JS Files -->
+    <script src="vendors/apexcharts/apexcharts.min.js"></script>
+    <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="vendors/chart.js/chart.umd.js"></script>
+    <script src="vendors/echarts/echarts.min.js"></script>
+    <script src="vendors/quill/quill.js"></script>
+    <script src="vendors/simple-datatables/simple-datatables.js"></script>
+    <script src="vendors/tinymce/tinymce.min.js"></script>
+    <script src="vendors/php-email-form/validate.js"></script>
+
+    <!-- Template Main JS File -->
+    <script src="assets/js/main.js"></script>
+
+  </body>
 
 </html>

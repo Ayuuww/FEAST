@@ -10,7 +10,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 
 // Get total approved faculty
-$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE role = 'faculty'";
+$faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE role = 'faculty' and status = 'active'";
 $faulty_result = mysqli_query($conn, $faculty_query);
 $data = mysqli_fetch_assoc($faulty_result);
 $totalfaculty = $data['total_faculty'];
@@ -115,6 +115,25 @@ $totalsubject = $data['total_subject'];
             </li>
           </ul>
         </li><!-- End Reports Nav -->
+
+        <!-- Evaluation Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+            <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="superadmin-evaluationsetting.php" >
+                <i class="bi bi-circle"></i><span>Setting</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-evaluationswitch.php">
+                <i class="bi bi-circle"></i><span>On/Off</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Evalutaion Nav -->
         
         <li class="nav-heading">Account Management</li>
 
@@ -235,11 +254,11 @@ $totalsubject = $data['total_subject'];
             <div class="row">
 
               <!-- Total Faculty Card -->
-              <div class="col-xxl-4 col-md-6">
+              <div class="col-xxl-4 col-md-12">
                 <div class="card info-card ">
                   
                   <div class="card-body">
-                    <h5 class="card-title">Total<span> | Faculty Members</span></h5>
+                    <h5 class="card-title">Total<span> | Faculty (Active)</span></h5>
 
                     <div class="d-flex align-items-center">
                       <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">

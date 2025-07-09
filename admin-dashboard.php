@@ -22,7 +22,7 @@ $row = $result->fetch_assoc();
 $department = $row['department'] ?? '';
 
 // Count faculty in same department
-$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department = ?";
+$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department = ? AND status = 'active'";
 $stmt = $conn->prepare($faculty_query);
 $stmt->bind_param("s", $department);
 $stmt->execute();
@@ -82,7 +82,7 @@ $totalstudent = $student_row['total'] ?? 0;
               </a>
             </li>
             <li>
-              <a href="admin-evaluatedfaculy.php" >
+              <a href="admin-evaluatedfaculty.php" >
                 <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
