@@ -1,30 +1,96 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
+// Check if superadmin is logged in
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Fetch student data for listing
-$query = "SELECT * FROM faculty  WHERE role = 'faculty'";
-$result = mysqli_query($conn, $query);
+// Check if faculty ID is provided
+if (!isset($_GET['id'])) {
+    echo "Faculty ID is missing.";
+    exit();
+}
+
+$faculty_id = $_GET['id'];
+
+// Fetch faculty data
+$stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
+$stmt->bind_param("s", $faculty_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$faculty = $result->fetch_assoc();
+
+if (!$faculty && $_SERVER["REQUEST_METHOD"] != "POST") {
+    echo "Faculty not found.";
+    exit();
+}
 
 
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $new_status = $_POST['status'];
+    $new_role   = $_POST['role'];
 
+    if ($new_role === 'admin') {
+    $facultyData = $faculty; // Already fetched above
+
+        if ($facultyData) {
+            $position = $_POST['position'] ?? '';
+            $is_faculty = $_POST['is_faculty'] ?? 'no';
+
+            // Insert into admin table
+            $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, email, password, role, status, department, position, faculty) 
+                                        VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
+            $insertAdmin->bind_param(
+                "ssssssssss",
+                $facultyData['idnumber'],
+                $facultyData['first_name'],
+                $facultyData['mid_name'],
+                $facultyData['last_name'],
+                $facultyData['email'],
+                $facultyData['password'],
+                $new_status,
+                $facultyData['department'],
+                $position,
+                $is_faculty
+            );
+            $insertAdmin->execute();
+
+            // Delete from faculty table
+            // $deleteFaculty = $conn->prepare("DELETE FROM faculty WHERE idnumber = ?");
+            // $deleteFaculty->bind_param("s", $faculty_id);
+            // $deleteFaculty->execute();
+
+            // Redirect
+            header("Location: superadmin-adminlist.php?converted=success");
+            exit();
+        } else {
+            $error = "Faculty data not found.";
+        }
+    }
+    else {
+        // Just update role and status
+        $stmt = $conn->prepare("UPDATE faculty SET status = ?, role = ? WHERE idnumber = ?");
+        $stmt->bind_param("sss", $new_status, $new_role, $faculty_id);
+        $stmt->execute();
+
+        $success = "Faculty updated successfully!";
+    }
+}
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / FacultyList</title>
-  <?php include 'header.php'?>
+  <meta charset="UTF-8">
+  <title>Edit Faculty Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?php include 'header.php'; ?>
 </head>
 
 <body>
@@ -206,79 +272,104 @@ $result = mysqli_query($conn, $query);
     </ul>
 
   </aside><!-- End Sidebar-->
-
+  
   <main id="main" class="main">
-
     <div class="pagetitle">
-      <h1>List of Faculty Members</h1>
+      <h1>Edit Faculty Status</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Faculty</li>
-          <li class="breadcrumb-item active">List</li>
+          <li class="breadcrumb-item"><a href="superadmin-facultylist.php">Faculty</a></li>
+          <li class="breadcrumb-item">List</li>
+          <li class="breadcrumb-item active">Edit</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
-    <section class="section ">
+    <section class="section">
       <div class="row">
-        <div class="col-lg-12">
-
+        <div class="col-lg-6">
           <div class="card">
-            <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
+            <div class="card-body">
+              <h5 class="card-title">Faculty Information</h5>
 
-              <!-- Table with stripped rows -->
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Academic Rank</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                        <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-capitalize"><?php echo $row['faculty_rank'];?></td>
-                        <td class="text-uppercase"><?php echo $row['department'];?></td>
-                        <td class="text-capitalize"><?php echo $row['status'];?></td>
-                        <td>
-                          <a href="superadmin-editfaculty.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                      </tr>
-                    <?php
-                      }
-                       ?>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- End Table with stripped rows -->
+              <?php if (isset($success)): ?>
+                <div class="alert alert-success"><?php echo $success; ?></div>
+              <?php endif; ?>
+
+              <?php if ($faculty): ?>
+              <form method="POST">
+                <div class="mb-3">
+                  <label class="form-label">ID Number</label>
+                  <input type="text" class="form-control" value="<?php echo $faculty['idnumber']; ?>" disabled>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Full Name</label>
+                  <input type="text" class="form-control" value="<?php echo $faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']; ?>" disabled>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Department</label>
+                  <input type="text" class="form-control" value="<?php echo $faculty['department']; ?>" disabled>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Role</label>
+                  <select name="role" class="form-select" required>
+                    <option value="faculty" <?php if ($faculty['role'] == 'faculty') echo 'selected'; ?>>Faculty</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                <div id="admin-options" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Position</label>
+                        <select class="form-select" name="position" required>
+                            <option value="" disabled selected>-- Select Position --</option>
+                            <option value="Vice-President">Vice-President</option>
+                            <option value="Chancellor">Chancellor</option>
+                            <option value="Campus Administrator">Campus Administrator</option>
+                            <option value="Dean">Dean</option>
+                            <option value="Director">Director</option>
+                            <option value="Coordinator">Coordinator</option>
+                        </select>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label class="form-label">Still a Faculty?</label>
+                        <select class="form-select" name="is_faculty">
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                  <label class="form-label">Current Status</label>
+                  <select name="status" class="form-select" required>
+                    <option value="active" <?php if ($faculty['status'] == 'active') echo 'selected'; ?>>Active</option>
+                    <option value="inactive" <?php if ($faculty['status'] == 'inactive') echo 'selected'; ?>>Inactive</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Update Status</button>
+                <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
+              </form>
+              <?php else: ?>
+                <div class="alert alert-info">This faculty member has been moved to the admin list.</div>
+              <?php endif; ?>
 
             </div>
           </div>
-
         </div>
       </div>
     </section>
+  </main>
+</body>
 
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
+    <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
     <div class="copyright">
       &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
@@ -307,6 +398,24 @@ $result = mysqli_query($conn, $query);
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-</body>
+  <script>
+    document.querySelector('select[name="role"]').addEventListener('change', function () {
+    const adminOptions = document.getElementById('admin-options');
+    if (this.value === 'admin') {
+        adminOptions.style.display = 'block';
+    } else {
+        adminOptions.style.display = 'none';
+    }
+    });
+
+    // Trigger change on page load (to restore visibility if form was submitted with errors)
+    window.addEventListener('DOMContentLoaded', function () {
+    const roleSelect = document.querySelector('select[name="role"]');
+    if (roleSelect.value === 'admin') {
+        document.getElementById('admin-options').style.display = 'block';
+    }
+    });
+  </script>
+
 
 </html>

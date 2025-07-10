@@ -43,7 +43,7 @@ if (isset($_POST['submit'])) {
                                         '$faculty_rank')";
 
     if (mysqli_query($conn, $sql)) {
-        $_SESSION['msg']    = 'faculty account successfully created.';
+        $_SESSION['msg']    = 'Faculty account successfully created.';
     } else {
         $_SESSION['msg']    = 'Error creating faculty account: ' . mysqli_error($conn);
     }

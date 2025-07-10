@@ -1,32 +1,52 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Fetch student data for listing
-$query = "SELECT * FROM student  WHERE role = 'student'";
-$result = mysqli_query($conn, $query);
+if (!isset($_GET['id'])) {
+    echo "Student ID is missing.";
+    exit();
+}
 
+$student_id = $_GET['id'];
 
+$stmt = $conn->prepare("SELECT * FROM student WHERE idnumber = ?");
+$stmt->bind_param("s", $student_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$student = $result->fetch_assoc();
 
+if (!$student) {
+    echo "Student not found.";
+    exit();
+}
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $new_department = $_POST['department'];
+    $new_section = $_POST['section'];
+
+    $update = $conn->prepare("UPDATE student SET department = ?, section = ? WHERE idnumber = ?");
+    $update->bind_param("sss", $new_department, $new_section, $student_id);
+    if ($update->execute()) {
+        header("Location: superadmin-studentlist.php?update=success");
+        exit();
+    } else {
+        echo "Update failed.";
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / StudentList</title>
-  <?php include 'header.php'?>
+    <meta charset="UTF-8">
+    <title>Edit Student</title>
+    <?php include 'header.php'; ?>
 </head>
-
 <body>
 
   <?php include 'superadmin-header.php'?>
@@ -207,74 +227,94 @@ $result = mysqli_query($conn, $query);
 
   </aside><!-- End Sidebar-->
 
-  <main id="main" class="main">
-
-    <div class="pagetitle">
-      <h1>List of Students</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Student</li>
-          <li class="breadcrumb-item active">List</li>
-        </ol>
-      </nav>
-    </div><!-- End Page Title -->
-
-    <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
-
-          <div class="card ">
-            <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
-
-              <!-- Table with stripped rows -->
-              <table class="table datatable">
-                <thead>
-                  <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Department</th>
-                    <th>Section</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td><?php echo $row['idnumber'];?></td>
-                        <td class="text-capitalize" ><?php echo $row['first_name'];?></td>
-                        <td class="text-capitalize" ><?php echo $row['mid_name'];?></td>
-                        <td class="text-capitalize" ><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-uppercase"><?php echo $row['department'];?></td>
-                        <td class="text-uppercase"><?php echo $row['section'];?></td> 
-                        <td>
-                          <a href="superadmin-editstudent.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                      </tr>
-                    <?php
-                      }
-                       ?>
-                  </tr>
-                </tbody>
-              </table>
-              <!-- End Table with stripped rows -->
-
-            </div>
-          </div>
-
+    <main id="main" class="main">
+        <div class="pagetitle">
+            <h1>Edit Student</h1>
+            <nav>
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+                    <li class="breadcrumb-item"><a href="superadmin-studentlist.php">Student</a></li>
+                    <li class="breadcrumb-item">List</li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
-      </div>
-    </section>
 
-  </main><!-- End #main -->
+        <section class="section">
+            <div class="card col-lg-6">
+                <div class="card-body">
+                    <h5 class="card-title">Student Information</h5>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
+                                <label class="form-label">ID Number</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-floating">
+                                <input type="text" class="form-control"
+                                    value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
+                                    disabled>
+                                <label class="form-label">Full Name</label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select name="department" class="form-select" id="departmentSelect" required>
+                                        <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
+                                        <option value="CIS" <?= $student['department'] == 'CIS' ? 'selected' : '' ?>>CIS</option>
+                                        <option value="CVM" <?= $student['department'] == 'CVM' ? 'selected' : '' ?>>CVM</option>
+                                        <option value="CAFF" <?= $student['department'] == 'CAFF' ? 'selected' : '' ?>>CAFF</option>
+                                        <!-- Optional additional departments -->
+                                        <!--
+                                        <option value="BEED" <?= $student['department'] == 'BEED' ? 'selected' : '' ?>>BEED</option>
+                                        <option value="BSHM" <?= $student['department'] == 'BSHM' ? 'selected' : '' ?>>BSHM</option>
+                                        <option value="BSTM" <?= $student['department'] == 'BSTM' ? 'selected' : '' ?>>BSTM</option>
+                                        <option value="BSCRIM" <?= $student['department'] == 'BSCRIM' ? 'selected' : '' ?>>BSCRIM</option>
+                                        -->
+                                    </select>
+                                    <label for="departmentSelect">Department</label>
+                                </div>
+                            </div>
+
+
+
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" name="section" required>
+                                        <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
+                                        <option value="1-A" <?= $student['section'] == '1-A' ? 'selected' : '' ?>>1-A</option>
+                                        <option value="1-B" <?= $student['section'] == '1-B' ? 'selected' : '' ?>>1-B</option>
+                                        <option value="1-C" <?= $student['section'] == '1-C' ? 'selected' : '' ?>>1-C</option>
+                                        <option value="1-D" <?= $student['section'] == '1-D' ? 'selected' : '' ?>>1-D</option>
+                                        <option value="2-A" <?= $student['section'] == '2-A' ? 'selected' : '' ?>>2-A</option>
+                                        <option value="2-B" <?= $student['section'] == '2-B' ? 'selected' : '' ?>>2-B</option>
+                                        <option value="2-C" <?= $student['section'] == '2-C' ? 'selected' : '' ?>>2-C</option>
+                                        <option value="2-D" <?= $student['section'] == '2-D' ? 'selected' : '' ?>>2-D</option>
+                                        <option value="3-A" <?= $student['section'] == '3-A' ? 'selected' : '' ?>>3-A</option>
+                                        <option value="3-B" <?= $student['section'] == '3-B' ? 'selected' : '' ?>>3-B</option>
+                                        <option value="3-C" <?= $student['section'] == '3-C' ? 'selected' : '' ?>>3-C</option>
+                                        <option value="3-D" <?= $student['section'] == '3-D' ? 'selected' : '' ?>>3-D</option>
+                                        <option value="4-A" <?= $student['section'] == '4-A' ? 'selected' : '' ?>>4-A</option>
+                                        <option value="4-B" <?= $student['section'] == '4-B' ? 'selected' : '' ?>>4-B</option>
+                                        <option value="4-C" <?= $student['section'] == '4-C' ? 'selected' : '' ?>>4-C</option>
+                                        <option value="4-D" <?= $student['section'] == '4-D' ? 'selected' : '' ?>>4-D</option>
+                                    </select>
+                                    <label for="section">Section</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Update</button>
+                        <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main><!-- end of main -->
 
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
@@ -304,7 +344,6 @@ $result = mysqli_query($conn, $query);
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-
 </body>
 
 </html>
