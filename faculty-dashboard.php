@@ -35,7 +35,7 @@ $result = mysqli_query($conn, $query);
       <ul class="sidebar-nav" id="sidebar-nav">
 
         <li class="nav-item">
-          <a class="nav-link " href="student-dashboard.php">
+          <a class="nav-link " href="faculty-dashboard.php">
             <i class="bi bi-grid"></i>
             <span>Dashboard</span>
           </a>
@@ -65,7 +65,14 @@ $result = mysqli_query($conn, $query);
             <i class="bi bi-book-fill"></i>
             <span>Subject</span>
           </a>
-        </li><!-- End Profile Nav -->
+        </li><!-- End Subject Nav -->
+
+        <li class="nav-item">
+          <a class="nav-link collapse" href="faculty-records.php">
+            <i class="ri-record-circle-fill"></i>
+            <span>Records</span>
+          </a>
+        </li><!-- End Records Nav -->
 
         <li class="nav-heading">Pages</li>
 

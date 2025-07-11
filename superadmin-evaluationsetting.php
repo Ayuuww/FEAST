@@ -238,25 +238,31 @@ $current_year = $setting['academic_year'];
       </div><!-- End Page Title -->
 
       <section class="section dashboard">
-        <div class="row">
-            <div class="col-md-6">
+        <div class="row align-items-center justify-content-center">
+            <div class="col-md-4">
                 <div class="card p-4">
-                    <h5>Set Default Evaluation Period</h5>
+                    <h5 class="text-center"><strong>Set Default Evaluation Period</strong></h5>
                     <form method="POST" action="">
                     <div class="mb-3">
-                        <label for="semester" class="form-label">Semester</label>
-                            <select class="form-select" id="semester" name="semester" required>
+                      <div class="form-floating">
+                        <select class="form-select" id="semester" name="semester" required>
                             <option value="1st Semester" <?= $current_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
                             <option value="2nd Semester" <?= $current_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
                             <option value="Summer" <?= $current_semester == 'Summer' ? 'selected' : '' ?>>Summer</option>
                         </select>
+                        <label for="semester" class="form-label">Semester</label>
+                      </div>
                     </div>
                     <div class="mb-3">
-                        <label for="academic_year" class="form-label">Academic Year</label>
+                      <div class="form-floating">
                         <input type="text" class="form-control" id="academic_year" name="academic_year" required placeholder="e.g. 2025-2026" value="<?= $current_year ?>">
+                        <label for="academic_year" class="form-label">Academic Year</label>
+                      </div>
                     </div>
+                    <div class="d-grid gap-2 col-6 mx-auto">
                         <button type="submit" class="btn btn-success">Save Settings</button>
-                    </form>
+                    </div>
+                  </form>
                 </div>
             </div>
         </div>
