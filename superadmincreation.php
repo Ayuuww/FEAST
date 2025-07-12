@@ -23,7 +23,7 @@ if (isset($_POST['submit'])) {
     }
 
     // Proceed with insertion
-    $sql    = "INSERT INTO admin   (   idnumber, 
+    $sql    = "INSERT INTO superadmin   (   idnumber, 
                                     first_name, 
                                     mid_name, 
                                     last_name, 
@@ -43,7 +43,7 @@ if (isset($_POST['submit'])) {
         $_SESSION['msg']    = 'Error creating super admin account: ' . mysqli_error($conn);
     }
 
-    header("Location: superadmin-admincreation.php");
+    header("Location: superadmin-superadmincreation.php");
     exit();
 
 } else {

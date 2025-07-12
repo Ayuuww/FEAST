@@ -67,12 +67,12 @@ $result = mysqli_query($conn, $query);
           </a>
         </li><!-- End Subject Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapse" href="faculty-records.php">
+        <!-- <li class="nav-item">
+          <a class="nav-link collapsed" href="faculty-records.php">
             <i class="ri-record-circle-fill"></i>
             <span>Records</span>
           </a>
-        </li><!-- End Records Nav -->
+        </li>End Records Nav -->
 
         <li class="nav-heading">Pages</li>
 

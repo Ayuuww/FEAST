@@ -32,8 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update = $conn->prepare("UPDATE student SET department = ?, section = ? WHERE idnumber = ?");
     $update->bind_param("sss", $new_department, $new_section, $student_id);
     if ($update->execute()) {
-        header("Location: superadmin-studentlist.php?update=success");
+        header("Location: superadmin-editstudent.php?id=$student_id&update=success");
         exit();
+
     } else {
         echo "Update failed.";
     }
@@ -244,6 +245,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card col-lg-6">
                 <div class="card-body">
                     <h5 class="card-title">Student Information</h5>
+                    <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+                      <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill"></i>
+                        Student information updated successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    <?php endif; ?>
+
                     <form method="POST">
                         <div class="mb-3">
                             <div class="form-floating">
@@ -344,6 +353,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-</body>
+  <!-- <script>
+    setTimeout(function () {
+      let alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('hide');
+      }
+    }, 3000); // Hide after 3 seconds
+  </script> -->
 
+</body>
 </html>

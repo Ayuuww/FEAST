@@ -29,6 +29,18 @@ $setting = mysqli_fetch_assoc($current);
 $current_semester = $setting['semester'];
 $current_year = $setting['academic_year'];
 
+// Show success message if set
+$success_msg = '';
+if (isset($_SESSION['msg'])) {
+    $success_msg = $_SESSION['msg'];
+    unset($_SESSION['msg']); // clear message after showing
+}
+
+// Fetch current settings
+$current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
+$setting = mysqli_fetch_assoc($current);
+$current_semester = $setting['semester'];
+$current_year = $setting['academic_year'];
 
 
 ?>
@@ -242,6 +254,12 @@ $current_year = $setting['academic_year'];
             <div class="col-md-4">
                 <div class="card p-4">
                     <h5 class="text-center"><strong>Set Default Evaluation Period</strong></h5>
+                    <?php if (!empty($success_msg)): ?>
+                      <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($success_msg) ?>
+                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
+                      </div>
+                    <?php endif; ?>
                     <form method="POST" action="">
                     <div class="mb-3">
                       <div class="form-floating">

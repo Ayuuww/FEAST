@@ -42,7 +42,7 @@ $stmt->bind_param("ss", $department, $evaluator_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-
+// super admin set academic year and semester to default
 $setting_query = "SELECT semester, academic_year FROM evaluation_settings WHERE id = 1 LIMIT 1";
 $setting_result = $conn->query($setting_query);
 $default_semester = '';

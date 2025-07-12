@@ -1,48 +1,82 @@
-<?php 
-
+<?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if the user is logged in and is a superadmin
+// Ensure user is logged in as superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Fetching admin data
-$query = "SELECT * FROM admin";
-$result = mysqli_query($conn, $query);
+if (!isset($_GET['id'])) {
+    echo "Superadmin ID is missing.";
+    exit();
+}
 
+$superadmin_id = $_GET['id'];
 
+// Fetch superadmin details
+$stmt = $conn->prepare("SELECT * FROM superadmin WHERE idnumber = ?");
+$stmt->bind_param("s", $superadmin_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$superadmin = $result->fetch_assoc();
+
+if (!$superadmin) {
+    echo "Superadmin not found.";
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $new_status = $_POST['status'];
+
+    $stmt = $conn->prepare("UPDATE superadmin SET status = ? WHERE idnumber = ?");
+    $stmt->bind_param("ss", $new_status, $superadmin_id);
+    $stmt->execute();
+
+    // Optional: Send email notification
+    // $to = $superadmin['email'];
+    // $subject = "Your Superadmin Account Status Changed";
+    // $message = "Hello " . $superadmin['first_name'] . ",\n\nYour account status has been updated to: $new_status.\n\nIf this was not you, please contact the system administrator.";
+    // $headers = "From: no-reply@yourdomain.com";
+
+    // mail($to, $subject, $message, $headers);
+
+    header("Location: superadmin-editsuperadmin.php?id=$superadmin_id&update=success");
+    exit();
+
+}
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Admin Status</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <?php include 'header.php'; ?>
+</head>
 
-    <title>FEAST / AdminList  </title>
-    <?php include 'header.php'?>
-  </head>
+<body>
 
-  <body>
+  <?php include 'superadmin-header.php'?>
 
-    <?php include 'superadmin-header.php'?>
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
 
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
+    <ul class="sidebar-nav" id="sidebar-nav">
 
-      <ul class="sidebar-nav" id="sidebar-nav">
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-dashboard.php">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-dashboard.php">
-            <i class="bi bi-grid"></i>
-            <span>Dashboard</span>
-          </a>
-        </li><!-- End Dashboard Nav -->
-
-        <!-- Subject Nav -->
+      <!-- Subject Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -114,14 +148,14 @@ $result = mysqli_query($conn, $query);
           <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-facultylist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-facultycreation.php">
+              <a href="superadmin-facultycreation.php" >
                 <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
@@ -149,12 +183,12 @@ $result = mysqli_query($conn, $query);
 
         <!-- Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="admin-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="admin-nav" class="nav-content collapse data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-adminlist.php" class="active" >
+              <a href="superadmin-adminlist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
@@ -168,13 +202,13 @@ $result = mysqli_query($conn, $query);
 
         <!-- Super Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person-fill"></i><span>Super Admin</span><i
               class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="tables-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-superadminlist.php">
+              <a href="superadmin-superadminlist.php" class="active">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
@@ -186,7 +220,7 @@ $result = mysqli_query($conn, $query);
           </ul>
         </li><!-- End Super Admin Nav -->
 
-        <li class="nav-heading">Pages</li>
+      <li class="nav-heading">Pages</li>
 
         <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-user-profile.php">
@@ -202,103 +236,81 @@ $result = mysqli_query($conn, $query);
           </a>
         </li><!-- End Sign Out Page Nav -->
 
-      </ul>
+    </ul>
 
-    </aside><!-- End Sidebar-->
-
+  </aside><!-- End Sidebar-->
+  
     <main id="main" class="main">
-
-      <div class="pagetitle">
-        <h1>Admin</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-            <li class="breadcrumb-item ">Admin</li>
-            <li class="breadcrumb-item active">List</li>
-          </ol>
-        </nav>
-      </div><!-- End Page Title -->
-
-      <!-- List of Admins -->
-      <section class="section">
-        <div class="row">
-          <div class="col-lg-12">
-
-            <div class="card">
-              <div class="card-body table-responsive">
-                <h5 class="card-title">Datatables</h5>
-
-                <!-- Table with stripped rows -->
-                <table class="table datatable">
-                  <thead>
-                    <tr>
-                      <th>
-                        <b>ID Number</b>
-                      </th>
-                      <th>First Name</th>
-                      <th>Middle Name</th>
-                      <th>Last Name</th>
-                      <th>Email</th>
-                      <th>Department</th>
-                      <th>Position</th>
-                      <th>Faculty?</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <?php
-                        while ($row = mysqli_fetch_assoc($result)) {
-                          ?>
-                          <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                          <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                          <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                          <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                          <td><?php echo $row['email'];?></td>
-                          <td class="text-uppercase"><?php echo $row['department'];?></td>
-                          <td class="text-capitalize"><?php echo $row['position'];?></td>
-                          <td class="text-capitalize"><?php echo $row['faculty'];?></td>
-                          <td class="text-capitalize"><?php echo $row['status'];?></td>
-                          <td>
-                            <a href="superadmin-editadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                        </tr>
-                      <?php
-                        }
-                        ?>
-                    </tr>
-                  </tbody>
-                </table>
-                <!-- End Table with stripped rows -->
-
-              </div>
-            </div>
-
-          </div>
+        <div class="pagetitle">
+            <h1>Edit Superadmin Status</h1>
         </div>
-      </section><!-- End List of Admins -->
 
-    </main><!-- End #main -->
+        <section class="section">
+            <div class="card col-md-6 p-4">
+                <h5 class="card-title">Superadmin Details</h5>
+
+                <!-- Display update message -->
+                <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill"></i> Superadmin status updated successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($superadmin): ?>
+                    <form method="POST">
+                        <div class="mb-3 form-floating">
+                            <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name']; ?>" disabled>
+                            <label>Full Name</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3 form-floating">
+                                <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
+                                <label>ID Number</label>
+                            </div>
+
+                            <div class="col-md-6 mb-3 form-floating">
+                                <input type="email" class="form-control" value="<?= $superadmin['email'] ?>" disabled>
+                                <label>Email</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 form-floating">
+                            <select name="status" class="form-select" required>
+                                <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                                <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                            </select>
+                            <label>Status</label>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">Update Status</button>
+                        <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
+                    </form>
+                <?php else: ?>
+                    <div class="alert alert-danger">Superadmin not found.</div>
+                <?php endif; ?>
+            </div>
+        </section>
+    </main><!-- end main -->
 
     <!-- ======= Footer ======= -->
     <footer id="footer" class="footer">
-      <div class="copyright">
+        <div class="copyright">
         &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
+        </div>
+        <div class="credits">
         <!-- All the links in the footer should remain intact. -->
         <!-- You can delete the links only if you purchased the pro version. -->
         <!-- Licensing information: https://bootstrapmade.com/license/ -->
         <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
         Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
+        </div>
     </footer><!-- End Footer -->
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-        class="bi bi-arrow-up-short"></i></a>
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
     <script src="vendors/apexcharts/apexcharts.min.js"></script>
     <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendors/chart.js/chart.umd.js"></script>
@@ -311,6 +323,5 @@ $result = mysqli_query($conn, $query);
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
 
-  </body>
-
+</body>
 </html>

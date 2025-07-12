@@ -3,125 +3,55 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-
-// Check if superadmin is logged in
+// Superadmin login check
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Check if faculty ID is provided
+
+// Get admin ID
 if (!isset($_GET['id'])) {
-    echo "Faculty ID is missing.";
+    echo "Admin ID is missing.";
     exit();
 }
 
-$faculty_id = $_GET['id'];
+    $admin_id = $_GET['id'];
 
-// Fetch faculty data
-$stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
-$stmt->bind_param("s", $faculty_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$faculty = $result->fetch_assoc();
-
-if (!$faculty && $_SERVER["REQUEST_METHOD"] != "POST") {
-    echo "Faculty not found.";
-    exit();
-}
-
-
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $faculty_id = $_GET['id'];
-
-    // Re-fetch faculty data in case it's not loaded yet
-    $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
-    $stmt->bind_param("s", $faculty_id);
+    // Fetch admin info
+    $stmt = $conn->prepare("SELECT * FROM admin WHERE idnumber = ?");
+    $stmt->bind_param("s", $admin_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    $faculty = $result->fetch_assoc();
+    $admin = $result->fetch_assoc();
 
-    if (!$faculty) {
-        echo "Faculty not found.";
+    if (!$admin) {
+        echo "Admin not found.";
         exit();
     }
 
-    $new_status = $_POST['status'];
-    $new_role   = $_POST['role'];
+    // Handle update
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $new_status = $_POST['status'];
+        $new_position = $_POST['position'];
 
-    if ($new_role === 'admin') {
-        $position = $_POST['position'] ?? '';
-        $is_faculty = $_POST['is_faculty'] ?? 'no';
+        $stmt = $conn->prepare("UPDATE admin SET status = ?, position = ? WHERE idnumber = ?");
+        $stmt->bind_param("sss", $new_status, $new_position, $admin_id);
+        $stmt->execute();
 
-        // Insert into admin table
-        $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, email, password, role, status, department, position, faculty) 
-            VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
-        $insertAdmin->bind_param(
-            "ssssssssss",
-            $faculty['idnumber'],
-            $faculty['first_name'],
-            $faculty['mid_name'],
-            $faculty['last_name'],
-            $faculty['email'],
-            $faculty['password'],
-            $new_status,
-            $faculty['department'],
-            $position,
-            $is_faculty
-        );
-        try {
-            $insertAdmin->execute();
-            
-            // Optional: Clear faculty email/password
-            $clearFaculty = $conn->prepare("UPDATE faculty SET email = '', password = '' WHERE idnumber = ?");
-            $clearFaculty->bind_param("s", $faculty_id);
-            $clearFaculty->execute();
-
-            $_SESSION['msg'] = "Faculty successfully converted to Admin.";
-            header("Location: superadmin-adminlist.php");
-            exit();
-        } catch (mysqli_sql_exception $e) {
-            if ($e->getCode() == 1062) { // Duplicate entry error
-                $_SESSION['msg'] = "Error: Admin with this ID number already exists.";
-            } else {
-                $_SESSION['msg'] = "Database Error: " . $e->getMessage();
-            }
-            header("Location: superadmin-editfaculty.php?id=$faculty_id");
-            exit();
-        }
-
-
-        header("Location: superadmin-adminlist.php?converted=success");
+        header("Location: superadmin-editadmin.php?id=$admin_id&update=success");
         exit();
-    } else {
-        $faculty_rank = $_POST['faculty_rank'] ?? null;
-
-        $stmt = $conn->prepare("UPDATE faculty SET status = ?, role = ?, faculty_rank = ? WHERE idnumber = ?");
-        $stmt->bind_param("ssss", $new_status, $new_role, $faculty_rank, $faculty_id);
-        $stmt->execute();
-
-        $success = "Faculty updated successfully!";
-
-        // Re-fetch updated faculty data
-        $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
-        $stmt->bind_param("s", $faculty_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $faculty = $result->fetch_assoc();
-
-    }
 
 }
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
-  <title>Edit Faculty Status</title>
+  <title>Edit Admin Status</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?php include 'header.php'; ?>
 </head>
@@ -211,12 +141,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-facultylist.php" class="active">
+              <a href="superadmin-facultylist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
@@ -249,12 +179,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <!-- Admin Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="admin-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-adminlist.php" >
+              <a href="superadmin-adminlist.php"  class="active">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
@@ -308,11 +238,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Edit Faculty Status</h1>
+      <h1>Edit Admin Status</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-facultylist.php">Faculty</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-adminlist.php">Admin</a></li>
           <li class="breadcrumb-item">List</li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
@@ -324,129 +254,81 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Faculty Information</h5>
+              <h5 class="card-title">Admin Information</h5>
 
               <?php if (isset($success)): ?>
                 <div class="alert alert-success"><?php echo $success; ?></div>
               <?php endif; ?>
 
-              <?php if ($faculty): ?>
+              <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                  <i class="bi bi-check-circle-fill"></i> Admin info updated successfully!
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              <?php endif; ?>
+
+              <?php if ($admin): ?>
               <form method="POST">
                 
-                  <div class="col-md-12 mb-3">
+                <div class="col-md-12 mb-3">
                     <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo $faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']; ?>" disabled>
-                      <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" value="<?php echo $admin['first_name'] . ' ' . $admin['mid_name'] . ' ' . $admin['last_name']; ?>" disabled>
+                        <label class="form-label">Full Name</label>
                     </div>
-                  </div>
-
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo $faculty['idnumber']; ?>" disabled>
-                      <label class="form-label">ID Number</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 mb-3">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo $faculty['department']; ?>" disabled>
-                      <label class="form-label">Department</label>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <div class="form-floating">
-                      <select name="role" class="form-select" required>
-                        <option value="faculty" <?php if ($faculty['role'] == 'faculty') echo 'selected'; ?>>Faculty</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                      <label class="form-label">Role</label>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 mb-3">
-                    <div class=" form-floating">
-                      <select name="status" class="form-select" required>
-                        <option value="active" <?php if ($faculty['status'] == 'active') echo 'selected'; ?>>Active</option>
-                        <option value="inactive" <?php if ($faculty['status'] == 'inactive') echo 'selected'; ?>>Inactive</option>
-                      </select>
-                      <label class="form-label">Current Status</label>
-                    </div>
-                  </div>
-                </div>
-            
-                <div id="admin-options" style="display: none;">
-                    <div class="mb-3 form-floating">
-                        <select class="form-select" name="position" required>
-                            <option value="" disabled selected>-- Select Position --</option>
-                            <option value="Vice-President">Vice-President</option>
-                            <option value="Chancellor">Chancellor</option>
-                            <option value="Campus Administrator">Campus Administrator</option>
-                            <option value="Dean">Dean</option>
-                            <option value="Director">Director</option>
-                            <option value="Coordinator">Coordinator</option>
-                        </select>
-                        <label class="form-label">Position</label>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" value="<?php echo $admin['idnumber']; ?>" disabled>
+                            <label class="form-label">ID Number</label>
+                        </div>
                     </div>
 
-
-                    <div class="mb-3 form-floating">
-                        <select class="form-select" name="is_faculty">
-                            <option value="yes">Yes</option>
-                            <option value="no">No</option>
-                        </select>
-                        <label class="form-label">Still a Faculty?</label>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" value="<?php echo $admin['department']; ?>" disabled>
+                            <label class="form-label">Department</label>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Current Rank -->
-                <div class="col-md-12 mb-3">
-                  <div class="form-floating">
-                    <input type="text" class="form-control" value="<?php echo $faculty['faculty_rank'] ?? 'Not Set'; ?>" disabled>
-                    <label class="form-label">Current Faculty Rank</label>
-                  </div>
+                <div class="row">
+                    <!-- Status -->
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select name="status" class="form-select" required>
+                                <option value="active" <?php if ($admin['status'] === 'active') echo 'selected'; ?>>Active</option>
+                                <option value="inactive" <?php if ($admin['status'] === 'inactive') echo 'selected'; ?>>Inactive</option>
+                            </select>
+                            <label class="form-label">Status</label>
+                        </div>
+                    </div>
+
+                    <!-- Position -->
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select name="position" class="form-select" required>
+                                <option value="" disabled>Select Position</option>
+                                <option value="Vice-President" <?php if ($admin['position'] === 'Vice-President') echo 'selected'; ?>>Vice-President</option>
+                                <option value="Chancelor" <?php if ($admin['position'] === 'Chancelor') echo 'selected'; ?>>Chancelor</option>
+                                <option value="Campus-Administrator" <?php if ($admin['position'] === 'Campus-Administrator') echo 'selected'; ?>>Campus-Administrator</option>
+                                <option value="Dean" <?php if ($admin['position'] === 'Dean') echo 'selected'; ?>>Dean</option>
+                                <option value="Director" <?php if ($admin['position'] === 'Director') echo 'selected'; ?>>Director</option>
+                            </select>
+                            <label class="form-label">Position</label>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Promoting section -->
-                <div class="col-md-12 mb-3">
-                  <div class="form-floating">
-                    <select class="form-select" name="faculty_rank">
-                      <option value="" disabled <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>Select Rank</option>
-                      <?php
-                      $ranks = [
-                        "Instructor I", "Instructor II", "Instructor III",
-                        "Assistant Professor I", "Assistant Professor II", "Assistant Professor III", "Assistant Professor IV",
-                        "Associate Professor I", "Associate Professor II", "Associate Professor III", "Associate Professor IV", "Associate Professor V",
-                        "Professor I", "Professor II", "Professor III", "Professor IV", "Professor V", "Professor VI"
-                      ];
-                      foreach ($ranks as $rank) {
-                          $selected = ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '';
-                          echo "<option value=\"$rank\" $selected>$rank</option>";
-                      }
-                      ?>
-                    </select>
-                    <label>Faculty Rank</label>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn btn-success">Update Status</button>
-                <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
-
-                <?php if (isset($_SESSION['msg'])): ?>
-                  <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-                    <?php echo $_SESSION['msg']; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                  <?php unset($_SESSION['msg']); ?>
-                <?php endif; ?>
+                <button type="submit" class="btn btn-success">Update</button>
+                <a href="superadmin-adminlist.php" class="btn btn-secondary">Back</a>
 
               </form>
               <?php else: ?>
-                <div class="alert alert-info">This faculty member has been moved to the admin list.</div>
+                <div class="alert alert-danger">Admin not found or has been removed.</div>
               <?php endif; ?>
+
 
             </div>
           </div>

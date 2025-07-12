@@ -317,7 +317,7 @@ $query = "SELECT * FROM superadmin";
                                   <option value="Professor V">Professor V</option>
                                   <option value="Professor VI">Professor VI</option>
                               </select>
-                              <label for="department">Faculty Rank</label>
+                              <label for="department">Academic Rank</label>
                           </div>
                       </div>
 

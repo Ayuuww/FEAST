@@ -11,6 +11,10 @@ if (isset($_SESSION['msg'])) {
 
 ?>
 
+<?php if (isset($_SESSION['msg'])): ?>
+  <div class="alert alert-danger text-center"><?= $_SESSION['msg']; unset($_SESSION['msg']); ?></div>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 

@@ -264,7 +264,7 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
                         <select name="faculty_id" class="form-select">
                           <option value="">-- Select Faculty --</option>
                           <?php while ($f = mysqli_fetch_assoc($faculty_result)): ?>
-                            <option value="<?= $f['idnumber'] ?>"><?= $f['first_name'] ?> <?= $f['last_name'] ?></option>
+                            <option value="<?= $f['idnumber'] ?>"><?= $f['last_name'] ?>, <?= $f['first_name'] ?></option>
                           <?php endwhile; ?>
                         </select>
                         <label for="faculty_id">Faculty</label>

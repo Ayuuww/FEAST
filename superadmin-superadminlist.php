@@ -240,6 +240,7 @@ $result = mysqli_query($conn, $query);
                     <th>Middle Name</th>
                     <th>Last Name</th>
                     <th>Email</th>
+                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -248,14 +249,14 @@ $result = mysqli_query($conn, $query);
                     <?php
                       while ($row = mysqli_fetch_assoc($result)) {
                         ?>
-                        <td><?php echo $row['idnumber'];?></td>
-                        <td><?php echo $row['first_name'];?></td>
-                        <td><?php echo $row['mid_name'];?></td>
-                        <td><?php echo $row['last_name'];?></td>
+                        <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
+                        <td class="text-capitalize"><?php echo $row['first_name'];?></td>
+                        <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
+                        <td class="text-capitalize"><?php echo $row['last_name'];?></td>
                         <td><?php echo $row['email'];?></td>
+                        <td class="text-capitalize"><?php echo $row['status'];?></td>
                         <td>
-                          <a class="btn btn-primary btn-sm">View</a>
-                          <a class="btn btn-warning btn-sm">Edit</a>
+                          <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
                       </tr>
                     <?php
                       }
