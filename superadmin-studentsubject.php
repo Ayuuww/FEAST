@@ -123,6 +123,11 @@ $subject_result = mysqli_query($conn, $subject_query);
               <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
             </a>
           </li>
+          <li>
+            <a href="superadmin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
         </ul>
       </li><!-- End Reports Nav -->
 

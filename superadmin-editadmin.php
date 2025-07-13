@@ -115,6 +115,11 @@ if (!isset($_GET['id'])) {
                 <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
               </a>
             </li>
+            <li>
+              <a href="superadmin-pastrecords.php">
+                <i class="bi bi-circle"></i><span>Past Record</span>
+              </a>
+            </li>
           </ul>
         </li><!-- End Reports Nav -->
 

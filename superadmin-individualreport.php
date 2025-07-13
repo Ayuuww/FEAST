@@ -84,18 +84,23 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
         <!-- Reports Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
             <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="reports" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-individualreport.php" class="active">
+              <a href="superadmin-individualreport.php" >
                 <i class="bi bi-circle"></i><span>Invidiual Report</span>
               </a>
             </li>
             <li>
               <a href="superadmin-acknowledgementreport.php">
                 <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+              </a>
+            </li>
+            <li>
+              <a href="superadmin-pastrecords.php">
+                <i class="bi bi-circle"></i><span>Past Record</span>
               </a>
             </li>
           </ul>
