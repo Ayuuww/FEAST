@@ -9,9 +9,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 
-
-
-
 ?>
 
 <!DOCTYPE html>

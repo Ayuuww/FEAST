@@ -353,19 +353,19 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 
         <script>
-        function printDiv(divId) {
-        var content = document.getElementById(divId).innerHTML;
-        var myWindow = window.open('', '', 'width=900,height=1000');
-        myWindow.document.write('<html><head><title>Print Report</title>');
-        myWindow.document.write('<link rel="stylesheet" href="assets/css/style.css">');
-        myWindow.document.write('</head><body>');
-        myWindow.document.write(content);
-        myWindow.document.write('</body></html>');
-        myWindow.document.close();
-        myWindow.focus();
-        myWindow.print();
-        myWindow.close();
-        }
+          function printDiv(divId) {
+          var content = document.getElementById(divId).innerHTML;
+          var myWindow = window.open('', '', 'width=900,height=1000');
+          myWindow.document.write('<html><head><title>Print Report</title>');
+          myWindow.document.write('<link rel="stylesheet" href="assets/css/style.css">');
+          myWindow.document.write('</head><body>');
+          myWindow.document.write(content);
+          myWindow.document.write('</body></html>');
+          myWindow.document.close();
+          myWindow.focus();
+          myWindow.print();
+          myWindow.close();
+          }
         </script>
 
         <?php } ?>
