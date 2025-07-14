@@ -75,17 +75,17 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
         <!-- Reports Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
             <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <ul id="reports" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-individualreport.php" >
                 <i class="bi bi-circle"></i><span>Invidiual Report</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-acknowledgementreport.php">
+              <a href="superadmin-acknowledgementreport.php" class="active">
                 <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
               </a>
             </li>
@@ -117,6 +117,14 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
         </li><!-- End Evalutaion Nav -->
         
         <li class="nav-heading">Account Management</li>
+
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
 
         <!-- Faculty Nav -->
         <li class="nav-item">
@@ -221,6 +229,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
         <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Reports</li>
             <li class="breadcrumb-item active">Acknowledgement Report</li>
         </ol>
         </nav>

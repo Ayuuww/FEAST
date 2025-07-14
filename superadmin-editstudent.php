@@ -25,6 +25,19 @@ if (!$student) {
     exit();
 }
 
+$departments = [];
+$sections = [];
+
+$dept_result = $conn->query("SELECT department_name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
+while ($row = $dept_result->fetch_assoc()) {
+    $departments[] = $row['department_name'];
+}
+
+$section_result = $conn->query("SELECT section_name FROM adds WHERE section_name IS NOT NULL ORDER BY section_name ASC");
+while ($row = $section_result->fetch_assoc()) {
+    $sections[] = $row['section_name'];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new_department = $_POST['department'];
     $new_section = $_POST['section'];
@@ -135,6 +148,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </li><!-- End Evalutaion Nav -->
 
         <li class="nav-heading">Account Management</li>
+
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
 
         <!-- Faculty Nav -->
         <li class="nav-item">
@@ -275,51 +296,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select name="department" class="form-select" id="departmentSelect" required>
-                                        <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
-                                        <option value="CIS" <?= $student['department'] == 'CIS' ? 'selected' : '' ?>>CIS</option>
-                                        <option value="CVM" <?= $student['department'] == 'CVM' ? 'selected' : '' ?>>CVM</option>
-                                        <option value="CAFF" <?= $student['department'] == 'CAFF' ? 'selected' : '' ?>>CAFF</option>
-                                        <!-- Optional additional departments -->
-                                        <!--
-                                        <option value="BEED" <?= $student['department'] == 'BEED' ? 'selected' : '' ?>>BEED</option>
-                                        <option value="BSHM" <?= $student['department'] == 'BSHM' ? 'selected' : '' ?>>BSHM</option>
-                                        <option value="BSTM" <?= $student['department'] == 'BSTM' ? 'selected' : '' ?>>BSTM</option>
-                                        <option value="BSCRIM" <?= $student['department'] == 'BSCRIM' ? 'selected' : '' ?>>BSCRIM</option>
-                                        -->
-                                    </select>
-                                    <label for="departmentSelect">Department</label>
-                                </div>
+                          
+                          <div class="col-md-6 ">
+                            <div class="form-floating mb-3">
+                              <select name="department" class="form-select" id="departmentSelect" required>
+                                <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
+                                <?php foreach ($departments as $dept): ?>
+                                  <option value="<?= htmlspecialchars($dept) ?>" <?= $student['department'] === $dept ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($dept) ?>
+                                  </option>
+                                <?php endforeach; ?>
+                              </select>
+                              <label for="departmentSelect">Department</label>
                             </div>
+                          </div>
 
-
-
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select class="form-select" name="section" required>
-                                        <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
-                                        <option value="1-A" <?= $student['section'] == '1-A' ? 'selected' : '' ?>>1-A</option>
-                                        <option value="1-B" <?= $student['section'] == '1-B' ? 'selected' : '' ?>>1-B</option>
-                                        <option value="1-C" <?= $student['section'] == '1-C' ? 'selected' : '' ?>>1-C</option>
-                                        <option value="1-D" <?= $student['section'] == '1-D' ? 'selected' : '' ?>>1-D</option>
-                                        <option value="2-A" <?= $student['section'] == '2-A' ? 'selected' : '' ?>>2-A</option>
-                                        <option value="2-B" <?= $student['section'] == '2-B' ? 'selected' : '' ?>>2-B</option>
-                                        <option value="2-C" <?= $student['section'] == '2-C' ? 'selected' : '' ?>>2-C</option>
-                                        <option value="2-D" <?= $student['section'] == '2-D' ? 'selected' : '' ?>>2-D</option>
-                                        <option value="3-A" <?= $student['section'] == '3-A' ? 'selected' : '' ?>>3-A</option>
-                                        <option value="3-B" <?= $student['section'] == '3-B' ? 'selected' : '' ?>>3-B</option>
-                                        <option value="3-C" <?= $student['section'] == '3-C' ? 'selected' : '' ?>>3-C</option>
-                                        <option value="3-D" <?= $student['section'] == '3-D' ? 'selected' : '' ?>>3-D</option>
-                                        <option value="4-A" <?= $student['section'] == '4-A' ? 'selected' : '' ?>>4-A</option>
-                                        <option value="4-B" <?= $student['section'] == '4-B' ? 'selected' : '' ?>>4-B</option>
-                                        <option value="4-C" <?= $student['section'] == '4-C' ? 'selected' : '' ?>>4-C</option>
-                                        <option value="4-D" <?= $student['section'] == '4-D' ? 'selected' : '' ?>>4-D</option>
-                                    </select>
-                                    <label for="section">Section</label>
-                                </div>
+                          <div class="col-md-6">
+                            <div  class="form-floating mb-3">
+                              <select class="form-select" name="section" required>
+                                <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
+                                <?php foreach ($sections as $sec): ?>
+                                  <option value="<?= htmlspecialchars($sec) ?>" <?= $student['section'] === $sec ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($sec) ?>
+                                  </option>
+                                <?php endforeach; ?>
+                              </select>
+                              <label for="section">Section</label>
                             </div>
+                          </div>
+
                         </div>
 
                         <button type="submit" class="btn btn-success">Update</button>

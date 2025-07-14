@@ -51,50 +51,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $new_role   = $_POST['role'];
 
     if ($new_role === 'admin') {
-        $position = $_POST['position'] ?? '';
-        $is_faculty = $_POST['is_faculty'] ?? 'no';
+          // Check if already an admin
+          $checkAdmin = $conn->prepare("SELECT idnumber FROM admin WHERE idnumber = ?");
+          $checkAdmin->bind_param("s", $faculty_id);
+          $checkAdmin->execute();
+          $adminResult = $checkAdmin->get_result();
 
-        // Insert into admin table
-        $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, email, password, role, status, department, position, faculty) 
-            VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
-        $insertAdmin->bind_param(
-            "ssssssssss",
-            $faculty['idnumber'],
-            $faculty['first_name'],
-            $faculty['mid_name'],
-            $faculty['last_name'],
-            $faculty['email'],
-            $faculty['password'],
-            $new_status,
-            $faculty['department'],
-            $position,
-            $is_faculty
-        );
-        try {
-            $insertAdmin->execute();
-            
-            // Optional: Clear faculty email/password
-            $clearFaculty = $conn->prepare("UPDATE faculty SET email = '', password = '' WHERE idnumber = ?");
-            $clearFaculty->bind_param("s", $faculty_id);
-            $clearFaculty->execute();
+          if ($adminResult->num_rows > 0) {
+              $_SESSION['msg'] = "This faculty is already an Admin.";
+              header("Location: superadmin-editfaculty.php?id=$faculty_id");
+              exit();
+          }
 
-            $_SESSION['msg'] = "Faculty successfully converted to Admin.";
-            header("Location: superadmin-adminlist.php");
-            exit();
-        } catch (mysqli_sql_exception $e) {
-            if ($e->getCode() == 1062) { // Duplicate entry error
-                $_SESSION['msg'] = "Error: Admin with this ID number already exists.";
-            } else {
-                $_SESSION['msg'] = "Database Error: " . $e->getMessage();
-            }
-            header("Location: superadmin-editfaculty.php?id=$faculty_id");
-            exit();
-        }
+          // Proceed to insert to admin if not yet
+          $position = $_POST['position'] ?? '';
+          $is_faculty = $_POST['is_faculty'] ?? 'no';
 
+          $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, email, password, role, status, department, position, faculty) 
+              VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
+          $insertAdmin->bind_param(
+              "ssssssssss",
+              $faculty['idnumber'],
+              $faculty['first_name'],
+              $faculty['mid_name'],
+              $faculty['last_name'],
+              $faculty['email'],
+              $faculty['password'],
+              $new_status,
+              $faculty['department'],
+              $position,
+              $is_faculty
+          );
 
-        header("Location: superadmin-adminlist.php?converted=success");
-        exit();
-    } else {
+          try {
+              $insertAdmin->execute();
+
+              // Optional: Clear from faculty table
+              $clearFaculty = $conn->prepare("UPDATE faculty SET email = '', password = '' WHERE idnumber = ?");
+              $clearFaculty->bind_param("s", $faculty_id);
+              $clearFaculty->execute();
+
+              $_SESSION['msg'] = "Faculty successfully converted to Admin.";
+              header("Location: superadmin-adminlist.php");
+              exit();
+          } catch (mysqli_sql_exception $e) {
+              $_SESSION['msg'] = "Database Error: " . $e->getMessage();
+              header("Location: superadmin-editfaculty.php?id=$faculty_id");
+              exit();
+          }
+      }
+       else {
         $faculty_rank = $_POST['faculty_rank'] ?? null;
 
         $stmt = $conn->prepare("UPDATE faculty SET status = ?, role = ?, faculty_rank = ? WHERE idnumber = ?");
@@ -112,6 +118,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     }
 
+}
+
+// Fetch admin position form the 'adds' table
+$positions = [];
+$position_result = $conn->query("SELECT position_name FROM adds WHERE position_name IS NOT NULL");
+while ($row = $position_result->fetch_assoc()) {
+    $positions[] = $row['position_name'];
+}
+
+// Fetch faculty ranks from the 'adds' table
+$rankQuery = $conn->query("SELECT rank_name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
+$facultyRanks = [];
+while ($row = $rankQuery->fetch_assoc()) {
+    $facultyRanks[] = $row['rank_name'];
 }
 
 ?>
@@ -213,6 +233,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </li><!-- End Evalutaion Nav -->
 
         <li class="nav-heading">Account Management</li>
+
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
 
         <!-- Faculty Nav -->
         <li class="nav-item">
@@ -386,13 +414,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <div id="admin-options" style="display: none;">
                     <div class="mb-3 form-floating">
                         <select class="form-select" name="position" required>
-                            <option value="" disabled selected>-- Select Position --</option>
-                            <option value="Vice-President">Vice-President</option>
-                            <option value="Chancellor">Chancellor</option>
-                            <option value="Campus Administrator">Campus Administrator</option>
-                            <option value="Dean">Dean</option>
-                            <option value="Director">Director</option>
-                            <option value="Coordinator">Coordinator</option>
+                          <option value="" disabled selected>-- Select Position --</option>
+                          <?php foreach ($positions as $position): ?>
+                            <option value="<?= htmlspecialchars($position) ?>"><?= htmlspecialchars($position) ?></option>
+                          <?php endforeach; ?>
                         </select>
                         <label class="form-label">Position</label>
                     </div>
@@ -420,20 +445,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   <div class="form-floating">
                     <select class="form-select" name="faculty_rank">
                       <option value="" disabled <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>Select Rank</option>
-                      <?php
-                      $ranks = [
-                        "Instructor I", "Instructor II", "Instructor III",
-                        "Assistant Professor I", "Assistant Professor II", "Assistant Professor III", "Assistant Professor IV",
-                        "Associate Professor I", "Associate Professor II", "Associate Professor III", "Associate Professor IV", "Associate Professor V",
-                        "Professor I", "Professor II", "Professor III", "Professor IV", "Professor V", "Professor VI"
-                      ];
-                      foreach ($ranks as $rank) {
-                          $selected = ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '';
-                          echo "<option value=\"$rank\" $selected>$rank</option>";
-                      }
-                      ?>
+                      <?php foreach ($facultyRanks as $rank): ?>
+                        <option value="<?= htmlspecialchars($rank) ?>" <?= ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($rank) ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
-                    <label>Faculty Rank</label>
+                    <label>Faculty Rank Promotion</label>
                   </div>
                 </div>
 

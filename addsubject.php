@@ -2,6 +2,9 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+$_SESSION['msg'] = "Subject added successfully!";
+$_SESSION['msg_type'] = "success";
+
 if (isset($_POST['addsubject'])) {
     $subject_code   = $_POST['code'];
     $subject_title  = $_POST['title'];

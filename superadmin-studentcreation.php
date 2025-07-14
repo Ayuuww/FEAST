@@ -3,16 +3,13 @@
 session_start();
 include 'conn/conn.php';// Connection to the database
 
+$departments = mysqli_query($conn, "SELECT id, department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+$sections = mysqli_query($conn, "SELECT id, section_name FROM adds WHERE section_name IS NOT NULL AND section_name != ''");
+
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
-}
-
-// Display message if set
-if(isset($_SESSION['msg'])) {
-    echo "<script>alert('".$_SESSION['msg']."');</script>";
-    unset($_SESSION['msg']);
 }
 
 // Fetch super admin details
@@ -119,6 +116,14 @@ $query = "SELECT * FROM superadmin";
         </li><!-- End Evalutaion Nav -->
 
         <li class="nav-heading">Account Management</li>
+
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
 
         <!-- Faculty Nav -->
         <li class="nav-item">
@@ -231,6 +236,15 @@ $query = "SELECT * FROM superadmin";
         </nav>
       </div><!-- End Page Title -->
 
+      <?php if (isset($_SESSION['msg'])): ?>
+        <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
+        <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
+          <?= htmlspecialchars($_SESSION['msg']) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+      <?php endif; ?>
+
         <!-- Admin Creation Section -->
         <section class="section">
           <div class="row">
@@ -301,43 +315,37 @@ $query = "SELECT * FROM superadmin";
 
                       <!-- Department -->
                       <div class="col-md-3">
-                          <div class="form-floating">
-                              <select class="form-select" name="department" required>
-                                  <option value="" disabled selected>Select Department</option>
-                                  <option value="CIS">CIS</option>
-                                  <option value="CAS">CAS</option>
-                                  <option value="CVM">CVM</option>
-                              </select>
-                              <label for="department">Department</label>
-                          </div>
+                        <div class="form-floating">
+                          <select name="department" class="form-select" required>
+                            <option disabled selected>Select Department</option>
+                            <?php
+                            $result = mysqli_query($conn, "SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                            }
+                            ?>
+                          </select>
+                          <label for="department">Department</label>
+                        </div>
                       </div>
 
-                      <!-- Department -->
+
+                      <!-- Section -->
                       <div class="col-md-3">
-                          <div class="form-floating">
-                              <select class="form-select" name="section" required>
-                                  <option value="" disabled selected>Select Section</option>
-                                  <option value="1-A">1-A</option>
-                                  <option value="1-B">1-B</option>
-                                  <option value="1-C">1-C</option>
-                                  <option value="1-C">1-C</option>
-                                  <option value="1-D">1-D</option>
-                                  <option value="2-A">2-A</option>
-                                  <option value="2-B">2-B</option>
-                                  <option value="2-C">2-C</option>
-                                  <option value="2-D">2-D</option>
-                                  <option value="3-A">3-A</option>
-                                  <option value="3-B">3-B</option>
-                                  <option value="3-C">3-C</option>
-                                  <option value="3-D">3-D</option>
-                                  <option value="4-A">4-A</option>
-                                  <option value="4-B">4-B</option>
-                                  <option value="4-C">4-C</option>
-                                  <option value="4-D">4-D</option>
-                              </select>
-                              <label for="department">Section</label>
-                          </div>
+                        <div class="form-floating">
+                          <select name="section" class="form-select" required>
+                            <option disabled selected>Select Section</option>
+                            <?php
+                            $result = mysqli_query($conn, "SELECT section_name FROM adds WHERE section_name IS NOT NULL AND section_name != ''");
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                echo '<option value="' . htmlspecialchars($row['section_name']) . '">' . htmlspecialchars($row['section_name']) . '</option>';
+                            }
+                            ?>
+                          </select>
+                          <label for="section">Section</label>
+                        </div>
                       </div>
+
 
                       <!-- Submit -->
                       <div class="col-4 offset-4">
@@ -383,24 +391,18 @@ $query = "SELECT * FROM superadmin";
 
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
-    <!-- <script>
-      var checkpass = function() {
+    <!--  -->
 
-      if (document.getElementById('password').value == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display = 'none';
-        document.getElementById('conpass').style.borderColor = 'green';
-      } 
-      else
-      {
-        document.getElementById('mess').style.display = 'block';
-        document.getElementById('conpass').style.borderColor = 'red';
+    <script>
+      setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+          alert.classList.remove('show');
+          alert.classList.add('fade');
+          setTimeout(() => alert.remove(), 500); // optional DOM cleanup
         }
-
-      } -->
-
-
+      }, 5000); // Hide after 5 seconds
     </script>
 
   </body>
-
 </html>

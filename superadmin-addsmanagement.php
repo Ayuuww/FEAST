@@ -1,33 +1,83 @@
-<?php 
-
+<?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
+$message = '';
 
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $type = $_POST['type'] ?? '';
+    $value = trim($_POST['value'] ?? '');
 
-// Fetch super admin details
-$query = "SELECT * FROM superadmin";
+    if ($type && $value) {
+        switch ($type) {
+            case 'Rank': $column = 'rank_name'; break;
+            case 'Position': $column = 'position_name'; break;
+            case 'Section': $column = 'section_name'; break;
+            case 'Department': $column = 'department_name'; break;
+            default: $column = '';
+        }
 
+        if ($column) {
+            $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER($column) = LOWER(?)");
+            $check->bind_param("s", $value);
+            $check->execute();
+            $check->bind_result($count);
+            $check->fetch();
+            $check->close();
 
+            if ($count > 0) {
+                $_SESSION['msg'] = "$type already exists.";
+                $_SESSION['msg_type'] = "warning";
+            } else {
+                $stmt = $conn->prepare("INSERT INTO adds ($column) VALUES (?)");
+                $stmt->bind_param("s", $value);
+                if ($stmt->execute()) {
+                    $_SESSION['msg'] = "$type added successfully!";
+                    $_SESSION['msg_type'] = "success";
+                } else {
+                    $_SESSION['msg'] = "Failed to add $type.";
+                    $_SESSION['msg_type'] = "danger";
+                }
+                $stmt->close();
+            }
+            header("Location: superadmin-addsmanagement.php");
+            exit();
+        }
 
+    }
+}
+
+// Fetch latest adds
+$result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
 ?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
-
   <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>FEAST / Faculty Creation  </title>
-    <?php include 'header.php'?>
+  <title>Manage Ranks & Positions</title>
+
+  <?php include 'header.php' ?>
+
+  <style>
+    .table + .card-title {
+      margin-top: 2rem;
+    }
+    .table th, .table td {
+      vertical-align: middle;
+    }
+  </style>
+
   </head>
-
   <body>
 
     <?php include 'superadmin-header.php'?>
@@ -113,12 +163,12 @@ $query = "SELECT * FROM superadmin";
             </li>
           </ul>
         </li><!-- End Evalutaion Nav -->
-
+        
         <li class="nav-heading">Account Management</li>
 
         <!-- Management Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <a class="nav-link collapse" href="superadmin-addsmanagement.php">
             <i class="ri-settings-line"></i>
             <span>Manage</span>
           </a>
@@ -126,17 +176,17 @@ $query = "SELECT * FROM superadmin";
 
         <!-- Faculty Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="components-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
               <a href="superadmin-facultylist.php">
                 <i class="bi bi-circle"></i><span>List</span>
               </a>
             </li>
             <li>
-              <a href="superadmin-facultycreation.php"  class="active">
+              <a href="superadmin-facultycreation.php">
                 <i class="bi bi-circle"></i><span>Add New Faculty</span>
               </a>
             </li>
@@ -217,20 +267,18 @@ $query = "SELECT * FROM superadmin";
           </a>
         </li><!-- End Sign Out Page Nav -->
 
-
       </ul>
 
     </aside><!-- End Sidebar-->
 
     <main id="main" class="main">
-
+      
       <div class="pagetitle">
-        <h1>Faculty</h1>
+        <h1>Manage Ranks, Positions, Sections, Departments</h1>
         <nav>
           <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-            <li class="breadcrumb-item ">Faculty</li>
-            <li class="breadcrumb-item active">Add New Faculty</li>
+            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item active">Manage</li>
           </ol>
         </nav>
       </div><!-- End Page Title -->
@@ -244,138 +292,148 @@ $query = "SELECT * FROM superadmin";
         <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
       <?php endif; ?>
 
-        <!-- Faculty Creation Section -->
-        <section class="section">
-          <div class="row">
-            <div class="col-lg-12">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Create New Faculty</h5>
-                    <form class="row g-3 needs-validation" novalidate method="post" action="facultycreation.php">
+      <section class="section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Add New</h5>
 
-                      <!-- ID Number -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
-                          <label for="idnumber" class="form-label">ID Number</label>
-                          <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
-                        </div>
-                      </div>
-
-                      <!-- First Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
-                              <label class="form-label">First Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Middle Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
-                              <label class="form-label">Middle Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Last Name -->
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
-                              <label class="form-label">Last Name</label>
-                          </div>
-                      </div>
-
-                      <!-- Email -->
-                      <div class="col-md-4">
-                          <div class="form-floating">
-                              <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
-                              <label for="yourEmail" class="form-label">Email</label>
-                          </div>
-                      </div>
-
-                      <!-- Password -->
-                      <div class="col-md-2">
-                          <div class="form-floating">
-                              <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" readonly>
-                              <label for="yourEmail" class="form-label">Default Password</label>
-                          </div>
-                      </div>
-
-                      <!-- Confirm Password
-                      <div class="col-md-3">
-                          <div class="form-floating">
-                              <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
-                              <div class="invalid-feedback" id="mess">Password do not match</div>
-                              <label class="form-label">Confirm Password</label>
-                          </div>
-                      </div> -->
-
-                      <!-- Faculty Rank -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <select class="form-select" name="faculty_rank" required>
-                            <option value="" disabled selected>Select Rank</option>
-                            <?php
-                              $rankQuery = mysqli_query($conn, "SELECT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
-                              while ($row = mysqli_fetch_assoc($rankQuery)) {
-                                  echo '<option value="' . htmlspecialchars($row['rank_name']) . '">' . htmlspecialchars($row['rank_name']) . '</option>';
-                              }
-                            ?>
-                          </select>
-                          <label for="faculty_rank">Academic Rank</label>
-                        </div>
-                      </div>
-
-                      <!-- Department -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <select class="form-select" name="department" required>
-                            <option value="" disabled selected>Select Department</option>
-                            <?php
-                              $deptQuery = mysqli_query($conn, "SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
-                              while ($row = mysqli_fetch_assoc($deptQuery)) {
-                                  echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
-                              }
-                            ?>
-                          </select>
-                          <label for="department">Department</label>
-                        </div>
-                      </div>
-
-                      <!-- Submit -->
-                      <div class="col-4 offset-4">
-                        <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
-                      </div>
-
-                    </form>
-                </div>
+            
+            <form method="POST" class="row g-3">
+              <div class="col-md-4">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" name="type" required>
+                  <option value="">-- Select --</option>
+                  <option value="Rank">Rank</option>
+                  <option value="Position">Position</option>
+                  <option value="Section">Section</option>
+                  <option value="Department">Department</option>
+                </select>
               </div>
-            </div>
+              <div class="col-md-6">
+                <label for="value" class="form-label">Name</label>
+                <input type="text" class="form-control" name="value" required>
+              </div>
+              <div class="col-md-2 align-self-end">
+                <button type="submit" class="btn btn-success w-100">Add</button>
+              </div>
+            </form>
           </div>
-        </section><!-- End Admin Creation Section -->
+        </div>
 
+        <?php
+        // Fetch entries by type
+        $ranks = mysqli_query($conn, "SELECT id, rank_name AS name FROM adds WHERE rank_name IS NOT NULL ORDER BY id DESC");
+        $positions = mysqli_query($conn, "SELECT id, position_name AS name FROM adds WHERE position_name IS NOT NULL ORDER BY id DESC");
+        $sections = mysqli_query($conn, "SELECT id, section_name AS name FROM adds WHERE section_name IS NOT NULL ORDER BY id DESC");
+        $departments = mysqli_query($conn, "SELECT id, department_name AS name FROM adds WHERE department_name IS NOT NULL ORDER BY id DESC");
+        ?>
+
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Existing Ranks</h5>
+            <table class="table table-bordered align-middle ">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 85%;">Rank</th>
+                  <th style="width: 15%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($row = mysqli_fetch_assoc($ranks)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td class="text-center">
+                      <div style="width: 85%;">
+                        <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Rank" class="btn btn-warning btn-sm">Edit</a>
+                        <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this rank?')" class="btn btn-danger btn-sm">Delete</a> -->
+                      </div>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+
+            <h5 class="card-title mt-4">Existing Positions</h5>
+            <table class="table table-bordered align-middle ">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 85%;">Position</th>
+                  <th style="width: 15%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($row = mysqli_fetch_assoc($positions)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td class="text-center">
+                      <div style="width: 85%;">
+                        <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Position" class="btn btn-warning btn-sm">Edit</a>
+                        <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this position?')" class="btn btn-danger btn-sm">Delete</a> -->
+                      </div>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+
+            <h5 class="card-title mt-4">Existing Sections</h5>
+            <table class="table table-bordered align-middle ">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 85%;">Section</th>
+                  <th style="width: 15%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($row = mysqli_fetch_assoc($sections)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td class="text-center">
+                      <div style="width: 85%;">
+                        <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Section" class="btn btn-warning btn-sm">Edit</a>
+                        <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this section?')" class="btn btn-danger btn-sm">Delete</a> -->
+                      </div>
+                    </td>
+                    </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+
+            <h5 class="card-title mt-4">Existing Departments</h5>
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 85%;">Department</th>
+                  <th style="width: 15%;">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php while ($row = mysqli_fetch_assoc($departments)): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($row['name']) ?></td>
+                    <td class="text-center">
+                      <div style="width: 85%;">
+                        <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Department" class="btn btn-warning btn-sm">Edit</a>
+                        <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this department?')" class="btn btn-danger btn-sm">Delete</a> -->
+                      </div>
+                    </td>
+                  </tr>
+                <?php endwhile; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main><!-- End #main -->
 
     <!-- ======= Footer ======= -->
-    <footer id="footer" class="footer">
-      <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
-      </div>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </footer><!-- End Footer -->
+    <?php include'footer.php'?>
+    <!-- End Footer -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
         class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
     <script src="vendors/apexcharts/apexcharts.min.js"></script>
     <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="vendors/chart.js/chart.umd.js"></script>
@@ -399,7 +457,5 @@ $query = "SELECT * FROM superadmin";
       }, 5000); // Hide after 5 seconds
     </script>
 
-
-  </body>
-
+</body>
 </html>

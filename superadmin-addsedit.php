@@ -1,62 +1,82 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     header("Location: pages-login.php");
     exit();
 }
 
-// Handle form submission
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $semester = $_POST['semester'];
-    $academic_year = $_POST['academic_year'];
+$id = $_GET['id'] ?? '';
+$type = $_GET['type'] ?? '';
+$message = '';
 
-    // Replace old setting or insert new one
-    $stmt = $conn->prepare("REPLACE INTO evaluation_settings (id, semester, academic_year) VALUES (1, ?, ?)");
-    $stmt->bind_param("ss", $semester, $academic_year);
-    $stmt->execute();
-
-    $_SESSION['msg'] = "Evaluation settings updated!";
-    header("Location: superadmin-evaluationsetting.php");
+if (!$id || !$type) {
+    header("Location: superadmin-addsmanagement.php");
     exit();
 }
 
-// Fetch current settings
-$current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
-$setting = mysqli_fetch_assoc($current);
-$current_semester = $setting['semester'];
-$current_year = $setting['academic_year'];
-
-// Show success message if set
-$success_msg = '';
-if (isset($_SESSION['msg'])) {
-    $success_msg = $_SESSION['msg'];
-    unset($_SESSION['msg']); // clear message after showing
+switch ($type) {
+    case 'Rank': $column = 'rank_name'; break;
+    case 'Position': $column = 'position_name'; break;
+    case 'Section': $column = 'section_name'; break;
+    case 'Department': $column = 'department_name'; break;
+    default: $column = '';
 }
 
-// Fetch current settings
-$current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
-$setting = mysqli_fetch_assoc($current);
-$current_semester = $setting['semester'];
-$current_year = $setting['academic_year'];
+if (!$column) {
+    header("Location: superadmin-addsmanagement.php");
+    exit();
+}
+
+// Fetch current value
+$stmt = $conn->prepare("SELECT $column FROM adds WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$stmt->bind_result($current);
+$stmt->fetch();
+$stmt->close();
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $new_value = ucwords(strtolower(trim($_POST['value'])));
+    if ($new_value) {
+        // Check if new value already exists in the column (excluding current ID)
+        $check = $conn->prepare("SELECT id FROM adds WHERE $column = ? AND id != ?");
+        $check->bind_param("si", $new_value, $id);
+        $check->execute();
+        $check->store_result();
+
+        if ($check->num_rows > 0) {
+            $message = "$type already exists!";
+        } else {
+            // Proceed with update
+            $stmt = $conn->prepare("UPDATE adds SET $column = ? WHERE id = ?");
+            $stmt->bind_param("si", $new_value, $id);
+            if ($stmt->execute()) {
+                $message = "$type updated successfully!";
+                $current = $new_value;
+            } else {
+                $message = "Update failed.";
+            }
+            $stmt->close();
+        }
+
+        $check->close();
+    }
+}
 
 
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Evaluation Setting </title>
-
-  <?php include 'header.php' ?>
-
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit <?= htmlspecialchars($type) ?> | Superadmin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php include 'header.php'; ?>
+</head>
+<body>
 
     <?php include 'superadmin-header.php'?>
 
@@ -125,12 +145,12 @@ $current_year = $setting['academic_year'];
 
         <!-- Evaluation Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
             <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="evaluation" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
             <li>
-              <a href="superadmin-evaluationsetting.php" class="active">
+              <a href="superadmin-evaluationsetting.php" >
                 <i class="bi bi-circle"></i><span>Setting</span>
               </a>
             </li>
@@ -146,7 +166,7 @@ $current_year = $setting['academic_year'];
 
         <!-- Management Nav -->
         <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <a class="nav-link collapse" href="superadmin-addsmanagement.php">
             <i class="ri-settings-line"></i>
             <span>Manage</span>
           </a>
@@ -250,77 +270,50 @@ $current_year = $setting['academic_year'];
     </aside><!-- End Sidebar-->
 
     <main id="main" class="main">
+        <div class="pagetitle">
+            <h1>Edit <?= htmlspecialchars($type) ?> Name</h1>
+            <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+                <li class="breadcrumb-item"><a href="superadmin-addsmanagement.php">Manage</a></li>
+                <li class="breadcrumb-item active">Edit <?= htmlspecialchars($type) ?></li>
+            </ol>
+            </nav>
+        </div>
 
-      <div class="pagetitle">
-        <h1>Setting of Evaluation</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item">Evaluation</li>
-            <li class="breadcrumb-item active">Setting</li>
-          </ol>
-        </nav>
-      </div><!-- End Page Title -->
-
-      <section class="section dashboard">
-        <div class="row align-items-center justify-content-center">
-            <div class="col-md-4">
-                <div class="card p-4">
-                    <h5 class="text-center"><strong>Set Default Evaluation Period</strong></h5>
-                    <?php if (!empty($success_msg)): ?>
-                      <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <?= htmlspecialchars($success_msg) ?>
-                        <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
-                      </div>
+        <section class="section">
+            <div class="card">
+                <div class="card-body pt-4">
+                    <?php if ($message): ?>
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <?= htmlspecialchars($message) ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
                     <?php endif; ?>
-                    <form method="POST" action="">
-                    <div class="mb-3">
-                      <div class="form-floating">
-                        <select class="form-select" id="semester" name="semester" required>
-                            <option value="1st Semester" <?= $current_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
-                            <option value="2nd Semester" <?= $current_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
-                            <option value="Summer" <?= $current_semester == 'Summer' ? 'selected' : '' ?>>Summer</option>
-                        </select>
-                        <label for="semester" class="form-label">Semester</label>
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" id="academic_year" name="academic_year" required placeholder="e.g. 2025-2026" value="<?= $current_year ?>">
-                        <label for="academic_year" class="form-label">Academic Year</label>
-                      </div>
-                    </div>
-                    <div class="d-grid gap-2 col-6 mx-auto">
-                        <button type="submit" class="btn btn-success">Save Settings</button>
-                    </div>
-                  </form>
+
+                    <form method="POST" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="value" class="form-label">New <?= htmlspecialchars($type) ?> Name</label>
+                            <input type="text" name="value" class="form-control" value="<?= htmlspecialchars($current) ?>" required>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success me-2">Update</button>
+                            <a href="superadmin-addsmanagement.php" class="btn btn-secondary">Back</a>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
-      </section>
+        </section>
+    </main>
 
-    </main><!-- End #main -->
+    <?php include 'footer.php'; ?>
 
-    <!-- ======= Footer ======= -->
-    <?php include'footer.php'?>
-    <!-- End Footer -->
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+        <i class="bi bi-arrow-up-short"></i>
+    </a>
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-        class="bi bi-arrow-up-short"></i></a>
-
-    <!-- Vendor JS Files -->
-    <script src="vendors/apexcharts/apexcharts.min.js"></script>
+    <!-- Bootstrap & other JS -->
     <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="vendors/chart.js/chart.umd.js"></script>
-    <script src="vendors/echarts/echarts.min.js"></script>
-    <script src="vendors/quill/quill.js"></script>
-    <script src="vendors/simple-datatables/simple-datatables.js"></script>
-    <script src="vendors/tinymce/tinymce.min.js"></script>
-    <script src="vendors/php-email-form/validate.js"></script>
-
-    <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
-
-  </body>
-
+</body>
 </html>

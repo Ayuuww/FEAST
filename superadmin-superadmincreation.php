@@ -119,6 +119,14 @@ if (isset($_SESSION['msg'])) {
 
       <li class="nav-heading">Account Management</li>
 
+      <!-- Management Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <i class="ri-settings-line"></i>
+          <span>Manage</span>
+        </a>
+      </li><!-- End Management Nav -->
+
       <!-- Faculty Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
@@ -228,6 +236,15 @@ if (isset($_SESSION['msg'])) {
         </ol>
       </nav>
     </div><!-- End Page Title -->
+
+    <?php if (isset($_SESSION['msg'])): ?>
+      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
+      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
+        <?= htmlspecialchars($_SESSION['msg']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+    <?php endif; ?>
 
     <!-- Super Admin Creation Section -->
     <section class="section">
@@ -356,10 +373,18 @@ if (isset($_SESSION['msg'])) {
 
       }
 
-
-
     </script>
 
+    <script>
+      setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+          alert.classList.remove('show');
+          alert.classList.add('fade');
+          setTimeout(() => alert.remove(), 500); // optional DOM cleanup
+        }
+      }, 5000); // Hide after 5 seconds
+    </script>
 </body>
 
 </html>

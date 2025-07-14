@@ -9,12 +9,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
-// Display message if set
-if(isset($_SESSION['msg'])) {
-    echo "<script>alert('".$_SESSION['msg']."');</script>";
-    unset($_SESSION['msg']);
-}
-
 // Fetch super admin details
 $query = "SELECT * FROM superadmin";
 
@@ -119,6 +113,14 @@ $query = "SELECT * FROM superadmin";
         </li><!-- End Evalutaion Nav -->
 
         <li class="nav-heading">Account Management</li>
+
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
 
         <!-- Faculty Nav -->
         <li class="nav-item">
@@ -231,6 +233,16 @@ $query = "SELECT * FROM superadmin";
         </nav>
       </div><!-- End Page Title -->
 
+      <?php if (isset($_SESSION['msg'])): ?>
+        <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
+        <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
+          <?= htmlspecialchars($_SESSION['msg']) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+      <?php endif; ?>
+
+
         <!-- Admin Creation Section -->
         <section class="section">
           <div class="row">
@@ -298,50 +310,71 @@ $query = "SELECT * FROM superadmin";
                           </div>
                       </div> -->
 
-                      <!-- Department -->
-                      <div class="col-md-4">
+                      <!-- Position -->
+                      <div class="col-md-2 mb-3">
                           <div class="form-floating">
                               <select class="form-select" name="position" required>
-                                  <option value="" disabled selected>-- Select Position --</option>
-                                  <option value="Vice-President">Vice-President</option>
-                                  <option value="Chancelor">Chancelor</option>
-                                  <option value="Campus-Administrator">Campus-Administrator</option>
-                                  <option value="Dean">Dean</option>
-                                  <option value="Director">Director</option>
+                                <option value="" disabled selected>-- Select Position --</option>
+                                <?php
+                                  $positions = mysqli_query($conn, "SELECT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != ''");
+                                  while ($row = mysqli_fetch_assoc($positions)) {
+                                    echo '<option value="' . htmlspecialchars($row['position_name']) . '">' . htmlspecialchars($row['position_name']) . '</option>';
+                                  }
+                                ?>
                               </select>
-                              <label for="department">Position</label>
+                              <label for="position">Position</label>
                           </div>
                       </div>
 
                       <!-- Department -->
-                      <div class="col-md-2">
+                      <div class="col-md-2 mb-3">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
-                                  <option value="" disabled selected>Select Department</option>
-                                  <option value="CIS">CIS</option>
-                                  <option value="CAS">CAS</option>
-                                  <option value="CVM">CVM</option>
-                                  <option value="CAFF">CAFF</option>
+                                <option value="" disabled selected>Select Department</option>
+                                <?php
+                                  $departments = mysqli_query($conn, "SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+                                  while ($row = mysqli_fetch_assoc($departments)) {
+                                    echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                                  }
+                                ?>
                               </select>
                               <label for="department">Department</label>
                           </div>
                       </div>
 
                       <!-- Is it Faculty? -->
-                      <div class="col-md-2 offset-5">
+                      <div class="col-md-2 mb-3">
                           <div class="form-floating">
-                              <select class="form-select" name="faculty" required>
+                              <select class="form-select" name="faculty" id="faculty" required>
                                   <option value="" disabled selected>-- Select --</option>
                                   <option value="yes">Yes</option>
                                   <option value="no">No</option>
                               </select>
                               <label for="department">Is it Faculty Member?</label>
                           </div>
+                      </div>  
+
+                      <!-- Faculty Rank (hidden by default, shown if faculty=yes) -->
+                      <div class="col-md-4 offset-4 mb-3" id="facultyRankContainer" style="display: none;">
+                        <div class="form-floating">
+                          <select class="form-select" name="faculty_rank" id="faculty_rank">
+                            <option value="" selected disabled>-- Select Rank --</option>
+                            <?php
+                              $rank_query = mysqli_query($conn, "SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
+                              while ($rank = mysqli_fetch_assoc($rank_query)) {
+                                echo '<option value="' . $rank['rank_name'] . '">' . $rank['rank_name'] . '</option>';
+                              }
+                            ?>
+                          </select>
+                          <label for="faculty_rank">Faculty Rank</label>
+                        </div>
                       </div>
 
-                      <!-- Submit -->
-                      <div class="col-4 offset-4">
-                        <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                      <div class="row mb-3 offset-4">
+                        <!-- Submit -->
+                        <div class="col-md-4">
+                          <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                        </div>
                       </div>
 
                     </form>
@@ -383,24 +416,33 @@ $query = "SELECT * FROM superadmin";
 
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
+
     <script>
-      var checkpass = function() {
+      document.addEventListener('DOMContentLoaded', function () {
+        const facultyDropdown = document.getElementById('faculty');
+        const facultyRankContainer = document.getElementById('facultyRankContainer');
 
-      if (document.getElementById('password').value == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display = 'none';
-        document.getElementById('conpass').style.borderColor = 'green';
-      } 
-      else
-      {
-        document.getElementById('mess').style.display = 'block';
-        document.getElementById('conpass').style.borderColor = 'red';
+        facultyDropdown.addEventListener('change', function () {
+          if (facultyDropdown.value.toLowerCase() === 'yes') {
+            facultyRankContainer.style.display = 'block';
+          } else {
+            facultyRankContainer.style.display = 'none';
+            document.getElementById('faculty_rank').selectedIndex = 0; // reset selection
+          }
+        });
+      });
+    </script>
+
+    <script>
+      setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+          alert.classList.remove('show');
+          alert.classList.add('fade');
+          setTimeout(() => alert.remove(), 500); // optional DOM cleanup
         }
-
-      }
-
-
+      }, 5000); // Hide after 5 seconds
     </script>
 
   </body>
-
 </html>

@@ -2,6 +2,8 @@
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
+$faculty_rank = $_POST['faculty_rank'] ?? null;
+
 // Submit form data
 if (isset($_POST['submit'])) {
     $id         = $_POST['idnumber'];
@@ -25,24 +27,13 @@ if (isset($_POST['submit'])) {
     }
 
     // Proceed with insertion to admin table
-    $sql = "INSERT INTO admin ( idnumber, 
-                                first_name, 
-                                mid_name, 
-                                last_name, 
-                                email, 
-                                password,
-                                department, 
-                                position, 
-                                faculty) 
-                    VALUES (    '$id', 
-                                '$first_name', 
-                                '$mid_name', 
-                                '$last_name', 
-                                '$email', 
-                                '$password',
-                                '$department', 
-                                '$position', 
-                                '$faculty')";
+   $sql = " INSERT INTO admin ( idnumber, first_name, mid_name, last_name, email, password,
+                            department, position, faculty, faculty_rank)
+                            
+            VALUES ('$id', '$first_name', '$mid_name', '$last_name', '$email', '$password',
+                '$department', '$position', '$faculty', " . 
+                ($faculty_rank ? "'$faculty_rank'" : "NULL") . ")";
+
 
     if (mysqli_query($conn, $sql)) {
 
@@ -55,11 +46,12 @@ if (isset($_POST['submit'])) {
                 $faculty_insert = "INSERT INTO faculty (
                     idnumber, first_name, mid_name, last_name, department, faculty_rank
                 ) VALUES (
-                    '$id', '$first_name', '$mid_name', '$last_name', '$department', '$position' 
+                    '$id', '$first_name', '$mid_name', '$last_name', '$department', '$faculty_rank'
                 )";
                 mysqli_query($conn, $faculty_insert);
             }
         }
+
 
         $_SESSION['msg'] = 'Admin account successfully created.';
     } else {

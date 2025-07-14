@@ -9,12 +9,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
-// Display message if set
-if (isset($_SESSION['msg'])) {
-    echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
-    unset($_SESSION['msg']);
-  }
-
 // Get real faculty
 $faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM faculty WHERE status = 'active'");
 
@@ -128,6 +122,14 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
 
       <li class="nav-heading">Account Management</li>
 
+      <!-- Management Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <i class="ri-settings-line"></i>
+          <span>Manage</span>
+        </a>
+      </li><!-- End Management Nav -->
+
       <!-- Faculty Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
@@ -238,6 +240,18 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
       </nav>
     </div><!-- End Page Title -->
 
+    <?php
+    if (isset($_SESSION['msg'])) {
+        $msg = $_SESSION['msg'];
+        $type = $_SESSION['msg_type'] ?? 'info'; // Can be 'success', 'warning', 'danger', 'info'
+        echo "<div class='alert alert-$type alert-dismissible fade show mt-3' role='alert'>
+                $msg
+                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+              </div>";
+        unset($_SESSION['msg'], $_SESSION['msg_type']);
+    }
+    ?>
+    
     <!-- Super Admin Creation Section -->
       <section class="section">
         <div class="row">
@@ -245,7 +259,16 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">Add New Subject</h5>
-                  <form class="row g-3 needs-validation" novalidate method="post" action="addsubject.php">
+
+                <!-- <?php if (isset($_SESSION['msg'])): ?>
+                  <div class="alert alert-info alert-dismissible fade show mt-3 mb-3" role="alert" style="margin: auto;">
+                    <?= $_SESSION['msg']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                  <?php unset($_SESSION['msg']); ?>
+                <?php endif; ?> -->
+
+                  <form class="row g-3 needs-validation " novalidate method="post" action="addsubject.php">
 
                     <!-- Subject Code -->
                     <div class="col-md-2">
@@ -356,6 +379,16 @@ $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last
     });
   </script>
 
-</body>
+  <script>
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500); // Remove from DOM
+      }
+    }, 5000); // 5 seconds
+  </script>
 
+</body>
 </html>

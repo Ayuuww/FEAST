@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 14, 2025 at 05:45 PM
+-- Generation Time: Jul 13, 2025 at 06:10 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -24,36 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `adds`
---
-
-CREATE TABLE `adds` (
-  `id` int(11) NOT NULL,
-  `rank_name` varchar(100) DEFAULT NULL,
-  `position_name` varchar(100) DEFAULT NULL,
-  `section_name` varchar(100) DEFAULT NULL,
-  `department_name` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `adds`
---
-
-INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `department_name`) VALUES
-(33, 'Instructor I', NULL, NULL, NULL),
-(34, NULL, 'Dean', NULL, NULL),
-(35, NULL, NULL, '4-B', NULL),
-(36, NULL, NULL, NULL, 'CIS'),
-(37, NULL, 'Vice-President', NULL, NULL),
-(38, 'Professor V', NULL, NULL, NULL),
-(39, NULL, NULL, NULL, 'CAS'),
-(40, NULL, NULL, '1-A', NULL),
-(41, NULL, NULL, NULL, 'CVM'),
-(42, 'Instructor II', NULL, NULL, NULL);
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `admin`
 --
 
@@ -68,16 +38,22 @@ CREATE TABLE `admin` (
   `position` varchar(50) NOT NULL,
   `faculty` varchar(11) NOT NULL,
   `role` varchar(255) NOT NULL DEFAULT 'admin',
-  `status` varchar(11) NOT NULL DEFAULT 'active',
-  `faculty_rank` varchar(255) DEFAULT NULL
+  `status` varchar(11) NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`, `status`, `faculty_rank`) VALUES
-('000-0000-3', 'Edith', 'Maam', 'Admin', 'admin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active', 'Instructor I');
+INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`, `status`) VALUES
+('000-0000-0', 'Ma\'amEdith', 'Admin', 'Faculty', 'sampleadmin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active'),
+('000-0000-1', 'Maricel', 'O', 'Pre', 'email@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active'),
+('000-0000-3', 'First', 'Middle', 'Last', 'samplefaculty2@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active'),
+('001-0000-1', 'Sample', 'Admin', '!Faculty', 'sampleadmin2@email.com', 'ILOVEDMMMSU', 'CAS', 'Campus-Administrator', 'no', 'admin', 'active'),
+('002-0000-2', 'Admin', 'Sample', 'Faculty', 'sampleadmin3@email.com', 'ILOVEDMMMSU', 'CAS', 'Dean', 'yes', 'admin', 'active'),
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', 'sampleadmin4@emial.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'yes', 'admin', 'active'),
+('004-0000-4', 'Admin', 'As', 'Faculty', 'adminasfaculty@email.com', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'yes', 'admin', 'active'),
+('221-0422-1', 'Mark', 'Kristian', 'Lagman', 'markkristian@email.com', 'ILOVEDMMMSU', 'CVM', 'Vice-President', 'yes', 'admin', 'active');
 
 -- --------------------------------------------------------
 
@@ -104,7 +80,9 @@ CREATE TABLE `admin_evaluation` (
 --
 
 INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
-(18, '000-0000-3', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-14 21:50:34');
+(12, '000-0000-0', '000-0000-3', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-06 20:52:13'),
+(16, '000-0000-0', '000-0000-1', 'Dean', '2024-2025', '2nd Semester', 69, 92.00, 'yes', 'CIS', '2025-07-09 18:11:10'),
+(17, '000-0000-0', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 71, 94.67, 'yes no', 'CIS', '2025-07-09 19:48:25');
 
 -- --------------------------------------------------------
 
@@ -133,9 +111,9 @@ CREATE TABLE `evaluation` (
 --
 
 INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`) VALUES
-(66, '221-0388-1', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '003-0000-3', 71.00, 94.67, '', '2025-07-14 15:09:21', '1st Semester', '4-B'),
-(67, '000-0000-0', 'CIS', 'ISBA-105', 'Analytics', '2025-2026', '000-0000-1', 71.00, 94.67, '', '2025-07-14 15:19:48', '1st Semester', '4-B'),
-(68, '000-0000-0', 'CIS', 'ISBA-101', 'Accounting', '2025-2026', '000-0000-3', 68.00, 90.67, '', '2025-07-14 15:20:26', '1st Semester', '4-B');
+(62, '111-1111-1', 'CAS', 'PATHFIT-2', 'Physical Damage', '2025-2026', '002-0000-2', 73.00, 97.33, '', '2025-07-09 11:42:43', '1st Semester', '1-B'),
+(63, '123-4567-8', 'CVM', 'ISPC-114', 'Capstone Project 2', '2025-2026', '221-0422-1', 61.00, 81.33, 'mark lng sakamal', '2025-07-10 15:11:44', '1st Semester', '1-B'),
+(64, '123-4567-8', 'CVM', 'GECC-105', 'Mathematics', '2025-2026', '000-0000-2', 72.00, 96.00, '', '2025-07-11 16:39:44', '1st Semester', '1-B');
 
 -- --------------------------------------------------------
 
@@ -199,12 +177,15 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `faculty_rank`, `role`, `status`) VALUES
-('000-0000-1', 'Rufo', 'Sir', 'Faculty', 'faulty@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
-('000-0000-3', 'Edith', 'Maam', 'Admin', NULL, NULL, 'CIS', 'Professor V', 'faculty', 'active'),
-('002-0000-2', 'Shirley', 'Maam', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CAS', 'Instructor I', 'faculty', 'active'),
-('003-0000-3', 'Maricel', 'Maam', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
-('004-0000-4', 'Kenneth', 'Sir', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CIS', 'Instructor I', 'faculty', 'active'),
-('005-0000-5', 'Excel', 'Maam', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active');
+('000-0000-0', 'MaamEdith', 'Admin', 'Faculty', '', '', 'CIS', '', '', ''),
+('000-0000-1', 'Maricel', 'O', 'Pre', '', '', 'CIS', 'Professor IV', 'faculty', 'inactive'),
+('000-0000-2', 'Faculty', 'Sample', 'Value', 'samplefaculty@email.com', 'ILOVEDMMMSU', 'CVM', 'Assistant Professor I', 'faculty', 'active'),
+('000-0000-3', 'First', 'Middle', 'Last', '', '', 'CIS', 'Assistant Professor I', 'faculty', 'active'),
+('000-0000-4', 'Rufo', 'A', 'Baro', 'email@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
+('002-0000-2', 'Admin', 'Sample', 'Faculty', '', '', 'CAS', '', 'faculty', 'active'),
+('003-0000-3', 'AdminAs', 'Faculty', 'Sample', '', '', 'CVM', '', 'faculty', 'inactive'),
+('004-0000-4', 'Admin', 'As', 'Faculty', '', '', 'CAFF', 'Dean', 'faculty', 'active'),
+('221-0422-1', 'Mark', 'Kristian', 'Lagman', 'markkristian@email.com', 'ILOVEDMMMSU', 'CVM', 'Professor V', 'faculty', 'active');
 
 -- --------------------------------------------------------
 
@@ -226,6 +207,41 @@ CREATE TABLE `faculty_peer_evaluation` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `faculty_ranks`
+--
+
+CREATE TABLE `faculty_ranks` (
+  `id` int(11) NOT NULL,
+  `rank_name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `faculty_ranks`
+--
+
+INSERT INTO `faculty_ranks` (`id`, `rank_name`) VALUES
+(1, 'Instructor I'),
+(2, 'Instructor II'),
+(3, 'Instructor III'),
+(4, 'Assistant Professor I'),
+(5, 'Assistant Professor II'),
+(6, 'Assistant Professor III'),
+(7, 'Assistant Professor IV'),
+(8, 'Associate Professor I'),
+(9, 'Associate Professor II'),
+(10, 'Associate Professor III'),
+(11, 'Associate Professor IV'),
+(12, 'Associate Professor V'),
+(13, 'Professor I'),
+(14, 'Professor II'),
+(15, 'Professor III'),
+(16, 'Professor IV'),
+(17, 'Professor V'),
+(18, 'Professor VI');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student`
 --
 
@@ -236,7 +252,7 @@ CREATE TABLE `student` (
   `last_name` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
   `password` varchar(50) NOT NULL,
-  `department` varchar(11) NOT NULL,
+  `department` varchar(50) NOT NULL,
   `section` varchar(11) NOT NULL,
   `role` varchar(50) NOT NULL DEFAULT 'student'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -246,8 +262,9 @@ CREATE TABLE `student` (
 --
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `section`, `role`) VALUES
-('000-0000-0', 'Mark', 'Lagman', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '4-B', 'student'),
-('221-0388-1', 'Charles', 'Adonis', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '4-B', 'student');
+('111-1111-1', 'Student', 'Sample', 'Value', 'sample@email.com', 'ILOVEDMMMSU', 'CIS', '1-B', 'student'),
+('111-2222-3', 'Kulark', 'Juswa', 'Rujas', 'email@email.com', 'ILOVEDMMMSU', 'CAS', '1-B', 'student'),
+('123-4567-8', 'Clark Joshua', 'Velasco', 'Rojas', 'email@email.com', 'ILOVEDMMMSU', 'CIS', '1-A', 'student');
 
 -- --------------------------------------------------------
 
@@ -268,10 +285,17 @@ CREATE TABLE `student_subject` (
 --
 
 INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`, `admin_id`) VALUES
-(25, '000-0000-0', 'ISBA-105', '000-0000-1', NULL),
-(26, '000-0000-0', 'ISBA-101', '000-0000-3', NULL),
-(27, '000-0000-0', 'PATHFIT-2', '002-0000-2', NULL),
-(28, '221-0388-1', 'ISPC-101', '003-0000-3', NULL);
+(14, '111-2222-3', 'ISPC-101', '000-0000-1', NULL),
+(15, '111-2222-3', 'ISBA-101', NULL, '000-0000-0'),
+(16, '111-1111-1', 'ISBA-101', NULL, '000-0000-0'),
+(17, '111-1111-1', 'PATHFIT-2', NULL, '002-0000-2'),
+(18, '123-4567-8', 'ISBA-102', '000-0000-0', NULL),
+(19, '123-4567-8', 'ISBA-101', NULL, '000-0000-0'),
+(20, '111-1111-1', 'ISPC-101', '000-0000-1', NULL),
+(21, '123-4567-8', 'ISPC-114', '221-0422-1', NULL),
+(22, '123-4567-8', 'GECC-105', '000-0000-2', NULL),
+(23, '111-1111-1', 'ISPC-114', '221-0422-1', NULL),
+(24, '123-4567-8', 'ISBA-105', '000-0000-4', NULL);
 
 -- --------------------------------------------------------
 
@@ -292,10 +316,13 @@ CREATE TABLE `subject` (
 --
 
 INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`) VALUES
-(20, 'ISBA-105', 'Analytics', '000-0000-1', NULL),
-(23, 'ISBA-101', 'Accounting', '000-0000-3', NULL),
-(24, 'PATHFIT-2', 'Physical Education', '002-0000-2', NULL),
-(25, 'ISPC-101', 'Computer Programming', '003-0000-3', NULL);
+(13, 'ISBA-101', 'Business Again', NULL, '000-0000-0'),
+(14, 'ISPC-101', 'Computer Programmerist', '000-0000-1', NULL),
+(15, 'PATHFIT-2', 'Physical Damage', NULL, '002-0000-2'),
+(16, 'ISBA-102', 'Business Nambato', '000-0000-0', NULL),
+(17, 'ISPC-114', 'Capstone Project 2', '221-0422-1', NULL),
+(18, 'GECC-105', 'Mathematics', '000-0000-2', NULL),
+(19, 'ISBA-105', 'Analytics Application', '000-0000-4', NULL);
 
 -- --------------------------------------------------------
 
@@ -327,22 +354,11 @@ INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `em
 --
 
 --
--- Indexes for table `adds`
---
-ALTER TABLE `adds`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `rank_name` (`rank_name`),
-  ADD KEY `position_name` (`position_name`),
-  ADD KEY `section_name` (`section_name`),
-  ADD KEY `department_name` (`department_name`);
-
---
 -- Indexes for table `admin`
 --
 ALTER TABLE `admin`
   ADD PRIMARY KEY (`idnumber`),
-  ADD KEY `position` (`position`),
-  ADD KEY `fk_admin_department` (`department`);
+  ADD KEY `position` (`position`);
 
 --
 -- Indexes for table `admin_evaluation`
@@ -362,8 +378,8 @@ ALTER TABLE `evaluation`
   ADD KEY `subject_code_key` (`subject_code`),
   ADD KEY `faculty_id_key` (`faculty_id`),
   ADD KEY `subject_title` (`subject_title`),
-  ADD KEY `fk_evaluation_department` (`department`),
-  ADD KEY `fk_evaluation_student_section` (`student_section`);
+  ADD KEY `department_key` (`department`),
+  ADD KEY `evaluation_student_section` (`student_section`);
 
 --
 -- Indexes for table `evaluation_settings`
@@ -382,8 +398,7 @@ ALTER TABLE `evaluation_switch`
 --
 ALTER TABLE `faculty`
   ADD PRIMARY KEY (`idnumber`),
-  ADD KEY `department` (`department`),
-  ADD KEY `fk_faculty_rank` (`faculty_rank`);
+  ADD KEY `department` (`department`);
 
 --
 -- Indexes for table `faculty_peer_evaluation`
@@ -392,13 +407,18 @@ ALTER TABLE `faculty_peer_evaluation`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `faculty_ranks`
+--
+ALTER TABLE `faculty_ranks`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
   ADD PRIMARY KEY (`idnumber`),
   ADD KEY `department` (`department`),
-  ADD KEY `section` (`section`),
-  ADD KEY `section_2` (`section`);
+  ADD KEY `section` (`section`);
 
 --
 -- Indexes for table `student_subject`
@@ -431,22 +451,16 @@ ALTER TABLE `superadmin`
 --
 
 --
--- AUTO_INCREMENT for table `adds`
---
-ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
-
---
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -467,27 +481,26 @@ ALTER TABLE `faculty_peer_evaluation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT for table `faculty_ranks`
+--
+ALTER TABLE `faculty_ranks`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `admin`
---
-ALTER TABLE `admin`
-  ADD CONSTRAINT `fk_admin_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_admin_position` FOREIGN KEY (`position`) REFERENCES `adds` (`position_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `admin_evaluation`
@@ -503,25 +516,11 @@ ALTER TABLE `admin_evaluation`
 -- Constraints for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  ADD CONSTRAINT `fk_evaluation_department` FOREIGN KEY (`department`) REFERENCES `faculty` (`department`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_evaluation_student_section` FOREIGN KEY (`student_section`) REFERENCES `student` (`section`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `department_key` FOREIGN KEY (`department`) REFERENCES `faculty` (`department`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `evaluation_student_section` FOREIGN KEY (`student_section`) REFERENCES `student` (`section`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `student` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_title_key` FOREIGN KEY (`subject_title`) REFERENCES `subject` (`title`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `faculty`
---
-ALTER TABLE `faculty`
-  ADD CONSTRAINT `fk_faculty_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_faculty_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
-
---
--- Constraints for table `student`
---
-ALTER TABLE `student`
-  ADD CONSTRAINT `fk_student_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_student_section` FOREIGN KEY (`section`) REFERENCES `adds` (`section_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student_subject`

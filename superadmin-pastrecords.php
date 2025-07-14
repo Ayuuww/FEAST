@@ -165,6 +165,14 @@ if ($faculty_id) {
         
         <li class="nav-heading">Account Management</li>
 
+        <!-- Management Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+            <i class="ri-settings-line"></i>
+            <span>Manage</span>
+          </a>
+        </li><!-- End Management Nav -->
+
         <!-- Faculty Nav -->
         <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
@@ -264,9 +272,17 @@ if ($faculty_id) {
 
 
     <main id="main" class="main">
+
       <div class="pagetitle">
         <h1>Past Faculty Evaluation Records</h1>
-      </div>
+        <nav>
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+            <li class="breadcrumb-item">Reports</li>
+            <li class="breadcrumb-item active">Past Records</li>
+          </ol>
+        </nav>
+      </div><!-- End Page Title -->
 
       <section class="section">
         <div class="card">

@@ -2,6 +2,10 @@
 session_start();
 include 'conn/conn.php';
 
+$_SESSION['msg'] = "Subject assigned successfully!";
+$_SESSION['msg_type'] = "success"; // or 'danger', 'warning', 'info'
+
+
 if (isset($_POST['assign'])) {
     $student_id   = $_POST['student_id'];
     $subject_code = $_POST['subject_code'];

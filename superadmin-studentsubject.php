@@ -9,11 +9,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
-// Display message if set
-if (isset($_SESSION['msg'])) {
-    echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
-    unset($_SESSION['msg']);
-  }
 
 $max_subjects = 9; // example limit
 
@@ -152,6 +147,14 @@ $subject_result = mysqli_query($conn, $subject_query);
 
       <li class="nav-heading">Account Management</li>
 
+      <!-- Management Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <i class="ri-settings-line"></i>
+          <span>Manage</span>
+        </a>
+      </li><!-- End Management Nav -->
+
       <!-- Faculty Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
@@ -262,6 +265,16 @@ $subject_result = mysqli_query($conn, $subject_query);
       </nav>
     </div><!-- End Page Title -->
 
+    <?php if (isset($_SESSION['msg'])): ?>
+      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
+      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
+        <?= htmlspecialchars($_SESSION['msg']) ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+    <?php endif; ?>
+
+
     <!-- Inserting Subject to Student Section -->
       <section class="section">
         <div class="row">
@@ -269,6 +282,8 @@ $subject_result = mysqli_query($conn, $subject_query);
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">Assign Subject</h5>
+
+                
 
                   <form method="POST" action="assignsubject.php" class="row g-3">
                     <!--Organize students by department -->
@@ -426,6 +441,17 @@ $subject_result = mysqli_query($conn, $subject_query);
         console.log("Admin ID:", adminId);
       });
     });
+  </script>
+
+  <script>
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500); // Remove from DOM
+      }
+    }, 5000); // 5 seconds
   </script>
 
 
