@@ -38,8 +38,9 @@ $query = "SELECT
           FROM student_subject ss
           JOIN subject s ON ss.subject_code = s.code 
           LEFT JOIN faculty f ON ss.faculty_id = f.idnumber AND f.status = 'active'
-          LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.faculty = 'yes' AND a.status = 'active'
+          LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.status = 'active'
           WHERE ss.student_id = ?
+            AND ss.evaluated != 'yes'
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
               WHERE e.student_id    = ss.student_id 
@@ -199,7 +200,7 @@ if (isset($_SESSION['msg'])) {
       <section class="section dashboard">
         <div class="container-fluid">
           <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="col-lg-12 col-md-10 col-sm-12">
               <div class="card shadow-lg">
                 <div class="card-body">
                   <h5 class="card-title text-center">Student Evaluation of Teachers (SET)</h5>

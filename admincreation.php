@@ -14,7 +14,6 @@ if (isset($_POST['submit'])) {
     $password   = $_POST['password'];
     $department = $_POST['department'];
     $position   = $_POST['position'];
-    $faculty    = $_POST['faculty']; // 'yes' or 'no'
 
     // Check if admin with same ID already exists
     $check_query = "SELECT * FROM admin WHERE idnumber = '$id'";
@@ -26,32 +25,29 @@ if (isset($_POST['submit'])) {
         exit();
     }
 
-    // Proceed with insertion to admin table
-   $sql = " INSERT INTO admin ( idnumber, first_name, mid_name, last_name, email, password,
-                            department, position, faculty, faculty_rank)
-                            
-            VALUES ('$id', '$first_name', '$mid_name', '$last_name', '$email', '$password',
-                '$department', '$position', '$faculty', " . 
-                ($faculty_rank ? "'$faculty_rank'" : "NULL") . ")";
-
+    // Proceed with insertion to admin table (faculty column removed)
+    $sql = "INSERT INTO admin (
+                idnumber, first_name, mid_name, last_name, email, password,
+                department, position, faculty_rank
+            ) VALUES (
+                '$id', '$first_name', '$mid_name', '$last_name', '$email', '$password',
+                '$department', '$position', " . 
+                ($faculty_rank ? "'$faculty_rank'" : "NULL") . "
+            )";
 
     if (mysqli_query($conn, $sql)) {
+        // Always insert into faculty table if not already present
+        $faculty_check = "SELECT idnumber FROM faculty WHERE idnumber = '$id'";
+        $faculty_result = mysqli_query($conn, $faculty_check);
 
-        // IF marked as faculty, also insert into faculty table (if not already present)
-        if (strtolower($faculty) === 'yes') {
-            $faculty_check = "SELECT idnumber FROM faculty WHERE idnumber = '$id'";
-            $faculty_result = mysqli_query($conn, $faculty_check);
-
-            if (mysqli_num_rows($faculty_result) == 0) {
-                $faculty_insert = "INSERT INTO faculty (
-                    idnumber, first_name, mid_name, last_name, department, faculty_rank
-                ) VALUES (
-                    '$id', '$first_name', '$mid_name', '$last_name', '$department', '$faculty_rank'
-                )";
-                mysqli_query($conn, $faculty_insert);
-            }
+        if (mysqli_num_rows($faculty_result) == 0) {
+            $faculty_insert = "INSERT INTO faculty (
+                idnumber, first_name, mid_name, last_name, department, faculty_rank
+            ) VALUES (
+                '$id', '$first_name', '$mid_name', '$last_name', '$department', '$faculty_rank'
+            )";
+            mysqli_query($conn, $faculty_insert);
         }
-
 
         $_SESSION['msg'] = 'Admin account successfully created.';
     } else {

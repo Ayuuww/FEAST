@@ -85,6 +85,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
     if ($stmt->execute()) {
+        // Prepare values for secondary insert
+        $questions = [];
+        foreach ($_POST as $key => $value) {
+            if (preg_match('/^q\d+$/', $key)) {
+                $questions[$key] = intval($value);
+            }
+        }
+        $form_data = json_encode($questions);
+        $rating_percent = round(($computed_rating), 2);
+
+        $insert = $conn->prepare("INSERT INTO admin_evaluation_submissions 
+            (evaluator_id, evaluatee_id, semester, academic_year, total_score, rating_percent, comment, form_data) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $insert->bind_param(
+            "sssssdss",
+            $evaluator_id,
+            $evaluatee_id,
+            $semester,
+            $academic_year,
+            $total_score,
+            $rating_percent,
+            $comment,
+            $form_data
+        );
+        $insert->execute();
+
+        // Store session for printing
         $average_rating = round(($computed_rating / 100) * 5, 2);
 
         $_SESSION['admin_print_data'] = [
@@ -114,5 +142,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: admin-evaluate.php");
     exit();
 }
+
 
 ?>

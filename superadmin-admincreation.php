@@ -286,7 +286,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Email -->
-                      <div class="col-md-4">
+                      <div class="col-md-3">
                           <div class="form-floating">
                               <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
                               <label for="yourEmail" class="form-label">Email</label>
@@ -294,12 +294,8 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Password -->
-                      <div class="col-md-2">
-                          <div class="form-floating">
-                              <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" readonly>
-                              <label for="yourEmail" class="form-label">Default Password</label>
-                          </div>
-                      </div>
+                      <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" hidden>
+                          
 
                       <!-- Confirm Password
                       <div class="col-md-3">
@@ -311,7 +307,7 @@ $query = "SELECT * FROM superadmin";
                       </div> -->
 
                       <!-- Position -->
-                      <div class="col-md-2 mb-3">
+                      <div class="col-md-3 mb-3">
                           <div class="form-floating">
                               <select class="form-select" name="position" required>
                                 <option value="" disabled selected>-- Select Position --</option>
@@ -327,7 +323,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Department -->
-                      <div class="col-md-2 mb-3">
+                      <div class="col-md-3 mb-3">
                           <div class="form-floating">
                               <select class="form-select" name="department" required>
                                 <option value="" disabled selected>Select Department</option>
@@ -343,7 +339,7 @@ $query = "SELECT * FROM superadmin";
                       </div>
 
                       <!-- Is it Faculty? -->
-                      <div class="col-md-2 mb-3">
+                      <!-- <div class="col-md-2 mb-3">
                           <div class="form-floating">
                               <select class="form-select" name="faculty" id="faculty" required>
                                   <option value="" disabled selected>-- Select --</option>
@@ -352,12 +348,12 @@ $query = "SELECT * FROM superadmin";
                               </select>
                               <label for="department">Is it Faculty Member?</label>
                           </div>
-                      </div>  
+                      </div>   -->
 
                       <!-- Faculty Rank (hidden by default, shown if faculty=yes) -->
-                      <div class="col-md-4 offset-4 mb-3" id="facultyRankContainer" style="display: none;">
+                      <div class="col-md-3 mb-3" id="">
                         <div class="form-floating">
-                          <select class="form-select" name="faculty_rank" id="faculty_rank">
+                          <select class="form-select" name="faculty_rank" id="">
                             <option value="" selected disabled>-- Select Rank --</option>
                             <?php
                               $rank_query = mysqli_query($conn, "SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
@@ -417,7 +413,7 @@ $query = "SELECT * FROM superadmin";
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
 
-    <script>
+    <!-- <script>
       document.addEventListener('DOMContentLoaded', function () {
         const facultyDropdown = document.getElementById('faculty');
         const facultyRankContainer = document.getElementById('facultyRankContainer');
@@ -431,7 +427,7 @@ $query = "SELECT * FROM superadmin";
           }
         });
       });
-    </script>
+    </script> -->
 
     <script>
       setTimeout(() => {

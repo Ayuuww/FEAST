@@ -24,7 +24,7 @@ $query = "SELECT
           FROM evaluation e
           JOIN subject s ON e.subject_code = s.code
           LEFT JOIN faculty f ON e.faculty_id = f.idnumber
-          LEFT JOIN admin a ON e.faculty_id = a.idnumber AND a.faculty = 'yes'
+          LEFT JOIN admin a ON e.faculty_id = a.idnumber
           LEFT JOIN student_subject ss 
               ON ss.subject_code = s.code 
             AND ss.student_id = e.student_id
@@ -140,6 +140,7 @@ if (isset($_SESSION['msg'])) {
                     <th>Academic Year</th>
                     <th>Semester</th>
                     <th>Evaluated On</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -161,6 +162,16 @@ if (isset($_SESSION['msg'])) {
                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
                         <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
+                        <td>
+                          <form action="student-evaluation-download.php" method="POST" target="_blank">
+                            <input type="hidden" name="student_id" value="<?= $student_id ?>">
+                            <input type="hidden" name="subject_code" value="<?= $row['subject_code'] ?>">
+                            <input type="hidden" name="faculty_id" value="<?= $row['faculty_id'] ?>">
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                              <i class="bi bi-printer"></i> Print Again
+                            </button>
+                          </form>
+                        </td>
                       </tr>
                     <?php endwhile; ?>
                   <?php else: ?>

@@ -121,27 +121,54 @@ if (isset($_SESSION['msg'])) {
 
         <!-- Evaluate Nav -->
         <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <a class="nav-link collapse " data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
-          <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <ul id="charts-nav" class="nav-content collapse show " data-bs-parent="#sidebar-nav">
             <li>
               <a href="admin-evaluate.php" class="active">
                 <i class="bi bi-circle"></i><span>Form</span>
               </a>
             </li>
             <li>
-              <a href="admin-evaluatedfaculty.php">
+              <a href="admin-evaluatedfaculty.php" >
                 <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
               </a>
             </li>
           </ul>
         </li><!-- End Evaluate Nav -->
 
+        <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#subject" data-bs-toggle="collapse" href="#">
+            <i class="ri-book-line"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="subject" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="admin-subjectlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="admin-subjectadding.php">
+                <i class="bi bi-circle"></i><span>Add Subject</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Subject Nav -->
+
+        <!-- Student Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="admin-studentsubject.php">
+            <i class="ri-book-fill"></i>
+            <span>Assign Subject</span>
+          </a>
+        </li><!-- End Student Subject Nav -->
+
         <li class="nav-item">
           <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
-            <span>Subject</span>
+            <span>Subject Evaluated</span>
           </a>
         </li><!-- End Profile Nav -->
 
@@ -160,6 +187,7 @@ if (isset($_SESSION['msg'])) {
             <span>Sign Out</span>
           </a>
         </li><!-- End Sign out Nav -->
+
 
       </ul>
 
@@ -181,7 +209,7 @@ if (isset($_SESSION['msg'])) {
       <section class="section dashboard">
         <div class="container-fluid">
           <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10 col-sm-12">
+            <div class="col-lg-12 col-md-10 col-sm-12">
               <div class="card shadow-lg">
                 <div class="card-body table-responsive">
                   <h5 class="card-title text-center">Supervisor's Evaulation of Faculty (SEF)</h5>

@@ -12,6 +12,7 @@ $evaluator_id = $_SESSION['idnumber'];
 
 // Fetching peer evaluations done by the current faculty
 $query = "SELECT 
+            ae.id,
             ae.evaluatee_id,
             f.first_name, f.mid_name, f.last_name,
             ae.total_score,
@@ -84,10 +85,37 @@ if (isset($_SESSION['msg'])) {
           </ul>
         </li><!-- End Evaluate Nav -->
 
+        <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#subject" data-bs-toggle="collapse" href="#">
+            <i class="ri-book-line"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="subject" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="admin-subjectlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="admin-subjectadding.php">
+                <i class="bi bi-circle"></i><span>Add Subject</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Subject Nav -->
+
+        <!-- Student Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="admin-studentsubject.php">
+            <i class="ri-book-fill"></i>
+            <span>Assign Subject</span>
+          </a>
+        </li><!-- End Student Subject Nav -->
+
         <li class="nav-item">
           <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
-            <span>Subject</span>
+            <span>Subject Evaluated</span>
           </a>
         </li><!-- End Profile Nav -->
 
@@ -150,6 +178,18 @@ if (isset($_SESSION['msg'])) {
                                         <td><?= htmlspecialchars($row['semester']) ?></td>
                                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
                                         <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
+                                        <td>
+                                          <div class="dropdown">
+                                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                              ⋮
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                              <li><a class="dropdown-item" href="view-evaluation.php?id=<?= $row['id'] ?>">View PDF</a></li>
+                                              <li><a class="dropdown-item" href="download-evaluation.php?id=<?= $row['id'] ?>">Download PDF</a></li>
+                                              <li><a class="dropdown-item" href="print-evaluation.php?id=<?= $row['id'] ?>" target="_blank">Print Again</a></li>
+                                            </ul>
+                                          </div>
+                                        </td>
                                     </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>

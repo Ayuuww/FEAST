@@ -254,7 +254,6 @@ $result = mysqli_query($conn, $query);
                       <th>Email</th>
                       <th>Department</th>
                       <th>Position</th>
-                      <th>Faculty?</th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
@@ -271,7 +270,6 @@ $result = mysqli_query($conn, $query);
                           <td><?php echo $row['email'];?></td>
                           <td class="text-uppercase"><?php echo $row['department'];?></td>
                           <td class="text-capitalize"><?php echo $row['position'];?></td>
-                          <td class="text-capitalize"><?php echo $row['faculty'];?></td>
                           <td class="text-capitalize"><?php echo $row['status'];?></td>
                           <td>
                             <a href="superadmin-editadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>

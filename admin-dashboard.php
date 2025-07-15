@@ -89,10 +89,37 @@ $totalstudent = $student_row['total'] ?? 0;
           </ul>
         </li><!-- End Evaluate Nav -->
 
+        <!-- Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" data-bs-target="#subject" data-bs-toggle="collapse" href="#">
+            <i class="ri-book-line"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="subject" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+            <li>
+              <a href="admin-subjectlist.php" >
+                <i class="bi bi-circle"></i><span>List</span>
+              </a>
+            </li>
+            <li>
+              <a href="admin-subjectadding.php">
+                <i class="bi bi-circle"></i><span>Add Subject</span>
+              </a>
+            </li>
+          </ul>
+        </li><!-- End Subject Nav -->
+
+        <!-- Student Subject Nav -->
+        <li class="nav-item">
+          <a class="nav-link collapsed" href="admin-studentsubject.php">
+            <i class="ri-book-fill"></i>
+            <span>Assign Subject</span>
+          </a>
+        </li><!-- End Student Subject Nav -->
+
         <li class="nav-item">
           <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
             <i class="bi bi-book-fill"></i>
-            <span>Subject</span>
+            <span>Subject Evaluated</span>
           </a>
         </li><!-- End Profile Nav -->
 

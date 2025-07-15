@@ -24,18 +24,18 @@ if (isset($_POST['submit'])) {
 
     // Proceed with insertion
     $sql    = "INSERT INTO superadmin   (   idnumber, 
-                                    first_name, 
-                                    mid_name, 
-                                    last_name, 
-                                    email, 
-                                    password)
+                                            first_name, 
+                                            mid_name, 
+                                            last_name, 
+                                            email, 
+                                            password)
 
-                VALUES          (   '$id', 
-                                    '$first_name', 
-                                    '$mid_name', 
-                                    '$last_name', 
-                                    '$email', 
-                                    '$password')";
+                        VALUES          (   '$id', 
+                                            '$first_name', 
+                                            '$mid_name', 
+                                            '$last_name', 
+                                            '$email', 
+                                            '$password')";
 
     if (mysqli_query($conn, $sql)) {
         $_SESSION['msg']    = 'Super Admin account successfully created.';

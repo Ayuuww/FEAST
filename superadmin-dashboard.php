@@ -71,7 +71,7 @@ $totalsubject = $data['total_subject'];
         </li><!-- End Dashboard Nav -->
 
         <!-- Subject Nav -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -87,15 +87,15 @@ $totalsubject = $data['total_subject'];
               </a>
             </li>
           </ul>
-        </li><!-- End Subject Nav -->
+        </li>End Subject Nav -->
 
         <!-- Student Subject Nav -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-studentsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Assign Subject</span>
           </a>
-        </li><!-- End Student Subject Nav -->
+        </li>End Student Subject Nav -->
 
         <!-- Reports Nav -->
         <li class="nav-item">
