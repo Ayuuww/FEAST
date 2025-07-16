@@ -24,60 +24,60 @@ $subject_result = mysqli_query($conn, $subject_query);
 
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
-    $student_ids = $_POST['student_id'];
-    $subject_codes = $_POST['subject_code']; // This is now an array
+  $student_ids = $_POST['student_id'];
+  $subject_codes = $_POST['subject_code']; // This is now an array
 
-    $success = 0;
-    $errors = [];
+  $success = 0;
+  $errors = [];
 
-    foreach ($student_ids as $student_id) {
-      foreach ($subject_codes as $subject_code) {
-          // Get faculty_id or admin_id for this subject
-          $query = "SELECT faculty_id, admin_id FROM subject WHERE code = ?";
-          $stmt = $conn->prepare($query);
-          $stmt->bind_param("s", $subject_code);
-          $stmt->execute();
-          $result = $stmt->get_result();
-          $subject_data = $result->fetch_assoc();
+  foreach ($student_ids as $student_id) {
+    foreach ($subject_codes as $subject_code) {
+      // Get faculty_id or admin_id for this subject
+      $query = "SELECT faculty_id, admin_id FROM subject WHERE code = ?";
+      $stmt = $conn->prepare($query);
+      $stmt->bind_param("s", $subject_code);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      $subject_data = $result->fetch_assoc();
 
-          if ($subject_data) {
-              $faculty_id = $subject_data['faculty_id'] ?? null;
-              $admin_id = $subject_data['admin_id'] ?? null;
+      if ($subject_data) {
+        $faculty_id = $subject_data['faculty_id'] ?? null;
+        $admin_id = $subject_data['admin_id'] ?? null;
 
-              // Check if already assigned to avoid duplicates
-              $check_stmt = $conn->prepare("SELECT * FROM student_subject WHERE student_id = ? AND subject_code = ?");
-              $check_stmt->bind_param("ss", $student_id, $subject_code);
-              $check_stmt->execute();
-              $check_result = $check_stmt->get_result();
+        // Check if already assigned to avoid duplicates
+        $check_stmt = $conn->prepare("SELECT * FROM student_subject WHERE student_id = ? AND subject_code = ?");
+        $check_stmt->bind_param("ss", $student_id, $subject_code);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
 
-              if ($check_result->num_rows === 0) {
-                  // Insert
-                  $insert_stmt = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id, admin_id) VALUES (?, ?, ?, ?)");
-                  $insert_stmt->bind_param("ssss", $student_id, $subject_code, $faculty_id, $admin_id);
-                  if ($insert_stmt->execute()) {
-                      $success++;
-                  } else {
-                      $errors[] = "Failed to assign $subject_code.";
-                  }
-              } else {
-                  $errors[] = "$subject_code already assigned.";
-              }
+        if ($check_result->num_rows === 0) {
+          // Insert
+          $insert_stmt = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id, admin_id) VALUES (?, ?, ?, ?)");
+          $insert_stmt->bind_param("ssss", $student_id, $subject_code, $faculty_id, $admin_id);
+          if ($insert_stmt->execute()) {
+            $success++;
           } else {
-              $errors[] = "$subject_code not found.";
+            $errors[] = "Failed to assign $subject_code.";
           }
+        } else {
+          $errors[] = "$subject_code already assigned.";
+        }
+      } else {
+        $errors[] = "$subject_code not found.";
       }
-    }   
-
-    if ($success > 0) {
-        $_SESSION['msg'] = "$success subject(s) successfully assigned.";
-        $_SESSION['msg_type'] = 'success';
-    } else {
-        $_SESSION['msg'] = "No subjects were assigned. " . implode(" ", $errors);
-        $_SESSION['msg_type'] = 'danger';
     }
+  }
 
-    header("Location: admin-studentsubject.php");
-    exit();
+  if ($success > 0) {
+    $_SESSION['msg'] = "$success subject(s) successfully assigned.";
+    $_SESSION['msg_type'] = 'success';
+  } else {
+    $_SESSION['msg'] = "No subjects were assigned. " . implode(" ", $errors);
+    $_SESSION['msg_type'] = 'danger';
+  }
+
+  header("Location: admin-studentsubject.php");
+  exit();
 }
 
 ?>
@@ -93,155 +93,154 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 
   <title>FEAST / Student Subject</title>
 
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 
   <style>
-  div.dataTables_length {
-    display: none;
-  }
+    div.dataTables_length {
+      display: none;
+    }
 
-  select[multiple] {
-    height: 400px;
-  }
+    select[multiple] {
+      height: 400px;
+    }
 
-  .select2-results__options {
-    max-height: 300px;
-  }
+    .select2-results__options {
+      max-height: 300px;
+    }
 
-  select[multiple] {
-    height: auto;
-    min-height: 300px;
-    overflow-y: auto;
-  }
+    select[multiple] {
+      height: auto;
+      min-height: 300px;
+      overflow-y: auto;
+    }
 
-  .mobiscroll-input {
-    min-height: 50px;
-  }
+    .mobiscroll-input {
+      min-height: 50px;
+    }
 
-  .mobiscroll-select {
-    max-height: 400px !important;
-  }
+    .mobiscroll-select {
+      max-height: 400px !important;
+    }
 
-  select.form-select {
-    padding-top: 0.5rem;
-  }
+    select.form-select {
+      padding-top: 0.5rem;
+    }
 
-  .select2-container--default .select2-selection--multiple {
-  min-height: 120px;
-  padding: 8px;
-  border: 1px solid #ced4da;
-  border-radius: 0.375rem;
-}
+    .select2-container--default .select2-selection--multiple {
+      min-height: 120px;
+      padding: 8px;
+      border: 1px solid #ced4da;
+      border-radius: 0.375rem;
+    }
 
-.select2-container--default .select2-selection--multiple .select2-selection__choice {
-  background-color: #198754;
-  border: none;
-  color: white;
-  padding: 3px 10px;
-  margin-top: 4px;
-  border-radius: 20px;
-}
-
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+      background-color: #198754;
+      border: none;
+      color: white;
+      padding: 3px 10px;
+      margin-top: 4px;
+      border-radius: 20px;
+    }
   </style>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Mobiscroll CSS -->
-<!-- <link rel="stylesheet" href="https://cdn.mobiscroll.com/5.27.1/css/mobiscroll.min.css" />
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Mobiscroll CSS -->
+  <!-- <link rel="stylesheet" href="https://cdn.mobiscroll.com/5.27.1/css/mobiscroll.min.css" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> -->
 
 
 </head>
 
 <body>
-  
-    <?php include 'admin-header.php'?>
-    
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
 
-      <ul class="sidebar-nav" id="sidebar-nav">
+  <?php include 'admin-header.php' ?>
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="admin-dashboard.php">
-            <i class="bi bi-grid"></i>
-            <span>Dashboard</span>
-          </a>
-        </li><!-- End Dashboard Nav -->
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
 
-        <!-- Evaluate Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="admin-evaluate.php" >
-                <i class="bi bi-circle"></i><span>Form</span>
-              </a>
-            </li>
-            <li>
-              <a href="admin-evaluatedfaculty.php" >
-                <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Evaluate Nav -->
+    <ul class="sidebar-nav" id="sidebar-nav">
 
-        <!-- Subject Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#subject" data-bs-toggle="collapse" href="#">
-            <i class="ri-book-line"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="subject" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="admin-subjectlist.php" >
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="admin-subjectadding.php">
-                <i class="bi bi-circle"></i><span>Add Subject</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Subject Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="admin-dashboard.php">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
 
-        <!-- Student Subject Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapse" href="admin-studentsubject.php">
-            <i class="ri-book-fill"></i>
-            <span>Assign Subject</span>
-          </a>
-        </li><!-- End Student Subject Nav -->
+      <!-- Evaluate Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="admin-evaluate.php">
+              <i class="bi bi-circle"></i><span>Form</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-evaluatedfaculty.php">
+              <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Evaluate Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
-            <i class="bi bi-book-fill"></i>
-            <span>Subject Evaluated</span>
-          </a>
-        </li><!-- End Profile Nav -->
+      <!-- Subject Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#subject" data-bs-toggle="collapse" href="#">
+          <i class="ri-book-line"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="subject" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="admin-subjectlist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-subjectadding.php">
+              <i class="bi bi-circle"></i><span>Add Subject</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Subject Nav -->
 
-        <li class="nav-heading">Pages</li>
+      <!-- Student Subject Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapse" href="admin-studentsubject.php">
+          <i class="ri-book-fill"></i>
+          <span>Assign Subject</span>
+        </a>
+      </li><!-- End Student Subject Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="admin-user-profile.php">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-        </li><!-- End Profile Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="admin-evaluatedsubject.php">
+          <i class="bi bi-book-fill"></i>
+          <span>Subject Evaluated</span>
+        </a>
+      </li><!-- End Profile Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="logout.php">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </a>
-        </li><!-- End Sign out Nav -->
+      <li class="nav-heading">Pages</li>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="admin-user-profile.php">
+          <i class="bi bi-person"></i>
+          <span>Profile</span>
+        </a>
+      </li><!-- End Profile Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="logout.php">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
+        </a>
+      </li><!-- End Sign out Nav -->
 
 
-      </ul>
+    </ul>
 
-    </aside><!-- End Sidebar-->
+  </aside><!-- End Sidebar-->
 
   <main id="main" class="main">
 
@@ -267,105 +266,105 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 
 
     <!-- Inserting Subject to Student Section -->
-      <!-- Subject & Student Selection Form Section -->
-      <section class="section">
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="card shadow-sm p-4">
-              <div class="card-body">
-                <h5 class="card-title mb-4">Assign Subject to Students</h5>
+    <!-- Subject & Student Selection Form Section -->
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card shadow-sm p-4">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Assign Subject to Students</h5>
 
-                <form method="POST" action="assignsubject.php" class="row g-4">
+              <form method="POST" action="assignsubject.php" class="row g-4">
 
-                  <!-- Department Filter -->
-                  <div class="col-md-2">
-                    <label for="departmentFilter" class="form-label">Filter by Department</label>
-                    <select id="departmentFilter" class="form-select">
-                      <option value="">All Departments</option>
-                      <?php
-                      $students_by_dept = [];
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        $students_by_dept[$row['department']][] = $row;
+                <!-- Department Filter -->
+                <div class="col-md-2">
+                  <label for="departmentFilter" class="form-label">Filter by Department</label>
+                  <select id="departmentFilter" class="form-select">
+                    <option value="">All Departments</option>
+                    <?php
+                    $students_by_dept = [];
+                    while ($row = mysqli_fetch_assoc($result)) {
+                      $students_by_dept[$row['department']][] = $row;
+                    }
+                    ksort($students_by_dept);
+                    foreach (array_keys($students_by_dept) as $dept): ?>
+                      <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+
+                <!-- Section Filter -->
+                <div class="col-md-2">
+                  <label for="sectionFilter" class="form-label">Filter by Section</label>
+                  <select id="sectionFilter" class="form-select">
+                    <option value="">All Sections</option>
+                    <?php
+                    $sections = [];
+                    foreach ($students_by_dept as $students) {
+                      foreach ($students as $stu) {
+                        $sections[$stu['section']] = true;
                       }
-                      ksort($students_by_dept);
-                      foreach (array_keys($students_by_dept) as $dept): ?>
-                        <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
+                    }
+                    ksort($sections);
+                    foreach (array_keys($sections) as $section): ?>
+                      <option value="<?= htmlspecialchars($section) ?>"><?= htmlspecialchars($section) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
 
-                  <!-- Section Filter -->
-                  <div class="col-md-2">
-                    <label for="sectionFilter" class="form-label">Filter by Section</label>
-                    <select id="sectionFilter" class="form-select">
-                      <option value="">All Sections</option>
-                      <?php
-                      $sections = [];
-                      foreach ($students_by_dept as $students) {
-                        foreach ($students as $stu) {
-                          $sections[$stu['section']] = true;
-                        }
-                      }
-                      ksort($sections);
-                      foreach (array_keys($sections) as $section): ?>
-                        <option value="<?= htmlspecialchars($section) ?>"><?= htmlspecialchars($section) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
+                <!-- Student Select -->
+                <div class="col-md-4">
+                  <label for="student_id" class="form-label">Students (Hold Ctrl for Multiple Selection)</label>
+                  <select id="student_id" name="student_id[]" class="form-select" multiple>
+                    <?php foreach ($students_by_dept as $department => $students): ?>
+                      <optgroup label="<?= htmlspecialchars($department) ?>">
+                        <?php foreach ($students as $student): ?>
+                          <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
+                            <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </optgroup>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
 
-                  <!-- Student Select -->
-                  <div class="col-md-4">
-                    <label for="student_id" class="form-label">Students (Hold Ctrl for Multiple Selection)</label>
-                    <select id="student_id" name="student_id[]" class="form-select" multiple>
-                      <?php foreach ($students_by_dept as $department => $students): ?>
-                        <optgroup label="<?= htmlspecialchars($department) ?>">
-                          <?php foreach ($students as $student): ?>
-                            <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
-                              <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>
-                            </option>
-                          <?php endforeach; ?>
-                        </optgroup>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
+                <!-- Subject Select -->
+                <div class="col-md-4">
+                  <label for="subject_code" class="form-label">Subjects</label>
+                  <select id="subject_code" name="subject_code[]" class="form-select" multiple>
+                    <?php
+                    $subjects_by_faculty = [];
+                    while ($subject = mysqli_fetch_assoc($subject_result)) {
+                      $instructor = trim($subject['first_name'] . ' ' . $subject['last_name']);
+                      $subjects_by_faculty[$instructor][] = $subject;
+                    }
+                    foreach ($subjects_by_faculty as $faculty => $subjects): ?>
+                      <optgroup label="<?= htmlspecialchars("Instructor: $faculty") ?>">
+                        <?php foreach ($subjects as $sub): ?>
+                          <option value="<?= $sub['code'] ?>"
+                            data-faculty-id="<?= $sub['faculty_id'] ?? '' ?>"
+                            data-admin-id="<?= $sub['admin_id'] ?? '' ?>">
+                            <?= $sub['code'] . ": " . $sub['title'] ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </optgroup>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
 
-                  <!-- Subject Select -->
-                  <div class="col-md-4">
-                    <label for="subject_code" class="form-label">Subjects</label>
-                    <select id="subject_code" name="subject_code[]" class="form-select" multiple>
-                      <?php
-                      $subjects_by_faculty = [];
-                      while ($subject = mysqli_fetch_assoc($subject_result)) {
-                        $instructor = trim($subject['first_name'] . ' ' . $subject['last_name']);
-                        $subjects_by_faculty[$instructor][] = $subject;
-                      }
-                      foreach ($subjects_by_faculty as $faculty => $subjects): ?>
-                        <optgroup label="<?= htmlspecialchars("Instructor: $faculty") ?>">
-                          <?php foreach ($subjects as $sub): ?>
-                            <option value="<?= $sub['code'] ?>"
-                                    data-faculty-id="<?= $sub['faculty_id'] ?? '' ?>"
-                                    data-admin-id="<?= $sub['admin_id'] ?? '' ?>">
-                              <?= $sub['code'] . ": " . $sub['title'] ?>
-                            </option>
-                          <?php endforeach; ?>
-                        </optgroup>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
+                <!-- Submit Button -->
+                <div class="col-12 d-flex justify-content-center">
+                  <button type="submit" name="assign" class="btn btn-success px-5">Assign Selected Subjects</button>
+                </div>
 
-                  <!-- Submit Button -->
-                  <div class="col-12 d-flex justify-content-center">
-                    <button type="submit" name="assign" class="btn btn-success px-5">Assign Selected Subjects</button>
-                  </div>
-
-                </form>
-              </div>
+              </form>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- End Inserting Subject to Student Section -->
+    <!-- End Inserting Subject to Student Section -->
 
   </main><!-- End #main -->
 
@@ -404,7 +403,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
       // Store original student options for filtering
       const originalOptions = $('#student_id option').clone();
 
@@ -429,7 +428,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
         $('#student_id').empty();
 
         // Loop through original options
-        originalOptions.each(function () {
+        originalOptions.each(function() {
           const dept = $(this).data('department');
           const section = $(this).data('section');
 
@@ -454,5 +453,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 
 
 </body>
-
 </html>

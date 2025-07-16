@@ -140,7 +140,7 @@ if (isset($_SESSION['msg'])) {
                     <th>Academic Year</th>
                     <th>Semester</th>
                     <th>Evaluated On</th>
-                    <th>Action</th>
+                    <th>Reprint</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,14 +163,10 @@ if (isset($_SESSION['msg'])) {
                         <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
                         <td>
-                          <form action="student-evaluation-download.php" method="POST" target="_blank">
-                            <input type="hidden" name="student_id" value="<?= $student_id ?>">
-                            <input type="hidden" name="subject_code" value="<?= $row['subject_code'] ?>">
-                            <input type="hidden" name="faculty_id" value="<?= $row['faculty_id'] ?>">
-                            <button type="submit" class="btn btn-secondary btn-sm">
-                              <i class="bi bi-printer"></i> Print Again
-                            </button>
-                          </form>
+                          <a href="student-evaluation-reprint.php?faculty_id=<?= urlencode($row['faculty_id']) ?>&subject_code=<?= urlencode($row['subject_code']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>" 
+                            class="btn btn-sm btn-outline-primary">
+                            Reprint
+                          </a>
                         </td>
                       </tr>
                     <?php endwhile; ?>

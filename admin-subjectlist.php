@@ -1,12 +1,12 @@
 <?php
 
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
@@ -16,8 +16,8 @@ $dept_query = mysqli_query($conn, "SELECT department FROM admin WHERE idnumber =
 $admin_dept = '';
 
 if ($dept_query && mysqli_num_rows($dept_query) > 0) {
-    $admin_data = mysqli_fetch_assoc($dept_query);
-    $admin_dept = $admin_data['department'];
+  $admin_data = mysqli_fetch_assoc($dept_query);
+  $admin_dept = $admin_data['department'];
 }
 
 
@@ -40,8 +40,8 @@ $result = mysqli_query($conn, $query);
 
 // Display messages if set
 if (isset($_SESSION['msg'])) {
-    echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
-    unset($_SESSION['msg']);
+  echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
+  unset($_SESSION['msg']);
 }
 
 ?>
@@ -56,14 +56,14 @@ if (isset($_SESSION['msg'])) {
 
   <title>FEAST / Subject List</title>
 
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 
 </head>
 
 <body>
 
-  <?php include 'admin-header.php'?>
-    
+  <?php include 'admin-header.php' ?>
+
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
@@ -83,12 +83,12 @@ if (isset($_SESSION['msg'])) {
         </a>
         <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>
-            <a href="admin-evaluate.php" >
+            <a href="admin-evaluate.php">
               <i class="bi bi-circle"></i><span>Form</span>
             </a>
           </li>
           <li>
-            <a href="admin-evaluatedfaculty.php" >
+            <a href="admin-evaluatedfaculty.php">
               <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
             </a>
           </li>
@@ -186,22 +186,22 @@ if (isset($_SESSION['msg'])) {
                 <tbody>
                   <tr>
                     <?php while ($row = mysqli_fetch_assoc($result)) { ?>
-                      <tr>
-                        <td class="text-uppercase"><?php echo $row['code']; ?></td>
-                        <td class="text-capitalize"><?php echo $row['title']; ?></td>
-                        <td class="text-capitalize">
-                          <?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name']; ?>
-                          <!-- <small class="text-muted">(<?php echo $row['handler_role']; ?>)</small> -->
-                        </td>
-                        <td>
-                          <form method="post" style="display:inline;" action="deletesubject.php">
-                            <input type="hidden" name="code" value="<?php echo $row['code']; ?>">
-                            <button class="btn btn-danger btn-sm" name="delete" type="submit">Delete</button>
-                          </form>
-                        </td>
-                      </tr>
-                    <?php } ?>
+                  <tr>
+                    <td class="text-uppercase"><?php echo $row['code']; ?></td>
+                    <td class="text-capitalize"><?php echo $row['title']; ?></td>
+                    <td class="text-capitalize">
+                      <?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name']; ?>
+                      <!-- <small class="text-muted">(<?php echo $row['handler_role']; ?>)</small> -->
+                    </td>
+                    <td>
+                      <form method="post" style="display:inline;" action="deletesubject.php">
+                        <input type="hidden" name="code" value="<?php echo $row['code']; ?>">
+                        <button class="btn btn-danger btn-sm" name="delete" type="submit">Delete</button>
+                      </form>
+                    </td>
                   </tr>
+                <?php } ?>
+                </tr>
                 </tbody>
               </table>
               <!-- End Table with stripped rows -->

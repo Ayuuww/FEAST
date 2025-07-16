@@ -3,13 +3,13 @@ session_start();
 include 'conn/conn.php';
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 if (!isset($_GET['id'])) {
-    echo "Student ID is missing.";
-    exit();
+  echo "Student ID is missing.";
+  exit();
 }
 
 $student_id = $_GET['id'];
@@ -21,8 +21,8 @@ $result = $stmt->get_result();
 $student = $result->fetch_assoc();
 
 if (!$student) {
-    echo "Student not found.";
-    exit();
+  echo "Student not found.";
+  exit();
 }
 
 $departments = [];
@@ -30,40 +30,41 @@ $sections = [];
 
 $dept_result = $conn->query("SELECT department_name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
 while ($row = $dept_result->fetch_assoc()) {
-    $departments[] = $row['department_name'];
+  $departments[] = $row['department_name'];
 }
 
 $section_result = $conn->query("SELECT section_name FROM adds WHERE section_name IS NOT NULL ORDER BY section_name ASC");
 while ($row = $section_result->fetch_assoc()) {
-    $sections[] = $row['section_name'];
+  $sections[] = $row['section_name'];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_department = $_POST['department'];
-    $new_section = $_POST['section'];
+  $new_department = $_POST['department'];
+  $new_section = $_POST['section'];
 
-    $update = $conn->prepare("UPDATE student SET department = ?, section = ? WHERE idnumber = ?");
-    $update->bind_param("sss", $new_department, $new_section, $student_id);
-    if ($update->execute()) {
-        header("Location: superadmin-editstudent.php?id=$student_id&update=success");
-        exit();
-
-    } else {
-        echo "Update failed.";
-    }
+  $update = $conn->prepare("UPDATE student SET department = ?, section = ? WHERE idnumber = ?");
+  $update->bind_param("sss", $new_department, $new_section, $student_id);
+  if ($update->execute()) {
+    header("Location: superadmin-editstudent.php?id=$student_id&update=success");
+    exit();
+  } else {
+    echo "Update failed.";
+  }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Edit Student</title>
-    <?php include 'header.php'; ?>
+  <meta charset="UTF-8">
+  <title>Edit Student</title>
+  <?php include 'header.php'; ?>
 </head>
+
 <body>
 
-  <?php include 'superadmin-header.php'?>
+  <?php include 'superadmin-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </li><!-- End Dashboard Nav -->
 
       <!-- Subject Nav -->
-        <li class="nav-item">
+      <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -94,246 +95,248 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </a>
             </li>
           </ul>
-        </li><!-- End Subject Nav -->
+        </li> -->
+      <!-- End Subject Nav -->
 
-        <!-- Student Subject Nav -->
-        <li class="nav-item">
+      <!-- Student Subject Nav -->
+      <!-- <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-studentsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Assign Subject</span>
           </a>
-        </li><!-- End Student Subject Nav -->
+        </li> -->
+      <!-- End Student Subject Nav -->
 
-        <!-- Reports Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-individualreport.php" >
-                <i class="bi bi-circle"></i><span>Invidiual Report</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-acknowledgementreport.php">
-                <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-pastrecords.php">
-                <i class="bi bi-circle"></i><span>Past Record</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Reports Nav -->
+      <!-- Reports Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-individualreport.php">
+              <i class="bi bi-circle"></i><span>Invidiual Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-acknowledgementreport.php">
+              <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Reports Nav -->
 
-        <!-- Evaluation Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
-            <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-evaluationsetting.php" >
-                <i class="bi bi-circle"></i><span>Setting</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-evaluationswitch.php">
-                <i class="bi bi-circle"></i><span>On/Off</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Evalutaion Nav -->
+      <!-- Evaluation Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-evaluationsetting.php">
+              <i class="bi bi-circle"></i><span>Setting</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-evaluationswitch.php">
+              <i class="bi bi-circle"></i><span>On/Off</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Evalutaion Nav -->
 
-        <li class="nav-heading">Account Management</li>
+      <li class="nav-heading">Account Management</li>
 
-        <!-- Management Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
-            <i class="ri-settings-line"></i>
-            <span>Manage</span>
-          </a>
-        </li><!-- End Management Nav -->
+      <!-- Management Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <i class="ri-settings-line"></i>
+          <span>Manage</span>
+        </a>
+      </li><!-- End Management Nav -->
 
-        <!-- Faculty Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-facultylist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-facultycreation.php">
-                <i class="bi bi-circle"></i><span>Add New Faculty</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Faculty Nav -->
-        
-        <!-- Student Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="forms-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-studentlist.php" class="active">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-studentcreation.php">
-                <i class="bi bi-circle"></i><span>Add New Student</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Student Nav -->
+      <!-- Faculty Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-facultylist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-facultycreation.php">
+              <i class="bi bi-circle"></i><span>Add New Faculty</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Faculty Nav -->
 
-        <!-- Admin Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="admin-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-adminlist.php" >
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-admincreation.php">
-                <i class="bi bi-circle"></i><span>Add New Admin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Admin Nav -->
+      <!-- Student Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapse" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-studentlist.php" class="active">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-studentcreation.php">
+              <i class="bi bi-circle"></i><span>Add New Student</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Student Nav -->
 
-        <!-- Super Admin Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person-fill"></i><span>Super Admin</span><i
-              class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-superadminlist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-superadmincreation.php">
-                <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Super Admin Nav -->
+      <!-- Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="admin-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-adminlist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-admincreation.php">
+              <i class="bi bi-circle"></i><span>Add New Admin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Admin Nav -->
 
-        <li class="nav-heading">Pages</li>
+      <!-- Super Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-fill"></i><span>Super Admin</span><i
+            class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-superadminlist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-superadmincreation.php">
+              <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Super Admin Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-user-profile.php">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-        </li><!-- End Profile Page Nav -->
+      <li class="nav-heading">Pages</li>
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="logout.php">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </a>
-        </li><!-- End Sign Out Page Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-user-profile.php">
+          <i class="bi bi-person"></i>
+          <span>Profile</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="logout.php">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
+        </a>
+      </li><!-- End Sign Out Page Nav -->
 
     </ul>
 
   </aside><!-- End Sidebar-->
 
-    <main id="main" class="main">
-        <div class="pagetitle">
-            <h1>Edit Student</h1>
-            <nav>
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-                    <li class="breadcrumb-item"><a href="superadmin-studentlist.php">Student</a></li>
-                    <li class="breadcrumb-item">List</li>
-                    <li class="breadcrumb-item active">Edit</li>
-                </ol>
-            </nav>
-        </div>
+  <main id="main" class="main">
+    <div class="pagetitle">
+      <h1>Edit Student</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-studentlist.php">Student</a></li>
+          <li class="breadcrumb-item">List</li>
+          <li class="breadcrumb-item active">Edit</li>
+        </ol>
+      </nav>
+    </div>
 
-        <section class="section">
-            <div class="card col-lg-6">
-                <div class="card-body">
-                    <h5 class="card-title">Student Information</h5>
-                    <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-                      <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="bi bi-check-circle-fill"></i>
-                        Student information updated successfully!
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                      </div>
-                    <?php endif; ?>
-
-                    <form method="POST">
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
-                                <label class="form-label">ID Number</label>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-floating">
-                                <input type="text" class="form-control"
-                                    value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
-                                    disabled>
-                                <label class="form-label">Full Name</label>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                          
-                          <div class="col-md-6 ">
-                            <div class="form-floating mb-3">
-                              <select name="department" class="form-select" id="departmentSelect" required>
-                                <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
-                                <?php foreach ($departments as $dept): ?>
-                                  <option value="<?= htmlspecialchars($dept) ?>" <?= $student['department'] === $dept ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($dept) ?>
-                                  </option>
-                                <?php endforeach; ?>
-                              </select>
-                              <label for="departmentSelect">Department</label>
-                            </div>
-                          </div>
-
-                          <div class="col-md-6">
-                            <div  class="form-floating mb-3">
-                              <select class="form-select" name="section" required>
-                                <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
-                                <?php foreach ($sections as $sec): ?>
-                                  <option value="<?= htmlspecialchars($sec) ?>" <?= $student['section'] === $sec ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($sec) ?>
-                                  </option>
-                                <?php endforeach; ?>
-                              </select>
-                              <label for="section">Section</label>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        <button type="submit" class="btn btn-success">Update</button>
-                        <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
-                    </form>
-                </div>
+    <section class="section">
+      <div class="card col-lg-6">
+        <div class="card-body">
+          <h5 class="card-title">Student Information</h5>
+          <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <i class="bi bi-check-circle-fill"></i>
+              Student information updated successfully!
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </section>
-    </main><!-- end of main -->
+          <?php endif; ?>
+
+          <form method="POST">
+            <div class="mb-3">
+              <div class="form-floating">
+                <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
+                <label class="form-label">ID Number</label>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-floating">
+                <input type="text" class="form-control"
+                  value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
+                  disabled>
+                <label class="form-label">Full Name</label>
+              </div>
+            </div>
+
+            <div class="row">
+
+              <div class="col-md-6 ">
+                <div class="form-floating mb-3">
+                  <select name="department" class="form-select" id="departmentSelect" required>
+                    <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
+                    <?php foreach ($departments as $dept): ?>
+                      <option value="<?= htmlspecialchars($dept) ?>" <?= $student['department'] === $dept ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($dept) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <label for="departmentSelect">Department</label>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-floating mb-3">
+                  <select class="form-select" name="section" required>
+                    <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
+                    <?php foreach ($sections as $sec): ?>
+                      <option value="<?= htmlspecialchars($sec) ?>" <?= $student['section'] === $sec ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($sec) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                  <label for="section">Section</label>
+                </div>
+              </div>
+
+            </div>
+
+            <button type="submit" class="btn btn-success">Update</button>
+            <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main><!-- end of main -->
 
   <!-- ======= Footer ======= -->
   <footer id="footer" class="footer">
@@ -374,4 +377,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </script> -->
 
 </body>
+
 </html>

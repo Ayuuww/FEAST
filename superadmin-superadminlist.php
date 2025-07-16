@@ -1,12 +1,12 @@
-<?php 
+<?php
 
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 // Fetch super admin data for listing
@@ -24,12 +24,12 @@ $result = mysqli_query($conn, $query);
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
   <title>FEAST / Super Admin List</title>
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php'?>
+  <?php include 'superadmin-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -44,7 +44,7 @@ $result = mysqli_query($conn, $query);
       </li><!-- End Dashboard Nav -->
 
       <!-- Subject Nav -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -60,15 +60,17 @@ $result = mysqli_query($conn, $query);
             </a>
           </li>
         </ul>
-      </li><!-- End Subject Nav -->
+      </li> -->
+      <!-- End Subject Nav -->
 
       <!-- Student Subject Nav -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" href="superadmin-studentsubject.php">
           <i class="bi bi-book-fill"></i>
           <span>Assign Subject</span>
         </a>
-      </li><!-- End Student Subject Nav -->
+      </li> -->
+      <!-- End Student Subject Nav -->
 
       <!-- Reports Nav -->
       <li class="nav-item">
@@ -77,7 +79,7 @@ $result = mysqli_query($conn, $query);
         </a>
         <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-individualreport.php" >
+            <a href="superadmin-individualreport.php">
               <i class="bi bi-circle"></i><span>Invidiual Report</span>
             </a>
           </li>
@@ -101,7 +103,7 @@ $result = mysqli_query($conn, $query);
         </a>
         <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-evaluationsetting.php" >
+            <a href="superadmin-evaluationsetting.php">
               <i class="bi bi-circle"></i><span>Setting</span>
             </a>
           </li>
@@ -141,7 +143,7 @@ $result = mysqli_query($conn, $query);
           </li>
         </ul>
       </li><!-- End Faculty Nav -->
-      
+
       <!-- Student Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
@@ -168,7 +170,7 @@ $result = mysqli_query($conn, $query);
         </a>
         <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-adminlist.php" >
+            <a href="superadmin-adminlist.php">
               <i class="bi bi-circle"></i><span>List</span>
             </a>
           </li>
@@ -260,21 +262,21 @@ $result = mysqli_query($conn, $query);
                 <tbody>
                   <tr>
                     <?php
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        ?>
-                        <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                        <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                        <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                        <td><?php echo $row['email'];?></td>
-                        <td class="text-capitalize"><?php echo $row['status'];?></td>
-                        <td>
-                          <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                      </tr>
-                    <?php
-                      }
-                      ?>
+                    while ($row = mysqli_fetch_assoc($result)) {
+                    ?>
+                      <td class="text-capitalize"><?php echo $row['idnumber']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
+                      <td><?php echo $row['email']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['status']; ?></td>
+                      <td>
+                        <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
                   </tr>
+                <?php
+                    }
+                ?>
+                </tr>
                 </tbody>
               </table>
               <!-- End Table with stripped rows -->

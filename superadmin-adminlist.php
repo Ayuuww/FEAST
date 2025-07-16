@@ -1,12 +1,12 @@
-<?php 
+<?php
 
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 // Fetching admin data
@@ -18,32 +18,32 @@ $result = mysqli_query($conn, $query);
 <!DOCTYPE html>
 <html lang="en">
 
-  <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-    <title>FEAST / AdminList  </title>
-    <?php include 'header.php'?>
-  </head>
+  <title>FEAST / AdminList </title>
+  <?php include 'header.php' ?>
+</head>
 
-  <body>
+<body>
 
-    <?php include 'superadmin-header.php'?>
+  <?php include 'superadmin-header.php' ?>
 
-    <!-- ======= Sidebar ======= -->
-    <aside id="sidebar" class="sidebar">
+  <!-- ======= Sidebar ======= -->
+  <aside id="sidebar" class="sidebar">
 
-      <ul class="sidebar-nav" id="sidebar-nav">
+    <ul class="sidebar-nav" id="sidebar-nav">
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-dashboard.php">
-            <i class="bi bi-grid"></i>
-            <span>Dashboard</span>
-          </a>
-        </li><!-- End Dashboard Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-dashboard.php">
+          <i class="bi bi-grid"></i>
+          <span>Dashboard</span>
+        </a>
+      </li><!-- End Dashboard Nav -->
 
-        <!-- Subject Nav -->
-        <li class="nav-item">
+      <!-- Subject Nav -->
+      <!-- <li class="nav-item">
           <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
             <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
           </a>
@@ -59,269 +59,271 @@ $result = mysqli_query($conn, $query);
               </a>
             </li>
           </ul>
-        </li><!-- End Subject Nav -->
+        </li> -->
+      <!-- End Subject Nav -->
 
-        <!-- Student Subject Nav -->
-        <li class="nav-item">
+      <!-- Student Subject Nav -->
+      <!-- <li class="nav-item">
           <a class="nav-link collapsed" href="superadmin-studentsubject.php">
             <i class="bi bi-book-fill"></i>
             <span>Assign Subject</span>
           </a>
-        </li><!-- End Student Subject Nav -->
+        </li> -->
+      <!-- End Student Subject Nav -->
 
-        <!-- Reports Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-individualreport.php" >
-                <i class="bi bi-circle"></i><span>Invidiual Report</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-acknowledgementreport.php">
-                <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-pastrecords.php">
-                <i class="bi bi-circle"></i><span>Past Record</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Reports Nav -->
+      <!-- Reports Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-individualreport.php">
+              <i class="bi bi-circle"></i><span>Invidiual Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-acknowledgementreport.php">
+              <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Reports Nav -->
 
-        <!-- Evaluation Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
-            <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-evaluationsetting.php" >
-                <i class="bi bi-circle"></i><span>Setting</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-evaluationswitch.php">
-                <i class="bi bi-circle"></i><span>On/Off</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Evalutaion Nav -->
+      <!-- Evaluation Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
+          <i class="ri-settings-4-line"></i><span>Evaluation</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-evaluationsetting.php">
+              <i class="bi bi-circle"></i><span>Setting</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-evaluationswitch.php">
+              <i class="bi bi-circle"></i><span>On/Off</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Evalutaion Nav -->
 
-        <li class="nav-heading">Account Management</li>
+      <li class="nav-heading">Account Management</li>
 
-        <!-- Management Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
-            <i class="ri-settings-line"></i>
-            <span>Manage</span>
-          </a>
-        </li><!-- End Management Nav -->
+      <!-- Management Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-addsmanagement.php">
+          <i class="ri-settings-line"></i>
+          <span>Manage</span>
+        </a>
+      </li><!-- End Management Nav -->
 
-        <!-- Faculty Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-facultylist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-facultycreation.php">
-                <i class="bi bi-circle"></i><span>Add New Faculty</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Faculty Nav -->
-        
-        <!-- Student Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-studentlist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-studentcreation.php">
-                <i class="bi bi-circle"></i><span>Add New Student</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Student Nav -->
+      <!-- Faculty Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="components-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-facultylist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-facultycreation.php">
+              <i class="bi bi-circle"></i><span>Add New Faculty</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Faculty Nav -->
 
-        <!-- Admin Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="admin-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-adminlist.php" class="active" >
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-admincreation.php">
-                <i class="bi bi-circle"></i><span>Add New Admin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Admin Nav -->
+      <!-- Student Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-people"></i><span>Student</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-studentlist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-studentcreation.php">
+              <i class="bi bi-circle"></i><span>Add New Student</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Student Nav -->
 
-        <!-- Super Admin Nav -->
-        <li class="nav-item">
-          <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-            <i class="bi bi-person-fill"></i><span>Super Admin</span><i
-              class="bi bi-chevron-down ms-auto"></i>
-          </a>
-          <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-            <li>
-              <a href="superadmin-superadminlist.php">
-                <i class="bi bi-circle"></i><span>List</span>
-              </a>
-            </li>
-            <li>
-              <a href="superadmin-superadmincreation.php">
-                <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
-              </a>
-            </li>
-          </ul>
-        </li><!-- End Super Admin Nav -->
+      <!-- Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapse" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="admin-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-adminlist.php" class="active">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-admincreation.php">
+              <i class="bi bi-circle"></i><span>Add New Admin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Admin Nav -->
 
-        <li class="nav-heading">Pages</li>
+      <!-- Super Admin Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-person-fill"></i><span>Super Admin</span><i
+            class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="superadmin-superadminlist.php">
+              <i class="bi bi-circle"></i><span>List</span>
+            </a>
+          </li>
+          <li>
+            <a href="superadmin-superadmincreation.php">
+              <i class="bi bi-circle"></i><span>Add New SuperAdmin</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Super Admin Nav -->
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="superadmin-user-profile.php">
-            <i class="bi bi-person"></i>
-            <span>Profile</span>
-          </a>
-        </li><!-- End Profile Page Nav -->
+      <li class="nav-heading">Pages</li>
 
-        <li class="nav-item">
-          <a class="nav-link collapsed" href="logout.php">
-            <i class="bi bi-box-arrow-right"></i>
-            <span>Sign Out</span>
-          </a>
-        </li><!-- End Sign Out Page Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="superadmin-user-profile.php">
+          <i class="bi bi-person"></i>
+          <span>Profile</span>
+        </a>
+      </li><!-- End Profile Page Nav -->
 
-      </ul>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="logout.php">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Sign Out</span>
+        </a>
+      </li><!-- End Sign Out Page Nav -->
 
-    </aside><!-- End Sidebar-->
+    </ul>
 
-    <main id="main" class="main">
+  </aside><!-- End Sidebar-->
 
-      <div class="pagetitle">
-        <h1>Admin</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-            <li class="breadcrumb-item ">Admin</li>
-            <li class="breadcrumb-item active">List</li>
-          </ol>
-        </nav>
-      </div><!-- End Page Title -->
+  <main id="main" class="main">
 
-      <!-- List of Admins -->
-      <section class="section">
-        <div class="row">
-          <div class="col-lg-12">
+    <div class="pagetitle">
+      <h1>Admin</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
+          <li class="breadcrumb-item ">Admin</li>
+          <li class="breadcrumb-item active">List</li>
+        </ol>
+      </nav>
+    </div><!-- End Page Title -->
 
-            <div class="card">
-              <div class="card-body table-responsive">
-                <h5 class="card-title">Datatables</h5>
+    <!-- List of Admins -->
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
 
-                <!-- Table with stripped rows -->
-                <table class="table datatable">
-                  <thead>
-                    <tr>
-                      <th>
-                        <b>ID Number</b>
-                      </th>
-                      <th>First Name</th>
-                      <th>Middle Name</th>
-                      <th>Last Name</th>
-                      <th>Email</th>
-                      <th>Department</th>
-                      <th>Position</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <?php
-                        while ($row = mysqli_fetch_assoc($result)) {
-                          ?>
-                          <td class="text-capitalize"><?php echo $row['idnumber'];?></td>
-                          <td class="text-capitalize"><?php echo $row['first_name'];?></td>
-                          <td class="text-capitalize"><?php echo $row['mid_name'];?></td>
-                          <td class="text-capitalize"><?php echo $row['last_name'];?></td>
-                          <td><?php echo $row['email'];?></td>
-                          <td class="text-uppercase"><?php echo $row['department'];?></td>
-                          <td class="text-capitalize"><?php echo $row['position'];?></td>
-                          <td class="text-capitalize"><?php echo $row['status'];?></td>
-                          <td>
-                            <a href="superadmin-editadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                        </tr>
-                      <?php
-                        }
-                        ?>
-                    </tr>
-                  </tbody>
-                </table>
-                <!-- End Table with stripped rows -->
+          <div class="card">
+            <div class="card-body table-responsive">
+              <h5 class="card-title">Datatables</h5>
 
-              </div>
+              <!-- Table with stripped rows -->
+              <table class="table datatable">
+                <thead>
+                  <tr>
+                    <th>
+                      <b>ID Number</b>
+                    </th>
+                    <th>First Name</th>
+                    <th>Middle Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Position</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <?php
+                    while ($row = mysqli_fetch_assoc($result)) {
+                    ?>
+                      <td class="text-capitalize"><?php echo $row['idnumber']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
+                      <td><?php echo $row['email']; ?></td>
+                      <td class="text-uppercase"><?php echo $row['department']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['position']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['status']; ?></td>
+                      <td>
+                        <a href="superadmin-editadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
+                  </tr>
+                <?php
+                    }
+                ?>
+                </tr>
+                </tbody>
+              </table>
+              <!-- End Table with stripped rows -->
+
             </div>
-
           </div>
+
         </div>
-      </section><!-- End List of Admins -->
-
-    </main><!-- End #main -->
-
-    <!-- ======= Footer ======= -->
-    <footer id="footer" class="footer">
-      <div class="copyright">
-        &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
       </div>
-      <div class="credits">
-        <!-- All the links in the footer should remain intact. -->
-        <!-- You can delete the links only if you purchased the pro version. -->
-        <!-- Licensing information: https://bootstrapmade.com/license/ -->
-        <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
-        Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
-      </div>
-    </footer><!-- End Footer -->
+    </section><!-- End List of Admins -->
 
-    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-        class="bi bi-arrow-up-short"></i></a>
+  </main><!-- End #main -->
 
-    <!-- Vendor JS Files -->
-    <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
-    <script src="vendors/apexcharts/apexcharts.min.js"></script>
-    <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="vendors/chart.js/chart.umd.js"></script>
-    <script src="vendors/echarts/echarts.min.js"></script>
-    <script src="vendors/quill/quill.js"></script>
-    <script src="vendors/simple-datatables/simple-datatables.js"></script>
-    <script src="vendors/tinymce/tinymce.min.js"></script>
-    <script src="vendors/php-email-form/validate.js"></script>
+  <!-- ======= Footer ======= -->
+  <footer id="footer" class="footer">
+    <div class="copyright">
+      &copy; Copyright <strong><span>NiceAdmin</span></strong>. All Rights Reserved
+    </div>
+    <div class="credits">
+      <!-- All the links in the footer should remain intact. -->
+      <!-- You can delete the links only if you purchased the pro version. -->
+      <!-- Licensing information: https://bootstrapmade.com/license/ -->
+      <!-- Purchase the pro version with working PHP/AJAX contact form: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/ -->
+      Designed by <a href="https://bootstrapmade.com/">BootstrapMade</a>
+    </div>
+  </footer><!-- End Footer -->
 
-    <!-- Template Main JS File -->
-    <script src="assets/js/main.js"></script>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+      class="bi bi-arrow-up-short"></i></a>
 
-  </body>
+  <!-- Vendor JS Files -->
+  <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
+  <script src="vendors/apexcharts/apexcharts.min.js"></script>
+  <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendors/chart.js/chart.umd.js"></script>
+  <script src="vendors/echarts/echarts.min.js"></script>
+  <script src="vendors/quill/quill.js"></script>
+  <script src="vendors/simple-datatables/simple-datatables.js"></script>
+  <script src="vendors/tinymce/tinymce.min.js"></script>
+  <script src="vendors/php-email-form/validate.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
+
+</body>
 
 </html>

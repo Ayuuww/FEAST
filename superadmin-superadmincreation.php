@@ -1,20 +1,20 @@
 <?php
 
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 // Create a new super admin account
 
 // Display message if set
 if (isset($_SESSION['msg'])) {
-    echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
-    unset($_SESSION['msg']);
+  echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
+  unset($_SESSION['msg']);
 }
 
 
@@ -28,12 +28,12 @@ if (isset($_SESSION['msg'])) {
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
   <title>FEAST / SuperAdmin Creation</title>
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php'?>
+  <?php include 'superadmin-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -48,7 +48,7 @@ if (isset($_SESSION['msg'])) {
       </li><!-- End Dashboard Nav -->
 
       <!-- Subject Nav -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-book"></i><span>Subject</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -64,15 +64,17 @@ if (isset($_SESSION['msg'])) {
             </a>
           </li>
         </ul>
-      </li><!-- End Subject Nav -->
+      </li> -->
+      <!-- End Subject Nav -->
 
       <!-- Student Subject Nav -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <a class="nav-link collapsed" href="superadmin-studentsubject.php">
           <i class="bi bi-book-fill"></i>
           <span>Assign Subject</span>
         </a>
-      </li><!-- End Student Subject Nav -->
+      </li> -->
+      <!-- End Student Subject Nav -->
 
       <!-- Reports Nav -->
       <li class="nav-item">
@@ -81,7 +83,7 @@ if (isset($_SESSION['msg'])) {
         </a>
         <ul id="reports" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-individualreport.php" >
+            <a href="superadmin-individualreport.php">
               <i class="bi bi-circle"></i><span>Invidiual Report</span>
             </a>
           </li>
@@ -105,7 +107,7 @@ if (isset($_SESSION['msg'])) {
         </a>
         <ul id="evaluation" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-evaluationsetting.php" >
+            <a href="superadmin-evaluationsetting.php">
               <i class="bi bi-circle"></i><span>Setting</span>
             </a>
           </li>
@@ -145,7 +147,7 @@ if (isset($_SESSION['msg'])) {
           </li>
         </ul>
       </li><!-- End Faculty Nav -->
-      
+
       <!-- Student Nav -->
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
@@ -172,7 +174,7 @@ if (isset($_SESSION['msg'])) {
         </a>
         <ul id="admin-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
-            <a href="superadmin-adminlist.php" >
+            <a href="superadmin-adminlist.php">
               <i class="bi bi-circle"></i><span>List</span>
             </a>
           </li>
@@ -253,73 +255,73 @@ if (isset($_SESSION['msg'])) {
           <div class="card">
             <div class="card-body ">
               <h5 class="card-title">Create New Super Admin</h5>
-                <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
+              <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
-                  <!-- ID Number -->
-                  <div class="col-md-3">
-                    <div class="form-floating">
-                      <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
-                      <label for="idnumber" class="form-label">ID Number</label>
-                      <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
-                    </div>
+                <!-- ID Number -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
+                    <label for="idnumber" class="form-label">ID Number</label>
+                    <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
                   </div>
+                </div>
 
-                  <!-- First Name -->
-                  <div class="col-md-3">
-                      <div class="form-floating">
-                          <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
-                          <label class="form-label">First Name</label>
-                      </div>
+                <!-- First Name -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
+                    <label class="form-label">First Name</label>
                   </div>
+                </div>
 
-                  <!-- Middle Name -->
-                  <div class="col-md-3">
-                      <div class="form-floating">
-                          <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
-                          <label class="form-label">Middle Name</label>
-                      </div>
+                <!-- Middle Name -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
+                    <label class="form-label">Middle Name</label>
                   </div>
+                </div>
 
-                  <!-- Last Name -->
-                  <div class="col-md-3">
-                      <div class="form-floating">
-                          <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
-                          <label class="form-label">Last Name</label>
-                      </div>
+                <!-- Last Name -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                    <label class="form-label">Last Name</label>
                   </div>
+                </div>
 
-                  <!-- Email -->
-                  <div class="col-md-6">
-                      <div class="form-floating">
-                          <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
-                          <label for="yourEmail" class="form-label">Email</label>
-                      </div>
+                <!-- Email -->
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
+                    <label for="yourEmail" class="form-label">Email</label>
                   </div>
+                </div>
 
-                  <!-- Password -->
-                  <div class="col-md-3">
-                      <div class="form-floating">
-                          <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
-                          <label class="form-label">Password</label>
-                          <div class="invalid-feedback">Password must be at least 8 characters!</div>
-                      </div>
+                <!-- Password -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
+                    <label class="form-label">Password</label>
+                    <div class="invalid-feedback">Password must be at least 8 characters!</div>
                   </div>
+                </div>
 
-                  <!-- Confirm Password -->
-                  <div class="col-md-3">
-                      <div class="form-floating">
-                          <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
-                          <div class="invalid-feedback" id="mess">Password do not match</div>
-                          <label class="form-label">Confirm Password</label>
-                      </div>
+                <!-- Confirm Password -->
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
+                    <div class="invalid-feedback" id="mess">Password do not match</div>
+                    <label class="form-label">Confirm Password</label>
                   </div>
+                </div>
 
-                  <!-- Submit -->
-                  <div class="col-4 offset-4">
-                    <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
-                  </div>
+                <!-- Submit -->
+                <div class="col-4 offset-4">
+                  <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                </div>
 
-                </form>
+              </form>
             </div>
           </div>
         </div>
@@ -357,34 +359,31 @@ if (isset($_SESSION['msg'])) {
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-   <script>
-      var checkpass = function() {
+  <script>
+    var checkpass = function() {
 
-      if (document.getElementById('password').value           == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display         = 'none';
-        document.getElementById('conpass').style.borderColor  = 'green';
-        
-      } 
-      else
-      {
-        document.getElementById('mess').style.display         = 'block';
-        document.getElementById('conpass').style.borderColor  = 'red';
-        }
+      if (document.getElementById('password').value == document.getElementById('conpass').value) {
+        document.getElementById('mess').style.display = 'none';
+        document.getElementById('conpass').style.borderColor = 'green';
 
+      } else {
+        document.getElementById('mess').style.display = 'block';
+        document.getElementById('conpass').style.borderColor = 'red';
       }
 
-    </script>
+    }
+  </script>
 
-    <script>
-      setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-          alert.classList.remove('show');
-          alert.classList.add('fade');
-          setTimeout(() => alert.remove(), 500); // optional DOM cleanup
-        }
-      }, 5000); // Hide after 5 seconds
-    </script>
+  <script>
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
+      }
+    }, 5000); // Hide after 5 seconds
+  </script>
 </body>
 
 </html>

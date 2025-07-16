@@ -179,16 +179,10 @@ if (isset($_SESSION['msg'])) {
                                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
                                         <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
                                         <td>
-                                          <div class="dropdown">
-                                            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                              ⋮
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                              <li><a class="dropdown-item" href="view-evaluation.php?id=<?= $row['id'] ?>">View PDF</a></li>
-                                              <li><a class="dropdown-item" href="download-evaluation.php?id=<?= $row['id'] ?>">Download PDF</a></li>
-                                              <li><a class="dropdown-item" href="print-evaluation.php?id=<?= $row['id'] ?>" target="_blank">Print Again</a></li>
-                                            </ul>
-                                          </div>
+                                          <a href="admin-evaluation-reprint.php?evaluatee_id=<?= urlencode($row['evaluatee_id']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>" 
+                                            class="btn btn-sm btn-outline-primary">
+                                            Reprint
+                                          </a>
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>

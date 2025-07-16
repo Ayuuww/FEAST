@@ -1,12 +1,12 @@
-<?php 
+<?php
 
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
@@ -16,8 +16,8 @@ $dept_query = mysqli_query($conn, "SELECT department FROM admin WHERE idnumber =
 $admin_dept = '';
 
 if ($dept_query && mysqli_num_rows($dept_query) > 0) {
-    $admin_data = mysqli_fetch_assoc($dept_query);
-    $admin_dept = $admin_data['department'];
+  $admin_data = mysqli_fetch_assoc($dept_query);
+  $admin_dept = $admin_data['department'];
 }
 
 // Get real faculty in same department
@@ -34,13 +34,13 @@ $faculty_data = [];
 $faculty_ids = [];
 
 while ($row = mysqli_fetch_assoc($faculty_result)) {
-    $faculty_data[] = $row;
-    $faculty_ids[] = $row['idnumber'];
+  $faculty_data[] = $row;
+  $faculty_ids[] = $row['idnumber'];
 }
 
 $admin_data = [];
 while ($row = mysqli_fetch_assoc($admin_result)) {
-    $admin_data[] = $row;
+  $admin_data[] = $row;
 }
 
 
@@ -57,14 +57,14 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
 
   <title>FEAST / Adding Subject</title>
 
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 
 </head>
 
 <body>
-    
-  <?php include 'admin-header.php'?>
-    
+
+  <?php include 'admin-header.php' ?>
+
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
@@ -84,12 +84,12 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
         </a>
         <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>
-            <a href="admin-evaluate.php" >
+            <a href="admin-evaluate.php">
               <i class="bi bi-circle"></i><span>Form</span>
             </a>
           </li>
           <li>
-            <a href="admin-evaluatedfaculty.php" >
+            <a href="admin-evaluatedfaculty.php">
               <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
             </a>
           </li>
@@ -103,7 +103,7 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
         </a>
         <ul id="subject" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
           <li>
-            <a href="admin-subjectlist.php" >
+            <a href="admin-subjectlist.php">
               <i class="bi bi-circle"></i><span>List</span>
             </a>
           </li>
@@ -166,25 +166,25 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
 
     <?php
     if (isset($_SESSION['msg'])) {
-        $msg = $_SESSION['msg'];
-        $type = $_SESSION['msg_type'] ?? 'info'; // Can be 'success', 'warning', 'danger', 'info'
-        echo "<div class='alert alert-$type alert-dismissible fade show mt-3' role='alert'>
+      $msg = $_SESSION['msg'];
+      $type = $_SESSION['msg_type'] ?? 'info'; // Can be 'success', 'warning', 'danger', 'info'
+      echo "<div class='alert alert-$type alert-dismissible fade show mt-3' role='alert'>
                 $msg
                 <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
               </div>";
-        unset($_SESSION['msg'], $_SESSION['msg_type']);
+      unset($_SESSION['msg'], $_SESSION['msg_type']);
     }
     ?>
-    
-    <!-- Super Admin Creation Section -->
-      <section class="section">
-        <div class="row">
-          <div class="col-lg-12">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title">Add New Subject</h5>
 
-                <!-- <?php if (isset($_SESSION['msg'])): ?>
+    <!-- Super Admin Creation Section -->
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Add New Subject</h5>
+
+              <!-- <?php if (isset($_SESSION['msg'])): ?>
                   <div class="alert alert-info alert-dismissible fade show mt-3 mb-3" role="alert" style="margin: auto;">
                     <?= $_SESSION['msg']; ?>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -192,47 +192,47 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                   <?php unset($_SESSION['msg']); ?>
                 <?php endif; ?> -->
 
-                  <form class="row g-3 needs-validation " novalidate method="post" action="addsubject.php">
+              <form class="row g-3 needs-validation " novalidate method="post" action="addsubject.php">
 
-                    <!-- Subject Code -->
-                    <div class="col-md-2">
-                      <div class="form-floating">
-                        <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
-                        <label for="idnumber" class="form-label">Subject Code</label>
-                      </div>
-                    </div>
+                <!-- Subject Code -->
+                <div class="col-md-2">
+                  <div class="form-floating">
+                    <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
+                    <label for="idnumber" class="form-label">Subject Code</label>
+                  </div>
+                </div>
 
-                    <!-- Subject title -->
-                    <div class="col-md-6">
-                        <div class="form-floating">
-                            <input type="text" name="title" class="form-control" placeholder="Descriptive Title" required>
-                            <label class="form-label">Descriptive Title</label>
-                        </div>
-                    </div>
+                <!-- Subject title -->
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" name="title" class="form-control" placeholder="Descriptive Title" required>
+                    <label class="form-label">Descriptive Title</label>
+                  </div>
+                </div>
 
-                    <!-- Faculty Name Dropdown -->
-                    <div class="col-md-4">
-                      <div class="form-floating">
-                        <select name="faculty_id" class="form-select" required>
-                          <option value="">-- Select Faculty --</option>
+                <!-- Faculty Name Dropdown -->
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <select name="faculty_id" class="form-select" required>
+                      <option value="">-- Select Faculty --</option>
 
-                          <?php foreach ($faculty_data as $f): ?>
-                            <option value="<?= $f['idnumber'] ?>"><?= $f['last_name'] ?>, <?= $f['first_name'] ?></option>
-                          <?php endforeach; ?>
+                      <?php foreach ($faculty_data as $f): ?>
+                        <option value="<?= $f['idnumber'] ?>"><?= $f['last_name'] ?>, <?= $f['first_name'] ?></option>
+                      <?php endforeach; ?>
 
-                          <?php foreach ($admin_data as $a): ?>
-                            <?php if (in_array($a['idnumber'], $faculty_ids)) continue; ?>
-                            <option value="<?= $a['idnumber'] ?>"><?= $a['last_name'] ?>, <?= $a['first_name'] ?></option>
-                          <?php endforeach; ?>
+                      <?php foreach ($admin_data as $a): ?>
+                        <?php if (in_array($a['idnumber'], $faculty_ids)) continue; ?>
+                        <option value="<?= $a['idnumber'] ?>"><?= $a['last_name'] ?>, <?= $a['first_name'] ?></option>
+                      <?php endforeach; ?>
 
-                        </select>
-                        <label for="faculty_id">Faculty</label>
-                      </div>
-                    </div>
+                    </select>
+                    <label for="faculty_id">Faculty</label>
+                  </div>
+                </div>
 
 
-                    <!-- Admin-as-Faculty Dropdown -->
-                    <!-- <div class="col-md-2">
+                <!-- Admin-as-Faculty Dropdown -->
+                <!-- <div class="col-md-2">
                       <div class="form-floating">
                         <select name="admin_id" class="form-select">
                           <option value="">-- Select Admin as Faculty --</option>
@@ -244,20 +244,20 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                       </div>
                     </div> -->
 
-                    
-                    <!-- Submit -->
-                    <div class="col-4 offset-4">
-                      <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>
-                    </div>
 
-                  </form>
-              </div>
+                <!-- Submit -->
+                <div class="col-4 offset-4">
+                  <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>
+                </div>
+
+              </form>
             </div>
           </div>
         </div>
-      </section><!-- End Super Admin Creation Section -->
+      </div>
+    </section><!-- End Super Admin Creation Section -->
 
-    
+
 
   </main><!-- End #main -->
 
@@ -323,4 +323,5 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
   </script>
 
 </body>
+
 </html>
