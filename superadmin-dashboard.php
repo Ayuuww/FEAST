@@ -453,6 +453,96 @@ $totalsubject = $data['total_subject'];
               </div>
             </div><!-- End Reports -->
 
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Stacked Bar Chart</h5>
+
+                  <?php
+                  // Fetch average evaluation score grouped by department and semester
+                  $chart_query = "
+                    SELECT f.department, e.semester, AVG(e.computed_rating) AS avg_rating
+                    FROM evaluation e
+                    JOIN faculty f ON f.idnumber = e.faculty_id
+                    GROUP BY f.department, e.semester
+                ";
+                  $chart_result = mysqli_query($conn, $chart_query);
+
+                  $departments = [];
+                  $rawData = [];
+
+                  while ($row = mysqli_fetch_assoc($chart_result)) {
+                    $dept = $row['department'];
+                    $sem = $row['semester'];
+                    $departments[$dept] = true;
+                    $rawData[$sem][$dept] = round($row['avg_rating'], 2);
+                  }
+
+                  $departmentLabels = array_keys($departments);
+                  $colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'];
+
+                  $datasets = [];
+                  $index = 0;
+                  foreach ($rawData as $semester => $values) {
+                    $data = [];
+                    foreach ($departmentLabels as $dept) {
+                      $data[] = $values[$dept] ?? 0;
+                    }
+                    $datasets[] = [
+                      'label' => $semester,
+                      'data' => $data,
+                      'backgroundColor' => $colors[$index++ % count($colors)]
+                    ];
+                  }
+
+                  $chartData = [
+                    'labels' => $departmentLabels,
+                    'datasets' => $datasets
+                  ];
+                  ?>
+                  <!-- Stacked Bar Chart -->
+                  <canvas id="stakedBarChart" style="max-height: 400px;"></canvas>
+                  <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+                      const chartData = <?= json_encode($chartData); ?>;
+
+                      new Chart(document.querySelector('#stakedBarChart'), {
+                        type: 'bar',
+                        data: {
+                          labels: chartData.labels,
+                          datasets: chartData.datasets
+                        },
+                        options: {
+                          plugins: {
+                            title: {
+                              display: true,
+                              text: 'Average Evaluation Scores per Department'
+                            },
+                          },
+                          responsive: true,
+                          scales: {
+                            x: {
+                              stacked: true,
+                            },
+                            y: {
+                              stacked: true,
+                              title: {
+                                display: true,
+                                text: 'Average Score (%)'
+                              },
+                              suggestedMin: 0,
+                              suggestedMax: 100
+                            }
+                          }
+                        }
+                      });
+                    });
+                  </script>
+                  <!-- End Stacked Bar Chart -->
+
+                </div>
+              </div>
+            </div>
           </div>
         </div><!-- End Left side columns -->
 
@@ -684,12 +774,16 @@ $totalsubject = $data['total_subject'];
             </div>
           </div><!-- End Website Traffic -->
 
+
+
         </div><!-- End Right side columns -->
 
       </div>
     </section>
 
   </main><!-- End #main -->
+
+
 
   <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>
@@ -710,6 +804,8 @@ $totalsubject = $data['total_subject'];
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+
 
 </body>
 

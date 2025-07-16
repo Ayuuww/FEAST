@@ -269,18 +269,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </ol>
       </nav>
     </div>
+    
+    <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill"></i>
+        Student information updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    <?php endif; ?>
 
     <section class="section">
       <div class="card col-lg-6">
         <div class="card-body">
           <h5 class="card-title">Student Information</h5>
-          <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-              <i class="bi bi-check-circle-fill"></i>
-              Student information updated successfully!
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          <?php endif; ?>
+
 
           <form method="POST">
             <div class="mb-3">

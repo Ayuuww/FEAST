@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 16, 2025 at 06:51 PM
+-- Generation Time: Jul 14, 2025 at 05:45 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -44,13 +44,12 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (34, NULL, 'Dean', NULL, NULL),
 (35, NULL, NULL, '4-B', NULL),
 (36, NULL, NULL, NULL, 'CIS'),
-(37, NULL, 'Program Chair', NULL, NULL),
+(37, NULL, 'Vice-President', NULL, NULL),
 (38, 'Professor V', NULL, NULL, NULL),
 (39, NULL, NULL, NULL, 'CAS'),
 (40, NULL, NULL, '1-A', NULL),
 (41, NULL, NULL, NULL, 'CVM'),
-(42, 'Instructor II', NULL, NULL, NULL),
-(43, NULL, NULL, NULL, 'BPED-Math');
+(42, 'Instructor II', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -67,6 +66,7 @@ CREATE TABLE `admin` (
   `password` varchar(255) NOT NULL,
   `department` varchar(255) NOT NULL,
   `position` varchar(50) NOT NULL,
+  `faculty` varchar(11) NOT NULL,
   `role` varchar(255) NOT NULL DEFAULT 'admin',
   `status` varchar(11) NOT NULL DEFAULT 'active',
   `faculty_rank` varchar(255) DEFAULT NULL
@@ -76,10 +76,8 @@ CREATE TABLE `admin` (
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `role`, `status`, `faculty_rank`) VALUES
-('000-0000-3', 'Edith', 'Maam', 'Admin', 'admin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'admin', 'active', 'Instructor I'),
-('000-0000-5', 'Program ', 'Chair', 'Admin', 'admin@email.com', 'ILOVEDMMMSU', 'BPED-Math', 'Program Chair', 'admin', 'active', 'Professor V'),
-('000-0000-9', 'Admin', 'Veterinary ', 'Medicine', 'admin@email.com', 'ILOVEDMMMSU', 'CVM', 'Dean', 'admin', 'active', 'Instructor II');
+INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `position`, `faculty`, `role`, `status`, `faculty_rank`) VALUES
+('000-0000-3', 'Edith', 'Maam', 'Admin', 'admin@email.com', 'ILOVEDMMMSU', 'CIS', 'Dean', 'yes', 'admin', 'active', 'Instructor I');
 
 -- --------------------------------------------------------
 
@@ -106,33 +104,7 @@ CREATE TABLE `admin_evaluation` (
 --
 
 INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
-(22, '000-0000-3', '003-0000-3', 'Dean', '2025-2026', '1st Semester', 73, 97.33, 'Excellent instructor I have', 'CIS', '2025-07-16 21:14:20');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `admin_evaluation_submissions`
---
-
-CREATE TABLE `admin_evaluation_submissions` (
-  `id` int(11) NOT NULL,
-  `evaluator_id` varchar(50) DEFAULT NULL,
-  `evaluatee_id` varchar(50) DEFAULT NULL,
-  `semester` varchar(20) DEFAULT NULL,
-  `academic_year` varchar(20) DEFAULT NULL,
-  `total_score` int(11) DEFAULT NULL,
-  `rating_percent` decimal(5,2) DEFAULT NULL,
-  `comment` text DEFAULT NULL,
-  `submission_date` datetime DEFAULT current_timestamp(),
-  `form_data` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `admin_evaluation_submissions`
---
-
-INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`, `semester`, `academic_year`, `total_score`, `rating_percent`, `comment`, `submission_date`, `form_data`) VALUES
-(3, '000-0000-3', '003-0000-3', '1st Semester', '2025-2026', 73, 97.33, 'Excellent instructor I have', '2025-07-16 21:14:20', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}');
+(18, '000-0000-3', '000-0000-1', 'Dean', '2025-2026', '1st Semester', 71, 94.67, '', 'CIS', '2025-07-14 21:50:34');
 
 -- --------------------------------------------------------
 
@@ -161,13 +133,9 @@ CREATE TABLE `evaluation` (
 --
 
 INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`) VALUES
-(77, '000-0000-0', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '003-0000-3', 44.00, 58.67, 'Solid Teaching', '2025-07-16 12:27:38', '1st Semester', '4-B'),
-(78, '221-0388-1', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '003-0000-3', 51.00, 68.00, 'Excellent Teaching', '2025-07-16 12:28:39', '1st Semester', '1-A'),
-(79, '221-0388-1', 'CIS', 'ISPE-102', 'Information Management 2', '2025-2026', '003-0000-3', 73.00, 97.33, 'Yes Maam', '2025-07-16 12:35:58', '1st Semester', '1-A'),
-(80, '000-0000-0', 'CIS', 'ISPE-102', 'Information Management 2', '2025-2026', '003-0000-3', 68.00, 90.67, 'Great Teaching', '2025-07-16 12:38:05', '1st Semester', '4-B'),
-(81, '001-1111-1', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '003-0000-3', 71.00, 94.67, 'Excellent Teaching', '2025-07-16 15:54:59', '1st Semester', '4-B'),
-(82, '001-1111-1', 'CVM', 'CVMM-001', 'Medicine ', '2025-2026', '000-0000-9', 63.00, 84.00, '', '2025-07-16 16:42:37', '1st Semester', '4-B'),
-(83, '101-1010-1', 'BPED-Math', 'EDUC-101', 'Edukasyon Sa Pagpapakatao', '2025-2026', '000-0000-5', 75.00, 100.00, '', '2025-07-16 16:49:09', '1st Semester', '1-A');
+(66, '221-0388-1', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '003-0000-3', 71.00, 94.67, '', '2025-07-14 15:09:21', '1st Semester', '4-B'),
+(67, '000-0000-0', 'CIS', 'ISBA-105', 'Analytics', '2025-2026', '000-0000-1', 71.00, 94.67, '', '2025-07-14 15:19:48', '1st Semester', '4-B'),
+(68, '000-0000-0', 'CIS', 'ISBA-101', 'Accounting', '2025-2026', '000-0000-3', 68.00, 90.67, '', '2025-07-14 15:20:26', '1st Semester', '4-B');
 
 -- --------------------------------------------------------
 
@@ -233,8 +201,6 @@ CREATE TABLE `faculty` (
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `faculty_rank`, `role`, `status`) VALUES
 ('000-0000-1', 'Rufo', 'Sir', 'Faculty', 'faulty@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
 ('000-0000-3', 'Edith', 'Maam', 'Admin', NULL, NULL, 'CIS', 'Professor V', 'faculty', 'active'),
-('000-0000-5', 'Program ', 'Chair', 'Admin', NULL, NULL, 'BPED-Math', 'Professor V', 'faculty', 'active'),
-('000-0000-9', 'Admin', 'Veterinary ', 'Medicine', NULL, NULL, 'CVM', 'Instructor II', 'faculty', 'active'),
 ('002-0000-2', 'Shirley', 'Maam', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CAS', 'Instructor I', 'faculty', 'active'),
 ('003-0000-3', 'Maricel', 'Maam', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
 ('004-0000-4', 'Kenneth', 'Sir', 'Faculty', 'faculty@email.com', 'ILOVEDMMMSU', 'CIS', 'Instructor I', 'faculty', 'active'),
@@ -281,43 +247,7 @@ CREATE TABLE `student` (
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `email`, `password`, `department`, `section`, `role`) VALUES
 ('000-0000-0', 'Mark', 'Lagman', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '4-B', 'student'),
-('001-1111-1', 'Sample', 'Name', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '4-B', 'student'),
-('101-1010-1', 'Education', 'Math', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'BPED-Math', '1-A', 'student'),
-('221-0388-1', 'Charles', 'Adonis', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '1-A', 'student');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `student_evaluation_submissions`
---
-
-CREATE TABLE `student_evaluation_submissions` (
-  `id` int(11) NOT NULL,
-  `student_id` varchar(50) DEFAULT NULL,
-  `subject_code` varchar(50) DEFAULT NULL,
-  `faculty_id` varchar(50) DEFAULT NULL,
-  `department` varchar(100) DEFAULT NULL,
-  `academic_year` varchar(20) DEFAULT NULL,
-  `semester` varchar(20) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `answers` text NOT NULL,
-  `total_score` int(11) DEFAULT 0,
-  `computed_rating` decimal(5,2) DEFAULT 0.00,
-  `comment` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `student_evaluation_submissions`
---
-
-INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`) VALUES
-(7, '000-0000-0', 'ISPC-101', '003-0000-3', 'CIS', '2025-2026', '1st Semester', '2025-07-16 20:27:38', '{\"q0\":1,\"q1\":2,\"q2\":3,\"q3\":4,\"q4\":5,\"q5\":4,\"q6\":3,\"q7\":2,\"q8\":1,\"q9\":2,\"q10\":3,\"q11\":4,\"q12\":5,\"q13\":3,\"q14\":2}', 44, 58.67, 'Solid Teaching'),
-(8, '221-0388-1', 'ISPC-101', '003-0000-3', 'CIS', '2025-2026', '1st Semester', '2025-07-16 20:28:39', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":2,\"q4\":1,\"q5\":2,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":3,\"q10\":3,\"q11\":3,\"q12\":3,\"q13\":5,\"q14\":5}', 51, 68.00, 'Excellent Teaching'),
-(9, '221-0388-1', 'ISPE-102', '003-0000-3', 'CIS', '2025-2026', '1st Semester', '2025-07-16 20:35:58', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":4}', 73, 97.33, 'Yes Maam'),
-(10, '000-0000-0', 'ISPE-102', '003-0000-3', 'CIS', '2025-2026', '1st Semester', '2025-07-16 20:38:05', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":4,\"q4\":4,\"q5\":4,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 68, 90.67, 'Great Teaching'),
-(11, '001-1111-1', 'ISPC-101', '003-0000-3', 'CIS', '2025-2026', '1st Semester', '2025-07-16 23:54:59', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":5}', 71, 94.67, 'Excellent Teaching'),
-(12, '001-1111-1', 'CVMM-001', '000-0000-9', 'CVM', '2025-2026', '1st Semester', '2025-07-17 00:42:37', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":4,\"q12\":3,\"q13\":2,\"q14\":2}', 63, 84.00, ''),
-(13, '101-1010-1', 'EDUC-101', '000-0000-5', 'BPED-Math', '2025-2026', '1st Semester', '2025-07-17 00:49:09', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '');
+('221-0388-1', 'Charles', 'Adonis', 'Student', 'student@email.com', 'ILOVEDMMMSU', 'CIS', '4-B', 'student');
 
 -- --------------------------------------------------------
 
@@ -330,22 +260,18 @@ CREATE TABLE `student_subject` (
   `student_id` varchar(11) NOT NULL,
   `subject_code` varchar(11) NOT NULL,
   `faculty_id` varchar(11) DEFAULT NULL,
-  `admin_id` varchar(50) DEFAULT NULL,
-  `evaluated` varchar(11) NOT NULL
+  `admin_id` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_subject`
 --
 
-INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`, `admin_id`, `evaluated`) VALUES
-(31, '221-0388-1', 'ISPC-101', '003-0000-3', NULL, 'yes'),
-(32, '000-0000-0', 'ISPC-101', '003-0000-3', NULL, 'yes'),
-(33, '001-1111-1', 'ISPC-101', '003-0000-3', NULL, 'yes'),
-(34, '001-1111-1', 'CVMM-001', '000-0000-9', NULL, 'yes'),
-(35, '221-0388-1', 'ISPE-102', '003-0000-3', NULL, 'yes'),
-(36, '000-0000-0', 'ISPE-102', '003-0000-3', NULL, 'yes'),
-(37, '101-1010-1', 'EDUC-101', '000-0000-5', NULL, 'yes');
+INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`, `admin_id`) VALUES
+(25, '000-0000-0', 'ISBA-105', '000-0000-1', NULL),
+(26, '000-0000-0', 'ISBA-101', '000-0000-3', NULL),
+(27, '000-0000-0', 'PATHFIT-2', '002-0000-2', NULL),
+(28, '221-0388-1', 'ISPC-101', '003-0000-3', NULL);
 
 -- --------------------------------------------------------
 
@@ -358,19 +284,18 @@ CREATE TABLE `subject` (
   `code` varchar(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `faculty_id` varchar(11) DEFAULT NULL,
-  `admin_id` varchar(11) DEFAULT NULL,
-  `department` varchar(100) DEFAULT NULL
+  `admin_id` varchar(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `subject`
 --
 
-INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `department`) VALUES
-(26, 'ISPC-101', 'Computer Programming', '003-0000-3', NULL, 'CIS'),
-(27, 'CVMM-001', 'Medicine ', '000-0000-9', NULL, 'CVM'),
-(28, 'ISPE-102', 'Information Management 2', '003-0000-3', NULL, 'CIS'),
-(29, 'EDUC-101', 'Edukasyon Sa Pagpapakatao', '000-0000-5', NULL, 'BPED-Math');
+INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`) VALUES
+(20, 'ISBA-105', 'Analytics', '000-0000-1', NULL),
+(23, 'ISBA-101', 'Accounting', '000-0000-3', NULL),
+(24, 'PATHFIT-2', 'Physical Education', '002-0000-2', NULL),
+(25, 'ISPC-101', 'Computer Programming', '003-0000-3', NULL);
 
 -- --------------------------------------------------------
 
@@ -429,12 +354,6 @@ ALTER TABLE `admin_evaluation`
   ADD KEY `fk_evaluator_position` (`evaluator_position`);
 
 --
--- Indexes for table `admin_evaluation_submissions`
---
-ALTER TABLE `admin_evaluation_submissions`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `evaluation`
 --
 ALTER TABLE `evaluation`
@@ -482,12 +401,6 @@ ALTER TABLE `student`
   ADD KEY `section_2` (`section`);
 
 --
--- Indexes for table `student_evaluation_submissions`
---
-ALTER TABLE `student_evaluation_submissions`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `student_subject`
 --
 ALTER TABLE `student_subject`
@@ -521,25 +434,19 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
-
---
--- AUTO_INCREMENT for table `admin_evaluation_submissions`
---
-ALTER TABLE `admin_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=69;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -560,22 +467,16 @@ ALTER TABLE `faculty_peer_evaluation`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `student_evaluation_submissions`
---
-ALTER TABLE `student_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
-
---
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- Constraints for dumped tables
