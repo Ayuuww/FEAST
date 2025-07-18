@@ -18,10 +18,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $first_name = $_POST['first_name'];
     $mid_name = $_POST['mid_name'];
     $last_name = $_POST['last_name'];
-    $email = $_POST['email'];
 
-    $stmt = $conn->prepare("UPDATE superadmin SET first_name=?, mid_name=?, last_name=?, email=? WHERE idnumber=?");
-    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $email, $idnumber);
+    $stmt = $conn->prepare("UPDATE superadmin SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
+    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $idnumber);
     if ($stmt->execute()) {
       $success_msg = "Profile updated successfully.";
     } else {
@@ -58,7 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // Fetch current profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, email, role FROM superadmin WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -285,8 +284,8 @@ $stmt->close();
     </div>
 
     <section class="section profile">
-      <div class="row">
-        <div class="col-xl-8">
+      <div class="row justify-content-center">
+        <div class="col-xl-6">
           <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
           <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
 
@@ -316,10 +315,6 @@ $stmt->close();
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Role</label>
                       <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['role']) ?>"></div>
-                    </div>
-                    <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Email</label>
-                      <div class="col-md-8 col-lg-9"><input name="email" type="email" class="form-control" value="<?= htmlspecialchars($data['email']) ?>"></div>
                     </div>
                     <div class="text-center">
                       <button type="submit" name="update_profile" class="btn btn-success">Save Changes</button>

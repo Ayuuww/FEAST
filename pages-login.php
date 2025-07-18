@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php'; // Connection to the database
 
 // Display messaeges if set
 // if (isset($_SESSION['msg'])) {
@@ -19,13 +19,14 @@ include 'conn/conn.php';// Connection to the database
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
   <title>FEAST - Login</title>
-  <?php include 'header.php'?>
+  <?php include 'header.php' ?>
 
   <style>
     @media (max-width: 576px) {
       .card {
         padding: 1rem !important;
       }
+
       .card-body {
         padding: 1.5rem !important;
       }
@@ -34,20 +35,21 @@ include 'conn/conn.php';// Connection to the database
 
 
 </head>
+
 <body>
 
   <main>
     <!-- Main Section -->
-    <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+    <section class="section login min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
       <div class="container-fluid">
         <div class="row h-100 flex-column flex-md-row">
-          
+
           <!-- Left side: Logo  -->
           <div class="col-md-6 d-flex flex-column align-items-center justify-content-center bg-light text-center">
             <img src="pics/DMMMSUlogosignup.png" alt="Logo" class="logo-img mb-4">
             <h4 class="fst-italic"><strong>FEAST DMMMSU-NLUC</strong></h4>
           </div>
-          
+
           <!-- Right side: Login form -->
           <div class="col-md-6 d-flex flex-column justify-content-center align-items-center bg-light">
             <div class="w-100 px-3 px-sm-5 px-md-0" style="max-width: 400px; width: 100%;">
@@ -71,42 +73,43 @@ include 'conn/conn.php';// Connection to the database
                     <!-- ID Number -->
                     <div class="col-12">
                       <div class="form-floating">
-                        <input type="text" name="idnumber" class="form-control" placeholder="ID Number" id="idnumber" pattern="^[0-9\-]+$" required>
+                        <input type="text" name="idnumber" class="form-control" placeholder="ID Number" id="idnumber" pattern="^[0-9\-]+$" value="<?= $_COOKIE['remember_idnumber'] ?? '' ?>" required>
                         <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
-                        <label for="floatingID" >ID Number</label>
+                        <label for="floatingID">ID Number</label>
                       </div>
                     </div>
-                  
+
                     <!-- Password -->
                     <div class="col-12 position-relative">
                       <div class="form-floating">
-                        <input type="password" name="password" class="form-control" placeholder="Password" id="password" required>
+                        <input type="password" name="password" class="form-control" placeholder="Password" id="password" value="<?= $_COOKIE['remember_password'] ?? '' ?>" required>
                         <label for="floatingPassword">Password</label>
                         <div class="invalid-feedback">Please enter your password!</div>
                       </div>
 
                       <!-- Show Password Toggle -->
                       <button type="button"
-                              class="position-absolute top-50 end-0 translate-middle-y me-2"
-                              style="border: none; background: transparent; z-index: 2;"
-                              onclick="togglePassword()" tabindex="-1">
+                        class="position-absolute top-50 end-0 translate-middle-y me-2"
+                        style="border: none; background: transparent; z-index: 2;"
+                        onclick="togglePassword()" tabindex="-1">
                         <i id="eyeIcon" class="bi bi-eye-slash fs-5"></i>
                       </button>
                     </div>
 
                     <!-- Remember Me -->
                     <div class="col-12">
-                        <div class="form-check">
-                          <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">
-                          <label class="form-check-label" for="rememberMe">Remember me</label>
-                        </div>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
+                          <?= isset($_COOKIE['remember_idnumber']) ? 'checked' : '' ?>>
+                        <label class="form-check-label" for="rememberMe">Remember me</label>
                       </div>
+                    </div>
 
                     <!-- Login -->
                     <div class="col-12">
                       <button class="btn btn-success w-100" name="login">Login</button>
                     </div>
-                    
+
                     <!-- <div class="col-12 text-center">
                       <a href="reset-password.php">Forgot your password?</a>
                     </div> -->
@@ -123,7 +126,7 @@ include 'conn/conn.php';// Connection to the database
             </div>
           </div>
 
-          
+
         </div>
       </div>
     </section><!-- End Registration Section -->
@@ -163,7 +166,7 @@ include 'conn/conn.php';// Connection to the database
   </script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", function() {
       const alert = document.querySelector(".alert-dismissible");
       if (alert) {
         setTimeout(() => {

@@ -18,11 +18,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $first_name = $_POST['first_name'];
         $mid_name   = $_POST['mid_name'];
         $last_name  = $_POST['last_name'];
-        $email      = $_POST['email'];
         $section    = $_POST['section'];
 
-        $stmt = $conn->prepare("UPDATE student SET first_name=?, mid_name=?, last_name=?, email=?, section=? WHERE idnumber=?");
-        $stmt->bind_param("ssssss", $first_name, $mid_name, $last_name, $email, $section, $idnumber);
+        $stmt = $conn->prepare("UPDATE student SET first_name=?, mid_name=?, last_name=?, section=? WHERE idnumber=?");
+        $stmt->bind_param("ssssss", $first_name, $mid_name, $last_name, $section, $idnumber);
         
         if ($stmt->execute()) {
             $success_msg = "Profile updated successfully.";
@@ -61,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // Fetch current profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, email, role, section, department FROM student WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, section, department FROM student WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -144,7 +143,7 @@ $stmt->close();
       </div>
 
       <section class="section profile">
-        <div class="row">
+        <div class="row justify-content-center">
           <div class="col-xl-8">
             <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
             <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
@@ -171,10 +170,6 @@ $stmt->close();
                       <div class="row mb-3">
                         <label class="col-md-4 col-lg-3 col-form-label">Middle Name</label>
                         <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
-                      </div>
-                      <div class="row mb-3">
-                        <label class="col-md-4 col-lg-3 col-form-label">Email</label>
-                        <div class="col-md-8 col-lg-9"><input name="email" type="email" class="form-control" value="<?= htmlspecialchars($data['email']) ?>"></div>
                       </div>
                       <div class="row mb-3">
                         <label class="col-md-4 col-lg-3 col-form-label">Section</label>

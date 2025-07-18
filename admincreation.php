@@ -10,7 +10,6 @@ if (isset($_POST['submit'])) {
     $first_name = $_POST['first_name'];
     $mid_name   = $_POST['mid_name'];
     $last_name  = $_POST['last_name'];
-    $email      = $_POST['email'];
     $password   = $_POST['password'];
     $department = $_POST['department'];
     $position   = $_POST['position'];
@@ -27,10 +26,10 @@ if (isset($_POST['submit'])) {
 
     // Proceed with insertion to admin table (faculty column removed)
     $sql = "INSERT INTO admin (
-                idnumber, first_name, mid_name, last_name, email, password,
+                idnumber, first_name, mid_name, last_name, password,
                 department, position, faculty_rank
             ) VALUES (
-                '$id', '$first_name', '$mid_name', '$last_name', '$email', '$password',
+                '$id', '$first_name', '$mid_name', '$last_name', '$password',
                 '$department', '$position', " . 
                 ($faculty_rank ? "'$faculty_rank'" : "NULL") . "
             )";

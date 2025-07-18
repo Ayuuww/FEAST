@@ -107,8 +107,8 @@ $verification = [
             }
 
             body {
-                font-size: 16px;
-                line-height: 1.6;
+                font-size: 15px;
+                line-height: 1.5;
                 margin: 0;
                 padding: 0;
                 background-color: #fff;
@@ -116,32 +116,45 @@ $verification = [
 
             .container {
                 width: 100%;
-                padding: 1.5cm;
+                max-width: 100%;
+                padding: 1cm;
             }
 
+            .card,
             .card-body {
-                font-size: 16px;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
             }
 
-            h3 {
-                font-size: 24px;
+            .table {
+                width: 100%;
+                table-layout: fixed;
             }
 
             .table th,
             .table td {
-                padding: 12px;
-                font-size: 15px;
+                padding: 8px;
+                font-size: 14px;
+                word-wrap: break-word;
             }
 
             .table th:first-child,
             .table td:first-child {
-                width: 75%;
+                width: 50%;
+                text-align: left;
+            }
+
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                width: 35%;
                 text-align: left;
             }
 
             .table th:last-child,
             .table td:last-child {
-                width: 25%;
+                width: 15%;
                 text-align: center;
             }
         }
@@ -159,8 +172,8 @@ $verification = [
 
                 <p><strong>Name of Faculty:</strong> <?= htmlspecialchars($evaluateeName) ?></p>
                 <p><strong>Academic Rank:</strong> <?= htmlspecialchars($evaluateeRank) ?></p>
-                <p><strong>College:</strong> <?= htmlspecialchars($evaluateeCollege) ?></p>
-                <p><strong>Rating Period:</strong> <?= htmlspecialchars($academic_year) ?> (<?= htmlspecialchars($semester) ?>)</p>
+                <p><strong>Department/College:</strong> <?= htmlspecialchars($evaluateeCollege) ?></p>
+                <p><strong>Rating Period (Academic Year):</strong> <?= htmlspecialchars($academic_year) ?> (<?= htmlspecialchars($semester) ?>)</p>
 
 
                 <div class="table-responsive mb-4">
@@ -206,7 +219,7 @@ $verification = [
 
                 <div class="row">
                     <div class="col-md-4 no-print">
-                        <a href="admin-evaluate.php" class="btn btn-secondary">Back to Evaluation</a>
+                        <a href="admin-evaluatedfaculty.php" class="btn btn-secondary">Back to Evaluation</a>
                     </div>
                     <div class="col-md-4 no-print">
                         <button type="button" class="btn btn-secondary w-100" onclick="window.print()">

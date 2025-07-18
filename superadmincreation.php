@@ -8,7 +8,6 @@ if (isset($_POST['submit'])) {
     $first_name = $_POST['first_name'];
     $mid_name   = $_POST['mid_name'];
     $last_name  = $_POST['last_name'];
-    $email      = $_POST['email'];
     $password   = $_POST['password'];
 
     // Check if admin with same ID already exists
@@ -26,15 +25,13 @@ if (isset($_POST['submit'])) {
     $sql    = "INSERT INTO superadmin   (   idnumber, 
                                             first_name, 
                                             mid_name, 
-                                            last_name, 
-                                            email, 
+                                            last_name,
                                             password)
 
                         VALUES          (   '$id', 
                                             '$first_name', 
                                             '$mid_name', 
-                                            '$last_name', 
-                                            '$email', 
+                                            '$last_name',
                                             '$password')";
 
     if (mysqli_query($conn, $sql)) {

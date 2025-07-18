@@ -64,6 +64,13 @@ if (count($answers) !== 15) {
 $computed_rating = ($total_score / 75) * 100;
 $answers_json = json_encode($answers);
 
+// Define the function FIRST
+function logActivity($conn, $user_id, $role, $action) {
+    $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $user_id, $role, $action);
+    $stmt->execute();
+}
+
 try {
     // Insert into main evaluation table
     $stmt = $conn->prepare("INSERT INTO evaluation (
@@ -87,6 +94,21 @@ try {
         $student_section
     );
     $stmt->execute();
+
+    // Fetch faculty name
+    $faculty_name = '';
+    $fac_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+    $fac_stmt->bind_param("s", $faculty_id);
+    $fac_stmt->execute();
+    $fac_stmt->bind_result($fname, $mname, $lname);
+    if ($fac_stmt->fetch()) {
+        $faculty_name = trim("$fname $mname $lname");
+    }
+    $fac_stmt->close();
+
+    // Then log the activity
+    $rounded_rating = round($computed_rating, 2);
+    logActivity($conn, $student_id, 'student', "Rated {$rounded_rating}% for {$subject_code} handled by {$faculty_name}");
 
     // Insert full answer data into archive table
     $archive_stmt = $conn->prepare("INSERT INTO student_evaluation_submissions (
@@ -112,9 +134,9 @@ try {
     $archive_stmt->execute();
 
     // Update evaluated status in student_subject table
-    $update_stmt = $conn->prepare("UPDATE student_subject SET evaluated = 'yes' WHERE student_id = ? AND subject_code = ? AND faculty_id = ?");
-    $update_stmt->bind_param("sss", $student_id, $subject_code, $faculty_id);
-    $update_stmt->execute();
+    // $update_stmt = $conn->prepare("UPDATE student_subject SET evaluated = 'yes' WHERE student_id = ? AND subject_code = ? AND faculty_id = ?");
+    // $update_stmt->bind_param("sss", $student_id, $subject_code, $faculty_id);
+    // $update_stmt->execute();
 
     // Store data for reprint
     $_SESSION['print_data'] = [

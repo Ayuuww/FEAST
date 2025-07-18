@@ -39,7 +39,47 @@ $subject_result = mysqli_query($conn, $subject_query);
 $data = mysqli_fetch_assoc($subject_result);
 $totalsubject = $data['total_subject'];
 
+// Get total evaluation (student/supervisor)
+// Total student-submitted evaluations
+$studentEvalQuery = mysqli_query($conn, "SELECT COUNT(*) AS total FROM evaluation");
+$studentEvalCount = mysqli_fetch_assoc($studentEvalQuery)['total'] ?? 0;
 
+// Total admin/supervisor-submitted evaluations
+$adminEvalQuery = mysqli_query($conn, "SELECT COUNT(*) AS total FROM admin_evaluation");
+$adminEvalCount = mysqli_fetch_assoc($adminEvalQuery)['total'] ?? 0;
+
+// Total combined
+$totalEvaluations = $studentEvalCount + $adminEvalCount;
+
+// Fetching activities
+$limit = $_GET['limit'] ?? 10;
+
+$log_query = "SELECT * FROM activity_logs ORDER BY timestamp DESC LIMIT ?";
+$stmt = $conn->prepare($log_query);
+$stmt->bind_param("i", $limit);
+$stmt->execute();
+$log_result = $stmt->get_result();
+
+
+// Function to convert time difference to "x min ago"
+function timeAgo($datetime)
+{
+  $timestamp = strtotime($datetime);
+  $difference = time() - $timestamp;
+
+  if ($difference < 0) return "Just now"; // Future time fallback
+
+  if ($difference < 60)
+    return "$difference sec";
+  elseif ($difference < 3600)
+    return floor($difference / 60) . " min";
+  elseif ($difference < 86400)
+    return floor($difference / 3600) . " hrs";
+  elseif ($difference < 604800)
+    return floor($difference / 86400) . " days";
+  else
+    return date("M d, Y", $timestamp);
+}
 
 ?>
 
@@ -269,11 +309,11 @@ $totalsubject = $data['total_subject'];
           <div class="row">
 
             <!-- Total Faculty Card -->
-            <div class="col-xxl-4 col-md-12">
+            <div class="col-xxl-4 col-md-6">
               <div class="card info-card ">
 
                 <div class="card-body">
-                  <h5 class="card-title">Total<span> | Faculty (Active)</span></h5>
+                  <h5 class="card-title">Total<span> | Faculty</span></h5>
 
                   <div class="d-flex align-items-center">
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
@@ -289,7 +329,7 @@ $totalsubject = $data['total_subject'];
             </div><!-- End Total Faculty Card -->
 
             <!-- Total Student Card -->
-            <div class="col-xxl-4 col-xl-12">
+            <div class="col-xxl-4 col-md-6">
               <div class="card info-card ">
 
                 <div class="card-body">
@@ -309,7 +349,7 @@ $totalsubject = $data['total_subject'];
             </div><!-- End Total Student Card -->
 
             <!-- Total Admins Card -->
-            <div class="col-xxl-4 col-xl-12">
+            <div class="col-xxl-4 col-md-6">
               <div class="card info-card">
 
                 <div class="card-body">
@@ -330,7 +370,7 @@ $totalsubject = $data['total_subject'];
             </div><!-- End Total Admin Card -->
 
             <!-- Total Super Admins Card -->
-            <div class="col-xxl-4 col-xl-12">
+            <div class="col-xxl-4 col-md-6">
               <div class="card info-card">
 
                 <div class="card-body">
@@ -351,7 +391,7 @@ $totalsubject = $data['total_subject'];
             </div><!-- End Total Super Admin Card -->
 
             <!-- Total Subjects Card -->
-            <div class="col-xxl-4 col-xl-12">
+            <div class="col-xxl-4 col-md-6">
               <div class="card info-card">
 
                 <div class="card-body">
@@ -369,180 +409,314 @@ $totalsubject = $data['total_subject'];
                 </div>
               </div>
 
-            </div><!-- End Total Super Admin Card -->
+            </div><!-- End Total Subjects Card -->
 
-            <!-- Reports -->
-            <div class="col-12">
-              <div class="card">
-
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <li class="dropdown-header text-start">
-                      <h6>Filter</h6>
-                    </li>
-
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                  </ul>
-                </div>
-
+            <!-- Total Evaluations Card -->
+            <div class="col-xxl-4 col-md-6">
+              <div class="card info-card">
                 <div class="card-body">
-                  <h5 class="card-title">Reports <span>/Today</span></h5>
+                  <h5 class="card-title">Total <span>| Evaluations</span></h5>
 
-                  <!-- Line Chart -->
-                  <div id="reportsChart"></div>
-
-                  <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                      new ApexCharts(document.querySelector("#reportsChart"), {
-                        series: [{
-                          name: 'Sales',
-                          data: [31, 40, 28, 51, 42, 82, 56],
-                        }, {
-                          name: 'Revenue',
-                          data: [11, 32, 45, 32, 34, 52, 41]
-                        }, {
-                          name: 'Customers',
-                          data: [15, 11, 32, 18, 9, 24, 11]
-                        }],
-                        chart: {
-                          height: 350,
-                          type: 'area',
-                          toolbar: {
-                            show: false
-                          },
-                        },
-                        markers: {
-                          size: 4
-                        },
-                        colors: ['#4154f1', '#2eca6a', '#ff771d'],
-                        fill: {
-                          type: "gradient",
-                          gradient: {
-                            shadeIntensity: 1,
-                            opacityFrom: 0.3,
-                            opacityTo: 0.4,
-                            stops: [0, 90, 100]
-                          }
-                        },
-                        dataLabels: {
-                          enabled: false
-                        },
-                        stroke: {
-                          curve: 'smooth',
-                          width: 2
-                        },
-                        xaxis: {
-                          type: 'datetime',
-                          categories: ["2018-09-19T00:00:00.000Z", "2018-09-19T01:30:00.000Z", "2018-09-19T02:30:00.000Z", "2018-09-19T03:30:00.000Z", "2018-09-19T04:30:00.000Z", "2018-09-19T05:30:00.000Z", "2018-09-19T06:30:00.000Z"]
-                        },
-                        tooltip: {
-                          x: {
-                            format: 'dd/MM/yy HH:mm'
-                          },
-                        }
-                      }).render();
-                    });
-                  </script>
-                  <!-- End Line Chart -->
-
-                </div>
-
-              </div>
-            </div><!-- End Reports -->
-
-            <div class="col-lg-6">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Stacked Bar Chart</h5>
-
-                  <?php
-                  // Fetch average evaluation score grouped by department and semester
-                  $chart_query = "
-                    SELECT f.department, e.semester, AVG(e.computed_rating) AS avg_rating
-                    FROM evaluation e
-                    JOIN faculty f ON f.idnumber = e.faculty_id
-                    GROUP BY f.department, e.semester
-                ";
-                  $chart_result = mysqli_query($conn, $chart_query);
-
-                  $departments = [];
-                  $rawData = [];
-
-                  while ($row = mysqli_fetch_assoc($chart_result)) {
-                    $dept = $row['department'];
-                    $sem = $row['semester'];
-                    $departments[$dept] = true;
-                    $rawData[$sem][$dept] = round($row['avg_rating'], 2);
-                  }
-
-                  $departmentLabels = array_keys($departments);
-                  $colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'];
-
-                  $datasets = [];
-                  $index = 0;
-                  foreach ($rawData as $semester => $values) {
-                    $data = [];
-                    foreach ($departmentLabels as $dept) {
-                      $data[] = $values[$dept] ?? 0;
-                    }
-                    $datasets[] = [
-                      'label' => $semester,
-                      'data' => $data,
-                      'backgroundColor' => $colors[$index++ % count($colors)]
-                    ];
-                  }
-
-                  $chartData = [
-                    'labels' => $departmentLabels,
-                    'datasets' => $datasets
-                  ];
-                  ?>
-                  <!-- Stacked Bar Chart -->
-                  <canvas id="stakedBarChart" style="max-height: 400px;"></canvas>
-                  <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                      const chartData = <?= json_encode($chartData); ?>;
-
-                      new Chart(document.querySelector('#stakedBarChart'), {
-                        type: 'bar',
-                        data: {
-                          labels: chartData.labels,
-                          datasets: chartData.datasets
-                        },
-                        options: {
-                          plugins: {
-                            title: {
-                              display: true,
-                              text: 'Average Evaluation Scores per Department'
-                            },
-                          },
-                          responsive: true,
-                          scales: {
-                            x: {
-                              stacked: true,
-                            },
-                            y: {
-                              stacked: true,
-                              title: {
-                                display: true,
-                                text: 'Average Score (%)'
-                              },
-                              suggestedMin: 0,
-                              suggestedMax: 100
-                            }
-                          }
-                        }
-                      });
-                    });
-                  </script>
-                  <!-- End Stacked Bar Chart -->
+                  <div class="d-flex align-items-center">
+                    <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
+                      <img src="icons/evaluation.png" alt="Evaluation Icon" style="width: 50px; height: 50px;">
+                    </div>
+                    <div class="ps-3">
+                      <h6><?= $totalEvaluations ?></h6>
+                    </div>
+                  </div>
 
                 </div>
               </div>
             </div>
+            <!-- End Total Evaluations Card -->
+
+            <!-- Average evaluation score per department -->
+            <div class="col-lg-12">
+              <?php
+              $selectedYear = $_GET['year'] ?? 'All';
+
+              // Get list of academic years
+              $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+              $academic_years = [];
+              while ($row = mysqli_fetch_assoc($year_result)) {
+                $academic_years[] = $row['academic_year'];
+              }
+              ?>
+
+              <div class="card">
+                <!-- Filter for academic year -->
+                <div class="filter">
+                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <li class="dropdown-header text-start">
+                      <h6>Filter by Year</h6>
+                    </li>
+                    <li><a class="dropdown-item year-filter <?= $selectedYear == 'All' ? 'active' : '' ?>" href="?year=All">All</a></li>
+                    <?php foreach ($academic_years as $year): ?>
+                      <li><a class="dropdown-item year-filter <?= $selectedYear == $year ? 'active' : '' ?>" href="?year=<?= $year ?>"><?= $year ?></a></li>
+                    <?php endforeach; ?>
+                  </ul>
+                </div>
+
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <strong>Average Evaluation Scores per Department</strong>
+                    <span id="yearLabel" class="text-muted small">| All Years</span><br><br>
+                    Student-to-Faculty Evaluation
+                  </h5>
+
+                  <!-- Stacked Bar Chart -->
+                  <canvas id="stakedBarChart" style="max-height: 400px;"></canvas>
+                  <script>
+                    let barChart;
+
+                    function fetchChartData(year = 'All') {
+
+                      document.getElementById("yearLabel").textContent = `| ${year === 'All' ? 'All Years' : year}`;
+
+                      fetch(`fetch-chart-data.php?year=${encodeURIComponent(year)}`)
+                        .then(response => response.json())
+                        .then(chartData => {
+                          if (barChart) {
+                            barChart.data.labels = chartData.labels;
+                            barChart.data.datasets = chartData.datasets;
+                            barChart.update();
+                          } else {
+                            const ctx = document.querySelector('#stakedBarChart').getContext('2d');
+                            barChart = new Chart(ctx, {
+                              type: 'bar',
+                              data: chartData,
+                              options: {
+                                responsive: true,
+                                scales: {
+                                  x: {
+                                    stacked: true
+                                  },
+                                  y: {
+                                    stacked: true,
+                                    title: {
+                                      display: true,
+                                      text: 'Average Score (%)'
+                                    },
+                                    suggestedMin: 0,
+                                    suggestedMax: 100
+                                  }
+                                }
+                              }
+                            });
+                          }
+                        });
+                    }
+
+                    document.addEventListener("DOMContentLoaded", () => {
+                      fetchChartData(); // Default load
+
+                      // Event listener for year filter
+                      document.querySelectorAll(".year-filter").forEach(item => {
+                        item.addEventListener("click", (e) => {
+                          e.preventDefault();
+                          const year = item.getAttribute("href").split("=")[1];
+                          fetchChartData(year);
+
+                          // update active state manually
+                          document.querySelectorAll(".dropdown-item").forEach(i => i.classList.remove("active"));
+                          item.classList.add("active");
+
+                          // update card title
+                          document.querySelector(".card-title span").textContent = `| ${year === 'All' ? 'All Years' : year}`;
+                        });
+                      });
+                    });
+                  </script>
+
+                </div>
+              </div>
+            </div>
+            <!-- End Stacked Bar Chart -->
+
+
+            <!-- Supervisor-to-Faculty Evaluation -->
+            <div class="col-lg-12">
+              <?php
+              $selectedYearAdmin = $_GET['year'] ?? 'All';
+              $year_result_admin = mysqli_query($conn, "SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
+              $admin_years = [];
+              while ($row = mysqli_fetch_assoc($year_result_admin)) {
+                $admin_years[] = $row['academic_year'];
+              }
+              ?>
+
+              <div class="card">
+                <!-- Filter for academic year -->
+                <div class="filter">
+                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <li class="dropdown-header text-start">
+                      <h6>Filter by Year</h6>
+                    </li>
+                    <li><a class="dropdown-item admin-year-filter <?= $selectedYearAdmin == 'All' ? 'active' : '' ?>" href="?year=All">All</a></li>
+                    <?php foreach ($admin_years as $year): ?>
+                      <li><a class="dropdown-item admin-year-filter <?= $selectedYearAdmin == $year ? 'active' : '' ?>" href="?year=<?= $year ?>"><?= $year ?></a></li>
+                    <?php endforeach; ?>
+                  </ul>
+                </div>
+
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <strong>Average Evaluation Scores per Department</strong>
+                    <span id="adminYearLabel" class="text-muted small">| All Years</span><br><br>
+                    Supervisor-to-Faculty Evaluation
+                  </h5>
+
+                  <canvas id="supervisorBarChart" style="max-height: 400px;"></canvas>
+
+                  <script>
+                    let supervisorBarChart;
+
+                    function fetchAdminChartData(year = 'All') {
+                      document.getElementById("adminYearLabel").textContent = `| ${year === 'All' ? 'All Years' : year}`;
+
+                      fetch(`fetch-admin-chart-data.php?year=${encodeURIComponent(year)}`)
+                        .then(response => response.json())
+                        .then(chartData => {
+                          if (supervisorBarChart) {
+                            supervisorBarChart.data.labels = chartData.labels;
+                            supervisorBarChart.data.datasets = chartData.datasets;
+                            supervisorBarChart.update();
+                          } else {
+                            const ctx = document.querySelector('#supervisorBarChart').getContext('2d');
+                            supervisorBarChart = new Chart(ctx, {
+                              type: 'bar',
+                              data: chartData,
+                              options: {
+                                responsive: true,
+                                scales: {
+                                  x: {
+                                    stacked: true
+                                  },
+                                  y: {
+                                    stacked: true,
+                                    title: {
+                                      display: true,
+                                      text: 'Average Score (%)'
+                                    },
+                                    suggestedMin: 0,
+                                    suggestedMax: 100
+                                  }
+                                }
+                              }
+                            });
+                          }
+                        });
+                    }
+
+                    document.addEventListener("DOMContentLoaded", () => {
+                      fetchAdminChartData(); // Default load
+
+                      document.querySelectorAll(".admin-year-filter").forEach(item => {
+                        item.addEventListener("click", (e) => {
+                          e.preventDefault();
+                          const year = item.getAttribute("href").split("=")[1];
+                          fetchAdminChartData(year);
+
+                          document.querySelectorAll(".admin-year-filter").forEach(i => i.classList.remove("active"));
+                          item.classList.add("active");
+
+                          document.getElementById("adminYearLabel").textContent = `| ${year === 'All' ? 'All Years' : year}`;
+                        });
+                      });
+                    });
+                  </script>
+                </div>
+              </div>
+            </div>
+            <!-- End Supervisor-to-Faculty Evaluation Chart -->
+
+            <!-- Overall Evaluation Score per Department (Student + Supervisor) -->
+            <div class="col-lg-12">
+
+              <div class="card">
+                <div class="filter">
+                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                    <li class="dropdown-header text-start">
+                      <h6>Filter by Year</h6>
+                    </li>
+                    <li><a class="dropdown-item overall-year-filter active" href="?year=All">All</a></li>
+                    <?php foreach ($academic_years as $year): ?>
+                      <li><a class="dropdown-item overall-year-filter <?= $selectedYear == $year ? 'active' : '' ?>" href="?year=<?= $year ?>"><?= $year ?></a></li>
+                    <?php endforeach; ?>
+                  </ul>
+                </div>
+
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <strong>Average Evaluation Scores per Department</strong>
+                    <span id="overallYearLabel" class="text-muted small">| All Years</span><br><br>
+                    Student and Supervisor Evaluation
+                  </h5>
+
+                  <canvas id="overallStackedChart" style="max-height: 400px;"></canvas>
+                  <script>
+                    let overallChart;
+
+                    function fetchOverallData(year = 'All') {
+                      document.getElementById("overallYearLabel").textContent = `| ${year === 'All' ? 'All Years' : year}`;
+
+                      fetch(`fetch-overall-eval-chart-data.php?year=${encodeURIComponent(year)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (overallChart) {
+                            overallChart.data.labels = data.labels;
+                            overallChart.data.datasets = data.datasets;
+                            overallChart.update();
+                          } else {
+                            const ctx = document.getElementById('overallStackedChart').getContext('2d');
+                            overallChart = new Chart(ctx, {
+                              type: 'bar',
+                              data: data,
+                              options: {
+                                responsive: true,
+                                scales: {
+                                  x: {
+                                    stacked: true
+                                  },
+                                  y: {
+                                    stacked: true,
+                                    title: {
+                                      display: true,
+                                      text: 'Average Rating (%)'
+                                    },
+                                    suggestedMax: 100
+                                  }
+                                }
+                              }
+                            });
+                          }
+                        });
+                    }
+
+                    document.addEventListener("DOMContentLoaded", () => {
+                      fetchOverallData();
+
+                      document.querySelectorAll(".overall-year-filter").forEach(item => {
+                        item.addEventListener("click", (e) => {
+                          e.preventDefault();
+                          const year = item.getAttribute("href").split("=")[1];
+                          fetchOverallData(year);
+
+                          document.querySelectorAll(".overall-year-filter").forEach(i => i.classList.remove("active"));
+                          item.classList.add("active");
+                        });
+                      });
+                    });
+                  </script>
+                </div>
+              </div>
+            </div>
+            <!-- End of overall evaluation department chart -->
+
           </div>
         </div><!-- End Left side columns -->
 
@@ -557,225 +731,469 @@ $totalsubject = $data['total_subject'];
                 <li class="dropdown-header text-start">
                   <h6>Filter</h6>
                 </li>
-
-                <li><a class="dropdown-item" href="#">Today</a></li>
-                <li><a class="dropdown-item" href="#">This Month</a></li>
-                <li><a class="dropdown-item" href="#">This Year</a></li>
+                <li><a class="dropdown-item activity-filter" href="#" data-filter="today">Today</a></li>
+                <li><a class="dropdown-item activity-filter" href="#" data-filter="month">This Month</a></li>
+                <li><a class="dropdown-item activity-filter" href="#" data-filter="year">This Year</a></li>
+                <li><a class="dropdown-item activity-filter" href="#" data-filter="all">All</a></li>
               </ul>
             </div>
 
-            <div class="card-body">
-              <h5 class="card-title">Recent Activity <span>| Today</span></h5>
-
-              <div class="activity">
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">32 min</div>
-                  <i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
-                  <div class="activity-content">
-                    Quia quae rerum <a href="#" class="fw-bold text-dark">explicabo officiis</a> beatae
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">56 min</div>
-                  <i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
-                  <div class="activity-content">
-                    Voluptatem blanditiis blanditiis eveniet
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">2 hrs</div>
-                  <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
-                  <div class="activity-content">
-                    Voluptates corrupti molestias voluptatem
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">1 day</div>
-                  <i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
-                  <div class="activity-content">
-                    Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">2 days</div>
-                  <i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
-                  <div class="activity-content">
-                    Est sit eum reiciendis exercitationem
-                  </div>
-                </div><!-- End activity item-->
-
-                <div class="activity-item d-flex">
-                  <div class="activite-label">4 weeks</div>
-                  <i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-                  <div class="activity-content">
-                    Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-                  </div>
-                </div><!-- End activity item-->
-
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;" id="activityContainer">
+              <h5 class="card-title">Recent Activity <span id="filter-label">| All</span></h5>
+              <div class="activity" id="activity-list">
+                <div class="activity" id="activity-list"></div>
               </div>
 
-            </div>
-          </div><!-- End Recent Activity -->
-
-          <!-- Budget Report -->
-          <div class="card">
-            <div class="filter">
-              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                <li class="dropdown-header text-start">
-                  <h6>Filter</h6>
-                </li>
-
-                <li><a class="dropdown-item" href="#">Today</a></li>
-                <li><a class="dropdown-item" href="#">This Month</a></li>
-                <li><a class="dropdown-item" href="#">This Year</a></li>
-              </ul>
-            </div>
-
-            <div class="card-body pb-0">
-              <h5 class="card-title">Budget Report <span>| This Month</span></h5>
-
-              <div id="budgetChart" style="min-height: 400px;" class="echart"></div>
+              <div id="loadingIndicator" class="text-center my-2" style="display: none;">
+                <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+              </div>
 
               <script>
+                let offset = 0;
+                const limit = 10;
+                let loading = false;
+                let filter = 'all';
+                const activityList = document.getElementById("activity-list");
+                const activityContainer = document.getElementById("activityContainer");
+                const loadingIndicator = document.getElementById("loadingIndicator");
+
+                function getTimeAgo(datetime) {
+                  const timestamp = new Date(datetime).getTime();
+                  const now = Date.now();
+                  const diff = Math.floor((now - timestamp) / 1000);
+                  if (diff < 0) return "Just now";
+                  if (diff < 60) return `${diff} sec`;
+                  if (diff < 3600) return `${Math.floor(diff / 60)} min`;
+                  if (diff < 86400) return `${Math.floor(diff / 3600)} hrs`;
+                  if (diff < 604800) return `${Math.floor(diff / 86400)} days`;
+                  const d = new Date(timestamp);
+                  return `${d.toLocaleString('default', { month: 'short' })} ${d.getDate()}, ${d.getFullYear()}`;
+                }
+
+                function loadLogs(reset = false) {
+                  if (loading) return;
+                  loading = true;
+                  loadingIndicator.style.display = 'block';
+
+                  // If resetting, offset must be set BEFORE fetching
+                  if (reset) offset = 0;
+
+                  fetch(`activity-fetch.php?limit=${limit}&offset=${offset}&filter=${filter}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (reset) {
+                        activityList.innerHTML = '';
+                      }
+
+                      data.forEach(log => {
+                        const timeAgo = getTimeAgo(log.timestamp);
+                        const item = `
+                          <div class="activity-item d-flex">
+                            <div class="activite-label">${timeAgo}</div>
+                            <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
+                            <div class="activity-content">
+                              <span class="fw-bold">${log.role.charAt(0).toUpperCase() + log.role.slice(1)}:</span> ${log.activity}
+                            </div>
+                          </div>`;
+                        activityList.insertAdjacentHTML("beforeend", item);
+                      });
+
+                      if (data.length > 0) {
+                        offset += data.length; // more accurate than += limit
+                      }
+
+                      loading = false;
+                      loadingIndicator.style.display = 'none';
+                    });
+                }
+
                 document.addEventListener("DOMContentLoaded", () => {
-                  var budgetChart = echarts.init(document.querySelector("#budgetChart")).setOption({
-                    legend: {
-                      data: ['Allocated Budget', 'Actual Spending']
-                    },
-                    radar: {
-                      // shape: 'circle',
-                      indicator: [{
-                          name: 'Sales',
-                          max: 6500
-                        },
-                        {
-                          name: 'Administration',
-                          max: 16000
-                        },
-                        {
-                          name: 'Information Technology',
-                          max: 30000
-                        },
-                        {
-                          name: 'Customer Support',
-                          max: 38000
-                        },
-                        {
-                          name: 'Development',
-                          max: 52000
-                        },
-                        {
-                          name: 'Marketing',
-                          max: 25000
-                        }
-                      ]
-                    },
-                    series: [{
-                      name: 'Budget vs spending',
-                      type: 'radar',
-                      data: [{
-                          value: [4200, 3000, 20000, 35000, 50000, 18000],
-                          name: 'Allocated Budget'
-                        },
-                        {
-                          value: [5000, 14000, 28000, 26000, 42000, 21000],
-                          name: 'Actual Spending'
-                        }
-                      ]
-                    }]
+                  loadLogs();
+
+                  activityContainer.addEventListener("scroll", () => {
+                    if (
+                      activityContainer.scrollTop + activityContainer.clientHeight >= activityContainer.scrollHeight - 5 &&
+                      !loading
+                    ) {
+                      loadLogs();
+                    }
+                  });
+
+                  document.querySelectorAll(".activity-filter").forEach(btn => {
+                    btn.addEventListener("click", (e) => {
+                      e.preventDefault();
+                      filter = btn.dataset.filter;
+                      offset = 0;
+                      document.getElementById("filter-label").textContent = `| ${btn.textContent}`;
+                      loadLogs(true);
+                    });
                   });
                 });
               </script>
 
             </div>
-          </div><!-- End Budget Report -->
+          </div>
+          <!-- End Recent Activity -->
 
-          <!-- Website Traffic -->
+          <!-- Pie Chart -->
           <div class="card">
+
             <div class="filter">
               <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
               <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 <li class="dropdown-header text-start">
                   <h6>Filter</h6>
                 </li>
-
-                <li><a class="dropdown-item" href="#">Today</a></li>
-                <li><a class="dropdown-item" href="#">This Month</a></li>
-                <li><a class="dropdown-item" href="#">This Year</a></li>
+                <li><a class="dropdown-item role-filter" data-role="student" href="#">Student</a></li>
+                <li><a class="dropdown-item role-filter" data-role="faculty" href="#">Faculty</a></li>
+                <li><a class="dropdown-item role-filter" data-role="admin" href="#">Program Chair / Dean</a></li>
               </ul>
             </div>
 
             <div class="card-body pb-0">
-              <h5 class="card-title">Website Traffic <span>| Today</span></h5>
+              <h5 class="card-title">Users per Department <span id="roleLabel">| Student</span></h5>
 
               <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
 
+              <?php
+              // STUDENT per department
+              $student_query = "SELECT department, COUNT(*) AS total FROM student GROUP BY department";
+              $student_result = mysqli_query($conn, $student_query);
+              $student_data = [];
+              while ($row = mysqli_fetch_assoc($student_result)) {
+                $student_data[] = ['name' => $row['department'], 'value' => (int)$row['total']];
+              }
+
+              // SECTIONS per department
+              $section_query = "SELECT department, section, COUNT(*) AS count FROM student GROUP BY department, section";
+              $section_result = mysqli_query($conn, $section_query);
+              $student_sections = [];
+              foreach ($student_data as $item) {
+                $student_sections[$item['name']] = [];
+              }
+              while ($row = mysqli_fetch_assoc($section_result)) {
+                $student_sections[$row['department']][] = $row['section'] . " (" . $row['count'] . ")";
+              }
+
+              // FACULTY per department
+              $faculty_query = "SELECT department, COUNT(*) AS total FROM faculty WHERE role='faculty' AND status='active' GROUP BY department";
+              $faculty_result = mysqli_query($conn, $faculty_query);
+              $faculty_data = [];
+              while ($row = mysqli_fetch_assoc($faculty_result)) {
+                $faculty_data[] = ['name' => $row['department'], 'value' => (int)$row['total']];
+              }
+
+              // ADMIN per department (Program Chair or Dean)
+              $admin_query = "SELECT department, COUNT(*) AS total FROM admin WHERE position IN ('Program Chair', 'Dean') GROUP BY department";
+              $admin_result = mysqli_query($conn, $admin_query);
+              $admin_data = [];
+              while ($row = mysqli_fetch_assoc($admin_result)) {
+                $admin_data[] = ['name' => $row['department'], 'value' => (int)$row['total']];
+              }
+              ?>
+
               <script>
                 document.addEventListener("DOMContentLoaded", () => {
-                  echarts.init(document.querySelector("#trafficChart")).setOption({
-                    tooltip: {
-                      trigger: 'item'
-                    },
-                    legend: {
-                      top: '5%',
-                      left: 'center'
-                    },
-                    series: [{
-                      name: 'Access From',
-                      type: 'pie',
-                      radius: ['40%', '70%'],
-                      avoidLabelOverlap: false,
-                      label: {
-                        show: false,
-                        position: 'center'
+                  const chart = echarts.init(document.querySelector("#trafficChart"));
+
+                  const dataMap = {
+                    student: <?= json_encode($student_data); ?>,
+                    faculty: <?= json_encode($faculty_data); ?>,
+                    admin: <?= json_encode($admin_data); ?>
+                  };
+
+                  const sectionDetails = <?= json_encode($student_sections); ?>;
+
+                  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1', '#ff9f40'];
+
+                  function updateChart(role) {
+                    const labelMap = {
+                      student: "Student",
+                      faculty: "Faculty",
+                      admin: "Program Chair / Dean"
+                    };
+
+                    document.getElementById("roleLabel").textContent = "| " + labelMap[role];
+
+                    chart.setOption({
+                      color: colors,
+                      tooltip: {
+                        trigger: 'item',
+                        formatter: function(params) {
+                          let base = `${params.name}<br/>${params.value} users (${params.percent}%)`;
+                          if (role === 'student') {
+                            const sectionInfo = sectionDetails[params.name]?.join(', ') || 'No section info';
+                            base += `<br/>Sections: ${sectionInfo}`;
+                          }
+                          return base;
+                        }
                       },
-                      emphasis: {
+                      legend: {
+                        top: '5%',
+                        left: 'center'
+                      },
+                      series: [{
+                        name: labelMap[role] + ' per Department',
+                        type: 'pie',
+                        radius: ['40%', '70%'], // <-- Makes it donut
+                        avoidLabelOverlap: false,
                         label: {
-                          show: true,
-                          fontSize: '18',
-                          fontWeight: 'bold'
-                        }
-                      },
-                      labelLine: {
-                        show: false
-                      },
-                      data: [{
-                          value: 1048,
-                          name: 'Search Engine'
+                          show: false, // <-- Like donut chart, hide inner label
+                          position: 'center'
                         },
-                        {
-                          value: 735,
-                          name: 'Direct'
+                        emphasis: {
+                          label: {
+                            show: true,
+                            fontSize: '18',
+                            fontWeight: 'bold'
+                          }
                         },
-                        {
-                          value: 580,
-                          name: 'Email'
+                        labelLine: {
+                          show: false
                         },
-                        {
-                          value: 484,
-                          name: 'Union Ads'
-                        },
-                        {
-                          value: 300,
-                          name: 'Video Ads'
-                        }
-                      ]
-                    }]
+                        data: dataMap[role]
+                      }]
+                    });
+
+                  }
+
+                  // Initial load
+                  updateChart('student');
+
+                  // Dropdown menu listener
+                  document.querySelectorAll(".role-filter").forEach(item => {
+                    item.addEventListener("click", e => {
+                      e.preventDefault();
+                      const role = item.getAttribute("data-role");
+                      updateChart(role);
+                    });
                   });
                 });
               </script>
-
             </div>
-          </div><!-- End Website Traffic -->
+          </div>
+          <!-- End Pie Chart -->
 
+          <!-- Top 10 rated faculty (student evaluation) -->
+          <?php
+          // Fetch distinct academic years
+          $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+          $academic_years = [];
+          while ($row = mysqli_fetch_assoc($year_result)) {
+            $academic_years[] = $row['academic_year'];
+          }
+          ?>
 
+          <div class="">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"><strong>Top 10 Highest Rated Faculty </strong>(Student Evaluation)</h5>
+                <!-- Filter -->
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select id="topRatedYear" class="form-select">
+                        <option value="All">All</option>
+                        <?php foreach ($academic_years as $year): ?>
+                          <option value="<?= $year ?>"><?= $year ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <label>Academic Year</label>
+                    </div>
+                  </div>
 
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select id="topRatedSemester" class="form-select">
+                        <option value="All">All</option>
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                        <option value="Summer">Summer</option>
+                      </select>
+                      <label>Semester</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="verticalBarChart" style="min-height: 400px;" class="echart"></div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            function loadTopRatedChart(year = 'All', semester = 'All') {
+              fetch(`fetch-top-rated.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
+                .then(res => res.json())
+                .then(data => {
+                  const chart = echarts.init(document.querySelector("#verticalBarChart"));
+                  chart.setOption({
+                    title: {
+                      text: 'Top 10 Highest Rated Faculty',
+                      left: 'center'
+                    },
+                    tooltip: {
+                      trigger: 'item',
+                      formatter: function(params) {
+                        const d = params.data;
+                        return `<strong>${d.name}</strong><br>Department: ${d.department}<br>Average Rating: ${d.value}%`;
+                      }
+                    },
+                    grid: {
+                      left: '3%',
+                      right: '4%',
+                      bottom: '3%',
+                      containLabel: true
+                    },
+                    xAxis: {
+                      type: 'value',
+                      name: 'Average Rating (%)',
+                      min: 0,
+                      max: 100
+                    },
+                    yAxis: {
+                      type: 'category',
+                      data: data.names
+                    },
+                    series: [{
+                      name: 'Rating',
+                      type: 'bar',
+                      data: data.ratings,
+                      itemStyle: {
+                        color: '#4CAF50'
+                      }
+                    }],
+                    animationDuration: 1000,
+                    animationEasing: 'cubicOut'
+                  });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+              const yearSelect = document.getElementById("topRatedYear");
+              const semSelect = document.getElementById("topRatedSemester");
+
+              function reloadChart() {
+                loadTopRatedChart(yearSelect.value, semSelect.value);
+              }
+
+              yearSelect.addEventListener("change", reloadChart);
+              semSelect.addEventListener("change", reloadChart);
+
+              loadTopRatedChart(); // Load default
+            });
+          </script>
+          <!-- End of Bar chart -->
+
+          <!-- Top 10 rated faculty (Supervisor Evaluation) -->
+          <?php
+          $year_result_admin = mysqli_query($conn, "SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
+          $admin_years = [];
+          while ($row = mysqli_fetch_assoc($year_result_admin)) {
+            $admin_years[] = $row['academic_year'];
+          }
+          ?>
+
+          <div class="">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title"><strong>Top 10 Highest Rated Faculty </strong>(Supervisor Evaluation)</h5>
+                <!-- Filter -->
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select id="topRatedAdminYear" class="form-select">
+                        <option value="All">All</option>
+                        <?php foreach ($admin_years as $year): ?>
+                          <option value="<?= $year ?>"><?= $year ?></option>
+                        <?php endforeach; ?>
+                      </select>
+                      <label>Academic Year</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select id="topRatedAdminSemester" class="form-select">
+                        <option value="All">All</option>
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                        <option value="Summer">Summer</option>
+                      </select>
+                      <label>Semester</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="adminVerticalBarChart" style="min-height: 400px;" class="echart"></div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            function loadTopRatedAdminChart(year = 'All', semester = 'All') {
+              fetch(`fetch-top-rated-admin.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
+                .then(res => res.json())
+                .then(data => {
+                  const chart = echarts.init(document.querySelector("#adminVerticalBarChart"));
+                  chart.setOption({
+                    title: {
+                      text: 'Top 10 Highest Rated Faculty',
+                      left: 'center'
+                    },
+                    tooltip: {
+                      trigger: 'item',
+                      formatter: function(params) {
+                        const d = params.data;
+                        return `<strong>${d.name}</strong><br>Department: ${d.department}<br>Average Rating: ${d.value}%`;
+                      }
+                    },
+                    grid: {
+                      left: '3%',
+                      right: '4%',
+                      bottom: '3%',
+                      containLabel: true
+                    },
+                    xAxis: {
+                      type: 'value',
+                      name: 'Average Rating (%)',
+                      min: 0,
+                      max: 100
+                    },
+                    yAxis: {
+                      type: 'category',
+                      data: data.names,
+                      inverse: true
+                    },
+                    series: [{
+                      name: 'Rating',
+                      type: 'bar',
+                      data: data.ratings,
+                      itemStyle: {
+                        color: '#4CAF50'
+                      }
+                    }],
+                    animationDuration: 1000,
+                    animationEasing: 'cubicOut'
+                  });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+              const yearSelect = document.getElementById("topRatedAdminYear");
+              const semSelect = document.getElementById("topRatedAdminSemester");
+
+              function reloadChart() {
+                loadTopRatedAdminChart(yearSelect.value, semSelect.value);
+              }
+
+              yearSelect.addEventListener("change", reloadChart);
+              semSelect.addEventListener("change", reloadChart);
+
+              loadTopRatedAdminChart(); // Default load
+            });
+          </script>
+          <!-- End Top 10 Highest Rated (supervisor) -->
+           
         </div><!-- End Right side columns -->
 
       </div>
@@ -804,8 +1222,7 @@ $totalsubject = $data['total_subject'];
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </body>
 

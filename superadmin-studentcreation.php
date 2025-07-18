@@ -249,15 +249,15 @@ $query = "SELECT * FROM superadmin";
 
     <!-- Admin Creation Section -->
     <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
+      <div class="row justify-content-center">
+        <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Create New Student</h5>
+              <h5 class="card-title text-center">Create New Student</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="studentcreation.php">
 
                 <!-- ID Number -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
                     <label for="idnumber" class="form-label">ID Number</label>
@@ -266,7 +266,7 @@ $query = "SELECT * FROM superadmin";
                 </div>
 
                 <!-- First Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
                     <label class="form-label">First Name</label>
@@ -274,7 +274,7 @@ $query = "SELECT * FROM superadmin";
                 </div>
 
                 <!-- Middle Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
                     <label class="form-label">Middle Name</label>
@@ -282,18 +282,10 @@ $query = "SELECT * FROM superadmin";
                 </div>
 
                 <!-- Last Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
                     <label class="form-label">Last Name</label>
-                  </div>
-                </div>
-
-                <!-- Email -->
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
-                    <label for="yourEmail" class="form-label">Email</label>
                   </div>
                 </div>
 
@@ -301,7 +293,7 @@ $query = "SELECT * FROM superadmin";
                 <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" hidden>
 
                 <!-- Department -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <select name="department" class="form-select" required>
                       <option disabled selected>Select Department</option>
@@ -318,7 +310,7 @@ $query = "SELECT * FROM superadmin";
 
 
                 <!-- Section -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <select name="section" class="form-select" required>
                       <option disabled selected>Select Section</option>

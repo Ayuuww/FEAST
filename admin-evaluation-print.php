@@ -75,9 +75,8 @@ $verification = [
   <style>
     @media print {
       body {
-        font-size: 16px;
-        /* increase base font */
-        line-height: 1.6;
+        font-size: 15px;
+        line-height: 1.5;
         margin: 0;
         padding: 0;
         background-color: #fff;
@@ -85,36 +84,49 @@ $verification = [
 
       .container {
         width: 100%;
-        padding: 1.5cm;
-        /* more padding for space */
+        max-width: 100%;
+        padding: 1.2cm;
       }
 
+      .card,
       .card-body {
-        font-size: 16px;
-        /* larger text inside card */
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
       }
 
       h3 {
-        font-size: 24px;
-        /* bigger title */
+        font-size: 22px;
+      }
+
+      .table {
+        table-layout: fixed;
+        width: 100%;
       }
 
       .table th,
       .table td {
-        padding: 12px;
-        font-size: 15px;
-        /* increase table font */
+        padding: 10px;
+        font-size: 14px;
+        word-wrap: break-word;
       }
 
       .table th:first-child,
       .table td:first-child {
-        width: 75%;
+        width: 45%;
+        text-align: left;
+      }
+
+      .table th:nth-child(2),
+      .table td:nth-child(2) {
+        width: 40%;
         text-align: left;
       }
 
       .table th:last-child,
       .table td:last-child {
-        width: 25%;
+        width: 15%;
         text-align: center;
       }
 
@@ -123,6 +135,7 @@ $verification = [
       }
     }
   </style>
+
 </head>
 
 <body onload="window.print()">

@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $position = $_POST['position'] ?? '';
     $is_faculty = $_POST['is_faculty'] ?? 'no';
 
-    $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, email, password, role, status, department, position, faculty) 
+    $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty) 
               VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
     $insertAdmin->bind_param(
       "ssssssssss",
@@ -75,7 +75,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $faculty['first_name'],
       $faculty['mid_name'],
       $faculty['last_name'],
-      $faculty['email'],
       $faculty['password'],
       $new_status,
       $faculty['department'],
@@ -87,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $insertAdmin->execute();
 
       // Optional: Clear from faculty table
-      $clearFaculty = $conn->prepare("UPDATE faculty SET email = '', password = '' WHERE idnumber = ?");
+      $clearFaculty = $conn->prepare("UPDATE faculty SET password = '' WHERE idnumber = ?");
       $clearFaculty->bind_param("s", $faculty_id);
       $clearFaculty->execute();
 

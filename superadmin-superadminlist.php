@@ -254,7 +254,6 @@ $result = mysqli_query($conn, $query);
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
-                    <th>Email</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
@@ -268,7 +267,6 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
-                      <td><?php echo $row['email']; ?></td>
                       <td class="text-capitalize"><?php echo $row['status']; ?></td>
                       <td>
                         <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>

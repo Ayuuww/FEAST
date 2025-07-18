@@ -270,13 +270,14 @@ $current_year = $setting['academic_year'];
       <div class="row align-items-center justify-content-center">
         <div class="col-md-4">
           <div class="card p-4">
-            <h5 class="text-center"><strong>Set Default Evaluation Period</strong></h5>
             <?php if (!empty($success_msg)): ?>
               <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <?= htmlspecialchars($success_msg) ?>
                 <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
               </div>
             <?php endif; ?>
+            <h5 class="text-center"><strong>Set Default Evaluation Period</strong></h5>
+
             <form method="POST" action="">
               <div class="mb-3">
                 <div class="form-floating">
@@ -324,6 +325,17 @@ $current_year = $setting['academic_year'];
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    setTimeout(() => {
+      const alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
+      }
+    }, 3000); // Hide after 3 seconds
+  </script>
 
 </body>
 

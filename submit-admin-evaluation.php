@@ -8,6 +8,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
+function logActivity($conn, $user_id, $role, $action) {
+    $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
+    $stmt->bind_param("sss", $user_id, $role, $action);
+    $stmt->execute();
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $evaluator_id   = $_SESSION['idnumber'];
     $evaluatee_id   = $_POST['evaluatee_id'];
@@ -92,6 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $questions[$key] = intval($value);
             }
         }
+        
         $form_data = json_encode($questions);
         $rating_percent = round(($computed_rating), 2);
 
@@ -110,28 +117,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $comment,
             $form_data
         );
-        $insert->execute();
+        if ($insert->execute()) {
+            // ✅ Log activity
+            $faculty_name_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+            $faculty_name_stmt->bind_param("s", $evaluatee_id);
+            $faculty_name_stmt->execute();
+            $faculty_name_result = $faculty_name_stmt->get_result();
+            $faculty_name_row = $faculty_name_result->fetch_assoc();
+            $faculty_fullname = $faculty_name_row
+                ? trim($faculty_name_row['first_name'] . ' ' . (isset($faculty_name_row['mid_name']) ? substr($faculty_name_row['mid_name'], 0, 1) . '. ' : '') . $faculty_name_row['last_name'])
+                : $evaluatee_id;
 
-        // Store session for printing
-        $average_rating = round(($computed_rating / 100) * 5, 2);
 
-        $_SESSION['admin_print_data'] = [
-            'evaluator_id'          => $evaluator_id,
-            'evaluatee_id'          => $evaluatee_id,
-            'evaluator_position'    => $evaluator_position,
-            'academic_year'         => $academic_year,
-            'semester'              => $semester,
-            'total_score'           => $total_score,
-            'computed_rating'       => $computed_rating,
-            'average_rating'        => $average_rating,
-            'faculty_rank'          => $faculty_data['faculty_rank'] ?? '',
-            'department'            => $evaluatee_department,
-            'comment'               => $comment,
-            'answers'               => $_POST
-        ];
+            $activity_message = "Evaluated Faculty: $faculty_fullname with a rating of $computed_rating%";
+            logActivity($conn, $evaluator_id, 'admin', $activity_message);
 
-        header("Location: admin-evaluation-print.php");
-        exit();
+            // Store session for printing
+            $average_rating = round(($computed_rating / 100) * 5, 2);
+
+            $_SESSION['admin_print_data'] = [
+                'evaluator_id'          => $evaluator_id,
+                'evaluatee_id'          => $evaluatee_id,
+                'evaluator_position'    => $evaluator_position,
+                'academic_year'         => $academic_year,
+                'semester'              => $semester,
+                'total_score'           => $total_score,
+                'computed_rating'       => $computed_rating,
+                'average_rating'        => $average_rating,
+                'faculty_rank'          => $faculty_data['faculty_rank'] ?? '',
+                'department'            => $evaluatee_department,
+                'comment'               => $comment,
+                'answers'               => $_POST
+            ];
+
+            header("Location: admin-evaluation-print.php");
+            exit();
+        }
+
     } else {
         $_SESSION['msg'] = "Failed to save evaluation.";
         header("Location: admin-evaluate.php");

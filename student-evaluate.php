@@ -40,7 +40,6 @@ $query = "SELECT
           LEFT JOIN faculty f ON ss.faculty_id = f.idnumber AND f.status = 'active'
           LEFT JOIN admin a ON ss.admin_id = a.idnumber AND a.status = 'active'
           WHERE ss.student_id = ?
-            AND ss.evaluated != 'yes'
             AND NOT EXISTS (
               SELECT 1 FROM evaluation e 
               WHERE e.student_id    = ss.student_id 
@@ -71,7 +70,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
     }
 }
 
-
+// Setting the academic year and semester by superadmin
 $setting_query = "SELECT semester, academic_year FROM evaluation_settings WHERE id = 1 LIMIT 1";
 $setting_result = $conn->query($setting_query);
 $default_semester = '';

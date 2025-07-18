@@ -250,15 +250,15 @@ if (isset($_SESSION['msg'])) {
 
     <!-- Super Admin Creation Section -->
     <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
+      <div class="row justify-content-center">
+        <div class="col-lg-6 ">
           <div class="card">
             <div class="card-body ">
-              <h5 class="card-title">Create New Super Admin</h5>
+              <h5 class="card-title text-center">Create New Super Admin</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
                 <!-- ID Number -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
                     <label for="idnumber" class="form-label">ID Number</label>
@@ -267,7 +267,7 @@ if (isset($_SESSION['msg'])) {
                 </div>
 
                 <!-- First Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
                     <label class="form-label">First Name</label>
@@ -275,7 +275,7 @@ if (isset($_SESSION['msg'])) {
                 </div>
 
                 <!-- Middle Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
                     <label class="form-label">Middle Name</label>
@@ -283,23 +283,15 @@ if (isset($_SESSION['msg'])) {
                 </div>
 
                 <!-- Last Name -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
                     <label class="form-label">Last Name</label>
                   </div>
                 </div>
 
-                <!-- Email -->
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <input type="email" name="email" class="form-control" placeholder="Email" id="yourEmail" required>
-                    <label for="yourEmail" class="form-label">Email</label>
-                  </div>
-                </div>
-
                 <!-- Password -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
                     <label class="form-label">Password</label>
@@ -308,7 +300,7 @@ if (isset($_SESSION['msg'])) {
                 </div>
 
                 <!-- Confirm Password -->
-                <div class="col-md-3">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
                     <div class="invalid-feedback" id="mess">Password do not match</div>

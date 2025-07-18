@@ -253,7 +253,6 @@ $result = mysqli_query($conn, $query);
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
-                    <th>Email</th>
                     <th>Academic Rank</th>
                     <th>Department</th>
                     <th>Status</th>
@@ -269,7 +268,6 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
-                      <td><?php echo $row['email']; ?></td>
                       <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
                       <td class="text-uppercase"><?php echo $row['department']; ?></td>
                       <td class="text-capitalize"><?php echo $row['status']; ?></td>

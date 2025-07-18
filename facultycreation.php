@@ -8,7 +8,6 @@ if (isset($_POST['submit'])) {
     $first_name = $_POST['first_name'];
     $mid_name   = $_POST['mid_name'];
     $last_name  = $_POST['last_name'];
-    $email      = $_POST['email'];
     $password   = $_POST['password'];
     $department = $_POST['department'];
     $faculty_rank = $_POST['faculty_rank'];
@@ -27,8 +26,7 @@ if (isset($_POST['submit'])) {
     $sql    = "INSERT INTO faculty   (  idnumber, 
                                         first_name, 
                                         mid_name, 
-                                        last_name, 
-                                        email, 
+                                        last_name,
                                         password, 
                                         department,
                                         faculty_rank)
@@ -36,8 +34,7 @@ if (isset($_POST['submit'])) {
                     VALUES          (   '$id', 
                                         '$first_name', 
                                         '$mid_name', 
-                                        '$last_name', 
-                                        '$email', 
+                                        '$last_name',
                                         '$password', 
                                         '$department',
                                         '$faculty_rank')";

@@ -19,6 +19,7 @@ $query = "SELECT
               e.total_score,
               e.computed_rating,
               e.academic_year,
+              e.comment,
               e.semester,
               e.created_at
           FROM evaluation e
@@ -137,6 +138,7 @@ if (isset($_SESSION['msg'])) {
                     <th>Faculty Name</th>
                     <th>Total Score</th>
                     <th>Computed Rating (%)</th>
+                    <th>Comment</th>
                     <th>Academic Year</th>
                     <th>Semester</th>
                     <th>Evaluated On</th>
@@ -159,6 +161,7 @@ if (isset($_SESSION['msg'])) {
                         </td>
                         <td><?= htmlspecialchars($row['total_score']) ?></td>
                         <td><?= number_format($row['computed_rating'], 2) ?>%</td>
+                        <td><?= htmlspecialchars($row['comment']) ?></td>
                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
                         <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>

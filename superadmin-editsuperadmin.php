@@ -35,14 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $stmt->bind_param("ss", $new_status, $superadmin_id);
   $stmt->execute();
 
-  // Optional: Send email notification
-  // $to = $superadmin['email'];
-  // $subject = "Your Superadmin Account Status Changed";
-  // $message = "Hello " . $superadmin['first_name'] . ",\n\nYour account status has been updated to: $new_status.\n\nIf this was not you, please contact the system administrator.";
-  // $headers = "From: no-reply@yourdomain.com";
-
-  // mail($to, $subject, $message, $headers);
-
   header("Location: superadmin-editsuperadmin.php?id=$superadmin_id&update=success");
   exit();
 }
@@ -282,11 +274,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <div class="col-md-6 mb-3 form-floating">
                 <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
                 <label>ID Number</label>
-              </div>
-
-              <div class="col-md-6 mb-3 form-floating">
-                <input type="email" class="form-control" value="<?= $superadmin['email'] ?>" disabled>
-                <label>Email</label>
               </div>
             </div>
 
