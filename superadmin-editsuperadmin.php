@@ -252,45 +252,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <section class="section">
-      <div class="card col-md-6 p-4">
-        <h5 class="card-title">Superadmin Details</h5>
+      <div class="row justify-content-center">
+        <div class="card col-md-6 p-4">
+          <h5 class="card-title">Superadmin Details</h5>
 
-        <!-- Display update message -->
-        <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-          <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill"></i> Superadmin status updated successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <?php endif; ?>
+          <!-- Display update message -->
+          <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+            <script>
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Superadmin status updated successfully!',
+                timer: 2000,
+                showConfirmButton: false,
+              });
 
-        <?php if ($superadmin): ?>
-          <form method="POST">
-            <div class="mb-3 form-floating">
-              <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name']; ?>" disabled>
-              <label>Full Name</label>
-            </div>
+              // Optional: Remove ?update=success from URL after showing the alert
+              if (window.location.search.includes('update=success')) {
+                const url = new URL(window.location);
+                url.searchParams.delete('update');
+                window.history.replaceState({}, document.title, url.pathname + url.search);
+              }
+            </script>
+          <?php endif; ?>
 
-            <div class="row">
-              <div class="col-md-6 mb-3 form-floating">
-                <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
-                <label>ID Number</label>
+          <?php if ($superadmin): ?>
+            <form method="POST">
+              <div class="mb-3 form-floating">
+                <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name']; ?>" disabled>
+                <label>Full Name</label>
               </div>
-            </div>
 
-            <div class="mb-3 form-floating">
-              <select name="status" class="form-select" required>
-                <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-              </select>
-              <label>Status</label>
-            </div>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
+                    <label>ID Number</label>
+                  </div>
+                </div>
 
-            <button type="submit" class="btn btn-success">Update Status</button>
-            <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
-          </form>
-        <?php else: ?>
-          <div class="alert alert-danger">Superadmin not found.</div>
-        <?php endif; ?>
+                <div class="col-md-6 mb-3 ">
+                  <div class="form-floating">
+                    <select name="status" class="form-select" required>
+                      <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                      <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                    </select>
+                    <label>Status</label>
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-success">Update Status</button>
+              <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
+            </form>
+          <?php else: ?>
+            <div class="alert alert-danger">Superadmin not found.</div>
+          <?php endif; ?>
+        </div>
       </div>
     </section>
   </main><!-- end main -->

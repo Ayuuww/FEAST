@@ -67,8 +67,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $position = $_POST['position'] ?? '';
     $is_faculty = $_POST['is_faculty'] ?? 'no';
 
-    $insertAdmin = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty) 
-              VALUES (?, ?, ?, ?, ?, ?, 'admin', ?, ?, ?, ?)");
+    $role = 'admin';
+    $insertAdmin = $conn->prepare(" INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty_rank) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
     $insertAdmin->bind_param(
       "ssssssssss",
       $faculty['idnumber'],
@@ -76,6 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $faculty['mid_name'],
       $faculty['last_name'],
       $faculty['password'],
+      $role,
       $new_status,
       $faculty['department'],
       $position,
@@ -351,14 +354,22 @@ while ($row = $rankQuery->fetch_assoc()) {
     </div>
 
     <section class="section">
-      <div class="row">
+      <div class="row justify-content-center">
         <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Faculty Information</h5>
 
               <?php if (isset($success)): ?>
-                <div class="alert alert-success"><?php echo $success; ?></div>
+                <script>
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: <?= json_encode($success) ?>,
+                    timer: 2000,
+                    showConfirmButton: false
+                  });
+                </script>
               <?php endif; ?>
 
               <?php if ($faculty): ?>
@@ -457,12 +468,17 @@ while ($row = $rankQuery->fetch_assoc()) {
                   <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
 
                   <?php if (isset($_SESSION['msg'])): ?>
-                    <div class="alert alert-warning alert-dismissible fade show mt-3" role="alert">
-                      <?php echo $_SESSION['msg']; ?>
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                    <script>
+                      Swal.fire({
+                        icon: 'info',
+                        title: 'Notice',
+                        text: <?= json_encode($_SESSION['msg']) ?>,
+                        confirmButtonColor: '#3085d6'
+                      });
+                    </script>
                     <?php unset($_SESSION['msg']); ?>
                   <?php endif; ?>
+
 
                 </form>
               <?php else: ?>

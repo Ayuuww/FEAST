@@ -100,7 +100,9 @@ if ($row = mysqli_fetch_assoc($result)) {
 
 // ---- Invalid Login ----
 $_SESSION['msg'] = 'Invalid ID or Password. Please try again.';
+$_SESSION['login_failed'] = true;
 header("Location: pages-login.php");
 exit();
+
 
 ?>

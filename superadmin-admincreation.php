@@ -235,22 +235,21 @@ $query = "SELECT * FROM superadmin";
       </nav>
     </div><!-- End Page Title -->
 
-    <?php if (isset($_SESSION['msg'])): ?>
-      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-        <?= htmlspecialchars($_SESSION['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-    <?php endif; ?>
-
-
     <!-- Admin Creation Section -->
     <section class="section">
       <div class="row justify-content-center">
         <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
+
+              <?php if (isset($_SESSION['msg'])): ?>
+                <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
+                <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
+                  <?= htmlspecialchars($_SESSION['msg']) ?>
+                </div>
+                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+              <?php endif; ?>
+
               <h5 class="card-title text-center">Create New Admin</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="admincreation.php">
 

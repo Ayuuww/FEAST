@@ -269,72 +269,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </ol>
       </nav>
     </div>
-    
+
     <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill"></i>
-        Student information updated successfully!
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
+      <script>
+        Swal.fire({
+          icon: 'success',
+          title: 'Success!',
+          text: 'Student information updated successfully!',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        // Remove ?update=success from URL
+        if (window.location.search.includes('update=success')) {
+          const url = new URL(window.location);
+          url.searchParams.delete('update');
+          window.history.replaceState({}, document.title, url.pathname + url.search);
+        }
+      </script>
     <?php endif; ?>
 
-    <section class="section">
-      <div class="card col-lg-6">
-        <div class="card-body">
-          <h5 class="card-title">Student Information</h5>
+    <section class="section ">
+      <div class="row justify-content-center">
+        <div class="card col-lg-6 ">
+          <div class="card-body ">
+            <h5 class="card-title">Student Information</h5>
 
 
-          <form method="POST">
-            <div class="mb-3">
-              <div class="form-floating">
-                <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
-                <label class="form-label">ID Number</label>
+            <form method="POST">
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
+                  <label class="form-label">ID Number</label>
+                </div>
               </div>
-            </div>
-            <div class="mb-3">
-              <div class="form-floating">
-                <input type="text" class="form-control"
-                  value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
-                  disabled>
-                <label class="form-label">Full Name</label>
-              </div>
-            </div>
-
-            <div class="row">
-
-              <div class="col-md-6 ">
-                <div class="form-floating mb-3">
-                  <select name="department" class="form-select" id="departmentSelect" required>
-                    <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
-                    <?php foreach ($departments as $dept): ?>
-                      <option value="<?= htmlspecialchars($dept) ?>" <?= $student['department'] === $dept ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($dept) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                  <label for="departmentSelect">Department</label>
+              <div class="mb-3">
+                <div class="form-floating">
+                  <input type="text" class="form-control"
+                    value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
+                    disabled>
+                  <label class="form-label">Full Name</label>
                 </div>
               </div>
 
-              <div class="col-md-6">
-                <div class="form-floating mb-3">
-                  <select class="form-select" name="section" required>
-                    <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
-                    <?php foreach ($sections as $sec): ?>
-                      <option value="<?= htmlspecialchars($sec) ?>" <?= $student['section'] === $sec ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($sec) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                  <label for="section">Section</label>
+              <div class="row">
+
+                <div class="col-md-6 ">
+                  <div class="form-floating mb-3">
+                    <select name="department" class="form-select" id="departmentSelect" required>
+                      <option value="" disabled <?= empty($student['department']) ? 'selected' : '' ?>>Select Department</option>
+                      <?php foreach ($departments as $dept): ?>
+                        <option value="<?= htmlspecialchars($dept) ?>" <?= $student['department'] === $dept ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($dept) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <label for="departmentSelect">Department</label>
+                  </div>
                 </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" name="section" required>
+                      <option value="" disabled <?= empty($student['section']) ? 'selected' : '' ?>>Select Section</option>
+                      <?php foreach ($sections as $sec): ?>
+                        <option value="<?= htmlspecialchars($sec) ?>" <?= $student['section'] === $sec ? 'selected' : '' ?>>
+                          <?= htmlspecialchars($sec) ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <label for="section">Section</label>
+                  </div>
+                </div>
+
               </div>
 
-            </div>
-
-            <button type="submit" class="btn btn-success">Update</button>
-            <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
-          </form>
+              <button type="submit" class="btn btn-success">Update</button>
+              <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
+            </form>
+          </div>
         </div>
       </div>
     </section>

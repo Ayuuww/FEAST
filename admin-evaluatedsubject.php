@@ -9,29 +9,40 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 }
 
 // Fetching the faculty subjects evaluated
-$faculty_id = $_SESSION['idnumber'];
+$admin_id = $_SESSION['idnumber'];
 
-$query = "  SELECT 
-                e.subject_code,
-                s.title AS subject_title,
-                e.academic_year,
-                e.semester,
-                COUNT(e.id) AS total_evaluations
-            FROM evaluation e
-            JOIN subject s 
-                ON e.subject_code = s.code 
-                AND (e.faculty_id = s.faculty_id OR e.faculty_id = s.admin_id)
-            WHERE e.faculty_id = ?
-            GROUP BY e.subject_code, s.title, e.academic_year, e.semester
-            ORDER BY e.academic_year DESC, e.semester DESC";
-
+// Fetch subject evaluations with comments
+$query = "SELECT 
+            e.subject_code,
+            s.title AS subject_title,
+            e.academic_year,
+            e.semester,
+            AVG(e.total_score) AS avg_score,
+            AVG(e.computed_rating) AS avg_rating,
+            GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
+          FROM evaluation e
+          JOIN subject s ON e.subject_code = s.code
+          WHERE e.faculty_id = ?
+            AND e.comment IS NOT NULL AND e.comment != ''
+          GROUP BY e.subject_code, s.title, e.academic_year, e.semester
+          ORDER BY e.academic_year DESC, e.semester DESC";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("s", $faculty_id);
+$stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Count evaluations per subject
+$countQuery = "SELECT subject_code, COUNT(*) as total FROM evaluation WHERE faculty_id = ? GROUP BY subject_code";
+$countStmt = $conn->prepare($countQuery);
+$countStmt->bind_param("s", $admin_id);
+$countStmt->execute();
+$countResult = $countStmt->get_result();
 
+$subjectCounts = [];
+while ($row = $countResult->fetch_assoc()) {
+  $subjectCounts[$row['subject_code']] = $row['total'];
+}
 
 
 
@@ -165,25 +176,49 @@ $result = $stmt->get_result();
                   <tr>
                     <th>Subject Code</th>
                     <th>Title</th>
+                    <th>Total Score</th>
+                    <th>Computed Rating</th>
+                    <th>Comments</th>
                     <th>Semester</th>
                     <th>School Year</th>
                     <th>Total Evaluations</th>
                   </tr>
                 </thead>
+
                 <tbody>
                   <?php if ($result->num_rows > 0): ?>
+                    <?php $index = 0; ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
                       <tr>
                         <td><?= htmlspecialchars($row['subject_code']) ?></td>
                         <td><?= htmlspecialchars($row['subject_title']) ?></td>
+                        <td><?= number_format($row['avg_score'], 2) ?></td>
+                        <td><?= number_format($row['avg_rating'], 2) ?>%</td>
+                        <td>
+                          <button class="btn btn-sm btn-success mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#comments<?= $index ?>">Show Comments</button>
+                          <div class="collapse mt-2" id="comments<?= $index ?>">
+                            <div class="border rounded bg-light p-2">
+                              <?php
+                              $comments = explode('||', $row['all_comments']);
+                              foreach ($comments as $comment) {
+                                $clean = trim($comment);
+                                if ($clean !== '') {
+                                  echo "<div class='mb-1'>• " . htmlspecialchars($clean) . "</div>";
+                                }
+                              }
+                              ?>
+                            </div>
+                          </div>
+                        </td>
                         <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
-                        <td><?= $row['total_evaluations'] ?></td>
+                        <td><?= $subjectCounts[$row['subject_code']] ?? 'N/A' ?></td>
                       </tr>
+                      <?php $index++; ?>
                     <?php endwhile; ?>
                   <?php else: ?>
                     <tr>
-                      <td colspan="6" class="text-center">No evaluations have been submitted for your subjects yet.</td>
+                      <td colspan="8" class="text-center">No evaluations have been submitted for your subjects yet.</td>
                     </tr>
                   <?php endif; ?>
                 </tbody>

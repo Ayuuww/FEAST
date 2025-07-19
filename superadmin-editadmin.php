@@ -30,6 +30,13 @@ if (!$admin) {
   exit();
 }
 
+// Fetch admin positions from 'adds' table
+$positions = [];
+$position_result = $conn->query("SELECT position_name FROM adds WHERE position_name IS NOT NULL ORDER BY position_name ASC");
+while ($row = $position_result->fetch_assoc()) {
+  $positions[] = $row['position_name'];
+}
+
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $new_status = $_POST['status'];
@@ -42,6 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   header("Location: superadmin-editadmin.php?id=$admin_id&update=success");
   exit();
 }
+
+
 ?>
 
 
@@ -264,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <section class="section">
-      <div class="row">
+      <div class="row justify-content-center">
         <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
@@ -272,13 +281,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
               <?php if (isset($success)): ?>
                 <div class="alert alert-success"><?php echo $success; ?></div>
-              <?php endif; ?>
-
-              <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                  <i class="bi bi-check-circle-fill"></i> Admin info updated successfully!
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
               <?php endif; ?>
 
               <?php if ($admin): ?>
@@ -324,11 +326,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <div class="form-floating">
                         <select name="position" class="form-select" required>
                           <option value="" disabled>Select Position</option>
-                          <option value="Vice-President" <?php if ($admin['position'] === 'Vice-President') echo 'selected'; ?>>Vice-President</option>
-                          <option value="Chancelor" <?php if ($admin['position'] === 'Chancelor') echo 'selected'; ?>>Chancelor</option>
-                          <option value="Campus-Administrator" <?php if ($admin['position'] === 'Campus-Administrator') echo 'selected'; ?>>Campus-Administrator</option>
-                          <option value="Dean" <?php if ($admin['position'] === 'Dean') echo 'selected'; ?>>Dean</option>
-                          <option value="Director" <?php if ($admin['position'] === 'Director') echo 'selected'; ?>>Director</option>
+                          <?php foreach ($positions as $position): ?>
+                            <option value="<?= htmlspecialchars($position) ?>" <?= $admin['position'] === $position ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($position) ?>
+                            </option>
+                          <?php endforeach; ?>
                         </select>
                         <label class="form-label">Position</label>
                       </div>
@@ -408,6 +410,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
     });
   </script>
+
+  <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated Successfully',
+        text: 'Admin info has been updated!',
+        confirmButtonColor: '#198754' // Bootstrap green
+      }).then(() => {
+        // Remove the query param from URL without reloading the page
+        if (history.pushState) {
+          const url = new URL(window.location);
+          url.searchParams.delete('update');
+          window.history.pushState({}, '', url);
+        }
+      });
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated Successfully',
+        text: 'Admin info has been updated!',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    </script>
+  <?php endif; ?>
 
 </body>
 

@@ -60,62 +60,75 @@ include 'conn/conn.php'; // Connection to the database
                   <h5 class="card-title text-center pb-0 fs-4">Login Your Account</h5>
 
                   <?php if (isset($_SESSION['msg'])): ?>
-                    <div class="alert alert-danger alert-dismissible fade show text-center mt-2" role="alert">
-                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                      <?= $_SESSION['msg']; ?>
-                      <!-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> -->
-                    </div>
-                    <?php unset($_SESSION['msg']); ?>
+                    <script>
+                      document.addEventListener("DOMContentLoaded", function() {
+                        let message = <?= json_encode($_SESSION['msg']) ?>;
+                        let icon = 'error';
+                        let title = 'Login Failed';
+
+                        // Customize based on message content
+                        if (message.toLowerCase().includes('inactive')) {
+                          title = 'Account Inactive';
+                        }
+
+                        Swal.fire({
+                          icon: icon,
+                          title: title,
+                          text: message,
+                          confirmButtonColor: '#3085d6'
+                        });
+                      });
+                    </script>
+                    <?php
+                    unset($_SESSION['msg']);
+                    unset($_SESSION['login_failed']);
+                    ?>
                   <?php endif; ?>
 
                   <form class="row g-3 needs-validation" novalidate method="post" action="login.php">
 
                     <!-- ID Number -->
-                    <div class="col-12">
+                    <div class="col-md-12">
                       <div class="form-floating">
-                        <input type="text" name="idnumber" class="form-control" placeholder="ID Number" id="idnumber" pattern="^[0-9\-]+$" value="<?= $_COOKIE['remember_idnumber'] ?? '' ?>" required>
+                        <input type="text" name="idnumber" class="form-control" id="idnumber"
+                          value="<?= (isset($_COOKIE['remember_idnumber']) && !isset($_SESSION['login_failed'])) ? $_COOKIE['remember_idnumber'] : '' ?>"
+                          placeholder="ID Number" pattern="^[0-9\-]+$" required>
                         <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
                         <label for="floatingID">ID Number</label>
                       </div>
                     </div>
 
                     <!-- Password -->
-                    <div class="col-12 position-relative">
+                    <div class="col-md-12 position-relative">
                       <div class="form-floating">
-                        <input type="password" name="password" class="form-control" placeholder="Password" id="password" value="<?= $_COOKIE['remember_password'] ?? '' ?>" required>
+                        <input type="password" name="password" class="form-control" id="password"
+                          value="<?= (isset($_COOKIE['remember_password']) && !isset($_SESSION['login_failed'])) ? $_COOKIE['remember_password'] : '' ?>"
+                          <?= (isset($_SESSION['login_failed'])) ? '' : '' ?>
+                          placeholder="Password" required>
                         <label for="floatingPassword">Password</label>
                         <div class="invalid-feedback">Please enter your password!</div>
                       </div>
 
-                      <!-- Show Password Toggle -->
-                      <button type="button"
-                        class="position-absolute top-50 end-0 translate-middle-y me-2"
-                        style="border: none; background: transparent; z-index: 2;"
-                        onclick="togglePassword()" tabindex="-1">
-                        <i id="eyeIcon" class="bi bi-eye-slash fs-5"></i>
-                      </button>
-                    </div>
-
-                    <!-- Remember Me -->
-                    <div class="col-12">
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
-                          <?= isset($_COOKIE['remember_idnumber']) ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="rememberMe">Remember me</label>
+                      <!-- Remember Me -->
+                      <div class="col-12 mb-3 mt-3">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
+                            <?= isset($_COOKIE['remember_idnumber']) ? 'checked' : '' ?>>
+                          <label class="form-check-label" for="rememberMe">Remember me</label>
+                        </div>
                       </div>
-                    </div>
 
-                    <!-- Login -->
-                    <div class="col-12">
-                      <button class="btn btn-success w-100" name="login">Login</button>
-                    </div>
+                      <!-- Login -->
+                      <div class="col-12">
+                        <button class="btn btn-success w-100" name="login">Login</button>
+                      </div>
 
-                    <!-- <div class="col-12 text-center">
+                      <!-- <div class="col-12 text-center">
                       <a href="reset-password.php">Forgot your password?</a>
                     </div> -->
 
 
-                    <!-- <div class="col-12 text-center">
+                      <!-- <div class="col-12 text-center">
                       <p class="small">Don't have account? <a href="pages-register.php">Create an account</a></p>
                     </div> -->
 
@@ -149,23 +162,6 @@ include 'conn/conn.php'; // Connection to the database
   <script src="assets/js/main.js"></script>
 
   <script>
-    function togglePassword() {
-      const passwordInput = document.getElementById("password");
-      const icon = document.getElementById("eyeIcon");
-
-      if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-        icon.classList.remove("bi-eye-slash");
-        icon.classList.add("bi-eye");
-      } else {
-        passwordInput.type = "password";
-        icon.classList.remove("bi-eye");
-        icon.classList.add("bi-eye-slash");
-      }
-    }
-  </script>
-
-  <script>
     document.addEventListener("DOMContentLoaded", function() {
       const alert = document.querySelector(".alert-dismissible");
       if (alert) {
@@ -180,8 +176,7 @@ include 'conn/conn.php'; // Connection to the database
     });
   </script>
 
-
-
 </body>
 
 </html>
+<?php unset($_SESSION['login_failed']); ?>

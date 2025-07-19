@@ -2,13 +2,12 @@
 session_start();
 include 'conn/conn.php';
 
-$_SESSION['msg'] = "Subject assigned successfully!";
-$_SESSION['msg_type'] = "success"; // or 'danger', 'warning', 'info'
-
-
 if (isset($_POST['assign'])) {
     $student_ids   = $_POST['student_id'];   // now an array
     $subject_codes = $_POST['subject_code']; // now an array
+
+    $success = 0;
+    $errors = [];
 
     foreach ($student_ids as $student_id) {
         foreach ($subject_codes as $subject_code) {
@@ -24,43 +23,67 @@ if (isset($_POST['assign'])) {
             $admin_id   = $subject_data['admin_id'] ?? null;
 
             if (!$faculty_id && !$admin_id) {
-                $_SESSION['msg'] = "Instructor ID missing for subject $subject_code.";
-                $_SESSION['msg_type'] = "danger";
-                header("Location: admin-studentsubject.php");
-                exit;
+                $errors[] = "❌ Subject $subject_code has no assigned instructor.";
+                continue;
             }
 
-            // Check for duplicate
-            $check = $conn->prepare("SELECT * FROM student_subject WHERE student_id = ? AND subject_code = ?");
+            // Check if already assigned
+            $check = $conn->prepare("SELECT 1 FROM student_subject WHERE student_id = ? AND subject_code = ?");
             $check->bind_param("ss", $student_id, $subject_code);
             $check->execute();
             $check_result = $check->get_result();
 
-            if ($check_result->num_rows === 0) {
-                if ($faculty_id) {
-                    $insert = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id) VALUES (?, ?, ?)");
-                    $insert->bind_param("sss", $student_id, $subject_code, $faculty_id);
-                } else {
-                    $insert = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, admin_id) VALUES (?, ?, ?)");
-                    $insert->bind_param("sss", $student_id, $subject_code, $admin_id);
-                }
+            if ($check_result->num_rows > 0) {
+                $errors[] = "⚠️ Student $student_id already assigned to subject $subject_code.";
+                $check->close();
+                continue;
+            }
+            $check->close();
 
-                if ($insert->execute()) {
-                    $_SESSION['msg'] = "Subjects successfully assigned.";
-                    $_SESSION['msg_type'] = "success";
-                } else {
-                    $_SESSION['msg'] = "DB Insert Error: " . $conn->error;
-                    $_SESSION['msg_type'] = "danger";
-                }
+            // Validate faculty_id if exists
+            if ($faculty_id) {
+                $faculty_check = $conn->prepare("SELECT 1 FROM faculty WHERE idnumber = ?");
+                $faculty_check->bind_param("s", $faculty_id);
+                $faculty_check->execute();
+                $faculty_check->store_result();
 
-                $insert->close();
+                if ($faculty_check->num_rows === 0) {
+                    $errors[] = "❌ Faculty ID $faculty_id (for subject $subject_code) not found.";
+                    $faculty_check->close();
+                    continue;
+                }
+                $faculty_check->close();
+
+                $insert = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id) VALUES (?, ?, ?)");
+                $insert->bind_param("sss", $student_id, $subject_code, $faculty_id);
             } else {
-                $_SESSION['msg'] = "Subject $subject_code already assigned to student $student_id.";
-                $_SESSION['msg_type'] = "warning";
+                $insert = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, admin_id) VALUES (?, ?, ?)");
+                $insert->bind_param("sss", $student_id, $subject_code, $admin_id);
             }
 
-            $check->close();
+            if ($insert->execute()) {
+                $success++;
+            } else {
+                $errors[] = "❌ Failed to assign $subject_code to $student_id.";
+            }
+
+            $insert->close();
         }
+    }
+
+    // Set session message
+    if ($success > 0 && count($errors) > 0) {
+        $_SESSION['msg_type'] = 'warning';
+        $_SESSION['msg'] = "$success subject(s) assigned. Some were skipped.";
+        $_SESSION['detailed_errors'] = $errors;
+    } elseif ($success > 0) {
+        $_SESSION['msg_type'] = 'success';
+        $_SESSION['msg'] = "$success subject(s) successfully assigned.";
+        $_SESSION['detailed_errors'] = [];
+    } else {
+        $_SESSION['msg_type'] = 'error';
+        $_SESSION['msg'] = "No subjects were assigned.";
+        $_SESSION['detailed_errors'] = $errors;
     }
 
     $conn->close();

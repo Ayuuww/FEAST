@@ -11,11 +11,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 // Create a new super admin account
 
-// Display message if set
-if (isset($_SESSION['msg'])) {
-  echo "<script>alert('" . $_SESSION['msg'] . "');</script>";
-  unset($_SESSION['msg']);
-}
 
 
 ?>
@@ -254,6 +249,18 @@ if (isset($_SESSION['msg'])) {
         <div class="col-lg-6 ">
           <div class="card">
             <div class="card-body ">
+
+              <?php if (isset($_SESSION['msg'])): ?>
+                <div class="position-fixed top-0 start-50 translate-middle-x mt-4 z-index-9999" style="z-index: 9999;">
+                  <div class="alert alert-success alert-dismissible fade show shadow rounded" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <?= htmlspecialchars($_SESSION['msg']) ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                </div>
+                <?php unset($_SESSION['msg']); ?>
+              <?php endif; ?>
+
               <h5 class="card-title text-center">Create New Super Admin</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
@@ -376,6 +383,7 @@ if (isset($_SESSION['msg'])) {
       }
     }, 5000); // Hide after 5 seconds
   </script>
+
 </body>
 
 </html>

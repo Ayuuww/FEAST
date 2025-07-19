@@ -173,7 +173,7 @@ $verification = [
                 <p><strong>Name of Faculty:</strong> <?= htmlspecialchars($evaluateeName) ?></p>
                 <p><strong>Academic Rank:</strong> <?= htmlspecialchars($evaluateeRank) ?></p>
                 <p><strong>Department/College:</strong> <?= htmlspecialchars($evaluateeCollege) ?></p>
-                <p><strong>Rating Period (Academic Year):</strong> <?= htmlspecialchars($academic_year) ?> (<?= htmlspecialchars($semester) ?>)</p>
+                <p><strong>Rating Period (Academic Year):</strong> <?= htmlspecialchars($academic_year) ?></p>
 
 
                 <div class="table-responsive mb-4">

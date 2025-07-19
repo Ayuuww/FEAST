@@ -217,11 +217,13 @@ if (isset($_SESSION['msg'])) {
               <div class="card-body table-responsive">
                 <h5 class="card-title text-center">Supervisor's Evaulation of Faculty (SEF)</h5>
 
-                <?php if ($evalStatus === 'off'): ?>
-                  <div class="alert alert-warning text-center fs-5 mt-4">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    Evaluation period is currently <strong>CLOSED</strong>. You may view the form but cannot submit.
-                  </div>
+                  <?php if ($evalStatus === 'off'): ?>
+                    <div class="alert alert-warning text-center fs-5 my-5">
+                      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                      Evaluation period is currently <strong>CLOSED</strong>.
+                    </div>
+                  <?php else: ?>
+
                   <style>
                     .overlay-block {
                       position: absolute;
@@ -243,288 +245,285 @@ if (isset($_SESSION['msg'])) {
                       opacity: 0.5;
                     }
                   </style>
-                <?php endif; ?>
 
-                <form action="submit-admin-evaluation.php" method="POST">
+                  <form action="submit-admin-evaluation.php" method="POST">
 
-                  <div class="<?= $evaluation_closed ? 'position-relative form-disabled' : '' ?>">
-                    <?php if ($evaluation_closed): ?>
-                      <div class="overlay-block rounded"></div>
-                    <?php endif; ?>
+                    <div class="<?= $evaluation_closed ? 'position-relative form-disabled' : '' ?>">
+                      <?php if ($evaluation_closed): ?>
+                        <div class="overlay-block rounded"></div>
+                      <?php endif; ?>
 
-                    <!-- Faculty Dropdown -->
-                    <div class="row mb-3">
-                      <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
-                      <!-- Evaluatee (Faculty) -->
-                      <div class="col-md-6">
-                        <div class="form-floating">
-                          <select name="evaluatee_id" class="form-select text-capitalize" required>
-                            <option value="" disabled selected>-- Select Faculty --</option>
-                            <?php foreach ($faculty_list as $faculty):
-                              $fullName = htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']);
-                              $rank = htmlspecialchars($faculty['faculty_rank']);
-                              // $dept = htmlspecialchars($faculty['department']);
-                            ?>
-                              <option value="<?= htmlspecialchars($faculty['idnumber']) ?>">
-                                <?= $fullName ?> (<?= $rank ?>)
-                              </option>
-                            <?php endforeach; ?>
-                          </select>
-                          <label for="evaluatee_id">Faculty to Evaluate</label>
+                      <!-- Faculty Dropdown -->
+                      <div class="row mb-3">
+                        <h5 class="mb-3"><strong>A. Faculty Information</strong></h5>
+                        <!-- Evaluatee (Faculty) -->
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <select name="evaluatee_id" class="form-select text-capitalize" required>
+                              <option value="" disabled selected>-- Select Faculty --</option>
+                              <?php foreach ($faculty_list as $faculty):
+                                $fullName = htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']);
+                                $rank = htmlspecialchars($faculty['faculty_rank']);
+                                // $dept = htmlspecialchars($faculty['department']);
+                              ?>
+                                <option value="<?= htmlspecialchars($faculty['idnumber']) ?>">
+                                  <?= $fullName ?> (<?= $rank ?>)
+                                </option>
+                              <?php endforeach; ?>
+                            </select>
+                            <label for="evaluatee_id">Faculty to Evaluate</label>
+                          </div>
+                        </div>
+
+
+                        <!-- School Year -->
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <select name="academic_year" id="academic_year" class="form-select" required disabled>
+                              <option value="" disabled>-- Academic Year --</option>
+                              <?php
+                              $currentYear = date("Y");
+                              for ($i = 0; $i < 5; $i++) {
+                                $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
+                                $selected = ($sy == $default_year) ? 'selected' : '';
+                                echo "<option value='$sy' $selected>$sy</option>";
+                              }
+                              ?>
+                            </select>
+                            <label for="academic_year">Academic Year</label>
+                          </div>
+                        </div>
+
+                        <!-- Semester -->
+                        <div class="col-md-3">
+                          <div class="form-floating">
+                            <select name="semester" id="semester" class="form-select" required disabled>
+                              <option value="" disabled>-- Semester --</option>
+                              <option value="1st Semester" <?= $default_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
+                              <option value="2nd Semester" <?= $default_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
+                            </select>
+                            <label for="semester">Semester</label>
+                          </div>
                         </div>
                       </div>
 
+                      <!-- Rating Scale -->
+                      <h5 class="mb-3"><strong>B. Rating Scale</strong></h5>
+                      <div class="table-responsive mb-4">
+                        <table class="table table-bordered text-center align-middle small">
+                          <thead class="table-light">
+                            <tr>
+                              <th>Scale</th>
+                              <th>Qualitative Description</th>
+                              <th>Operational Definition</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><strong>5</strong></td>
+                              <td>Always manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is
+                                consistently and unfailling demostrated in all relevant situation or instances.
+                                There is no observed deviation from this pattern. Operationally, this could mean
+                                occurring in 95-100% of observed opportunities or instances.
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>4</strong></td>
+                              <td>Often manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is
+                                demostrated frequently, though occasional instances of non-manifestation may occur.
+                                Operationally, this could mean occurring in 60-94% of
+                                observed opportunities or instances.
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>3</strong></td>
+                              <td>Sometimes manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is
+                                demostrated intermittenly or irregulary, with an approximately equal likelihood
+                                occurrence and non-occurence. Operationally, this could mean occurring in 40-60%
+                                of observed opportunities or instances.
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>2</strong></td>
+                              <td>Seldom manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is
+                                demostrated infrequently and is generally absend in most relevant situation.
+                                Operationally, this could mean occurring in 25-40% of
+                                observed opportunities or instances.
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>1</strong></td>
+                              <td>Rarely manifested</td>
+                              <td class="text-start text-danger">The behavior, characteristic, or condition is
+                                almost never demostrated, with only isolated or exceptional instances of
+                                occurrence. Operationally, this could mean occurring in 0-24% of observed
+                                opportunities or instances.
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
 
-                      <!-- School Year -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <select name="academic_year" id="academic_year" class="form-select" required disabled>
-                            <option value="" disabled>-- Academic Year --</option>
+
+                      <!-- Evaluation Questions (Benchmark Style) -->
+                      <h5 class="mb-3"><strong>C. Instruction: </strong>Read the benchmark statement carefully and rate the faculty on each
+                        statement using the above-listed rating scale by shading your rating. The Suggested Means of Verification
+                        column can be used by the supervisor to assist the faculty objectively </h5>
+                      <div class="table-responsive ">
+                        <table class="table table-bordered text-center align-middle">
+                          <tbody>
+                            <thead class="table-light">
+                              <tr class="text-start">
+                                <th>Benchmark Statement for Faculty Teaching Effectiveness</th>
+                              </tr>
+                            </thead>
+                          </tbody>
+                        </table>
+                        <table class="table table-bordered text-center align-middle">
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">A. Manage of Teaching and Learning</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
+                              <?php endfor; ?>
+                            </tr>
+                          </thead>
+                          <tbody>
                             <?php
-                            $currentYear = date("Y");
-                            for ($i = 0; $i < 5; $i++) {
-                              $sy = ($currentYear - $i) . '-' . ($currentYear - $i + 1);
-                              $selected = ($sy == $default_year) ? 'selected' : '';
-                              echo "<option value='$sy' $selected>$sy</option>";
-                            }
+                            $questionIndex = 0;
+                            $questions = [
+                              "Comes to class on time regularly.",
+                              "Submits updated syllabus, grade sheets, and other required reports on time.",
+                              "Maximizes the allocated time/learning hours effectively.",
+                              "Provide appropriate learning activities that facilitate critical thinking and creativity of students.",
+                              "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
+                              "Communicates constructive feedback to students for their academic growth."
+                            ];
+                            foreach ($questions as $question):
                             ?>
-                          </select>
-                          <label for="academic_year">Academic Year</label>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                            <?php
+                              $questionIndex++;
+                            endforeach;
+                            ?>
+                          </tbody>
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">B. Content Knowledge, Pedagogy and Technology</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
+                              <?php endfor; ?>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                            $questions = [
+                              "Demonstrates extensive and broad knowledge of the subject/course.",
+                              "Simplifies complex ideas in the lesson for ease of understanding.",
+                              "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
+                              "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
+                              "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes"
+                            ];
+                            foreach ($questions as $question):
+                            ?>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                            <?php
+                              $questionIndex++;
+                            endforeach;
+                            ?>
+                          </tbody>
+                          <thead class="table-light">
+                            <tr>
+                              <th class="text-start">C. Commitment and Transparency</th>
+                              <?php for ($i = 5; $i >= 1; $i--): ?>
+                                <th><?= $i ?></th>
+                              <?php endfor; ?>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <?php
+                            $questions = [
+                              "Recognizes and values the unique diversity and individual differences among students.",
+                              "Assist students with their learning challenges during consultation hours.",
+                              "Provide immediate feedback on student outputs and performance.",
+                              "Provides transparent and clear criteria in rating student's performance."
+                            ];
+                            foreach ($questions as $question):
+                            ?>
+                              <tr>
+                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
+                                <?php for ($i = 5; $i >= 1; $i--): ?>
+                                  <td>
+                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                                  </td>
+                                <?php endfor; ?>
+                              </tr>
+                            <?php
+                              $questionIndex++;
+                            endforeach;
+                            ?>
+                            </thead>
+                            <thead class="table-light">
+                              <tr>
+                                <th class="text-start">Total Score</th>
+                                <th colspan="5" id="totalScore" class="text-center text-danger fs-5">0</th>
+                              </tr>
+                            </thead>
+                          </tbody>
+                        </table>
+                      </div>
+
+
+                      <!-- Comment Box -->
+                      <div class="mb-3">
+                        <label for="comment" class="form-label">Other comments and suggestions (optional)</label>
+                        <textarea name="comment" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
+                      </div>
+
+                      <input type="hidden" name="evaluator_id" value="<?= $_SESSION['idnumber'] ?>">
+                      <input type="hidden" name="semester" value="<?= $default_semester ?>">
+                      <input type="hidden" name="academic_year" value="<?= $default_year ?>">
+
+
+
+                      <!-- Computed Rating and Date -->
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Computed Rating (%)</label>
+                          <input type="text" class="form-control text-danger fw-bold" id="computedRating" readonly>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Date of Evaluation</label>
+                          <input type="text" class="form-control" value="<?= date('F j, Y') ?>" readonly>
                         </div>
                       </div>
 
-                      <!-- Semester -->
-                      <div class="col-md-3">
-                        <div class="form-floating">
-                          <select name="semester" id="semester" class="form-select" required disabled>
-                            <option value="" disabled>-- Semester --</option>
-                            <option value="1st Semester" <?= $default_semester == '1st Semester' ? 'selected' : '' ?>>1st Semester</option>
-                            <option value="2nd Semester" <?= $default_semester == '2nd Semester' ? 'selected' : '' ?>>2nd Semester</option>
-                          </select>
-                          <label for="semester">Semester</label>
-                        </div>
+                      <div class="col-md-4 offset-md-4 mb-3">
+                        <button type="submit" class="btn btn-success btn-block w-100 <?= $evaluation_closed ? 'disabled-button' : '' ?>">
+                          Submit Evaluation
+                        </button>
                       </div>
                     </div>
 
-                    <!-- Rating Scale -->
-                    <h5 class="mb-3"><strong>B. Rating Scale</strong></h5>
-                    <div class="table-responsive mb-4">
-                      <table class="table table-bordered text-center align-middle small">
-                        <thead class="table-light">
-                          <tr>
-                            <th>Scale</th>
-                            <th>Qualitative Description</th>
-                            <th>Operational Definition</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <td><strong>5</strong></td>
-                            <td>Always manifested</td>
-                            <td class="text-start text-danger">The behavior, characteristic, or condition is
-                              consistently and unfailling demostrated in all relevant situation or instances.
-                              There is no observed deviation from this pattern. Operationally, this could mean
-                              occurring in 95-100% of observed opportunities or instances.
-                            </td>
-                          </tr>
-                          <tr>
-                            <td><strong>4</strong></td>
-                            <td>Often manifested</td>
-                            <td class="text-start text-danger">The behavior, characteristic, or condition is
-                              demostrated frequently, though occasional instances of non-manifestation may occur.
-                              Operationally, this could mean occurring in 60-94% of
-                              observed opportunities or instances.
-                            </td>
-                          </tr>
-                          <tr>
-                            <td><strong>3</strong></td>
-                            <td>Sometimes manifested</td>
-                            <td class="text-start text-danger">The behavior, characteristic, or condition is
-                              demostrated intermittenly or irregulary, with an approximately equal likelihood
-                              occurrence and non-occurence. Operationally, this could mean occurring in 40-60%
-                              of observed opportunities or instances.
-                            </td>
-                          </tr>
-                          <tr>
-                            <td><strong>2</strong></td>
-                            <td>Seldom manifested</td>
-                            <td class="text-start text-danger">The behavior, characteristic, or condition is
-                              demostrated infrequently and is generally absend in most relevant situation.
-                              Operationally, this could mean occurring in 25-40% of
-                              observed opportunities or instances.
-                            </td>
-                          </tr>
-                          <tr>
-                            <td><strong>1</strong></td>
-                            <td>Rarely manifested</td>
-                            <td class="text-start text-danger">The behavior, characteristic, or condition is
-                              almost never demostrated, with only isolated or exceptional instances of
-                              occurrence. Operationally, this could mean occurring in 0-24% of observed
-                              opportunities or instances.
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-
-                    <!-- Evaluation Questions (Benchmark Style) -->
-                    <h5 class="mb-3"><strong>C. Instruction: </strong>Read the benchmark statement carefully and rate the faculty on each
-                      statement using the above-listed rating scale by shading your rating. The Suggested Means of Verification
-                      column can be used by the supervisor to assist the faculty objectively </h5>
-                    <div class="table-responsive ">
-                      <table class="table table-bordered text-center align-middle">
-                        <tbody>
-                          <thead class="table-light">
-                            <tr class="text-start">
-                              <th>Benchmark Statement for Faculty Teaching Effectiveness</th>
-                            </tr>
-                          </thead>
-                        </tbody>
-                      </table>
-                      <table class="table table-bordered text-center align-middle">
-                        <thead class="table-light">
-                          <tr>
-                            <th class="text-start">A. Manage of Teaching and Learning</th>
-                            <?php for ($i = 5; $i >= 1; $i--): ?>
-                              <th><?= $i ?></th>
-                            <?php endfor; ?>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <?php
-                          $questionIndex = 0;
-                          $questions = [
-                            "Comes to class on time regularly.",
-                            "Submits updated syllabus, grade sheets, and other required reports on time.",
-                            "Maximizes the allocated time/learning hours effectively.",
-                            "Provide appropriate learning activities that facilitate critical thinking and creativity of students.",
-                            "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
-                            "Communicates constructive feedback to students for their academic growth."
-                          ];
-                          foreach ($questions as $question):
-                          ?>
-                            <tr>
-                              <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <td>
-                                  <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
-                                </td>
-                              <?php endfor; ?>
-                            </tr>
-                          <?php
-                            $questionIndex++;
-                          endforeach;
-                          ?>
-                        </tbody>
-                        <thead class="table-light">
-                          <tr>
-                            <th class="text-start">B. Content Knowledge, Pedagogy and Technology</th>
-                            <?php for ($i = 5; $i >= 1; $i--): ?>
-                              <th><?= $i ?></th>
-                            <?php endfor; ?>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <?php
-                          $questions = [
-                            "Demonstrates extensive and broad knowledge of the subject/course.",
-                            "Simplifies complex ideas in the lesson for ease of understanding.",
-                            "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
-                            "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
-                            "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes"
-                          ];
-                          foreach ($questions as $question):
-                          ?>
-                            <tr>
-                              <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <td>
-                                  <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
-                                </td>
-                              <?php endfor; ?>
-                            </tr>
-                          <?php
-                            $questionIndex++;
-                          endforeach;
-                          ?>
-                        </tbody>
-                        <thead class="table-light">
-                          <tr>
-                            <th class="text-start">C. Commitment and Transparency</th>
-                            <?php for ($i = 5; $i >= 1; $i--): ?>
-                              <th><?= $i ?></th>
-                            <?php endfor; ?>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <?php
-                          $questions = [
-                            "Recognizes and values the unique diversity and individual differences among students.",
-                            "Assist students with their learning challenges during consultation hours.",
-                            "Provide immediate feedback on student outputs and performance.",
-                            "Provides transparent and clear criteria in rating student's performance."
-                          ];
-                          foreach ($questions as $question):
-                          ?>
-                            <tr>
-                              <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <td>
-                                  <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
-                                </td>
-                              <?php endfor; ?>
-                            </tr>
-                          <?php
-                            $questionIndex++;
-                          endforeach;
-                          ?>
-                          </thead>
-                          <thead class="table-light">
-                            <tr>
-                              <th class="text-start">Total Score</th>
-                              <th colspan="5" id="totalScore" class="text-center text-danger fs-5">0</th>
-                            </tr>
-                          </thead>
-                        </tbody>
-                      </table>
-                    </div>
-
-
-                    <!-- Comment Box -->
-                    <div class="mb-3">
-                      <label for="comment" class="form-label">Other comments and suggestions (optional)</label>
-                      <textarea name="comment" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
-                    </div>
-
-                    <input type="hidden" name="evaluator_id" value="<?= $_SESSION['idnumber'] ?>">
-                    <input type="hidden" name="semester" value="<?= $default_semester ?>">
-                    <input type="hidden" name="academic_year" value="<?= $default_year ?>">
-
-
-
-                    <!-- Computed Rating and Date -->
-                    <div class="row mb-3">
-                      <div class="col-md-6">
-                        <label class="form-label">Computed Rating (%)</label>
-                        <input type="text" class="form-control text-danger fw-bold" id="computedRating" readonly>
-                      </div>
-                      <div class="col-md-6">
-                        <label class="form-label">Date of Evaluation</label>
-                        <input type="text" class="form-control" value="<?= date('F j, Y') ?>" readonly>
-                      </div>
-                    </div>
-
-                    <div class="col-md-4 offset-md-4 mb-3">
-                      <button type="submit" class="btn btn-success btn-block w-100 <?= $evaluation_closed ? 'disabled-button' : '' ?>">
-                        Submit Evaluation
-                      </button>
-                    </div>
-                  </div>
-
-                </form>
-                <?php if ($evalStatus === 'off'): ?>
-                  </fieldset>
+                  </form>
                 <?php endif; ?>
 
               </div>
@@ -586,6 +585,31 @@ if (isset($_SESSION['msg'])) {
       calculateScore(); // Initial calc on load
     });
   </script>
+
+  <?php if (isset($_SESSION['admin_eval_success'])): ?>
+    <script>
+      Swal.fire({
+        title: 'Evaluation Submitted!',
+        text: 'Do you want to print the evaluation now?',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonText: 'Print Now',
+        cancelButtonText: 'Print Later'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "admin-evaluation-print.php";
+        } else {
+          Swal.fire({
+            title: 'Saved!',
+            text: 'You may print it later from your evaluated faculty list.',
+            icon: 'info',
+            timer: 3000
+          });
+        }
+      });
+    </script>
+    <?php unset($_SESSION['admin_eval_success']); ?>
+  <?php endif; ?>
 
 
 

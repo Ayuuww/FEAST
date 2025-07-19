@@ -8,7 +8,8 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
     exit();
 }
 
-function logActivity($conn, $user_id, $role, $action) {
+function logActivity($conn, $user_id, $role, $action)
+{
     $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
     $stmt->bind_param("sss", $user_id, $role, $action);
     $stmt->execute();
@@ -98,14 +99,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $questions[$key] = intval($value);
             }
         }
-        
+
         $form_data = json_encode($questions);
         $rating_percent = round(($computed_rating), 2);
 
         $insert = $conn->prepare("INSERT INTO admin_evaluation_submissions 
             (evaluator_id, evaluatee_id, semester, academic_year, total_score, rating_percent, comment, form_data) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        
+
         $insert->bind_param(
             "sssssdss",
             $evaluator_id,
@@ -150,10 +151,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'answers'               => $_POST
             ];
 
-            header("Location: admin-evaluation-print.php");
+            $_SESSION['admin_eval_success'] = true;
+            header("Location: admin-evaluate.php");
             exit();
         }
-
     } else {
         $_SESSION['msg'] = "Failed to save evaluation.";
         header("Location: admin-evaluate.php");
@@ -164,6 +165,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     header("Location: admin-evaluate.php");
     exit();
 }
-
-
-?>

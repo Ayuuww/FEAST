@@ -1,61 +1,71 @@
 <?php
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php';
 
-$faculty_rank = $_POST['faculty_rank'] ?? null;
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
+    // Sanitize inputs
+    $id         = mysqli_real_escape_string($conn, trim($_POST['idnumber']));
+    $first_name = mysqli_real_escape_string($conn, trim($_POST['first_name']));
+    $mid_name   = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
+    $last_name  = mysqli_real_escape_string($conn, trim($_POST['last_name']));
+    $password   = mysqli_real_escape_string($conn, trim($_POST['password']));
+    $department = mysqli_real_escape_string($conn, trim($_POST['department']));
+    $position   = mysqli_real_escape_string($conn, trim($_POST['position']));
+    $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank'])) 
+                    ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank'])) 
+                    : null;
 
-// Submit form data
-if (isset($_POST['submit'])) {
-    $id         = $_POST['idnumber'];
-    $first_name = $_POST['first_name'];
-    $mid_name   = $_POST['mid_name'];
-    $last_name  = $_POST['last_name'];
-    $password   = $_POST['password'];
-    $department = $_POST['department'];
-    $position   = $_POST['position'];
+    // Hash the password before storing (for security)
+    // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Check if admin with same ID already exists
-    $check_query = "SELECT * FROM admin WHERE idnumber = '$id'";
-    $check_result = mysqli_query($conn, $check_query);
+    $check_query = "SELECT idnumber FROM admin WHERE idnumber = ?";
+    $stmt = $conn->prepare($check_query);
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    $stmt->store_result();
 
-    if (mysqli_num_rows($check_result) > 0) {
+    if ($stmt->num_rows > 0) {
         $_SESSION['msg'] = 'Admin with this ID already exists!';
         header("Location: superadmin-admincreation.php");
         exit();
     }
+    $stmt->close();
 
-    // Proceed with insertion to admin table (faculty column removed)
-    $sql = "INSERT INTO admin (
-                idnumber, first_name, mid_name, last_name, password,
-                department, position, faculty_rank
-            ) VALUES (
-                '$id', '$first_name', '$mid_name', '$last_name', '$password',
-                '$department', '$position', " . 
-                ($faculty_rank ? "'$faculty_rank'" : "NULL") . "
-            )";
+    // Insert into admin table
+    $insert_query = "INSERT INTO admin (
+        idnumber, first_name, mid_name, last_name, password, department, position, faculty_rank
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-    if (mysqli_query($conn, $sql)) {
-        // Always insert into faculty table if not already present
-        $faculty_check = "SELECT idnumber FROM faculty WHERE idnumber = '$id'";
-        $faculty_result = mysqli_query($conn, $faculty_check);
+    $stmt = $conn->prepare($insert_query);
+    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $position, $faculty_rank);
+    
+    if ($stmt->execute()) {
+        // Check and insert into faculty if not already present
+        $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
+        $faculty_check->bind_param("s", $id);
+        $faculty_check->execute();
+        $faculty_check->store_result();
 
-        if (mysqli_num_rows($faculty_result) == 0) {
-            $faculty_insert = "INSERT INTO faculty (
+        if ($faculty_check->num_rows == 0) {
+            $faculty_insert = $conn->prepare("INSERT INTO faculty (
                 idnumber, first_name, mid_name, last_name, department, faculty_rank
-            ) VALUES (
-                '$id', '$first_name', '$mid_name', '$last_name', '$department', '$faculty_rank'
-            )";
-            mysqli_query($conn, $faculty_insert);
+            ) VALUES (?, ?, ?, ?, ?, ?)");
+            $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $department, $faculty_rank);
+            $faculty_insert->execute();
+            $faculty_insert->close();
         }
+        $faculty_check->close();
 
         $_SESSION['msg'] = 'Admin account successfully created.';
     } else {
-        $_SESSION['msg'] = 'Error creating admin account: ' . mysqli_error($conn);
+        $_SESSION['msg'] = 'Error creating admin account: ' . $stmt->error;
     }
+    $stmt->close();
 
     header("Location: superadmin-admincreation.php");
     exit();
 } else {
-    echo "<script>alert('Please fill in all fields.');</script>";
+    echo "<script>alert('Please fill in all required fields.'); window.location.href='superadmin-admincreation.php';</script>";
 }
 ?>

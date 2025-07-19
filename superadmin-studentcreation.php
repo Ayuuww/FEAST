@@ -238,14 +238,6 @@ $query = "SELECT * FROM superadmin";
       </nav>
     </div><!-- End Page Title -->
 
-    <?php if (isset($_SESSION['msg'])): ?>
-      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-        <?= htmlspecialchars($_SESSION['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-    <?php endif; ?>
 
     <!-- Admin Creation Section -->
     <section class="section">
@@ -372,16 +364,20 @@ $query = "SELECT * FROM superadmin";
   <script src="assets/js/main.js"></script>
   <!--  -->
 
-  <script>
-    setTimeout(() => {
-      const alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
-      }
-    }, 5000); // Hide after 5 seconds
-  </script>
+  <?php if (isset($_SESSION['msg'])): ?>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+          icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : ($_SESSION['msg_type'] === 'danger' ? 'error' : ($_SESSION['msg_type'] === 'warning' ? 'warning' : 'info')) ?>',
+          title: '<?= addslashes($_SESSION['msg']) ?>',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+        });
+      });
+    </script>
+    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+  <?php endif; ?>
 
 </body>
 

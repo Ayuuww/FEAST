@@ -62,6 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // Fetch latest adds
 $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
+
 ?>
 
 
@@ -298,143 +299,156 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
     </div><!-- End Page Title -->
 
     <?php if (isset($_SESSION['msg'])): ?>
-      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-        <?= htmlspecialchars($_SESSION['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
+      <script>
+        window.addEventListener('DOMContentLoaded', function() {
+          Swal.fire({
+            icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : ($_SESSION['msg_type'] === 'warning' ? 'warning' : 'error') ?>',
+            title: "<?= $_SESSION['msg_type'] === 'success' ? 'Successfully Added!' : 'Notice' ?>",
+            text: "<?= htmlspecialchars($_SESSION['msg']) ?>",
+            confirmButtonColor: "#198754"
+          });
+        });
+      </script>
       <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
     <?php endif; ?>
 
+
+
     <section class="section">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Add New</h5>
+      <div class="row justify-content-center">
+        <div class="card col-lg-6">
+          <div class="card-body">
+            <h5 class="card-title">Add New</h5>
 
 
-          <form method="POST" class="row g-3">
-            <div class="col-md-4">
-              <label for="type" class="form-label">Type</label>
-              <select class="form-select" name="type" required>
-                <option value="">-- Select --</option>
-                <option value="Rank">Rank</option>
-                <option value="Position">Position</option>
-                <option value="Section">Section</option>
-                <option value="Department">Department</option>
-              </select>
-            </div>
-            <div class="col-md-6">
-              <label for="value" class="form-label">Name</label>
-              <input type="text" class="form-control" name="value" required>
-            </div>
-            <div class="col-md-2 align-self-end">
-              <button type="submit" class="btn btn-success w-100">Add</button>
-            </div>
-          </form>
+            <form method="POST" class="row g-3">
+              <div class="col-md-4">
+                <label for="type" class="form-label">Type</label>
+                <select class="form-select" name="type" required>
+                  <option value="">-- Select --</option>
+                  <option value="Rank">Rank</option>
+                  <option value="Position">Position</option>
+                  <option value="Section">Section</option>
+                  <option value="Department">Department</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="value" class="form-label">Name</label>
+                <input type="text" class="form-control" name="value" required>
+              </div>
+              <div class="col-md-2 align-self-end">
+                <button type="button" id="confirmAdd" class="btn btn-success w-100">Add</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
 
-      <?php
-      // Fetch entries by type
-      $ranks = mysqli_query($conn, "SELECT id, rank_name AS name FROM adds WHERE rank_name IS NOT NULL ORDER BY id DESC");
-      $positions = mysqli_query($conn, "SELECT id, position_name AS name FROM adds WHERE position_name IS NOT NULL ORDER BY id DESC");
-      $sections = mysqli_query($conn, "SELECT id, section_name AS name FROM adds WHERE section_name IS NOT NULL ORDER BY id DESC");
-      $departments = mysqli_query($conn, "SELECT id, department_name AS name FROM adds WHERE department_name IS NOT NULL ORDER BY id DESC");
-      ?>
+        <?php
+        // Fetch entries by type
+        $ranks = mysqli_query($conn, "SELECT id, rank_name AS name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
+        $positions = mysqli_query($conn, "SELECT id, position_name AS name FROM adds WHERE position_name IS NOT NULL ORDER BY position_name ASC");
+        $sections = mysqli_query($conn, "SELECT id, section_name AS name FROM adds WHERE section_name IS NOT NULL ORDER BY section_name ASC");
+        $departments = mysqli_query($conn, "SELECT id, department_name AS name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
+        ?>
 
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Existing Ranks</h5>
-          <table class="table table-bordered align-middle ">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 85%;">Rank</th>
-                <th style="width: 15%;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php while ($row = mysqli_fetch_assoc($ranks)): ?>
-                <tr>
-                  <td><?= htmlspecialchars($row['name']) ?></td>
-                  <td class="text-center">
-                    <div style="width: 85%;">
-                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Rank" class="btn btn-warning btn-sm">Edit</a>
-                      <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this rank?')" class="btn btn-danger btn-sm">Delete</a> -->
-                    </div>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            </tbody>
-          </table>
+        <div class="row justify-content-center">
+          <div class="card col-lg-12">
+            <div class="card-body">
+              <div class="row">
+                <!-- Ranks -->
+                <div class="col-md-3">
+                  <h5 class="card-title">Existing Ranks</h5>
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Rank</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php while ($row = mysqli_fetch_assoc($ranks)): ?>
+                        <tr>
+                          <td><?= htmlspecialchars($row['name']) ?></td>
+                          <td class="text-center">
+                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Rank" class="btn btn-warning btn-sm">Edit</a>
+                          </td>
+                        </tr>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                </div>
 
-          <h5 class="card-title mt-4">Existing Positions</h5>
-          <table class="table table-bordered align-middle ">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 85%;">Position</th>
-                <th style="width: 15%;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php while ($row = mysqli_fetch_assoc($positions)): ?>
-                <tr>
-                  <td><?= htmlspecialchars($row['name']) ?></td>
-                  <td class="text-center">
-                    <div style="width: 85%;">
-                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Position" class="btn btn-warning btn-sm">Edit</a>
-                      <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this position?')" class="btn btn-danger btn-sm">Delete</a> -->
-                    </div>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            </tbody>
-          </table>
+                <!-- Positions -->
+                <div class="col-md-3">
+                  <h5 class="card-title">Existing Positions</h5>
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Position</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php while ($row = mysqli_fetch_assoc($positions)): ?>
+                        <tr>
+                          <td><?= htmlspecialchars($row['name']) ?></td>
+                          <td class="text-center">
+                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Position" class="btn btn-warning btn-sm">Edit</a>
+                          </td>
+                        </tr>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                </div>
 
-          <h5 class="card-title mt-4">Existing Sections</h5>
-          <table class="table table-bordered align-middle ">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 85%;">Section</th>
-                <th style="width: 15%;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php while ($row = mysqli_fetch_assoc($sections)): ?>
-                <tr>
-                  <td><?= htmlspecialchars($row['name']) ?></td>
-                  <td class="text-center">
-                    <div style="width: 85%;">
-                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Section" class="btn btn-warning btn-sm">Edit</a>
-                      <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this section?')" class="btn btn-danger btn-sm">Delete</a> -->
-                    </div>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            </tbody>
-          </table>
+                <!-- Sections -->
+                <div class="col-md-3">
+                  <h5 class="card-title">Existing Sections</h5>
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Section</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php while ($row = mysqli_fetch_assoc($sections)): ?>
+                        <tr>
+                          <td><?= htmlspecialchars($row['name']) ?></td>
+                          <td class="text-center">
+                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Section" class="btn btn-warning btn-sm">Edit</a>
+                          </td>
+                        </tr>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                </div>
 
-          <h5 class="card-title mt-4">Existing Departments</h5>
-          <table class="table table-bordered align-middle">
-            <thead class="table-light">
-              <tr>
-                <th style="width: 85%;">Department</th>
-                <th style="width: 15%;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php while ($row = mysqli_fetch_assoc($departments)): ?>
-                <tr>
-                  <td><?= htmlspecialchars($row['name']) ?></td>
-                  <td class="text-center">
-                    <div style="width: 85%;">
-                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Department" class="btn btn-warning btn-sm">Edit</a>
-                      <!-- <a href="superadmin-addsdelete.php?id=<?= $row['id'] ?>" onclick="return confirm('Delete this department?')" class="btn btn-danger btn-sm">Delete</a> -->
-                    </div>
-                  </td>
-                </tr>
-              <?php endwhile; ?>
-            </tbody>
-          </table>
+                <!-- Departments -->
+                <div class="col-md-3">
+                  <h5 class="card-title">Existing Departments</h5>
+                  <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Department</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php while ($row = mysqli_fetch_assoc($departments)): ?>
+                        <tr>
+                          <td><?= htmlspecialchars($row['name']) ?></td>
+                          <td class="text-center">
+                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Department" class="btn btn-warning btn-sm">Edit</a>
+                          </td>
+                        </tr>
+                      <?php endwhile; ?>
+                    </tbody>
+                  </table>
+                </div>
+              </div> <!-- End .row -->
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -469,6 +483,47 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
         setTimeout(() => alert.remove(), 500); // optional DOM cleanup
       }
     }, 5000); // Hide after 5 seconds
+  </script>
+
+  <script>
+    document.getElementById("confirmAdd").addEventListener("click", function(e) {
+      const typeSelect = document.querySelector("select[name='type']");
+      const nameInput = document.querySelector("input[name='value']");
+      const type = typeSelect.value;
+      const value = nameInput.value.trim();
+
+      if (!type || !value) {
+        Swal.fire({
+          icon: "warning",
+          title: "Missing Fields",
+          text: "Please select a type and enter a name.",
+        });
+        return;
+      }
+
+      const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+          confirmButton: "btn btn-success mx-2",
+          cancelButton: "btn btn-danger mx-2"
+        },
+        buttonsStyling: false
+      });
+
+      swalWithBootstrapButtons.fire({
+        title: `Add "${value}" as ${type}?`,
+        text: "Please double-check if this is correct before saving.",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, add it!",
+        cancelButtonText: "Cancel",
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Submit the form manually if confirmed
+          e.target.closest("form").submit();
+        }
+      });
+    });
   </script>
 
 </body>

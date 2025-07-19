@@ -256,13 +256,49 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
     </div><!-- End Page Title -->
 
     <?php if (isset($_SESSION['msg'])): ?>
-      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-        <?= htmlspecialchars($_SESSION['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          const type = <?= json_encode($_SESSION['msg_type'] ?? 'info') ?>;
+          const msg = <?= json_encode($_SESSION['msg']) ?>;
+          const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
+
+          if (errors.length > 0) {
+            const htmlTable = `
+          <table class="table table-bordered" style="text-align:left;">
+            <thead>
+              <tr><th>Skipped Details</th></tr>
+            </thead>
+            <tbody>
+              ${errors.map(err => `<tr><td>${err}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        `;
+
+            Swal.fire({
+              icon: type === 'success' ? 'success' : (type === 'warning' ? 'warning' : 'error'),
+              title: msg,
+              html: htmlTable,
+              width: 600,
+              confirmButtonText: 'OK',
+            });
+          } else {
+            Swal.fire({
+              icon: type,
+              title: msg,
+              showConfirmButton: false,
+              timer: 2000,
+              timerProgressBar: true
+            });
+          }
+        });
+      </script>
+      <?php
+      unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']);
+      ?>
     <?php endif; ?>
+
+
 
 
     <!-- Inserting Subject to Student Section -->
@@ -453,4 +489,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 
 
 </body>
+
 </html>

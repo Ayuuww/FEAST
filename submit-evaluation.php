@@ -65,7 +65,8 @@ $computed_rating = ($total_score / 75) * 100;
 $answers_json = json_encode($answers);
 
 // Define the function FIRST
-function logActivity($conn, $user_id, $role, $action) {
+function logActivity($conn, $user_id, $role, $action)
+{
     $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
     $stmt->bind_param("sss", $user_id, $role, $action);
     $stmt->execute();
@@ -117,7 +118,7 @@ try {
         total_score, computed_rating, comment
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-      $archive_stmt->bind_param(
+    $archive_stmt->bind_param(
         "sssssssids",
         $student_id,
         $subject_code,
@@ -153,16 +154,16 @@ try {
         'answers'         => $answers
     ];
 
-    header("Location: evaluation-print.php");
+    $_SESSION['evaluation_success'] = true;
+    header("Location: student-evaluate.php");
     exit();
-
+    
 } catch (mysqli_sql_exception $e) {
     if (str_contains($e->getMessage(), 'Duplicate entry')) {
         $_SESSION['error_message'] = "You've already submitted an evaluation for this subject and semester.";
     } else {
         $_SESSION['error_message'] = "Error: " . $e->getMessage();
     }
-    header("Location: error-page.php");
+    header("Location: student-evaluate.php");
     exit();
 }
-?>

@@ -19,9 +19,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $stmt->execute();
 
   $_SESSION['msg'] = "Evaluation settings updated!";
-  header("Location: superadmin-evaluationsetting.php");
+  header("Location: superadmin-evaluationsetting.php?success=1"); // <-- add ?success=1
   exit();
 }
+
 
 // Fetch current settings
 $current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
@@ -30,11 +31,11 @@ $current_semester = $setting['semester'];
 $current_year = $setting['academic_year'];
 
 // Show success message if set
-$success_msg = '';
-if (isset($_SESSION['msg'])) {
-  $success_msg = $_SESSION['msg'];
-  unset($_SESSION['msg']); // clear message after showing
-}
+// $success_msg = '';
+// if (isset($_SESSION['msg'])) {
+//   $success_msg = $_SESSION['msg'];
+//   unset($_SESSION['msg']); // clear message after showing
+// }
 
 // Fetch current settings
 $current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
@@ -56,6 +57,12 @@ $current_year = $setting['academic_year'];
 
   <?php include 'header.php' ?>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+      font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    }
+  </style>
 </head>
 
 <body>
@@ -296,7 +303,7 @@ $current_year = $setting['academic_year'];
                 </div>
               </div>
               <div class="d-grid gap-2 col-6 mx-auto">
-                <button type="submit" class="btn btn-success">Save Settings</button>
+                <button type="submit" class="btn btn-success" onclick="" id="save_settings">Save Settings</button>
               </div>
             </form>
           </div>
@@ -327,6 +334,7 @@ $current_year = $setting['academic_year'];
   <script src="assets/js/main.js"></script>
 
   <script>
+    // Auto dismiss bootstrap alert
     setTimeout(() => {
       const alert = document.querySelector('.alert');
       if (alert) {
@@ -334,7 +342,23 @@ $current_year = $setting['academic_year'];
         alert.classList.add('fade');
         setTimeout(() => alert.remove(), 500); // optional DOM cleanup
       }
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
+
+    // Show SweetAlert on successful save
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === '1') {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Evaluation settings have been updated.',
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        // Clean up the URL so alert doesn't reappear on refresh
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      });
+    }
   </script>
 
 </body>
