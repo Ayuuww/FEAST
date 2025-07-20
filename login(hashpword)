@@ -1,0 +1,82 @@
+<?php
+session_start();
+include "conn/conn.php";
+
+// Sanitize input
+$id = mysqli_real_escape_string($conn, $_POST['idnumber']);
+$password = $_POST['password']; // Keep raw for password_verify()
+
+function tryLogin($conn, $table, $id, $password) {
+    $stmt = $conn->prepare("SELECT * FROM $table WHERE idnumber = ?");
+    $stmt->bind_param("s", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        if (!password_verify($password, $row['password'])) {
+            return null; // Password doesn't match
+        }
+
+        if (isset($row['status']) && $row['status'] !== 'active') {
+            $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
+            header("Location: pages-login.php");
+            exit();
+        }
+
+        return $row;
+    }
+    return null;
+}
+
+// Superadmin
+if ($user = tryLogin($conn, "superadmin", $id, $password)) {
+    $_SESSION['idnumber']   = $user['idnumber'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name']  = $user['last_name'];
+    $_SESSION['role']       = 'superadmin';
+    header("Location: superadmin-dashboard.php");
+    exit();
+}
+
+// Admin
+if ($user = tryLogin($conn, "admin", $id, $password)) {
+    $_SESSION['idnumber']   = $user['idnumber'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name']  = $user['last_name'];
+    $_SESSION['department'] = $user['department'];
+    $_SESSION['position']   = $user['position'];
+    $_SESSION['email']      = $user['email'];
+    $_SESSION['role']       = 'admin';
+    header("Location: admin-dashboard.php");
+    exit();
+}
+
+// Faculty
+if ($user = tryLogin($conn, "faculty", $id, $password)) {
+    $_SESSION['idnumber']   = $user['idnumber'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name']  = $user['last_name'];
+    $_SESSION['department'] = $user['department'];
+    $_SESSION['role']       = $user['role'];
+    $_SESSION['status']     = $user['status'];
+    header("Location: faculty-dashboard.php");
+    exit();
+}
+
+// Student
+if ($user = tryLogin($conn, "student", $id, $password)) {
+    $_SESSION['idnumber']   = $user['idnumber'];
+    $_SESSION['first_name'] = $user['first_name'];
+    $_SESSION['last_name']  = $user['last_name'];
+    $_SESSION['role']       = $user['role'];
+    $_SESSION['section']    = $user['section'];
+    $_SESSION['department'] = $user['department'];
+    header("Location: student-dashboard.php");
+    exit();
+}
+
+// Invalid login
+$_SESSION['msg'] = 'Invalid ID or Password. Please try again.';
+header("Location: pages-login.php");
+exit();
+?>
