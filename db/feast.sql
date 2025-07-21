@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 19, 2025 at 05:14 PM
+-- Generation Time: Jul 21, 2025 at 03:12 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -61,7 +61,14 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (78, '100-0000-0', 'admin', 'Logged in', '2025-07-19 22:04:15'),
 (79, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty with a rating of 98.67%', '2025-07-19 22:05:08'),
 (80, '100-0000-0', 'admin', 'Logged in', '2025-07-19 22:11:27'),
-(81, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 22:21:51');
+(81, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 22:21:51'),
+(82, '221-0387-1', 'superadmin', 'Logged in', '2025-07-21 00:55:15'),
+(83, '100-0000-0', 'admin', 'Logged in', '2025-07-21 00:58:22'),
+(84, '001-0000-0', 'faculty', 'Logged in', '2025-07-21 01:08:26'),
+(85, '001-0000-0', 'faculty', 'Logged in', '2025-07-21 19:20:56'),
+(86, '000-0000-0', 'student', 'Logged in', '2025-07-21 20:58:29'),
+(87, '000-0000-0', 'student', 'Rated 100% for ISPC-101 handled by Maricel Maam Faculty', '2025-07-21 21:00:02'),
+(88, '221-0388-1', 'student', 'Logged in', '2025-07-21 21:01:08');
 
 -- --------------------------------------------------------
 
@@ -154,13 +161,6 @@ CREATE TABLE `admin_evaluation` (
   `evaluation_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `admin_evaluation`
---
-
-INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
-(28, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '1st Semester', 74, 98.67, 'Greate Teaching', 'CIS', '2025-07-19 22:05:08');
-
 -- --------------------------------------------------------
 
 --
@@ -209,6 +209,13 @@ CREATE TABLE `evaluation` (
   `semester` varchar(255) DEFAULT NULL,
   `student_section` varchar(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `evaluation`
+--
+
+INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`) VALUES
+(100, '000-0000-0', 'CIS', 'ISPC-101', 'Computer Programming', '2025-2026', '001-0000-0', 75.00, 100.00, 'Great at teaching', '2025-07-21 13:00:02', '1st Semester', '1-A');
 
 -- --------------------------------------------------------
 
@@ -338,6 +345,13 @@ CREATE TABLE `student_evaluation_submissions` (
   `comment` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `student_evaluation_submissions`
+--
+
+INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`) VALUES
+(27, '000-0000-0', 'ISPC-101', '001-0000-0', 'CIS', '2025-2026', '1st Semester', '2025-07-21 21:00:02', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Great at teaching');
+
 -- --------------------------------------------------------
 
 --
@@ -349,18 +363,19 @@ CREATE TABLE `student_subject` (
   `student_id` varchar(11) NOT NULL,
   `subject_code` varchar(11) NOT NULL,
   `faculty_id` varchar(11) DEFAULT NULL,
-  `admin_id` varchar(50) DEFAULT NULL
+  `admin_id` varchar(50) DEFAULT NULL,
+  `evaluated` varchar(11) NOT NULL DEFAULT 'no'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `student_subject`
 --
 
-INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`, `admin_id`) VALUES
-(51, '221-0388-1', 'ISBA-101', '100-0000-0', NULL),
-(52, '221-0388-1', 'ISPC-101', '001-0000-0', NULL),
-(54, '000-0000-1', 'ISBA-101', '100-0000-0', NULL),
-(55, '000-0000-0', 'ISPC-101', '001-0000-0', NULL);
+INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `faculty_id`, `admin_id`, `evaluated`) VALUES
+(51, '221-0388-1', 'ISBA-101', '100-0000-0', NULL, 'no'),
+(52, '221-0388-1', 'ISPC-101', '001-0000-0', NULL, 'no'),
+(54, '000-0000-1', 'ISBA-101', '100-0000-0', NULL, 'no'),
+(55, '000-0000-0', 'ISPC-101', '001-0000-0', NULL, 'yes');
 
 -- --------------------------------------------------------
 
@@ -538,7 +553,7 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=82;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
 
 --
 -- AUTO_INCREMENT for table `adds`
@@ -562,7 +577,7 @@ ALTER TABLE `admin_evaluation_submissions`
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -586,7 +601,7 @@ ALTER TABLE `faculty_peer_evaluation`
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
 --
 ALTER TABLE `student_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `student_subject`
