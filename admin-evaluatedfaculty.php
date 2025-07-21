@@ -202,7 +202,7 @@ if (isset($_SESSION['msg'])) {
 
 
     <!-- ======= Footer ======= -->
-    <?php include'footer.php'?>
+    <?php include 'footer.php'?>
     <!-- End Footer -->
 
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i

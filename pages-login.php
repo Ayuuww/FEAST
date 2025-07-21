@@ -31,6 +31,13 @@ include 'conn/conn.php'; // Connection to the database
         padding: 1.5rem !important;
       }
     }
+
+    #footer {
+      background-color: #f8f9fa;
+      padding: 20px 0;
+      font-size: 14px;
+      color: #6c757d;
+    }
   </style>
 
 
@@ -145,6 +152,9 @@ include 'conn/conn.php'; // Connection to the database
     </section><!-- End Registration Section -->
   </main>
 
+  <!-- ======= Footer ======= -->
+  <?php include 'footer.php'?>
+  <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 

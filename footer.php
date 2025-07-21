@@ -5,7 +5,7 @@
       &copy; <?= date('Y') ?> <strong><span>FEAST - DMMMSU-NLUC</span></strong>. All Rights Reserved.
     </div>
     <div class="text-muted small">
-      Developed and maintained by the CJVR, JAS, AYMM.
+      Developed and maintained by the <strong>FEAST Team</strong> CJVR, JAS, AYMM.
     </div>
   </div>
 </footer><!-- End Footer -->

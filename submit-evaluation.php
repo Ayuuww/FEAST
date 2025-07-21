@@ -135,9 +135,9 @@ try {
     $archive_stmt->execute();
 
     // Update evaluated status in student_subject table
-    // $update_stmt = $conn->prepare("UPDATE student_subject SET evaluated = 'yes' WHERE student_id = ? AND subject_code = ? AND faculty_id = ?");
-    // $update_stmt->bind_param("sss", $student_id, $subject_code, $faculty_id);
-    // $update_stmt->execute();
+    $update_stmt = $conn->prepare("UPDATE student_subject SET evaluated = 'yes' WHERE student_id = ? AND subject_code = ? AND faculty_id = ?");
+    $update_stmt->bind_param("sss", $student_id, $subject_code, $faculty_id);
+    $update_stmt->execute();
 
     // Store data for reprint
     $_SESSION['print_data'] = [

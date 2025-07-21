@@ -182,6 +182,10 @@ include 'conn/conn.php'; // DB connection
     </section>
   </main>
 
+  <!-- ======= Footer ======= -->
+  <?php include 'footer.php'?>
+  <!-- End Footer -->
+
   <?php if (isset($_SESSION['msg'])): ?>
     <script>
       document.addEventListener("DOMContentLoaded", function() {
