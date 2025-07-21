@@ -12,7 +12,7 @@ if (isset($_POST['delete'])) {
 
     if (mysqli_num_rows($check_result) == 0) {
         $_SESSION['msg'] = 'Subject does not exist!';
-        header("Location: superadmin-subjectlist.php");
+        header("Location: admin-subjectlist.php");
         exit();
         
     } else {
@@ -21,7 +21,7 @@ if (isset($_POST['delete'])) {
         
         if (mysqli_query($conn, $delete_query)) {
             $_SESSION['msg'] = 'Subject deleted successfully!';
-            header("Location: superadmin-subjectlist.php");
+            header("Location: admin-subjectlist.php");
             exit();
         } else {
             echo "<script>alert('Error deleting subject: " . mysqli_error($conn) . "');</script>";

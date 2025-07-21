@@ -643,7 +643,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Saved!',
-                            text: 'You can print your evaluation later.',
+                            text: 'You can print your evaluation later. Check on Evaluated Subject',
                             confirmButtonText: 'OK'
                         });
                     }
