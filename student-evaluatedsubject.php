@@ -168,7 +168,7 @@ if (isset($_SESSION['msg'])) {
                       <td><?= htmlspecialchars($row['semester']) ?></td>
                       <td><?= date("M d, Y", strtotime($row['created_at'])) ?></td>
                       <td>
-                        <a href="student-evaluation-reprint.php?faculty_id=<?= urlencode($row['faculty_id']) ?>&subject_code=<?= urlencode($row['subject_code']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>"
+                        <a href="student-evaluation-reprint-fpdf.php?faculty_id=<?= urlencode($row['faculty_id']) ?>&subject_code=<?= urlencode($row['subject_code']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>"
                           class="btn btn-sm btn-outline-primary">
                           Reprint
                         </a>

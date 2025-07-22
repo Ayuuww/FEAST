@@ -44,7 +44,7 @@ if (isset($_SESSION['msg'])) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Student Evaluate </title>
+  <title>FEAST / Evaluate (Evaluated Faculty) </title>
   
 
   <?php include 'header.php' ?>
@@ -179,7 +179,7 @@ if (isset($_SESSION['msg'])) {
                                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
                                         <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
                                         <td>
-                                          <a href="admin-evaluation-reprint.php?evaluatee_id=<?= urlencode($row['evaluatee_id']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>" 
+                                          <a href="admin-evaluation-reprint-fpdf.php?evaluatee_id=<?= urlencode($row['evaluatee_id']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>" 
                                             class="btn btn-sm btn-outline-primary">
                                             Reprint
                                           </a>

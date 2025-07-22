@@ -638,7 +638,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.open('evaluation-print.php', '_blank'); // Open in new tab
+                        window.open('student-evaluation-print-fpdf.php', '_blank'); // Open in new tab
                     } else {
                         Swal.fire({
                             icon: 'success',

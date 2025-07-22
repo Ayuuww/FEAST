@@ -568,7 +568,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                     if (result.isConfirmed) {
                         // Assuming you pass the evaluatee_id to print page
                         // You might need to adjust this based on how you handle printing
-                        window.location.href = "admin-evaluation-print.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>";
+                        window.location.href = "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>";
                     } else {
                         Swal.fire({
                             title: 'Saved!',

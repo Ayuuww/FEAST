@@ -54,7 +54,7 @@ $sectionLabels = [];
 $sectionValues = [];
 
 while ($row = $sectionResult->fetch_assoc()) {
-  $sectionLabels[] = $row['studdent_section'];
+  $sectionLabels[] = $row['student_section'];
   $sectionValues[] = $row['total_ratings'];
 }
 
