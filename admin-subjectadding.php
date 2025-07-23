@@ -128,7 +128,46 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
           <i class="bi bi-book-fill"></i>
           <span>Subject Evaluated</span>
         </a>
-      </li><!-- End Profile Nav -->
+      </li><!-- End Subject Evaluated Nav -->
+
+      <!-- Reports Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="admin-individualreport.php">
+              <i class="bi bi-circle"></i><span>Invidiual Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-acknowledgementreport.php">
+              <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-set.php">
+              <i class="bi bi-circle"></i><span>Overall Report SET</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-sef.php">
+              <i class="bi bi-circle"></i><span>Overall Report SEF</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport.php">
+              <i class="bi bi-circle"></i><span>Overall Report (SET & SEF)</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Reports Nav -->
 
       <li class="nav-heading">Pages</li>
 
@@ -164,17 +203,17 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
       </nav>
     </div><!-- End Page Title -->
 
-    <?php
-    if (isset($_SESSION['msg'])) {
-      $msg = $_SESSION['msg'];
-      $type = $_SESSION['msg_type'] ?? 'info'; // Can be 'success', 'warning', 'danger', 'info'
-      echo "<div class='alert alert-$type alert-dismissible fade show mt-3' role='alert'>
-                $msg
-                <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
-              </div>";
-      unset($_SESSION['msg'], $_SESSION['msg_type']);
-    }
-    ?>
+    <?php if (isset($_SESSION['msg'])): ?>
+      <script>
+        Swal.fire({
+          icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
+          title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
+          text: '<?= $_SESSION['msg'] ?>',
+          confirmButtonColor: '#3085d6'
+        });
+      </script>
+      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+    <?php endif; ?>
 
     <!-- Super Admin Creation Section -->
     <section class="section">
@@ -184,13 +223,18 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
             <div class="card-body">
               <h5 class="card-title">Add New Subject</h5>
 
-              <!-- <?php if (isset($_SESSION['msg'])): ?>
-                  <div class="alert alert-info alert-dismissible fade show mt-3 mb-3" role="alert" style="margin: auto;">
-                    <?= $_SESSION['msg']; ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                  <?php unset($_SESSION['msg']); ?>
-                <?php endif; ?> -->
+              <?php if (isset($_SESSION['msg'])): ?>
+                <script>
+                  Swal.fire({
+                    icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
+                    title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
+                    text: '<?= $_SESSION['msg'] ?>',
+                    confirmButtonColor: '#3085d6'
+                  });
+                </script>
+                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+              <?php endif; ?>
+
 
               <form class="row g-3 needs-validation " novalidate method="post" action="addsubject.php">
 

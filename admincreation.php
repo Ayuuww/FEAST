@@ -11,9 +11,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     $password   = mysqli_real_escape_string($conn, trim($_POST['password']));
     $department = mysqli_real_escape_string($conn, trim($_POST['department']));
     $position   = mysqli_real_escape_string($conn, trim($_POST['position']));
-    $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank'])) 
-                    ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank'])) 
-                    : null;
+    $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank']))
+        ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank']))
+        : null;
 
     // Hash the password before storing (for security)
     // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -38,8 +38,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($insert_query);
-    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $position, $faculty_rank);
-    
+    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $password, $department, $position, $faculty_rank);
+
     if ($stmt->execute()) {
         // Check and insert into faculty if not already present
         $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
@@ -57,10 +57,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
         }
         $faculty_check->close();
 
-        $_SESSION['msg'] = 'Admin account successfully created.';
+        $_SESSION['msg'] = 'Admin created successfully!';
+        $_SESSION['msg_type'] = 'success';
+        header("Location: superadmin-admincreation.php");
+        exit();
     } else {
-        $_SESSION['msg'] = 'Error creating admin account: ' . $stmt->error;
+        $_SESSION['msg'] = 'Failed to create admin. ID already exists.';
+        $_SESSION['msg_type'] = 'info'; // or 'error' if you want
+        header("Location: superadmin-admincreation.php");
+        exit();
     }
+
     $stmt->close();
 
     header("Location: superadmin-admincreation.php");

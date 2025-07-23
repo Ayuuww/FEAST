@@ -20,10 +20,10 @@ $check->fetch();
 $check->close();
 
 if ($exists > 0) {
-    $_SESSION['msg'] = "ID number already exists. Please enter a different one.";
-    $_SESSION['msg_type'] = "warning";
-    header("Location: superadmin-facultycreation.php");
-    exit();
+  $_SESSION['msg'] = "ID number already exists. Please enter a different one.";
+  $_SESSION['msg_type'] = "warning";
+  header("Location: superadmin-facultycreation.php");
+  exit();
 }
 
 // Insert if not duplicate
@@ -31,14 +31,13 @@ $stmt = $conn->prepare("INSERT INTO faculty (idnumber, first_name, mid_name, las
 $stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $password, $rank, $department);
 
 if ($stmt->execute()) {
-    $_SESSION['msg'] = "Faculty account has been created successfully.";
-    $_SESSION['msg_type'] = "success";
+  $_SESSION['msg'] = "Faculty account has been created successfully.";
+  $_SESSION['msg_type'] = "success";
 } else {
-    $_SESSION['msg'] = "Failed to create faculty account.";
-    $_SESSION['msg_type'] = "danger";
+  $_SESSION['msg'] = "Failed to create faculty account.";
+  $_SESSION['msg_type'] = "danger";
 }
 $stmt->close();
 
 header("Location: superadmin-facultycreation.php");
 exit();
-?>

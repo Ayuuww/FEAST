@@ -197,8 +197,5 @@ $comments_q = mysqli_query($conn, "SELECT comment FROM evaluation WHERE faculty_
         </tr>
         </table>
 
-
-
-
 </body>
 </html>

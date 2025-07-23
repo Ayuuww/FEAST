@@ -1,60 +1,57 @@
 <?php
 session_start();
 include 'conn/conn.php';
-
-// Check if the user is logged in and is a faculty
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
 }
-
-$evaluator_id = $_SESSION['idnumber'];
-
-// Fetching peer evaluations done by the current faculty
-$query = "SELECT 
-            ae.id,
-            ae.evaluatee_id,
-            f.first_name, f.mid_name, f.last_name,
-            ae.total_score,
-            ae.computed_rating,
-            ae.academic_year,
-            ae.semester,
-            ae.evaluation_date
-          FROM admin_evaluation ae
-          JOIN faculty f ON ae.evaluatee_id = f.idnumber
-          WHERE ae.evaluator_id = ?
-          ORDER BY ae.evaluation_date DESC";
-
-$stmt = $conn->prepare($query);
-$stmt->bind_param("s", $evaluator_id);
+$admin_id = $_SESSION['idnumber'];
+$stmt = $conn->prepare("SELECT department FROM admin WHERE idnumber = ?");
+$stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$result = $stmt->get_result();
+$stmt->bind_result($admin_department);
+$stmt->fetch();
+$stmt->close();
 
-// Display message if set
-if (isset($_SESSION['msg'])) {
-  echo "<script>alert('" . addslashes($_SESSION['msg']) . "');</script>";
-  unset($_SESSION['msg']);
+// Fetch all faculty in this department
+$query = $conn->prepare("
+  SELECT idnumber, last_name, first_name, mid_name
+  FROM faculty
+  WHERE department = ?
+  ORDER BY last_name ASC
+");
+$query->bind_param("s", $admin_department);
+$query->execute();
+$faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+$query->close();
+
+// Build table rows
+$rows = '';
+foreach ($faculties as $fac) {
+  $fid = $fac['idnumber'];
+  $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
+  $r = $conn->query("
+    SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
+    FROM evaluation
+    WHERE faculty_id = '$fid'
+  ")->fetch_assoc();
+  $count = (int)$r['students'];
+  $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
+  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg} %</td></tr>";
 }
 ?>
 
-
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Evaluate (Evaluated Faculty) </title>
-
-
-  <?php include 'header.php' ?>
-
+  <title>Overall SET Report</title>
+  <?php include 'header.php'; ?>
 </head>
 
 <body>
 
-  <?php include 'admin-header.php' ?>
+  <?php include 'admin-header.php'; ?>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
@@ -70,17 +67,17 @@ if (isset($_SESSION['msg'])) {
 
       <!-- Evaluate Nav -->
       <li class="nav-item">
-        <a class="nav-link collapse" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="charts-nav" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
+        <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>
             <a href="admin-evaluate.php">
               <i class="bi bi-circle"></i><span>Form</span>
             </a>
           </li>
           <li>
-            <a href="admin-evaluatedfaculty.php" class="active">
+            <a href="admin-evaluatedfaculty.php">
               <i class="bi bi-circle"></i><span>Evaluated Faculty</span>
             </a>
           </li>
@@ -123,10 +120,10 @@ if (isset($_SESSION['msg'])) {
 
       <!-- Reports Nav -->
       <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+        <a class="nav-link collapse" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
           <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="reports" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+        <ul id="reports" class="nav-content collapse show" data-bs-parent="#sidebar-nav">
           <li>
             <a href="admin-individualreport.php">
               <i class="bi bi-circle"></i><span>Invidiual Report</span>
@@ -138,7 +135,7 @@ if (isset($_SESSION['msg'])) {
             </a>
           </li>
           <li>
-            <a href="admin-overallreport-set.php">
+            <a href="admin-overallreport-set.php" class="active">
               <i class="bi bi-circle"></i><span>Overall Report SET</span>
             </a>
           </li>
@@ -148,7 +145,7 @@ if (isset($_SESSION['msg'])) {
             </a>
           </li>
           <li>
-            <a href="admin-overallreport.php">
+            <a href="admin-overallreport.php" >
               <i class="bi bi-circle"></i><span>Overall Report (SET & SEF)</span>
             </a>
           </li>
@@ -176,72 +173,62 @@ if (isset($_SESSION['msg'])) {
         </a>
       </li><!-- End Sign out Nav -->
 
-
     </ul>
 
   </aside><!-- End Sidebar-->
 
+
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Evaluated Faculty</h1>
+      <h1>Student Evaluation of Teacher Report</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Evaluate</li>
-          <li class="breadcrumb-item active">Evaluated Faculty</li>
+          <li class="breadcrumb-item">Reports</li>
+          <li class="breadcrumb-item active">Overall Report SET</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
-    <section class="section">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title">Faculty You Have Evaluated</h5>
+    <section class="section dashboard">
+      <div class="container mt-4">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <div class="card">
+              <div class="card-body">
+                <h4 class="card-title text-center my-3">
+                  Overall SET Report – <?= htmlspecialchars($admin_department) ?>
+                </h4>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Faculty Name</th>
+                        <th>No. of Student Evaluations</th>
+                        <th>Average SET Rating</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?= $rows ?>
+                    </tbody>
+                  </table>
+                </div>
 
-          <div class="table-responsive">
-            <table class="table table-striped datatable">
-              <thead>
-                <tr>
-                  <th>Evaluatee Name</th>
-                  <th>Total Score</th>
-                  <th>Computed Rating</th>
-                  <th>Semester</th>
-                  <th>Academic Year</th>
-                  <th>Evaluated On</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php if ($result->num_rows > 0): ?>
-                  <?php while ($row = $result->fetch_assoc()): ?>
-                    <tr>
-                      <td class="text-capitalize"><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
-                      <td><?= htmlspecialchars($row['total_score']) ?></td>
-                      <td><?= htmlspecialchars($row['computed_rating']) ?></td>
-                      <td><?= htmlspecialchars($row['semester']) ?></td>
-                      <td><?= htmlspecialchars($row['academic_year']) ?></td>
-                      <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
-                      <td>
-                        <a href="admin-evaluation-reprint-fpdf.php?evaluatee_id=<?= urlencode($row['evaluatee_id']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>"
-                          class="btn btn-sm btn-outline-primary">
-                          Reprint
-                        </a>
-                      </td>
-                    </tr>
-                  <?php endwhile; ?>
-                <?php else: ?>
-                  <tr>
-                    <td colspan="5" class="text-center">You have not evaluated any faculty peers yet.</td>
-                  </tr>
-                <?php endif; ?>
-              </tbody>
-            </table>
+                <div class="text-end mb-3">
+                  <a href="admin-overallreport-set-print.php" class="btn btn-secondary" target="_blank">
+                    <i class="bi bi-printer"></i> Print Report
+                  </a>
+                </div>
+
+              </div>
+            </div>
           </div>
-
         </div>
       </div>
     </section>
-  </main><!-- End #main -->
 
+  </main>
+  <!-- End #main -->
 
   <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>

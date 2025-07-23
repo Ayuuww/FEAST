@@ -104,12 +104,13 @@ while ($row = $countResult->fetch_assoc()) {
         </a>
       </li><!-- End Profile Nav -->
 
-      <!-- <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-records.php">
-            <i class="ri-record-circle-fill"></i>
-            <span>Records</span>
-          </a>
-        </li>End Records Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="faculty-pastrecords.php">
+          <i class="ri-record-circle-fill"></i>
+          <span>Records</span>
+        </a>
+      </li>
+      <!-- End Records Nav -->
 
       <li class="nav-heading">Pages</li>
 
@@ -175,20 +176,38 @@ while ($row = $countResult->fetch_assoc()) {
                         <td><?= number_format($row['avg_score'], 2) ?></td>
                         <td><?= number_format($row['avg_rating'], 2) ?>%</td>
                         <td>
-                          <button class="btn btn-sm btn-success mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#comments<?= $index ?>" aria-expanded="false" aria-controls="comments<?= $index ?>">
-                            <i class="bi bi-chat-dots"></i> Show Comments
+                          <!-- Modal Trigger Button -->
+                          <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#commentModal<?= $index ?>">
+                            <i class="bi bi-chat-dots"></i> View
                           </button>
-                          <div class="collapse mt-2" id="comments<?= $index ?>">
-                            <div class="border p-2 bg-light rounded">
-                              <?php
-                              $comments = isset($row['all_comments']) ? explode('||', $row['all_comments']) : [];
-                              foreach ($comments as $comment) {
-                                $cleaned = trim($comment);
-                                if ($cleaned !== '') {
-                                  echo "<div class='mb-1'>• " . htmlspecialchars($cleaned) . "</div>";
-                                }
-                              }
-                              ?>
+
+                          <!-- Modal -->
+                          <div class="modal fade" id="commentModal<?= $index ?>" tabindex="-1" aria-labelledby="commentModalLabel<?= $index ?>" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="commentModalLabel<?= $index ?>">Comments for <?= htmlspecialchars($row['subject_code']) ?></h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <?php
+                                  $comments = isset($row['all_comments']) ? explode('||', $row['all_comments']) : [];
+                                  if (count($comments)) {
+                                    foreach ($comments as $comment) {
+                                      $cleaned = trim($comment);
+                                      if ($cleaned !== '') {
+                                        echo "<div class='mb-2'>• " . htmlspecialchars($cleaned) . "</div>";
+                                      }
+                                    }
+                                  } else {
+                                    echo "<p class='text-muted'>No comments available.</p>";
+                                  }
+                                  ?>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </td>

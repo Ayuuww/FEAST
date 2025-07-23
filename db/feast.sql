@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 22, 2025 at 08:34 PM
+-- Generation Time: Jul 23, 2025 at 05:34 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -99,7 +99,22 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (116, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 01:59:21'),
 (117, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-07-23 02:02:08'),
 (118, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 02:08:56'),
-(119, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-07-23 02:11:51');
+(119, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-07-23 02:11:51'),
+(120, '100-0000-0', 'admin', 'Logged in', '2025-07-23 14:08:30'),
+(121, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 14:18:23'),
+(122, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 14:20:02'),
+(123, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:01:27'),
+(124, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:14:19'),
+(125, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 18:17:03'),
+(126, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:22:56'),
+(127, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 18:54:50'),
+(128, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:55:57'),
+(129, '100-0000-0', 'admin', 'Logged in', '2025-07-23 20:04:50'),
+(130, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 20:12:48'),
+(131, '100-0000-0', 'admin', 'Logged in', '2025-07-23 20:55:20'),
+(132, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 20:55:33'),
+(133, '500-0000-0', 'admin', 'Logged in', '2025-07-23 21:33:02'),
+(134, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 21:39:11');
 
 -- --------------------------------------------------------
 
@@ -144,7 +159,8 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (60, 'Professor IV', NULL, NULL, NULL),
 (61, 'Associate Professor I', NULL, NULL, NULL),
 (62, NULL, NULL, '2-D', NULL),
-(63, NULL, NULL, '4-A', NULL);
+(63, NULL, NULL, '4-A', NULL),
+(64, NULL, NULL, NULL, 'CAFF');
 
 -- --------------------------------------------------------
 
@@ -170,7 +186,11 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `position`, `role`, `status`, `faculty_rank`) VALUES
-('100-0000-0', 'Maam', 'Edith', 'Admin', 'ILOVEDMMMSU', 'CIS', 'Dean', 'admin', 'active', 'Associate Professor I');
+('100-0000-0', 'Maam', 'Edith', 'Admin', 'ILOVEDMMMSU', 'CIS', 'Dean', 'admin', 'active', 'Associate Professor I'),
+('200-000-0', 'Program', 'Chair', 'Admin', 'ILOVEDMMMSU', 'CAS', 'Program Chair', 'admin', 'active', 'Professor V'),
+('300-0000-0', 'Vergil', 'Cry', 'Admin', 'ILOVEDMMMSU', 'CVM', 'Dean', 'admin', 'active', 'Professor IV'),
+('400-0000-0', 'Yelan', 'Hydro', 'Admin', 'ILOVEDMMMSU', 'BPED-Math', 'Program Chair', 'admin', 'active', 'Professor III'),
+('500-0000-0', 'Klee', 'Pyro', 'Admin', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'admin', 'active', 'Professor IV');
 
 -- --------------------------------------------------------
 
@@ -323,7 +343,18 @@ CREATE TABLE `faculty` (
 
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `faculty_rank`, `role`, `status`) VALUES
 ('001-0000-0', 'Maricel', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
-('100-0000-0', 'Maam', 'Edith', 'Admin', NULL, 'CIS', 'Associate Professor I', 'faculty', 'active');
+('002-0000-0', 'Shirley', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CAS', 'Professor V', 'faculty', 'active'),
+('003-0000-0', 'Excel', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor II', 'faculty', 'active'),
+('004-0000-0', 'Mark', 'Kristian', 'Faculty', 'ILOVEDMMMSU', 'BPED-Math', 'Professor III', 'faculty', 'active'),
+('005-0000-0', 'Jose', 'Christoper', 'Faculty', 'ILOVEDMMMSU', 'CVM', 'Professor I', 'faculty', 'active'),
+('006-0000-0', 'Van', 'Apollo', 'Faculty', 'ILOVEDMMMSU', 'CVM', 'Professor II', 'faculty', 'active'),
+('007-0000-0', 'Delwin', 'Caligma', 'Faculty', 'ILOVEDMMMSU', 'BPED-Math', 'Professor IV', 'faculty', 'active'),
+('008-0000-0', 'Rufo', 'Baro', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor IV', 'faculty', 'active'),
+('100-0000-0', 'Maam', 'Edith', 'Admin', NULL, 'CIS', 'Associate Professor I', 'faculty', 'active'),
+('200-000-0', 'Program', 'Chair', 'Admin', NULL, 'CAS', 'Professor V', 'faculty', 'active'),
+('300-0000-0', 'Vergil', 'Cry', 'Admin', NULL, 'CVM', 'Professor IV', 'faculty', 'active'),
+('400-0000-0', 'Yelan', 'Hydro', 'Admin', NULL, 'BPED-Math', 'Professor III', 'faculty', 'active'),
+('500-0000-0', 'Klee', 'Pyro', 'Admin', NULL, 'CAFF', 'Professor IV', 'faculty', 'active');
 
 -- --------------------------------------------------------
 
@@ -365,7 +396,7 @@ CREATE TABLE `student` (
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `section`, `role`) VALUES
 ('000-0000-0', 'Mark', 'Kristian', 'Student', 'ILOVEDMMMSU', 'CAS', '1-A', 'student'),
-('000-0000-1', 'Student', 'Sample', 'Experiment', 'ILOVEDMMMSU', 'BPED-Math', '2-A', 'student'),
+('000-0000-1', 'Clark', 'Joshua', 'Student', 'ILOVEDMMMSU', 'CVM', '4-B', 'student'),
 ('221-0388-1', 'Charles', 'Adonis', 'Student', 'ILOVEDMMMSU', 'CIS', '4-B', 'student');
 
 -- --------------------------------------------------------
@@ -423,13 +454,10 @@ CREATE TABLE `student_subject` (
 --
 
 INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academic_year`, `semester`, `faculty_id`, `admin_id`) VALUES
-(62, '000-0000-1', 'ISPC-101', '2025-2026', '1st Semester', '001-0000-0', NULL),
 (63, '000-0000-0', 'ISPC-101', '2025-2026', '1st Semester', '001-0000-0', NULL),
 (64, '221-0388-1', 'ISPC-101', '2025-2026', '1st Semester', '001-0000-0', NULL),
-(65, '000-0000-1', 'ISBA-101', '2025-2026', '1st Semester', '100-0000-0', NULL),
 (66, '000-0000-0', 'ISBA-101', '2025-2026', '1st Semester', '100-0000-0', NULL),
 (67, '221-0388-1', 'ISBA-101', '2025-2026', '1st Semester', '100-0000-0', NULL),
-(68, '000-0000-1', 'ISAE-101', '2025-2026', '1st Semester', '001-0000-0', NULL),
 (69, '000-0000-0', 'ISAE-101', '2025-2026', '1st Semester', '001-0000-0', NULL),
 (70, '221-0388-1', 'ISAE-101', '2025-2026', '1st Semester', '001-0000-0', NULL);
 
@@ -455,7 +483,8 @@ CREATE TABLE `subject` (
 INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `department`) VALUES
 (37, 'ISPC-101', 'Computer Programming I', '001-0000-0', NULL, 'CIS'),
 (38, 'ISBA-101', 'Accounting', '100-0000-0', NULL, 'CIS'),
-(39, 'ISAE-101', 'Fundamentals', '001-0000-0', NULL, 'CIS');
+(39, 'ISAE-101', 'Fundamentals', '001-0000-0', NULL, 'CIS'),
+(42, 'ISPE-110', 'IT Audit', '003-0000-0', NULL, 'CIS');
 
 -- --------------------------------------------------------
 
@@ -478,7 +507,8 @@ CREATE TABLE `superadmin` (
 --
 
 INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `status`) VALUES
-('221-0387-1', 'Clark Joshua', 'Joshua', 'Rojas', '12345678', 'superadmin', 'active');
+('221-0387-1', 'Clark Joshua', 'Joshua', 'Rojas', '12345678', 'superadmin', 'active'),
+('221-1230-1', 'Super', 'Admin', 'Superadmin', '12345678', 'superadmin', 'active');
 
 --
 -- Indexes for dumped tables
@@ -610,13 +640,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=120;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -670,7 +700,7 @@ ALTER TABLE `student_subject`
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- Constraints for dumped tables

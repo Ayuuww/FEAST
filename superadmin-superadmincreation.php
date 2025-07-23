@@ -234,32 +234,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
       </nav>
     </div><!-- End Page Title -->
 
-    <?php if (isset($_SESSION['msg'])): ?>
-      <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-      <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-        <?= htmlspecialchars($_SESSION['msg']) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-      <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-    <?php endif; ?>
-
     <!-- Super Admin Creation Section -->
     <section class="section">
       <div class="row justify-content-center">
         <div class="col-lg-6 ">
           <div class="card">
             <div class="card-body ">
-
-              <?php if (isset($_SESSION['msg'])): ?>
-                <div class="position-fixed top-0 start-50 translate-middle-x mt-4 z-index-9999" style="z-index: 9999;">
-                  <div class="alert alert-success alert-dismissible fade show shadow rounded" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    <?= htmlspecialchars($_SESSION['msg']) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                </div>
-                <?php unset($_SESSION['msg']); ?>
-              <?php endif; ?>
 
               <h5 class="card-title text-center">Create New Super Admin</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
@@ -330,7 +310,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
+  <?php include 'footer.php' ?>
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -363,16 +343,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     }
   </script>
 
-  <script>
-    setTimeout(() => {
-      const alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
-      }
-    }, 5000); // Hide after 5 seconds
-  </script>
+  <?php if (isset($_SESSION['msg'])): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+          icon: <?= json_encode($_SESSION['msg_type'] ?? 'info') ?>,
+          title: <?= json_encode($_SESSION['msg']) ?>,
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true
+        });
+      });
+    </script>
+    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+  <?php endif; ?>
+
 
 </body>
 

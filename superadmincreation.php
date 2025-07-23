@@ -30,22 +30,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Insert new superadmin
     $insert_stmt = $conn->prepare("INSERT INTO superadmin (idnumber, first_name, mid_name, last_name, password) VALUES (?, ?, ?, ?, ?)");
-    $insert_stmt->bind_param("sssss", $id, $first_name, $mid_name, $last_name, $hashed_password);
+    $insert_stmt->bind_param("sssss", $id, $first_name, $mid_name, $last_name, $password);
 
     if ($insert_stmt->execute()) {
-        $_SESSION['msg'] = 'Super Admin account successfully created.';
-        $_SESSION['msg_type'] = 'success';
+        $_SESSION['msg'] = 'Super Admin account created successfully!';
+        $_SESSION['msg_type'] = 'success'; // SweetAlert2 icon type
     } else {
         $_SESSION['msg'] = 'Error creating Super Admin account: ' . $insert_stmt->error;
-        $_SESSION['msg_type'] = 'danger';
+        $_SESSION['msg_type'] = 'error'; // SweetAlert2 icon type
     }
-    $insert_stmt->close();
 
+    $insert_stmt->close();
     header("Location: superadmin-superadmincreation.php");
     exit();
 } else {
     $_SESSION['msg'] = 'Invalid access method.';
-    $_SESSION['msg_type'] = 'danger';
+    $_SESSION['msg_type'] = 'error';
     header("Location: superadmin-superadmincreation.php");
     exit();
 }

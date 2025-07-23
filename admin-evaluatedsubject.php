@@ -63,12 +63,13 @@ while ($row = $countResult->fetch_assoc()) {
 </head>
 
 <body>
+
   <?php include 'admin-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
   <aside id="sidebar" class="sidebar">
 
-    <ul class="sidebar-nav collapsed" id="sidebar-nav">
+    <ul class="sidebar-nav" id="sidebar-nav">
 
       <li class="nav-item">
         <a class="nav-link collapsed" href="admin-dashboard.php">
@@ -130,6 +131,45 @@ while ($row = $countResult->fetch_assoc()) {
         </a>
       </li><!-- End Profile Nav -->
 
+      <!-- Reports Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="admin-individualreport.php">
+              <i class="bi bi-circle"></i><span>Invidiual Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-acknowledgementreport.php">
+              <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-set.php">
+              <i class="bi bi-circle"></i><span>Overall Report SET</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-sef.php">
+              <i class="bi bi-circle"></i><span>Overall Report SEF</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport.php">
+              <i class="bi bi-circle"></i><span>Overall Report (SET & SEF)</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Reports Nav -->
+
       <li class="nav-heading">Pages</li>
 
       <li class="nav-item">
@@ -189,24 +229,47 @@ while ($row = $countResult->fetch_assoc()) {
                   <?php if ($result->num_rows > 0): ?>
                     <?php $index = 0; ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
+                      <?php
+                      $modalId = "commentsModal" . $index;
+                      $comments = explode('||', $row['all_comments']);
+                      ?>
                       <tr>
                         <td><?= htmlspecialchars($row['subject_code']) ?></td>
                         <td><?= htmlspecialchars($row['subject_title']) ?></td>
                         <td><?= number_format($row['avg_score'], 2) ?></td>
                         <td><?= number_format($row['avg_rating'], 2) ?>%</td>
                         <td>
-                          <button class="btn btn-sm btn-success mb-1" type="button" data-bs-toggle="collapse" data-bs-target="#comments<?= $index ?>">Show Comments</button>
-                          <div class="collapse mt-2" id="comments<?= $index ?>">
-                            <div class="border rounded bg-light p-2">
-                              <?php
-                              $comments = explode('||', $row['all_comments']);
-                              foreach ($comments as $comment) {
-                                $clean = trim($comment);
-                                if ($clean !== '') {
-                                  echo "<div class='mb-1'>• " . htmlspecialchars($clean) . "</div>";
-                                }
-                              }
-                              ?>
+                          <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
+                           <i class="bi bi-chat-dots"></i> View
+                          </button>
+
+                          <!-- Modal -->
+                          <div class="modal fade" id="<?= $modalId ?>" tabindex="-1" aria-labelledby="<?= $modalId ?>Label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="<?= $modalId ?>Label">Comments for <?= htmlspecialchars($row['subject_title']) ?></h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <?php
+                                  $hasComment = false;
+                                  foreach ($comments as $comment) {
+                                    $clean = trim($comment);
+                                    if ($clean !== '') {
+                                      $hasComment = true;
+                                      echo "<div class='mb-2'>• " . htmlspecialchars($clean) . "</div>";
+                                    }
+                                  }
+                                  if (!$hasComment) {
+                                    echo "<div class='text-muted'>No comments available.</div>";
+                                  }
+                                  ?>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -222,6 +285,7 @@ while ($row = $countResult->fetch_assoc()) {
                     </tr>
                   <?php endif; ?>
                 </tbody>
+
               </table>
             </div>
           </div>

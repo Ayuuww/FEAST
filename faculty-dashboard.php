@@ -15,13 +15,14 @@ $chartValues = [];
 $faculty_id = $_SESSION['idnumber']; // currently logged-in faculty
 
 $subjectQuery = "
-    SELECT subject_title, COUNT(*) AS total_ratings 
-    FROM evaluation 
+    SELECT subject_title, ROUND(AVG(computed_rating), 2) AS avg_rating
+    FROM evaluation
     WHERE faculty_id = ?
-    GROUP BY subject_title 
-    ORDER BY total_ratings DESC 
+    GROUP BY subject_title
+    ORDER BY avg_rating DESC
     LIMIT 5
 ";
+
 
 $stmt = $conn->prepare($subjectQuery);
 $stmt->bind_param("s", $faculty_id);
@@ -32,19 +33,18 @@ $chartLabels = [];
 $chartValues = [];
 while ($row = $result->fetch_assoc()) {
   $chartLabels[] = $row['subject_title'];
-  $chartValues[] = $row['total_ratings'];
+  $chartValues[] = $row['avg_rating'];
 }
 
 // Top Rated Subjects by Section (for this faculty)
 $sectionQuery = "
-    SELECT student_section, COUNT(*) AS total_ratings
+    SELECT student_section, ROUND(AVG(computed_rating), 2) AS avg_rating
     FROM evaluation
     WHERE faculty_id = ?
     GROUP BY student_section
-    ORDER BY total_ratings DESC
+    ORDER BY avg_rating DESC
     LIMIT 5
 ";
-
 $stmt2 = $conn->prepare($sectionQuery);
 $stmt2->bind_param("s", $faculty_id);
 $stmt2->execute();
@@ -55,8 +55,9 @@ $sectionValues = [];
 
 while ($row = $sectionResult->fetch_assoc()) {
   $sectionLabels[] = $row['student_section'];
-  $sectionValues[] = $row['total_ratings'];
+  $sectionValues[] = $row['avg_rating'];
 }
+
 
 ?>
 
@@ -130,6 +131,7 @@ while ($row = $sectionResult->fetch_assoc()) {
 </head>
 
 <body>
+
   <?php include 'faculty-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
@@ -170,12 +172,13 @@ while ($row = $sectionResult->fetch_assoc()) {
         </a>
       </li><!-- End Subject Nav -->
 
-      <!-- <li class="nav-item">
-          <a class="nav-link collapsed" href="faculty-records.php">
-            <i class="ri-record-circle-fill"></i>
-            <span>Records</span>
-          </a>
-        </li>End Records Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="faculty-pastrecords.php">
+          <i class="ri-record-circle-fill"></i>
+          <span>Records</span>
+        </a>
+      </li>
+      <!-- End Records Nav -->
 
       <li class="nav-heading">Pages</li>
 
@@ -211,6 +214,7 @@ while ($row = $sectionResult->fetch_assoc()) {
     </div><!-- End Page Title -->
 
     <section class="section dashboard">
+
       <?php
       $faculty_name = 'Faculty';
       $idnumber = $_SESSION['idnumber'] ?? '';
@@ -248,12 +252,18 @@ while ($row = $sectionResult->fetch_assoc()) {
                     data: {
                       labels: <?= json_encode($chartLabels) ?>,
                       datasets: [{
-                        label: 'No. of Ratings',
+                        label: 'Average Rating (%)',
                         data: <?= json_encode($chartValues) ?>,
                         backgroundColor: 'rgba(75, 192, 192, 0.7)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                       }]
+                    },
+                    ticks: {
+                      beginAtZero: true,
+                      callback: function(value) {
+                        return value + "%";
+                      }
                     },
                     options: {
                       responsive: true,
@@ -291,12 +301,18 @@ while ($row = $sectionResult->fetch_assoc()) {
               data: {
                 labels: <?= json_encode($sectionLabels) ?>,
                 datasets: [{
-                  label: 'No. of Ratings',
+                  label: 'Average Rating (%)',
                   data: <?= json_encode($sectionValues) ?>,
                   backgroundColor: 'rgba(255, 159, 64, 0.7)',
                   borderColor: 'rgba(255, 159, 64, 1)',
                   borderWidth: 1
                 }]
+              },
+              ticks: {
+                beginAtZero: true,
+                callback: function(value) {
+                  return value + "%";
+                }
               },
               options: {
                 responsive: true,
@@ -313,7 +329,7 @@ while ($row = $sectionResult->fetch_assoc()) {
           });
         </script>
       </div>
-      
+
     </section>
 
 

@@ -24,6 +24,9 @@ $query = "SELECT * FROM superadmin";
 
   <title>FEAST / Admin Creation </title>
   <?php include 'header.php' ?>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
 
 <body>
@@ -243,10 +246,17 @@ $query = "SELECT * FROM superadmin";
             <div class="card-body">
 
               <?php if (isset($_SESSION['msg'])): ?>
-                <?php $type = $_SESSION['msg_type'] ?? 'info'; ?>
-                <div class="alert alert-<?= htmlspecialchars($type) ?> alert-dismissible fade show mt-3" role="alert">
-                  <?= htmlspecialchars($_SESSION['msg']) ?>
-                </div>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                      icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : 'info' ?>',
+                      title: '<?= htmlspecialchars($_SESSION['msg']) ?>',
+                      showConfirmButton: false,
+                      timer: 1500,
+                      timerProgressBar: true
+                    });
+                  });
+                </script>
                 <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
               <?php endif; ?>
 
@@ -362,7 +372,7 @@ $query = "SELECT * FROM superadmin";
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
+  <?php include 'footer.php' ?>
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
@@ -398,16 +408,20 @@ $query = "SELECT * FROM superadmin";
       });
     </script> -->
 
-  <script>
-    setTimeout(() => {
-      const alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
-      }
-    }, 5000); // Hide after 5 seconds
-  </script>
+  <?php if (isset($_SESSION['msg'])): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+          icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : 'info' ?>',
+          title: <?= json_encode($_SESSION['msg']) ?>,
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true
+        });
+      });
+    </script>
+    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+  <?php endif; ?>
 
 </body>
 

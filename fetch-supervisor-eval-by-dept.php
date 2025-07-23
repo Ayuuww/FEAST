@@ -3,8 +3,8 @@ session_start();
 include 'conn/conn.php';
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-    echo json_encode(['names' => [], 'ratings' => []]);
-    exit();
+  echo json_encode(['names' => [], 'ratings' => []]);
+  exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
@@ -30,14 +30,14 @@ $params = [$department];
 $types = "s";
 
 if ($year !== 'All') {
-    $sql .= " AND a.academic_year = ?";
-    $types .= "s";
-    $params[] = $year;
+  $sql .= " AND a.academic_year = ?";
+  $types .= "s";
+  $params[] = $year;
 }
 if ($semester !== 'All') {
-    $sql .= " AND a.semester = ?";
-    $types .= "s";
-    $params[] = $semester;
+  $sql .= " AND a.semester = ?";
+  $types .= "s";
+  $params[] = $semester;
 }
 
 $sql .= " GROUP BY f.idnumber, f.first_name, f.last_name ORDER BY avg_rating DESC LIMIT 10";
@@ -51,13 +51,11 @@ $names = [];
 $ratings = [];
 
 while ($row = $result->fetch_assoc()) {
-    $names[] = $row['last_name'] . ', ' . $row['first_name'] ;
-    $ratings[] = [
-        'value' => round($row['avg_rating'], 2),
-        'name' => $row['first_name'] . ' ' . $row['last_name']
-    ];
+  $names[] = $row['last_name'] . ', ' . $row['first_name'];
+  $ratings[] = [
+    'value' => round($row['avg_rating'], 2),
+    'name' => $row['first_name'] . ' ' . $row['last_name']
+  ];
 }
 
 echo json_encode(['names' => $names, 'ratings' => $ratings]);
-
-?>
