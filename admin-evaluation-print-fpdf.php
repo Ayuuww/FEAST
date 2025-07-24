@@ -122,12 +122,13 @@ $pdf->Ln(4);
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
 $pdf->Cell(0, 6, "Academic Rank: " . $data['faculty_rank'], 0, 1);
-$pdf->Cell(0, 6, "College: " . $data['department'], 0, 1);
+$pdf->Cell(0, 6, "Department/College: " . $data['department'], 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 
 // Table Headers
 $pdf->SetFont('Arial', 'B', 9);
+$pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
 $pdf->Cell(80, 8, "Suggested Means of Verification", 1, 0, 'C', true);
 $pdf->Cell(30, 8, "Rating", 1, 1, 'C', true);

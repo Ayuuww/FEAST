@@ -148,7 +148,7 @@ $pdf->Ln(4);
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
 $pdf->Cell(0, 6, "Academic Rank: " . $evaluateeRank, 0, 1);
-$pdf->Cell(0, 6, "College: " . $evaluateeDept, 0, 1);
+$pdf->Cell(0, 6, "Department/College: " . $evaluateeDept, 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 

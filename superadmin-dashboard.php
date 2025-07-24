@@ -904,7 +904,7 @@ function timeAgo($datetime)
 
                   const sectionDetails = <?= json_encode($student_sections); ?>;
 
-                  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1', '#ff9f40'];
+                  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1', '#ff9f40', '#4CAF50' ,'#e78ca0ff', '#a220dfff', '#f80800ff', '#0f010cff', '#47a4e2ff', '#1e6928ff'];
 
                   function updateChart(role) {
                     const labelMap = {

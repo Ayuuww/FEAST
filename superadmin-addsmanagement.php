@@ -474,7 +474,7 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <script>
+  <!-- <script>
     setTimeout(() => {
       const alert = document.querySelector('.alert');
       if (alert) {
@@ -483,7 +483,7 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
         setTimeout(() => alert.remove(), 500); // optional DOM cleanup
       }
     }, 5000); // Hide after 5 seconds
-  </script>
+  </script> -->
 
   <script>
     document.getElementById("confirmAdd").addEventListener("click", function(e) {
@@ -516,7 +516,7 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
         showCancelButton: true,
         confirmButtonText: "Yes, add it!",
         cancelButtonText: "Cancel",
-        reverseButtons: true
+        reverseButtons: false // Change this to false
       }).then((result) => {
         if (result.isConfirmed) {
           // Submit the form manually if confirmed

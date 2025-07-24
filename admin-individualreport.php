@@ -1,7 +1,6 @@
 <?php
 session_start();
 include 'conn/conn.php';
-
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
@@ -17,8 +16,13 @@ mysqli_stmt_bind_result($dept_query, $admin_department);
 mysqli_stmt_fetch($dept_query);
 mysqli_stmt_close($dept_query);
 
+// Get unique semesters and academic years for filters
+$semesters_query = mysqli_query($conn, "SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
+$academic_years_query = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
 
-
+$selected_faculty_id = $_GET['faculty_id'] ?? '';
+$selected_semester = $_GET['semester'] ?? '';
+$selected_academic_year = $_GET['academic_year'] ?? '';
 
 ?>
 
@@ -194,29 +198,56 @@ mysqli_stmt_close($dept_query);
       </nav>
     </div><!-- End Page Title -->
 
+    </div>
     <div class="card p-4 mb-4">
       <form method="GET" action="admin-individualreport.php">
         <div class="row align-items-end mb-4">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <label for="faculty_id" class="form-label">Select Faculty</label>
             <select class="form-select" name="faculty_id" id="faculty_id" required>
-              <option value="" disabled selected>-- Choose Faculty --</option>
+              <option value="" disabled <?php echo empty($selected_faculty_id) ? 'selected' : ''; ?>>-- Choose Faculty --</option>
               <?php
-              $faculty_query = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
-                                      FROM faculty 
-                                      WHERE department = '" . mysqli_real_escape_string($conn, $admin_department) . "' 
-                                      ORDER BY last_name ASC");
+              $faculty_query = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name
+                                                FROM faculty
+                                                WHERE department = '" . mysqli_real_escape_string($conn, $admin_department) . "'
+                                                ORDER BY last_name ASC");
               while ($row = mysqli_fetch_assoc($faculty_query)) {
                 $full_name = $row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name'];
                 echo "<option value='{$row['idnumber']}' " .
-                  (isset($_GET['faculty_id']) && $_GET['faculty_id'] == $row['idnumber'] ? "selected" : "") .
+                  ($selected_faculty_id == $row['idnumber'] ? "selected" : "") .
                   ">$full_name</option>";
               }
               ?>
             </select>
           </div>
-          <div class="col-md-auto">
-            <button type="submit" class="btn btn-success mt-3 mt-md-0 w-100">Generate</button>
+          <div class="col-md-3">
+            <label for="semester" class="form-label">Select Semester</label>
+            <select class="form-select" name="semester" id="semester">
+              <option value="">-- All Semesters --</option>
+              <?php
+              while ($sem_row = mysqli_fetch_assoc($semesters_query)) {
+                echo "<option value='{$sem_row['semester']}' " .
+                  ($selected_semester == $sem_row['semester'] ? "selected" : "") .
+                  ">" . htmlspecialchars($sem_row['semester']) . "</option>";
+              }
+              ?>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="academic_year" class="form-label">Select Academic Year</label>
+            <select class="form-select" name="academic_year" id="academic_year">
+              <option value="">-- All Academic Years --</option>
+              <?php
+              while ($ay_row = mysqli_fetch_assoc($academic_years_query)) {
+                echo "<option value='{$ay_row['academic_year']}' " .
+                  ($selected_academic_year == $ay_row['academic_year'] ? "selected" : "") .
+                  ">" . htmlspecialchars($ay_row['academic_year']) . "</option>";
+              }
+              ?>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success mt-3 mt-md-0 w-100">Generate Report</button>
           </div>
         </div>
       </form>
@@ -235,62 +266,115 @@ mysqli_stmt_close($dept_query);
 
         $faculty_name = "$fname $mname $lname";
 
-        // Get latest semester/year evaluated by supervisor
+        // Parameters for filtered queries
+        $params_types = "s";
+        $params_values = [$faculty_id];
+
+        // Dynamic WHERE clauses for both evaluation and admin_evaluation tables
+        $eval_where_clauses = ["faculty_id = ?"];
+        $admin_eval_where_clauses = ["evaluatee_id = ?"];
+
+        if (!empty($selected_semester)) {
+          $eval_where_clauses[] = "semester = ?";
+          $admin_eval_where_clauses[] = "semester = ?";
+          $params_types .= "s";
+          $params_values[] = $selected_semester;
+        }
+        if (!empty($selected_academic_year)) {
+          $eval_where_clauses[] = "academic_year = ?";
+          $admin_eval_where_clauses[] = "academic_year = ?";
+          $params_types .= "s";
+          $params_values[] = $selected_academic_year;
+        }
+
+        $eval_where_sql = implode(' AND ', $eval_where_clauses);
+        $admin_eval_where_sql = implode(' AND ', $admin_eval_where_clauses);
+
+
+        // Get latest semester/year evaluated by supervisor based on filters
         $semester = "N/A";
         $academic_year = "N/A";
 
         // Try admin_evaluation first
-        $eval_q = mysqli_query($conn, "SELECT semester, academic_year FROM admin_evaluation WHERE evaluatee_id = '$faculty_id' ORDER BY evaluation_date DESC LIMIT 1");
-        if ($eval_q && mysqli_num_rows($eval_q) > 0) {
-          $row = mysqli_fetch_assoc($eval_q);
-          $semester = $row['semester'] ?? "N/A";
-          $academic_year = $row['academic_year'] ?? "N/A";
-        } else {
-          // Fallback: Try from student evaluation if supervisor evaluation is missing
-          $eval_fallback = mysqli_query($conn, "SELECT semester, academic_year FROM evaluation WHERE faculty_id = '$faculty_id' ORDER BY id DESC LIMIT 1");
-          if ($eval_fallback && mysqli_num_rows($eval_fallback) > 0) {
-            $row = mysqli_fetch_assoc($eval_fallback);
-            $semester = $row['semester'] ?? "N/A";
-            $academic_year = $row['academic_year'] ?? "N/A";
+        // FIX: Select only the columns you intend to bind
+        $admin_eval_stmt = $conn->prepare("SELECT semester, academic_year FROM admin_evaluation WHERE " . $admin_eval_where_sql . " ORDER BY evaluation_date DESC LIMIT 1");
+        if ($admin_eval_stmt) {
+          $admin_eval_stmt->bind_param($params_types, ...$params_values);
+          $admin_eval_stmt->execute();
+          // Bind only the two columns you selected: semester and academic_year
+          $admin_eval_stmt->bind_result($sem_res, $ay_res);
+          if ($admin_eval_stmt->fetch()) {
+            $semester = $sem_res;
+            $academic_year = $ay_res;
           }
+          $admin_eval_stmt->close();
         }
 
-
+        // Fallback: Try from student evaluation if supervisor evaluation is missing or filtered out
+        if ($semester == "N/A" || $academic_year == "N/A") {
+          // FIX: Select only the columns you intend to bind
+          $eval_fallback_stmt = $conn->prepare("SELECT semester, academic_year FROM evaluation WHERE " . $eval_where_sql . " ORDER BY id DESC LIMIT 1");
+          if ($eval_fallback_stmt) {
+            $eval_fallback_stmt->bind_param($params_types, ...$params_values);
+            $eval_fallback_stmt->execute();
+            // Bind only the two columns you selected: semester and academic_year
+            $eval_fallback_stmt->bind_result($semester_res, $academic_year_res);
+            if ($eval_fallback_stmt->fetch()) {
+              $semester = $semester_res;
+              $academic_year = $academic_year_res;
+            }
+            $eval_fallback_stmt->close();
+          }
+        }
 
         // ===========================
         // B. Summary of Average SET Rating
         // ===========================
-        $result = mysqli_query($conn, "SELECT 
+        $set_summary_query = "SELECT
                                         e.subject_code,
                                         TRIM(e.student_section) AS student_section,
                                         COUNT(*) AS num_students,
                                         ROUND(AVG(e.computed_rating), 2) AS avg_rating,
                                         ROUND(COUNT(*) * AVG(e.computed_rating), 2) AS weighted_value
-                                      FROM evaluation e
-                                      WHERE e.faculty_id = '$faculty_id'
-                                      GROUP BY e.subject_code, TRIM(e.student_section)");
+                                    FROM evaluation e
+                                    WHERE " . $eval_where_sql; // Use the eval_where_sql here
+
+        $set_summary_query .= " GROUP BY e.subject_code, TRIM(e.student_section)";
+
+        $stmt_set = $conn->prepare($set_summary_query);
+        if ($stmt_set) {
+          $stmt_set->bind_param($params_types, ...$params_values);
+          $stmt_set->execute();
+          $result = $stmt_set->get_result();
+        } else {
+          $result = false; // Handle error if prepare fails
+        }
+
 
         $total_students = 0;
         $total_weighted_value = 0;
         $table_rows = '';
 
-        while ($row = mysqli_fetch_assoc($result)) {
-          $subject = htmlspecialchars($row['subject_code']);
-          $section = htmlspecialchars($row['student_section']);
-          $students = $row['num_students'];
-          $avg = number_format($row['avg_rating'], 2);
-          $weighted = number_format($row['weighted_value'], 2);
+        if ($result) {
+          while ($row = mysqli_fetch_assoc($result)) {
+            $subject = htmlspecialchars($row['subject_code']);
+            $section = htmlspecialchars($row['student_section']);
+            $students = $row['num_students'];
+            $avg = number_format($row['avg_rating'], 2);
+            $weighted = number_format($row['weighted_value'], 2);
 
-          $total_students += $students;
-          $total_weighted_value += $row['weighted_value'];
+            $total_students += $students;
+            $total_weighted_value += $row['weighted_value'];
 
-          $table_rows .= "<tr>
-                <td>$subject</td>
-                <td>$section</td>
-                <td>$students</td>
-                <td>$avg</td>
-                <td>$weighted</td>
-            </tr>";
+            $table_rows .= "<tr>
+                                            <td>$subject</td>
+                                            <td>$section</td>
+                                            <td>$students</td>
+                                            <td>$avg</td>
+                                            <td>$weighted</td>
+                                        </tr>";
+          }
+          $stmt_set->close();
         }
 
 
@@ -299,14 +383,32 @@ mysqli_stmt_close($dept_query);
         // ===========================
         // C. Supervisor Evaluation (SEF)
         // ===========================
-        $sef_result = mysqli_query($conn, "SELECT AVG(computed_rating) as sef_rating FROM admin_evaluation WHERE evaluatee_id = '$faculty_id'");
-        $sef_rating = mysqli_fetch_assoc($sef_result)['sef_rating'] ?? 0;
-        $sef_rating = number_format($sef_rating, 2);
+        $sef_query = "SELECT AVG(computed_rating) as sef_rating FROM admin_evaluation WHERE " . $admin_eval_where_sql; // Use admin_eval_where_sql here
+        $stmt_sef = $conn->prepare($sef_query);
+        $sef_rating = 0;
+        if ($stmt_sef) {
+          $stmt_sef->bind_param($params_types, ...$params_values);
+          $stmt_sef->execute();
+          $sef_result = $stmt_sef->get_result();
+          $sef_rating = mysqli_fetch_assoc($sef_result)['sef_rating'] ?? 0;
+          $sef_rating = number_format($sef_rating, 2);
+          $stmt_sef->close();
+        }
+
 
         // ===========================
         // D. Qualitative Comments
         // ===========================
-        $comments_q = mysqli_query($conn, "SELECT comment FROM evaluation WHERE faculty_id = '$faculty_id' AND comment IS NOT NULL AND comment <> '' LIMIT 5");
+        $comments_query = "SELECT comment FROM evaluation WHERE " . $eval_where_sql . " AND comment IS NOT NULL AND comment <> '' LIMIT 5";
+        $stmt_comments = $conn->prepare($comments_query);
+        if ($stmt_comments) {
+          $stmt_comments->bind_param($params_types, ...$params_values);
+          $stmt_comments->execute();
+          $comments_q = $stmt_comments->get_result();
+        } else {
+          $comments_q = false; // Handle error if prepare fails
+        }
+
 
         // ===========================
         // HTML Output Starts Here
@@ -377,9 +479,12 @@ mysqli_stmt_close($dept_query);
           </tr>
           <?php
           $count = 1;
-          while ($row = mysqli_fetch_assoc($comments_q)) {
-            echo "<tr><td>{$count}</td><td>" . htmlspecialchars($row['comment']) . "</td></tr>";
-            $count++;
+          if ($comments_q) {
+            while ($row = mysqli_fetch_assoc($comments_q)) {
+              echo "<tr><td>{$count}</td><td>" . htmlspecialchars($row['comment']) . "</td></tr>";
+              $count++;
+            }
+            $stmt_comments->close();
           }
           if ($count == 1) echo "<tr><td colspan='2'>No comments available.</td></tr>";
           ?>
@@ -428,17 +533,22 @@ mysqli_stmt_close($dept_query);
         </table>
 
         <div class="text-end mb-3">
-          <a href="admin-individualreport-printing.php?faculty_id=<?= $faculty_id ?>" class="btn btn-secondary" target="_blank">
+          <?php
+          // Pass selected semester and academic year to printing page
+          $print_url = "admin-individualreport-printing.php?faculty_id=" . $faculty_id;
+          if (!empty($selected_semester)) {
+            $print_url .= "&semester=" . urlencode($selected_semester);
+          }
+          if (!empty($selected_academic_year)) {
+            $print_url .= "&academic_year=" . urlencode($selected_academic_year);
+          }
+          ?>
+          <a href="<?= $print_url ?>" class="btn btn-secondary" target="_blank">
             <i class="bi bi-printer"></i> Print Report
           </a>
         </div>
-
       <?php } ?>
-
-
     </div>
-
-
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->
@@ -462,5 +572,4 @@ mysqli_stmt_close($dept_query);
   <script src="assets/js/main.js"></script>
 
 </body>
-
 </html>

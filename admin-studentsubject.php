@@ -38,8 +38,8 @@ $query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.department
           LEFT JOIN student_subject ss ON s.idnumber = ss.student_id
           WHERE s.role = 'student'
           GROUP BY s.idnumber
-          HAVING subject_count < $max_subjects
           ORDER BY s.department, s.section";
+
 
 $result = mysqli_query($conn, $query);
 
@@ -255,6 +255,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
           <span>Subject Evaluated</span>
         </a>
       </li>
+
+      <!-- Reports Nav -->
+      <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#reports" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="reports" class="nav-content collapse" data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="admin-individualreport.php">
+              <i class="bi bi-circle"></i><span>Invidiual Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-acknowledgementreport.php">
+              <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-set.php">
+              <i class="bi bi-circle"></i><span>Overall Report SET</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport-sef.php">
+              <i class="bi bi-circle"></i><span>Overall Report SEF</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-overallreport.php">
+              <i class="bi bi-circle"></i><span>Overall Report (SET & SEF)</span>
+            </a>
+          </li>
+          <li>
+            <a href="admin-pastrecords.php">
+              <i class="bi bi-circle"></i><span>Past Record</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Reports Nav -->
+
       <li class="nav-heading">Pages</li>
 
       <li class="nav-item">
@@ -286,7 +326,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
         </ol>
       </nav>
     </div>
-    
+
     <?php if (isset($_SESSION['msg'])) : ?>
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script>
@@ -326,7 +366,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
         });
       </script>
       <?php
-            unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']);
+      unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']);
       ?>
     <?php endif; ?>
 
@@ -395,7 +435,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
                       <optgroup label="<?= htmlspecialchars($department) ?>">
                         <?php foreach ($students as $student) : ?>
                           <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
-                            <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?> (<?= $student['subject_count'] ?>/9 assigned)
+                            <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?> (<?= $student['subject_count'] ?> assigned)
                           </option>
                         <?php endforeach; ?>
                       </optgroup>

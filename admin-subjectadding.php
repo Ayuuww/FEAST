@@ -264,10 +264,10 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                         <option value="<?= $f['idnumber'] ?>"><?= $f['last_name'] ?>, <?= $f['first_name'] ?></option>
                       <?php endforeach; ?>
 
-                      <?php foreach ($admin_data as $a): ?>
+                      <!-- <?php foreach ($admin_data as $a): ?>
                         <?php if (in_array($a['idnumber'], $faculty_ids)) continue; ?>
                         <option value="<?= $a['idnumber'] ?>"><?= $a['last_name'] ?>, <?= $a['first_name'] ?></option>
-                      <?php endforeach; ?>
+                      <?php endforeach; ?> -->
 
                     </select>
                     <label for="faculty_id">Faculty</label>

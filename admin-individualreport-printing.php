@@ -13,46 +13,88 @@ if (!isset($_GET['faculty_id'])) {
 }
 
 $faculty_id = $_GET['faculty_id'];
+$filter_semester = $_GET['semester'] ?? '';
+$filter_academic_year = $_GET['academic_year'] ?? '';
 
 // Faculty Info
-$stmt = $conn->prepare("SELECT last_name, first_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $department, $faculty_rank);
+$stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
 $stmt->fetch();
 $stmt->close();
-$faculty_name = "$fname $lname";
+$faculty_name = "$fname $mname $lname";
 
-// Semester & Year
-$semester = $academic_year = "N/A";
-$eval_q = mysqli_query($conn, "SELECT semester, academic_year FROM admin_evaluation WHERE evaluatee_id = '$faculty_id' ORDER BY evaluation_date DESC LIMIT 1");
-if ($eval_q && mysqli_num_rows($eval_q) > 0) {
-    $row = mysqli_fetch_assoc($eval_q);
-    $semester = $row['semester'];
-    $academic_year = $row['academic_year'];
-} else {
-    $eval_fallback = mysqli_query($conn, "SELECT semester, academic_year FROM evaluation WHERE faculty_id = '$faculty_id' ORDER BY id DESC LIMIT 1");
-    if ($eval_fallback && mysqli_num_rows($eval_fallback) > 0) {
-        $row = mysqli_fetch_assoc($eval_fallback);
-        $semester = $row['semester'];
-        $academic_year = $row['academic_year'];
+// Prepare base query parts for filtering
+$where_clauses = ["faculty_id = ?"];
+$params_types = "s";
+$params_values = [$faculty_id];
+
+if (!empty($filter_semester)) {
+    $where_clauses[] = "semester = ?";
+    $params_types .= "s";
+    $params_values[] = $filter_semester;
+}
+if (!empty($filter_academic_year)) {
+    $where_clauses[] = "academic_year = ?";
+    $params_types .= "s";
+    $params_values[] = $filter_academic_year;
+}
+$where_sql = implode(' AND ', $where_clauses);
+
+
+// Semester & Year for display (should reflect filtered data, or N/A if no data for filters)
+$semester_display = $filter_semester ?: "All Semesters";
+$academic_year_display = $filter_academic_year ?: "All Academic Years";
+
+// Get latest semester/year evaluated by supervisor based on filters for display
+$eval_q_sql = "SELECT semester, academic_year FROM admin_evaluation WHERE evaluatee_id = ?";
+$admin_eval_params_types = "s";
+$admin_eval_params_values = [$faculty_id];
+
+if (!empty($filter_semester)) {
+    $eval_q_sql .= " AND semester = ?";
+    $admin_eval_params_types .= "s";
+    $admin_eval_params_values[] = $filter_semester;
+}
+if (!empty($filter_academic_year)) {
+    $eval_q_sql .= " AND academic_year = ?";
+    $admin_eval_params_types .= "s";
+    $admin_eval_params_values[] = $filter_academic_year;
+}
+$eval_q_sql .= " ORDER BY evaluation_date DESC LIMIT 1";
+
+$stmt_eval_q = $conn->prepare($eval_q_sql);
+if ($stmt_eval_q) {
+    $stmt_eval_q->bind_param($admin_eval_params_types, ...$admin_eval_params_values);
+    $stmt_eval_q->execute();
+    $stmt_eval_q->bind_result($sem_res, $ay_res);
+    if ($stmt_eval_q->fetch()) {
+        $semester_display = $sem_res;
+        $academic_year_display = $ay_res;
     }
+    $stmt_eval_q->close();
 }
 
+
 // SET Summary
-$result = mysqli_query($conn, "
-    SELECT subject_code, student_section, COUNT(*) as num_students,
-           AVG(computed_rating) as avg_rating
-    FROM evaluation
-    WHERE faculty_id = '$faculty_id'
-    GROUP BY subject_code, student_section
-");
+$set_summary_sql = "SELECT 
+                        subject_code, TRIM(student_section) AS student_section, COUNT(*) AS num_students,
+                        AVG(computed_rating) AS avg_rating
+                    FROM evaluation
+                    WHERE $where_sql
+                    GROUP BY subject_code, TRIM(student_section)";
+
+$stmt_set_summary = $conn->prepare($set_summary_sql);
+$stmt_set_summary->bind_param($params_types, ...$params_values);
+$stmt_set_summary->execute();
+$result_set_summary = $stmt_set_summary->get_result();
 
 $total_students = 0;
 $total_weighted_value = 0;
 $summary = [];
 
-while ($row = mysqli_fetch_assoc($result)) {
+while ($row = mysqli_fetch_assoc($result_set_summary)) {
     $weighted = $row['num_students'] * $row['avg_rating'];
     $total_students += $row['num_students'];
     $total_weighted_value += $weighted;
@@ -64,19 +106,46 @@ while ($row = mysqli_fetch_assoc($result)) {
         'weighted' => number_format($weighted, 2)
     ];
 }
+$stmt_set_summary->close();
 
 $overall_set = $total_students ? number_format($total_weighted_value / $total_students, 2) : '0.00';
 
 // SEF
-$sef_result = mysqli_query($conn, "SELECT AVG(computed_rating) as sef_rating FROM admin_evaluation WHERE evaluatee_id = '$faculty_id'");
+$sef_sql = "SELECT AVG(computed_rating) as sef_rating FROM admin_evaluation WHERE evaluatee_id = ?";
+$sef_params_types = "s";
+$sef_params_values = [$faculty_id];
+
+if (!empty($filter_semester)) {
+    $sef_sql .= " AND semester = ?";
+    $sef_params_types .= "s";
+    $sef_params_values[] = $filter_semester;
+}
+if (!empty($filter_academic_year)) {
+    $sef_sql .= " AND academic_year = ?";
+    $sef_params_types .= "s";
+    $sef_params_values[] = $filter_academic_year;
+}
+
+$stmt_sef = $conn->prepare($sef_sql);
+$stmt_sef->bind_param($sef_params_types, ...$sef_params_values);
+$stmt_sef->execute();
+$sef_result = $stmt_sef->get_result();
 $sef_rating = number_format(mysqli_fetch_assoc($sef_result)['sef_rating'] ?? 0, 2);
+$stmt_sef->close();
+
 
 // Comments
-$comments_q = mysqli_query($conn, "SELECT comment FROM evaluation WHERE faculty_id = '$faculty_id' AND comment IS NOT NULL AND comment <> '' LIMIT 5");
+$comments_sql = "SELECT comment FROM evaluation WHERE $where_sql AND comment IS NOT NULL AND comment <> '' LIMIT 5";
+$stmt_comments = $conn->prepare($comments_sql);
+$stmt_comments->bind_param($params_types, ...$params_values);
+$stmt_comments->execute();
+$comments_q = $stmt_comments->get_result();
 $comments = [];
 while ($row = mysqli_fetch_assoc($comments_q)) {
     $comments[] = $row['comment'];
 }
+$stmt_comments->close();
+
 
 // Generate PDF
 $pdf = new FPDF();
@@ -100,7 +169,7 @@ $pdf->Cell(80, 8, 'Current Faculty Rank:', 1);
 $pdf->Cell(110, 8, $faculty_rank, 1, 1);
 
 $pdf->Cell(80, 8, 'Semester / Academic Year:', 1);
-$pdf->Cell(110, 8, "$semester / $academic_year", 1, 1);
+$pdf->Cell(110, 8, "$semester_display / $academic_year_display", 1, 1); // Display filtered values
 
 // Section B: Summary
 $pdf->Ln(5);

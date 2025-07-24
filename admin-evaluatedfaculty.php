@@ -222,7 +222,7 @@ if (isset($_SESSION['msg'])) {
                       <td><?= htmlspecialchars($row['evaluation_date']) ?></td>
                       <td>
                         <a href="admin-evaluation-reprint-fpdf.php?evaluatee_id=<?= urlencode($row['evaluatee_id']) ?>&academic_year=<?= urlencode($row['academic_year']) ?>&semester=<?= urlencode($row['semester']) ?>"
-                          class="btn btn-sm btn-outline-primary">
+                          class="btn btn-sm btn-outline-primary" target="_blank">
                           Reprint
                         </a>
                       </td>

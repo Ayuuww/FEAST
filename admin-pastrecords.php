@@ -6,14 +6,15 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   exit();
 }
 
-$admin_id = $_SESSION['idnumber'];
+$admin_id = $_SESSION['idnumber']; // This admin's ID is used as faculty_id
 $academic_year = $_GET['academic_year'] ?? '';
+$semester      = $_GET['semester'] ?? ''; // NEW: Get selected semester
 $subject_code  = $_GET['subject_code'] ?? '';
 
-// Get list of evaluated subjects for this admin
+// --- Get list of evaluated subjects for this admin (acting as faculty) ---
 $subject_list = null;
-$sqlSubjects = "SELECT DISTINCT subject_code, subject_title 
-                FROM evaluation 
+$sqlSubjects = "SELECT DISTINCT subject_code, subject_title
+                FROM evaluation
                 WHERE faculty_id = ?";
 $paramsSub = [$admin_id];
 $typesSub = "s";
@@ -23,20 +24,33 @@ if ($academic_year) {
   $paramsSub[] = $academic_year;
   $typesSub .= "s";
 }
-
+// NEW: Add semester filter to subject list query
+if ($semester) {
+  $sqlSubjects .= " AND semester = ?";
+  $paramsSub[] = $semester;
+  $typesSub .= "s";
+}
 if ($subject_code) {
   $sqlSubjects .= " AND subject_code = ?";
   $paramsSub[] = $subject_code;
   $typesSub .= "s";
 }
 
-$stmtSub = $conn->prepare($sqlSubjects);
-$stmtSub->bind_param($typesSub, ...$paramsSub);
-$stmtSub->execute();
-$subject_list = $stmtSub->get_result();
-$stmtSub->close();
+$sqlSubjects .= " ORDER BY subject_title ASC";
 
-// Build main evaluation query filtering only this admin's faculty_id
+$stmtSub = $conn->prepare($sqlSubjects);
+if ($stmtSub) { // Check if prepare was successful
+  $stmtSub->bind_param($typesSub, ...$paramsSub);
+  $stmtSub->execute();
+  $subject_list = $stmtSub->get_result();
+  $stmtSub->close();
+} else {
+  error_log("Failed to prepare subject list statement in admin-pastrecords.php: " . $conn->error);
+  $subject_list = false; // Indicate an error
+}
+
+
+// --- Build main evaluation query for this admin (acting as faculty) ---
 $params = [$admin_id];
 $types = "s";
 $sql = "SELECT subject_code, subject_title, student_section, academic_year, semester, created_at,
@@ -52,6 +66,12 @@ if ($academic_year) {
   $params[] = $academic_year;
   $types .= "s";
 }
+// NEW: Add semester filter to main evaluation query
+if ($semester) {
+  $sql .= " AND semester = ?";
+  $params[] = $semester;
+  $types .= "s";
+}
 if ($subject_code) {
   $sql .= " AND subject_code = ?";
   $params[] = $subject_code;
@@ -62,10 +82,62 @@ $sql .= " GROUP BY subject_code, student_section, semester, academic_year
           ORDER BY created_at DESC";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param($types, ...$params);
-$stmt->execute();
-$result = $stmt->get_result();
-$stmt->close();
+if ($stmt) { // Check if prepare was successful
+  $stmt->bind_param($types, ...$params);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $stmt->close();
+} else {
+  error_log("Failed to prepare main evaluation statement in admin-pastrecords.php: " . $conn->error);
+  $result = false; // Indicate an error
+}
+
+// Get distinct academic years for the dropdown (for this admin acting as faculty)
+$years_query = $conn->prepare("SELECT DISTINCT academic_year FROM evaluation WHERE faculty_id = ? ORDER BY academic_year DESC");
+$years_data = [];
+if ($years_query) {
+  $years_query->bind_param("s", $admin_id);
+  $years_query->execute();
+  $years_result = $years_query->get_result();
+  while ($row = $years_result->fetch_assoc()) {
+    $years_data[] = $row;
+  }
+  $years_query->close();
+}
+
+// Get distinct semesters for the dropdown (for this admin acting as faculty), filtered by academic year if selected
+$semesters_data = [];
+$semester_sql = "SELECT DISTINCT semester FROM evaluation WHERE faculty_id = ?";
+$semester_types = "s";
+$semester_params = [$admin_id];
+
+if ($academic_year) {
+  $semester_sql .= " AND academic_year = ?";
+  $semester_types .= "s";
+  $semester_params[] = $academic_year;
+}
+
+// Order by 1st, 2nd, Summer (assuming these are the common values)
+$semester_sql .= " ORDER BY
+    CASE semester
+        WHEN '1st Semester' THEN 1
+        WHEN '2nd Semester' THEN 2
+        WHEN 'Summer' THEN 3
+        ELSE 4
+    END";
+
+$semesters_query = $conn->prepare($semester_sql);
+if ($semesters_query) { // Check if prepare was successful
+  $semesters_query->bind_param($semester_types, ...$semester_params);
+  $semesters_query->execute();
+  $semesters_result = $semesters_query->get_result();
+  while ($row = $semesters_result->fetch_assoc()) {
+    if (!empty(trim($row['semester']))) { // Only add non-empty semesters
+      $semesters_data[] = $row;
+    }
+  }
+  $semesters_query->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -220,31 +292,48 @@ $stmt->close();
         <div class="card-body table-responsive">
           <h5 class="card-title">Filter Evaluations (Self)</h5>
 
-          <form method="GET" class="row g-3 mb-4">
-            <div class="col-md-4">
-              <button type="submit" class="btn btn-secondary btn-sm">Clear</button>
+          <form method="GET" class="row g-3 mb-4 align-items-end">
+            <div class="col-md-auto">
+              <button type="submit" class="btn btn-secondary btn-sm">Clear Filters</button>
             </div>
 
-            <div class="col-md-4">
-              <select name="academic_year" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Academic Year --</option>
-                <?php
-                $years = $conn->query("SELECT DISTINCT academic_year FROM evaluation WHERE faculty_id = '$admin_id' ORDER BY academic_year DESC");
-                while ($yr = $years->fetch_assoc()):
-                  $sel = ($academic_year == $yr['academic_year']) ? 'selected' : '';
-                  echo "<option value=\"{$yr['academic_year']}\" $sel>{$yr['academic_year']}</option>";
-                endwhile;
-                ?>
+            <div class="col-md-3">
+              <label for="academic_year" class="form-label">Academic Year</label>
+              <select name="academic_year" id="academic_year" class="form-select" onchange="this.form.submit()">
+                <option value="">-- All Academic Years --</option>
+                <?php foreach ($years_data as $yr): ?>
+                  <option value="<?= htmlspecialchars($yr['academic_year']) ?>" <?= ($academic_year == $yr['academic_year']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($yr['academic_year']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label for="semester" class="form-label">Semester</label>
+              <select name="semester" id="semester" class="form-select" onchange="this.form.submit()">
+                <option value="">-- All Semesters --</option>
+                <?php foreach ($semesters_data as $sem_opt): ?>
+                  <option value="<?= htmlspecialchars($sem_opt['semester']) ?>" <?= ($semester == $sem_opt['semester']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($sem_opt['semester']) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
 
             <?php if ($subject_list && $subject_list->num_rows): ?>
               <div class="col-md-4">
-                <select name="subject_code" class="form-select" onchange="this.form.submit()">
-                  <option value="">-- Subject --</option>
-                  <?php foreach ($subject_list as $sub):
+                <label for="subject_code" class="form-label">Subject</label>
+                <select name="subject_code" id="subject_code" class="form-select" onchange="this.form.submit()">
+                  <option value="">-- All Subjects --</option>
+                  <?php
+                  // Reset pointer for subject_list if it was already iterated
+                  if ($subject_list->num_rows > 0) {
+                    $subject_list->data_seek(0);
+                  }
+                  foreach ($subject_list as $sub):
                     $sel = ($subject_code == $sub['subject_code']) ? 'selected' : '';
-                    echo "<option value=\"{$sub['subject_code']}\" $sel>{$sub['subject_code']} - {$sub['subject_title']}</option>";
+                    echo "<option value=\"" . htmlspecialchars($sub['subject_code']) . "\" $sel>" . htmlspecialchars($sub['subject_code']) . " - " . htmlspecialchars($sub['subject_title']) . "</option>";
                   endforeach;
                   ?>
                 </select>
@@ -252,8 +341,9 @@ $stmt->close();
             <?php endif; ?>
           </form>
 
-          <?php if ($result->num_rows): ?>
-            <a href="admin-pastrecords-print.php?academic_year=<?= $academic_year ?>&subject_code=<?= $subject_code ?>" target="_blank" class="btn btn-outline-secondary mb-3">
+          <?php if ($result && $result->num_rows): // Check if $result is not false and has rows 
+          ?>
+            <a href="admin-pastrecords-print.php?academic_year=<?= urlencode($academic_year) ?>&semester=<?= urlencode($semester) ?>&subject_code=<?= urlencode($subject_code) ?>" target="_blank" class="btn btn-outline-secondary mb-3">
               <i class="bi bi-printer"></i> Print My Evaluations
             </a>
 
@@ -288,15 +378,13 @@ $stmt->close();
                     <td><?= number_format($row['avg_total_score'], 2) ?></td>
                     <td><?= number_format($row['avg_computed_rating'], 2) ?>%</td>
 
-                    <!-- View Comment Button -->
                     <td>
-                      <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
-                       <i class="bi bi-chat-dots"></i> View
+                      <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
+                        <i class="bi bi-chat-dots"></i> View
                       </button>
 
-                      <!-- Modal -->
                       <div class="modal fade" id="<?= $modalId ?>" tabindex="-1" aria-labelledby="<?= $modalId ?>Label" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-scrollable" style="max-height: 500px;">
+                        <div class="modal-dialog modal-dialog-scrollable">
                           <div class="modal-content">
                             <div class="modal-header">
                               <h5 class="modal-title" id="<?= $modalId ?>Label">Comments</h5>
@@ -329,7 +417,21 @@ $stmt->close();
               </tbody>
             </table>
           <?php else: ?>
-            <div class="alert alert-info">You have no past evaluation records<?= $academic_year ? " for A.Y. $academic_year" : "" ?><?= $subject_code ? " on subject $subject_code" : "" ?>.</div>
+            <div class="alert alert-info">You have no past evaluation records
+              <?php
+              $filter_info = [];
+              if ($academic_year) {
+                $filter_info[] = "for A.Y. " . htmlspecialchars($academic_year);
+              }
+              if ($semester) {
+                $filter_info[] = "in " . htmlspecialchars($semester);
+              }
+              if ($subject_code) {
+                $filter_info[] = "on subject " . htmlspecialchars($subject_code);
+              }
+              echo implode(' ', $filter_info) . ".";
+              ?>
+            </div>
           <?php endif; ?>
         </div>
       </div>
