@@ -3,33 +3,62 @@ session_start();
 include 'conn/conn.php';
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-  header("Location: pages-login.php");
-  exit();
+    header("Location: pages-login.php");
+    exit();
 }
+
+// Get the super admin's ID from the session
+$superadminId = $_SESSION['idnumber'];
 
 // Fetch current evaluation status
 $eval_status = 'off';
 $status_query = mysqli_query($conn, "SELECT status FROM evaluation_switch LIMIT 1");
 if ($row = mysqli_fetch_assoc($status_query)) {
-  $eval_status = $row['status'];
+    $eval_status = $row['status'];
 }
 
 // Handle toggle submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $new_status = isset($_POST['status']) && $_POST['status'] === 'on' ? 'on' : 'off';
+    $new_status = isset($_POST['status']) && $_POST['status'] === 'on' ? 'on' : 'off';
+    
+    // Log the activity
+    $activity_description = "Evaluation turned " . ($new_status === 'on' ? 'on' : 'off');
+    $role = 'superadmin';
 
-  // Update or insert into evaluation_switch
-  $check = mysqli_query($conn, "SELECT id FROM evaluation_switch LIMIT 1");
-  if (mysqli_num_rows($check) > 0) {
-    mysqli_query($conn, "UPDATE evaluation_switch SET status = '$new_status'");
-  } else {
-    mysqli_query($conn, "INSERT INTO evaluation_switch (status) VALUES ('$new_status')");
-  }
+    // Check your activity_logs table's user_id type. If it's an INT, use 'i'. If VARCHAR, use 's'.
+    // Assuming it is VARCHAR based on your session ID.
+    $log_stmt = $conn->prepare("INSERT INTO activity_logs (timestamp, role, activity, user_id) VALUES (NOW(), ?, ?, ?)");
+    $log_stmt->bind_param("sss", $role, $activity_description, $superadminId);
+    $log_stmt->execute();
+    $log_stmt->close();
 
-  $eval_status = $new_status; // Update local variable
+    // Check if a row exists in evaluation_switch
+    $check_stmt = $conn->prepare("SELECT id FROM evaluation_switch LIMIT 1");
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+
+    if ($check_result->num_rows > 0) {
+        // Update the existing row
+        $update_stmt = $conn->prepare("UPDATE evaluation_switch SET status = ?, user_id = ?");
+        // Check the data type of evaluation_switch.user_id. It should match superadmin.idnumber.
+        // Assuming it is VARCHAR.
+        $update_stmt->bind_param("ss", $new_status, $superadminId); 
+        $update_stmt->execute(); // This is line 44
+        $update_stmt->close();
+    } else {
+        // Insert a new row if one doesn't exist
+        $insert_stmt = $conn->prepare("INSERT INTO evaluation_switch (status, user_id) VALUES (?, ?)");
+        // Check the data type of evaluation_switch.user_id. It should be VARCHAR.
+        $insert_stmt->bind_param("ss", $new_status, $superadminId);
+        $insert_stmt->execute();
+        $insert_stmt->close();
+    }
+    
+    $check_stmt->close();
+
+    $eval_status = $new_status; // Update local variable for display
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">

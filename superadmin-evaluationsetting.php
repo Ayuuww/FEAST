@@ -4,46 +4,47 @@ include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-  header("Location: pages-login.php");
-  exit();
+    header("Location: pages-login.php");
+    exit();
 }
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $semester = $_POST['semester'];
-  $academic_year = $_POST['academic_year'];
+    $semester = $_POST['semester'];
+    $academic_year = $_POST['academic_year'];
 
-  // Replace old setting or insert new one
-  $stmt = $conn->prepare("REPLACE INTO evaluation_settings (id, semester, academic_year) VALUES (1, ?, ?)");
-  $stmt->bind_param("ss", $semester, $academic_year);
-  $stmt->execute();
+    // Get the current user's ID and role from the session
+    $userId = $_SESSION['idnumber'];
+    $userRole = $_SESSION['role'];
 
-  $_SESSION['msg'] = "Evaluation settings updated!";
-  header("Location: superadmin-evaluationsetting.php?success=1"); // <-- add ?success=1
-  exit();
+    // Fetch the old settings to log the change
+    $current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
+    $setting = mysqli_fetch_assoc($current);
+    $old_semester = $setting['semester'];
+    $old_year = $setting['academic_year'];
+
+    // Replace old setting or insert new one
+    $stmt = $conn->prepare("REPLACE INTO evaluation_settings (id, semester, academic_year) VALUES (1, ?, ?)");
+    $stmt->bind_param("ss", $semester, $academic_year);
+    $stmt->execute();
+    
+    // Log the activity to the activity_logs table
+    $activity_description = "Updated evaluation settings from '{$old_semester} - {$old_year}' to '{$semester} - {$academic_year}'";
+    $log_stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
+    $log_stmt->bind_param("sss", $userId, $userRole, $activity_description);
+    $log_stmt->execute();
+    $log_stmt->close();
+    
+    $_SESSION['msg'] = "Evaluation settings updated!";
+    header("Location: superadmin-evaluationsetting.php?success=1");
+    exit();
 }
 
-
 // Fetch current settings
 $current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
 $setting = mysqli_fetch_assoc($current);
 $current_semester = $setting['semester'];
 $current_year = $setting['academic_year'];
-
-// Show success message if set
-// $success_msg = '';
-// if (isset($_SESSION['msg'])) {
-//   $success_msg = $_SESSION['msg'];
-//   unset($_SESSION['msg']); // clear message after showing
-// }
-
-// Fetch current settings
-$current = mysqli_query($conn, "SELECT * FROM evaluation_settings WHERE id = 1");
-$setting = mysqli_fetch_assoc($current);
-$current_semester = $setting['semester'];
-$current_year = $setting['academic_year'];
-
-
 ?>
 
 <!DOCTYPE html>
@@ -63,6 +64,7 @@ $current_year = $setting['academic_year'];
       font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;
     }
   </style>
+  
 </head>
 
 <body>

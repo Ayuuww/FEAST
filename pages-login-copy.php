@@ -151,7 +151,7 @@ include 'conn/conn.php'; // DB connection
 
         <form class="login-form" method="POST" action="login-copy.php" novalidate>
           <!-- ID Number -->
-          <input type="text" name="idnumber" class="login-input" placeholder="USERNAME"
+          <input type="text" name="idnumber" class="login-input" placeholder="ID NUMBER"
             pattern="^[0-9\-]+$" required
             value="<?= (isset($_COOKIE['remember_idnumber']) && !isset($_SESSION['login_failed'])) ? $_COOKIE['remember_idnumber'] : '' ?>">
 
@@ -183,7 +183,6 @@ include 'conn/conn.php'; // DB connection
   </main>
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
   <!-- End Footer -->
 
   <?php if (isset($_SESSION['msg'])): ?>
