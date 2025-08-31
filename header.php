@@ -20,7 +20,7 @@
 <link href="vendors/simple-datatables/style.css" rel="stylesheet">
 
 <!-- JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="sweetalert2/sweetalert2@11.js"></script>
 
 <!-- Template Main CSS File -->
 <link href="assets/css/style.css" rel="stylesheet">
