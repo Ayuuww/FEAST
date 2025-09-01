@@ -140,9 +140,62 @@ class PDF_Extended extends FPDF {
 // Start PDF
 $pdf = new PDF_Extended('P', 'mm', 'A4');
 $pdf->AddPage();
+
+// University logo (always the same)
+$univ_logo = 'pics/DMMMSUlogo.png';
+
+// Department logos mapping
+$dept_logos = [
+    'CIS'  => 'pics/CISlogo.png',
+    'BPED' => 'pics/CElogo.png',
+    'CVM'  => 'pics/CVMlogo.jpg',
+    'CAFF' => 'pics/CAFFlogo.jpg',
+    'CAS'  => 'pics/CASlogo.jpg',
+    'CA'   => 'pics/CAlogo.jpg',
+    // add more departments here...
+];
+
+// Department headers mapping
+$dept_headers = [
+    'CIS'  => 'College of Information Systems',
+    'BPED' => 'College of Physical Education',
+    'CVM'  => 'College of Veterinary Medicine',
+    'CAFF' => 'College of Agroforestry and Forestry',
+    'CAS'  => 'College of Arts and Science',
+    'CA'   => 'College of Agriculture',
+    // add more departments here...
+];
+
+// Use department logo if available, otherwise fallback
+$dept_logo = isset($dept_logos[$evaluateeDept]) ? $dept_logos[$evaluateeDept] : 'pics/DMMMSUlogo.png';
+
+// Use department header if available, otherwise fallback
+$dept_header = isset($dept_headers[$evaluateeDept]) ? $dept_headers[$evaluateeDept] : $evaluateeDept;
+
+// Insert left logo
+$pdf->Image($univ_logo, 15, 10, 25);
+
+// Insert right logo (dynamic department logo)
+$pdf->Image($dept_logo, 170, 10, 25);
+
+// Set font for header
+$pdf->SetFont('Arial', 'B', 10);
+
+// University header
+$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
+
+// Department header (dynamic)
+$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
+
+// Location line
+$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
+
+$pdf->Ln(10);
+$pdf->SetFont('Arial', 'B', 12);
+
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, 'Supervisor-to-Faculty Evaluation Summary', 0, 1, 'C');
-$pdf->Ln(4);
+$pdf->Cell(0, -5, 'Supervisor-to-Faculty Evaluation Summary', 0, 1, 'C');
+$pdf->Ln(10);
 
 // Faculty info
 $pdf->SetFont('Arial', '', 10);

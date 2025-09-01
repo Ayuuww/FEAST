@@ -627,7 +627,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
-          icon: 'warning',
+          icon: 'error',
           title: 'Oops!',
           text: <?= json_encode($errorMessage) ?>,
           confirmButtonText: 'OK'
@@ -641,7 +641,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
           title: 'Evaluation Submitted!',
-          text: 'Do you want to print the evaluation now?',
+          text: 'Would you like to print your evaluation now?',
           icon: 'success',
           showCancelButton: true,
           confirmButtonText: 'Print Now',

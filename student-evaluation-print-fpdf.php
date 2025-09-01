@@ -59,6 +59,56 @@ $questions = [
 
 $pdf = new FPDF('P', 'mm', 'A4');
 $pdf->AddPage();
+
+// University logo (always the same)
+$univ_logo = 'pics/DMMMSUlogo.png';
+
+// Department logos mapping
+$dept_logos = [
+    'CIS'  => 'pics/CISlogo.png',
+    'BPED' => 'pics/CElogo.png',
+    'CVM'  => 'pics/CVMlogo.jpg',
+    'CAFF' => 'pics/CAFFlogo.jpg',
+    'CAS'  => 'pics/CASlogo.jpg',
+    'CA'   => 'pics/CAlogo.jpg',
+];
+
+// Department headers mapping
+$dept_headers = [
+    'CIS'  => 'College of Information Systems',
+    'BPED' => 'College of Physical Education',
+    'CVM'  => 'College of Veterinary Medicine',
+    'CAFF' => 'College of Agroforestry and Forestry',
+    'CAS'  => 'College of Arts and Sciences',
+    'CA'   => 'College of Agriculture',
+];
+
+// Get evaluatee department from $data
+$evaluateeDept = $data['department'] ?? 'N/A';
+
+// Department logo + header
+$dept_logo   = $dept_logos[$evaluateeDept] ?? $univ_logo;
+$dept_header = $dept_headers[$evaluateeDept] ?? $evaluateeDept;
+
+// Insert left logo
+$pdf->Image($univ_logo, 15, 10, 25);
+
+// Insert right logo
+$pdf->Image($dept_logo, 170, 10, 25);
+
+// Set font for header
+$pdf->SetFont('Arial', 'B', 10);
+
+// University header
+$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
+
+// Department header (dynamic)
+$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
+
+// Location line
+$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
+$pdf->Ln(15);
+
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, 'Faculty Evaluation Summary', 0, 1, 'C');
 $pdf->Ln(3);

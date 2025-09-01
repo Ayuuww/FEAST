@@ -553,8 +553,6 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
     <script src="vendors/simple-datatables/simple-datatables.js"></script>
     <script src="vendors/tinymce/tinymce.min.js"></script>
     <script src="vendors/php-email-form/validate.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 
     <script src="assets/js/main.js"></script>
 
@@ -635,7 +633,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                     showCancelButton: true,
                     confirmButtonText: 'Print Now',
                     cancelButtonText: 'Print Later',
-                    reverseButtons: true
+                    reverseButtons: false
                 }).then((result) => {
                     if (result.isConfirmed) {
                         window.open('student-evaluation-print-fpdf.php', '_blank'); // Open in new tab

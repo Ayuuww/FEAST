@@ -44,8 +44,8 @@ $where_sql = implode(' AND ', $where_clauses);
 
 
 // Semester & Year for display (should reflect filtered data, or N/A if no data for filters)
-$semester_display = $filter_semester ?: "All Semesters";
-$academic_year_display = $filter_academic_year ?: "All Academic Years";
+$sem = $filter_semester ?: "All Semesters";
+$sy = $filter_academic_year ?: "All Academic Years";
 
 // Get latest semester/year evaluated by supervisor based on filters for display
 $eval_q_sql = "SELECT semester, academic_year FROM admin_evaluation WHERE evaluatee_id = ?";
@@ -70,8 +70,8 @@ if ($stmt_eval_q) {
     $stmt_eval_q->execute();
     $stmt_eval_q->bind_result($sem_res, $ay_res);
     if ($stmt_eval_q->fetch()) {
-        $semester_display = $sem_res;
-        $academic_year_display = $ay_res;
+        $sem = $sem_res;
+        $sy = $ay_res;
     }
     $stmt_eval_q->close();
 }
@@ -150,15 +150,72 @@ $stmt_comments->close();
 // Generate PDF
 $pdf = new FPDF();
 $pdf->AddPage();
-$pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
+
+// University logo (always the same)
+$univ_logo = 'pics/DMMMSUlogo.png';
+
+// Department logos mapping
+$dept_logos = [
+    'CIS'  => 'pics/CISlogo.png',
+    'BPED' => 'pics/CElogo.png',
+    'CVM'  => 'pics/CVMlogo.jpg',
+    'CAFF' => 'pics/CAFFlogo.jpg',
+    'CAS'  => 'pics/CASlogo.jpg',
+    'CA'   => 'pics/CAlogo.jpg',
+    // add more departments here...
+];
+
+// Department headers mapping
+$dept_headers = [
+    'CIS'  => 'College of Information Systems',
+    'BPED' => 'College of Physical Education',
+    'CVM'  => 'College of Veterinary Medicine',
+    'CAFF' => 'College of Agroforestry and Forestry',
+    'CAS'  => 'College of Arts and Science',
+    'CA'   => 'College of Agriculture',
+    // add more departments here...
+];
+
+// Use department logo if available, otherwise fallback
+$dept_logo = isset($dept_logos[$department]) ? $dept_logos[$department] : 'pics/DMMMSUlogo.png';
+
+// Use department header if available, otherwise fallback
+$dept_header = isset($dept_headers[$department]) ? $dept_headers[$department] : $department;
+
+// Insert left logo
+$pdf->Image($univ_logo, 15, 10, 25);
+
+// Insert right logo (dynamic department logo)
+$pdf->Image($dept_logo, 170, 10, 25);
+
+// Set font for header
+$pdf->SetFont('Arial', 'B', 10);
+
+// University header
+$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
+
+// Department header (dynamic)
+$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
+
+// Location line (optional)
+$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
+
+$pdf->Ln(10);
+$pdf->SetFont('Arial', 'B', 12);
+
+$pdf->Cell(0, 2, $department . " " . 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
+$pdf->Ln(4);
+
+$pdf->SetFont('Arial', 'B', 8);
+$pdf->Cell(0, -1, "$sem / $sy", 0, 1, 'C');
+$pdf->Ln(4);
 
 // Section A: Faculty Info
 $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, 'A. Faculty Information', 0, 1);
 
-$pdf->SetFont('Arial', '', 11);
+$pdf->SetFont('Arial', 'b', 11);
 $pdf->Cell(80, 8, 'Name of Faculty Evaluated:', 1);
 $pdf->Cell(110, 8, $faculty_name, 1, 1);
 
@@ -169,7 +226,7 @@ $pdf->Cell(80, 8, 'Current Faculty Rank:', 1);
 $pdf->Cell(110, 8, $faculty_rank, 1, 1);
 
 $pdf->Cell(80, 8, 'Semester / Academic Year:', 1);
-$pdf->Cell(110, 8, "$semester_display / $academic_year_display", 1, 1); // Display filtered values
+$pdf->Cell(110, 8, "$sem / $sy", 1, 1); // Display filtered values
 
 // Section B: Summary
 $pdf->Ln(5);
