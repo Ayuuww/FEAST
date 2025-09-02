@@ -151,58 +151,70 @@ $stmt_comments->close();
 $pdf = new FPDF();
 $pdf->AddPage();
 
-// University logo (always the same)
-$univ_logo = 'pics/DMMMSUlogo.png';
+// Logos (always the same for all departments)
+$logo_left  = 'pics/bagong_pilipinas.jpg'; // Bagong Pilipinas logo
+$logo_right = 'pics/DMMMSUlogo_header.png';       // University seal
 
-// Department logos mapping
-$dept_logos = [
-    'CIS'  => 'pics/CISlogo.png',
-    'BPED' => 'pics/CElogo.png',
-    'CVM'  => 'pics/CVMlogo.jpg',
-    'CAFF' => 'pics/CAFFlogo.jpg',
-    'CAS'  => 'pics/CASlogo.jpg',
-    'CA'   => 'pics/CAlogo.jpg',
+// Department-specific info
+$dept_info = [
+    'CIS' => [
+        'college' => 'COLLEGE OF INFORMATION SYSTEMS',
+        'website' => 'www.cisdmmmsu.edu.ph',
+        'phone'   => '+63960-8182660',
+        'email'   => 'cis.nluc@dmmmsu.edu.ph'
+    ],
+    'BPED' => [
+        'college' => 'COLLEGE OF PHYSICAL EDUCATION',
+        'website' => 'www.bpedmmmsu.edu.ph',
+        'phone'   => '+63912-3456789',
+        'email'   => 'bped.nluc@dmmmsu.edu.ph'
+    ],
+    'CVM' => [
+        'college' => 'COLLEGE OF VETERINARY MEDICINE',
+        'website' => 'www.cvm.dmmmsu.edu.ph',
+        'phone'   => '+63923-4567890',
+        'email'   => 'cvm.nluc@dmmmsu.edu.ph'
+    ],
+    'CAS' => [
+        'college' => 'COLLEGE OF ARTS AND SCIENCE',
+        'website' => 'www.cas.dmmmsu.edu.ph',
+        'phone'   => '+63923-4567890',
+        'email'   => 'cas.nluc@dmmmsu.edu.ph'
+    ],
     // add more departments here...
 ];
 
-// Department headers mapping
-$dept_headers = [
-    'CIS'  => 'College of Information Systems',
-    'BPED' => 'College of Physical Education',
-    'CVM'  => 'College of Veterinary Medicine',
-    'CAFF' => 'College of Agroforestry and Forestry',
-    'CAS'  => 'College of Arts and Science',
-    'CA'   => 'College of Agriculture',
-    // add more departments here...
-];
+// Pick department (from logged-in admin session for example)
+$department = $_SESSION['department'] ?? 'CIS';
 
-// Use department logo if available, otherwise fallback
-$dept_logo = isset($dept_logos[$department]) ? $dept_logos[$department] : 'pics/DMMMSUlogo.png';
+// Get department details or fallback
+$college_name       = $dept_info[$department]['college'] ?? 'COLLEGE';
+$college_website    = $dept_info[$department]['website'] ?? 'www.dmmmsu.edu.ph';
+$college_phone      = $dept_info[$department]['phone'] ?? '';
+$college_email      = $dept_info[$department]['email'] ?? '';
 
-// Use department header if available, otherwise fallback
-$dept_header = isset($dept_headers[$department]) ? $dept_headers[$department] : $department;
-
-// Insert left logo
-$pdf->Image($univ_logo, 15, 10, 25);
-
-// Insert right logo (dynamic department logo)
-$pdf->Image($dept_logo, 170, 10, 25);
-
-// Set font for header
-$pdf->SetFont('Arial', 'B', 10);
+// Insert logos
+$pdf->Image($logo_left, 9, 10, 32);   // left logo
+$pdf->Image($logo_right, 35, 10, 20); // right logo
 
 // University header
-$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 7, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
+$pdf->Cell(195, 2, 'NORTH LA UNION CAMPUS Bacnotan, La Union, Philippines', 0, 1, 'C');
 
-// Department header (dynamic)
-$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
-
-// Location line (optional)
-$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
-
-$pdf->Ln(10);
+// College name (dynamic, bold)
 $pdf->SetFont('Arial', 'B', 12);
+$pdf->Cell(173, 7, strtoupper($college_name), 0, 1, 'C');
 
+// Website, phone, email (dynamic)
+$pdf->SetFont('Arial', '', 9);
+$pdf->SetTextColor(0, 0, 255); // blue for links
+$pdf->Cell(195, 1, $college_website . ' | ' . $college_phone . ' | ' . $college_email, 0, 1, 'C', false, $college_website);
+
+$pdf->SetTextColor(0, 0, 0); // reset to black
+$pdf->Ln(10);
+
+$pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 2, $department . " " . 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
 $pdf->Ln(4);
 

@@ -3,15 +3,14 @@ session_start();
 include 'conn/conn.php'; // Connection to the database
 
 // Check if the user is logged in and is a student
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
 // Fetching the faculty subjects evaluated
-$admin_id = $_SESSION['idnumber'];
+$faculty_id = $_SESSION['idnumber'];
 
-// Fetch subject evaluations with comments
 $query = "SELECT 
             e.subject_code,
             s.title AS subject_title,
@@ -23,19 +22,20 @@ $query = "SELECT
           FROM evaluation e
           JOIN subject s ON e.subject_code = s.code
           WHERE e.faculty_id = ?
-            AND e.comment IS NOT NULL AND e.comment != ''
+          AND e.comment IS NOT NULL AND e.comment != ''
           GROUP BY e.subject_code, s.title, e.academic_year, e.semester
-          ORDER BY e.academic_year DESC, e.semester DESC";
+          ORDER BY e.academic_year DESC, e.semester DESC
+          LIMIT 10";
 
 $stmt = $conn->prepare($query);
-$stmt->bind_param("s", $admin_id);
+$stmt->bind_param("s", $faculty_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Count evaluations per subject
+// Total evaluation
 $countQuery = "SELECT subject_code, COUNT(*) as total FROM evaluation WHERE faculty_id = ? GROUP BY subject_code";
 $countStmt = $conn->prepare($countQuery);
-$countStmt->bind_param("s", $admin_id);
+$countStmt->bind_param("s", $faculty_id);
 $countStmt->execute();
 $countResult = $countStmt->get_result();
 
@@ -43,6 +43,7 @@ $subjectCounts = [];
 while ($row = $countResult->fetch_assoc()) {
   $subjectCounts[$row['subject_code']] = $row['total'];
 }
+
 
 
 
@@ -55,28 +56,28 @@ while ($row = $countResult->fetch_assoc()) {
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Subjects </title>
+  <title>FEAST / Home </title>
 
   <?php include 'header.php' ?>
-
 
 </head>
 
 <body>
 
-  <?php include 'admin-header.php' ?>
+  <?php include 'superadmin-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
-  <?php include 'admin-sidebar.php' ?>
+  <?php include 'superadmin-sidebar.php' ?>
   <!-- End Sidebar-->
 
   <main id="main" class="main">
+
 
     <div class="pagetitle">
       <h1>Subjects</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="faculty-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Subject</li>
         </ol>
       </nav>
@@ -90,7 +91,7 @@ while ($row = $countResult->fetch_assoc()) {
             <h5 class="card-title">Evaluated Subjects You Handle</h5>
 
             <div class="table-responsive">
-              <table class="table table-bordered table-striped datatable">
+              <table class="table table-bordered table-striped">
                 <thead>
                   <tr>
                     <th>Subject Code</th>
@@ -103,45 +104,41 @@ while ($row = $countResult->fetch_assoc()) {
                     <th>Total Evaluations</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   <?php if ($result->num_rows > 0): ?>
                     <?php $index = 0; ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
-                      <?php
-                      $modalId = "commentsModal" . $index;
-                      $comments = explode('||', $row['all_comments']);
-                      ?>
                       <tr>
                         <td><?= htmlspecialchars($row['subject_code']) ?></td>
                         <td><?= htmlspecialchars($row['subject_title']) ?></td>
                         <td><?= number_format($row['avg_score'], 2) ?></td>
                         <td><?= number_format($row['avg_rating'], 2) ?>%</td>
                         <td>
-                          <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
-                           <i class="bi bi-chat-dots"></i> View
+                          <!-- Modal Trigger Button -->
+                          <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#commentModal<?= $index ?>">
+                            <i class="bi bi-chat-dots"></i> View
                           </button>
 
                           <!-- Modal -->
-                          <div class="modal fade" id="<?= $modalId ?>" tabindex="-1" aria-labelledby="<?= $modalId ?>Label" aria-hidden="true">
+                          <div class="modal fade" id="commentModal<?= $index ?>" tabindex="-1" aria-labelledby="commentModalLabel<?= $index ?>" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-scrollable">
                               <div class="modal-content">
                                 <div class="modal-header">
-                                  <h5 class="modal-title" id="<?= $modalId ?>Label">Comments for <?= htmlspecialchars($row['subject_title']) ?></h5>
+                                  <h5 class="modal-title" id="commentModalLabel<?= $index ?>">Comments for <?= htmlspecialchars($row['subject_code']) ?></h5>
                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
                                   <?php
-                                  $hasComment = false;
-                                  foreach ($comments as $comment) {
-                                    $clean = trim($comment);
-                                    if ($clean !== '') {
-                                      $hasComment = true;
-                                      echo "<div class='mb-2'>• " . htmlspecialchars($clean) . "</div>";
+                                  $comments = isset($row['all_comments']) ? explode('||', $row['all_comments']) : [];
+                                  if (count($comments)) {
+                                    foreach ($comments as $comment) {
+                                      $cleaned = trim($comment);
+                                      if ($cleaned !== '') {
+                                        echo "<div class='mb-2'>• " . htmlspecialchars($cleaned) . "</div>";
+                                      }
                                     }
-                                  }
-                                  if (!$hasComment) {
-                                    echo "<div class='text-muted'>No comments available.</div>";
+                                  } else {
+                                    echo "<p class='text-muted'>No comments available.</p>";
                                   }
                                   ?>
                                 </div>
@@ -164,7 +161,6 @@ while ($row = $countResult->fetch_assoc()) {
                     </tr>
                   <?php endif; ?>
                 </tbody>
-
               </table>
             </div>
           </div>
@@ -194,6 +190,7 @@ while ($row = $countResult->fetch_assoc()) {
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+  <script src="chart/chart.js"></script>
 
 </body>
 

@@ -88,56 +88,8 @@ $result = mysqli_query($conn, $query);
   <?php include 'student-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
-  <aside id="sidebar" class="sidebar">
-
-    <ul class="sidebar-nav" id="sidebar-nav">
-
-      <li class="nav-item">
-        <a class="nav-link " href="student-dashboard.php">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
-      </li><!-- End Dashboard Nav -->
-
-      <!-- Evaluate Nav -->
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-book"></i><span>Evaluate</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="charts-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="student-evaluate.php">
-              <i class="bi bi-circle"></i><span>Form</span>
-            </a>
-          </li>
-          <li>
-            <a href="student-evaluatedsubject.php">
-              <i class="bi bi-circle"></i><span>Evaluated Subject</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Evaluate Nav -->
-
-      <li class="nav-heading">Pages</li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="student-user-profile.php">
-          <i class="bi bi-person"></i>
-          <span>Profile</span>
-        </a>
-      </li><!-- End Profile Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="logout.php">
-          <i class="bi bi-box-arrow-right"></i>
-          <span>Sign Out</span>
-        </a>
-      </li><!-- End Sign out Nav -->
-
-
-    </ul>
-
-  </aside><!-- End Sidebar-->
+  <?php include 'student-sidebar.php' ?>
+  <!-- End Sidebar-->
 
   <main id="main" class="main">
 
