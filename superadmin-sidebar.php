@@ -93,28 +93,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
     </li>
 
-    <!-- Faculty -->
-    <?php $facultyPages = ['superadmin-facultylist.php', 'superadmin-facultycreation.php']; ?>
-    <li class="nav-item">
-      <a class="nav-link <?= in_array($currentPage, $facultyPages) ? '' : 'collapsed' ?>"
-        data-bs-target="#faculty-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
-      </a>
-      <ul id="faculty-nav" class="nav-content collapse <?= in_array($currentPage, $facultyPages) ? 'show' : '' ?>"
-        data-bs-parent="#sidebar-nav">
-        <li>
-          <a href="superadmin-facultylist.php" class="<?= $currentPage == 'superadmin-facultylist.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>List</span>
-          </a>
-        </li>
-        <li>
-          <a href="superadmin-facultycreation.php" class="<?= $currentPage == 'superadmin-facultycreation.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Add New Faculty</span>
-          </a>
-        </li>
-      </ul>
-    </li>
-
     <!-- Student -->
     <?php $studentPages = ['superadmin-studentlist.php', 'superadmin-studentcreation.php']; ?>
     <li class="nav-item">
@@ -132,6 +110,28 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <li>
           <a href="superadmin-studentcreation.php" class="<?= $currentPage == 'superadmin-studentcreation.php' ? 'active' : '' ?>">
             <i class="bi bi-circle"></i><span>Add New Student</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+
+    <!-- Faculty -->
+    <?php $facultyPages = ['superadmin-facultylist.php', 'superadmin-facultycreation.php']; ?>
+    <li class="nav-item">
+      <a class="nav-link <?= in_array($currentPage, $facultyPages) ? '' : 'collapsed' ?>"
+        data-bs-target="#faculty-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-people-fill"></i><span>Faculty</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="faculty-nav" class="nav-content collapse <?= in_array($currentPage, $facultyPages) ? 'show' : '' ?>"
+        data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="superadmin-facultylist.php" class="<?= $currentPage == 'superadmin-facultylist.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>List</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-facultycreation.php" class="<?= $currentPage == 'superadmin-facultycreation.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>Add New Faculty</span>
           </a>
         </li>
       </ul>

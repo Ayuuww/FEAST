@@ -21,11 +21,11 @@ $query = "SELECT * FROM superadmin";
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Faculty Creation </title>
-  <?php include 'header.php' ?>
+        
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>
@@ -108,7 +108,7 @@ $query = "SELECT * FROM superadmin";
                 </div>
 
                 <!-- Password -->
-                <input type="text" name="password" value="ILOVEDMMMSU" class="form-control" placeholder="ILOVEDMMMSU" id="yourPassword" hidden>
+                <input type="hidden" name="password" value="ILOVEDMMMSU">
 
                 <!-- Confirm Password
                       <div class="col-md-3">

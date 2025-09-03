@@ -74,9 +74,11 @@ $result = $stmt->get_result();
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Superadmin - Past Evaluation Records</title>
-  <?php include 'header.php'; ?>
+        
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>

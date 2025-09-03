@@ -26,30 +26,34 @@ $query->execute();
 $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
 $query->close();
 
-// Initialize PDF
-$pdf = new FPDF('L', 'mm', 'A4');
+// Custom PDF class
+require 'printing-headerfooter.php';
+
+// Start PDF
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
+
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, "Overall Faculty Evaluation Report $admin_department", 0, 1, 'C');
+$pdf->Cell(0, 10, "$admin_department Overall Faculty Evaluation Report ", 0, 1, 'C');
 $pdf->Ln(3);
 
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(0, 10, 'Combined Overall Evaluation (SET + SEF)', 0, 1, 'L', true);
+$pdf->Cell(0, 10, "$admin_department Combined Overall Evaluation (SET + SEF)", 0, 1, 'L', true);
 $pdf->Ln(2);
 
 // Table Header
 $pdf->SetFont('Arial', 'B', 10);
-$headers = ['Faculty Name', 'SET Avg (%)', 'SEF Avg (%)', 'Overall Avg (%)'];
-$widths = [120, 50, 50, 50];
+$headers = ['Faculty Member Name', 'SET Avg (%)', 'SEF Avg (%)', 'Overall Avg (%)'];
+$widths = [100, 30, 30, 30];
 foreach ($headers as $i => $h) {
     $pdf->Cell($widths[$i], 8, $h, 1, 0, 'C');
 }
 $pdf->Ln();
 
 // Table Data
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', 'B', 10);
 foreach ($faculties as $fac) {
     $fid = $fac['idnumber'];
     $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
@@ -64,10 +68,10 @@ foreach ($faculties as $fac) {
         ? number_format(((float)$set_avg + (float)$sef_avg) / 2, 2)
         : ($set['students'] ? $set_avg : ($sef['admins'] ? $sef_avg : '0.00'));
 
-    $pdf->Cell(120, 8, $name, 1);
-    $pdf->Cell(50, 8, $set_avg . ' %', 1, 0, 'C');
-    $pdf->Cell(50, 8, $sef_avg . ' %', 1, 0, 'C');
-    $pdf->Cell(50, 8, $overall . ' %', 1, 0, 'C');
+    $pdf->Cell(100, 8, $name, 1);
+    $pdf->Cell(30, 8, $set_avg . ' %', 1, 0, 'C');
+    $pdf->Cell(30, 8, $sef_avg . ' %', 1, 0, 'C');
+    $pdf->Cell(30, 8, $overall . ' %', 1, 0, 'C');
     $pdf->Ln();
 }
 

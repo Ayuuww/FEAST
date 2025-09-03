@@ -108,90 +108,11 @@ $verifications = [
 ];
 
 // Custom PDF class
-class PDF_Extended extends FPDF {
-    function GetMultiCellHeight($w, $h, $txt) {
-        $cw = &$this->CurrentFont['cw'];
-        if ($w == 0) $w = $this->w - $this->rMargin - $this->x;
-        $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
-        $s = str_replace("\r", '', $txt);
-        $nb = strlen($s);
-        if ($nb > 0 && $s[$nb - 1] == "\n") $nb--;
-        $sep = -1; $i = 0; $j = 0; $l = 0; $nl = 1;
-        while ($i < $nb) {
-            $c = $s[$i];
-            if ($c == "\n") { $i++; $sep = -1; $j = $i; $l = 0; $nl++; continue; }
-            if ($c == ' ') $sep = $i;
-            $l += $cw[$c];
-            if ($l > $wmax) {
-                if ($sep == -1) {
-                    if ($i == $j) $i++;
-                } else {
-                    $i = $sep + 1;
-                }
-                $sep = -1; $j = $i; $l = 0; $nl++;
-            } else {
-                $i++;
-            }
-        }
-        return $h * $nl;
-    }
-}
+require 'printing-headerfooter.php';
 
 // Start PDF
-$pdf = new PDF_Extended('P', 'mm', 'A4');
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
-
-// University logo (always the same)
-$univ_logo = 'pics/DMMMSUlogo.png';
-
-// Department logos mapping
-$dept_logos = [
-    'CIS'  => 'pics/CISlogo.png',
-    'BPED' => 'pics/CElogo.png',
-    'CVM'  => 'pics/CVMlogo.jpg',
-    'CAFF' => 'pics/CAFFlogo.jpg',
-    'CAS'  => 'pics/CASlogo.jpg',
-    'CA'   => 'pics/CAlogo.jpg',
-    // add more departments here...
-];
-
-// Department headers mapping
-$dept_headers = [
-    'CIS'  => 'College of Information Systems',
-    'BPED' => 'College of Physical Education',
-    'CVM'  => 'College of Veterinary Medicine',
-    'CAFF' => 'College of Agroforestry and Forestry',
-    'CAS'  => 'College of Arts and Science',
-    'CA'   => 'College of Agriculture',
-    // add more departments here...
-];
-
-// Use department logo if available, otherwise fallback
-$dept_logo = isset($dept_logos[$evaluateeDept]) ? $dept_logos[$evaluateeDept] : 'pics/DMMMSUlogo.png';
-
-// Use department header if available, otherwise fallback
-$dept_header = isset($dept_headers[$evaluateeDept]) ? $dept_headers[$evaluateeDept] : $evaluateeDept;
-
-// Insert left logo
-$pdf->Image($univ_logo, 15, 10, 25);
-
-// Insert right logo (dynamic department logo)
-$pdf->Image($dept_logo, 170, 10, 25);
-
-// Set font for header
-$pdf->SetFont('Arial', 'B', 10);
-
-// University header
-$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
-
-// Department header (dynamic)
-$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
-
-// Location line
-$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
-
-$pdf->Ln(10);
-$pdf->SetFont('Arial', 'B', 12);
 
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, -5, 'Supervisor-to-Faculty Evaluation Summary', 0, 1, 'C');

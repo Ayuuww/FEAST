@@ -7,9 +7,12 @@ $idnumber   = mysqli_real_escape_string($conn, $_POST['idnumber']);
 $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
 $mid_name   = mysqli_real_escape_string($conn, $_POST['mid_name']);
 $last_name  = mysqli_real_escape_string($conn, $_POST['last_name']);
-$password   = mysqli_real_escape_string($conn, $_POST['password']);
+$password   = trim($_POST['password']); // don’t escape before hashing
 $department = mysqli_real_escape_string($conn, $_POST['department']);
 $section    = mysqli_real_escape_string($conn, $_POST['section']);
+
+// ✅ Hash password before saving
+$hashed = password_hash($password, PASSWORD_DEFAULT);
 
 // Check if student with same ID already exists
 $check = $conn->prepare("SELECT COUNT(*) FROM student WHERE idnumber = ?");
@@ -26,9 +29,9 @@ if ($exists > 0) {
     exit();
 }
 
-// Insert new student
+// Insert new student (store hashed password!)
 $stmt = $conn->prepare("INSERT INTO student (idnumber, first_name, mid_name, last_name, password, department, section) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $password, $department, $section);
+$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed, $department, $section);
 
 if ($stmt->execute()) {
     $_SESSION['msg'] = "Student account has been created successfully.";

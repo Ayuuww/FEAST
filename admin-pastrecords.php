@@ -144,8 +144,11 @@ if ($semesters_query) { // Check if prepare was successful
 <html>
 
 <head>
-  <title>My Past Evaluations</title>
-  <?php include 'header.php'; ?>
+   
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
 </head>
 
 <body>

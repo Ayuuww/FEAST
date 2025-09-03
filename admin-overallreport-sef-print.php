@@ -12,20 +12,24 @@ $admin_id = $_SESSION['idnumber'];
 
 // Get department of logged-in admin
 $admin_id = $_SESSION['idnumber'];
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department FROM admin WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, position FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$stmt->bind_result($fname, $mname, $lname, $admin_department);
+$stmt->bind_result($fname, $mname, $lname, $admin_department, $position);
 $stmt->fetch();
 $stmt->close();
 
 $admin_name = $lname . ', ' . $fname . ' ' . $mname;
 
-// Initialize PDF
-$pdf = new FPDF();
+// Custom PDF class
+require 'printing-headerfooter.php';
+
+// Start PDF
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
+
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, 'OVERALL SEF REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, "$admin_department OVERALL SEF REPORT", 0, 1, 'C');
 
 $pdf->SetFont('Arial', '', 12);
 $pdf->Cell(0, 8, 'Supervisor: ' . $admin_name, 0, 1);
@@ -68,7 +72,7 @@ foreach ($faculties as $fac) {
 
   $pdf->Cell(80, 8, $name, 1);
   $pdf->Cell(50, 8, $count, 1, 0, 'C');
-  $pdf->Cell(50, 8, $avg, 1, 0, 'C');
+  $pdf->Cell(50, 8, "$avg%", 1, 0, 'C');
   $pdf->Ln();
 }
 
@@ -82,7 +86,7 @@ $pdf->Ln(12);
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 6, $admin_name, 0, 1);
 $pdf->SetFont('Arial', '', 11);
-$pdf->Cell(0, 6, 'Supervisor', 0, 1);
+$pdf->Cell(0, 6, $position, 0, 1);
 
 $pdf->Output('I', 'Overall-SEF-Report.pdf');
 ?>

@@ -146,75 +146,17 @@ while ($row = mysqli_fetch_assoc($comments_q)) {
 }
 $stmt_comments->close();
 
+// Custom PDF class
+require 'printing-headerfooter.php';
 
-// Generate PDF
-$pdf = new FPDF();
+// Start PDF
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
-// Logos (always the same for all departments)
-$logo_left  = 'pics/bagong_pilipinas.jpg'; // Bagong Pilipinas logo
-$logo_right = 'pics/DMMMSUlogo_header.png';       // University seal
-
-// Department-specific info
-$dept_info = [
-    'CIS' => [
-        'college' => 'COLLEGE OF INFORMATION SYSTEMS',
-        'website' => 'www.cisdmmmsu.edu.ph',
-        'phone'   => '+63960-8182660',
-        'email'   => 'cis.nluc@dmmmsu.edu.ph'
-    ],
-    'BPED' => [
-        'college' => 'COLLEGE OF PHYSICAL EDUCATION',
-        'website' => 'www.bpedmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'bped.nluc@dmmmsu.edu.ph'
-    ],
-    'CVM' => [
-        'college' => 'COLLEGE OF VETERINARY MEDICINE',
-        'website' => 'www.cvm.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'cvm.nluc@dmmmsu.edu.ph'
-    ],
-    'CAS' => [
-        'college' => 'COLLEGE OF ARTS AND SCIENCE',
-        'website' => 'www.cas.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'cas.nluc@dmmmsu.edu.ph'
-    ],
-    // add more departments here...
-];
-
-// Pick department (from logged-in admin session for example)
-$department = $_SESSION['department'] ?? 'CIS';
-
-// Get department details or fallback
-$college_name       = $dept_info[$department]['college'] ?? 'COLLEGE';
-$college_website    = $dept_info[$department]['website'] ?? 'www.dmmmsu.edu.ph';
-$college_phone      = $dept_info[$department]['phone'] ?? '';
-$college_email      = $dept_info[$department]['email'] ?? '';
-
-// Insert logos
-$pdf->Image($logo_left, 9, 10, 32);   // left logo
-$pdf->Image($logo_right, 35, 10, 20); // right logo
-
-// University header
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 7, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
-$pdf->Cell(195, 2, 'NORTH LA UNION CAMPUS Bacnotan, La Union, Philippines', 0, 1, 'C');
-
-// College name (dynamic, bold)
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(173, 7, strtoupper($college_name), 0, 1, 'C');
-
-// Website, phone, email (dynamic)
-$pdf->SetFont('Arial', '', 9);
-$pdf->SetTextColor(0, 0, 255); // blue for links
-$pdf->Cell(195, 1, $college_website . ' | ' . $college_phone . ' | ' . $college_email, 0, 1, 'C', false, $college_website);
-
 $pdf->SetTextColor(0, 0, 0); // reset to black
-$pdf->Ln(10);
+$pdf->Ln(4);
 
-$pdf->SetFont('Arial', 'B', 10);
+$pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 2, $department . " " . 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
 $pdf->Ln(4);
 
@@ -298,7 +240,7 @@ if (count($comments) > 0) {
 // Section E
 $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, 'E. Development Plan', 0, 1);
+$pdf->Cell(0, 15, 'E. Development Plan', 0, 1);
 
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 8, 'Areas for Improvement:', 1, 1);
@@ -319,30 +261,30 @@ $y = $pdf->GetY();
 
 // Row 1: Prepared by
 $pdf->SetXY($x, $y);
-$pdf->MultiCell(35, 8, "Prepared by\n(Staff Signature):", 1); // 2 lines, height 8 each
+$pdf->MultiCell(35, 8, "Prepared by\n(Staff Signature):", 0,); // 2 lines, height 8 each
 
 $pdf->SetXY($x + 35, $y);
-$pdf->Cell(45, 16, '', 1, 0); // Signature
+$pdf->Cell(40, 16, '', 0, 0); // Signature
 
-$pdf->Cell(20, 16, 'Name:', 1, 0);
-$pdf->Cell(45, 16, $evaluator_name ?? '', 1, 0);
+$pdf->Cell(25, 16, 'Name:', 0, 0);
+$pdf->Cell(45, 16, $evaluator_name ?? '', 0, 0);
 
-$pdf->Cell(15, 16, 'Date:', 1, 0);
-$pdf->Cell(0, 16, date('F j, Y'), 1, 1); // Auto date
+$pdf->Cell(15, 16, 'Date:', 0, 0);
+$pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
 
 // Row 2: Reviewed by
 $y2 = $pdf->GetY(); // Move to next line
 $pdf->SetXY($x, $y2);
-$pdf->MultiCell(35, 8, "Reviewed by\n(Authorized Official):", 1);
+$pdf->MultiCell(35, 8, "Reviewed by\n(Authorized Official):", 0);
 
 $pdf->SetXY($x + 35, $y2);
-$pdf->Cell(45, 16, '', 1, 0); // Signature
+$pdf->Cell(40, 16, '', 0, 0); // Signature
 
-$pdf->Cell(20, 16, 'Name:', 1, 0);
-$pdf->Cell(45, 16, '', 1, 0); // Leave blank or insert official name
+$pdf->Cell(25, 16, 'Name:', 0, 0);
+$pdf->Cell(45, 16, '', 0, 0); // Leave blank or insert official name
 
-$pdf->Cell(15, 16, 'Date:', 1, 0);
-$pdf->Cell(0, 16, date('F j, Y'), 1, 1); // Auto date
+$pdf->Cell(15, 16, 'Date:', 0, 0);
+$pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
 
 $pdf->Output('I', 'Individual-Faculty-Evaluation.pdf');
 ?>

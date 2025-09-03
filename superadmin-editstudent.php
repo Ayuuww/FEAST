@@ -57,9 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Edit Student</title>
-  <?php include 'header.php'; ?>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>

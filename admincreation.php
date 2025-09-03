@@ -4,19 +4,19 @@ include 'conn/conn.php';
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     // Sanitize inputs
-    $id         = mysqli_real_escape_string($conn, trim($_POST['idnumber']));
-    $first_name = mysqli_real_escape_string($conn, trim($_POST['first_name']));
-    $mid_name   = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
-    $last_name  = mysqli_real_escape_string($conn, trim($_POST['last_name']));
-    $password   = mysqli_real_escape_string($conn, trim($_POST['password']));
-    $department = mysqli_real_escape_string($conn, trim($_POST['department']));
-    $position   = mysqli_real_escape_string($conn, trim($_POST['position']));
+    $id           = mysqli_real_escape_string($conn, trim($_POST['idnumber']));
+    $first_name   = mysqli_real_escape_string($conn, trim($_POST['first_name']));
+    $mid_name     = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
+    $last_name    = mysqli_real_escape_string($conn, trim($_POST['last_name']));
+    $password     = trim($_POST['password']); // don't escape before hashing
+    $department   = mysqli_real_escape_string($conn, trim($_POST['department']));
+    $position     = mysqli_real_escape_string($conn, trim($_POST['position']));
     $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank']))
         ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank']))
         : null;
 
-    // Hash the password before storing (for security)
-    // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    // ✅ Hash the password before storing
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Check if admin with same ID already exists
     $check_query = "SELECT idnumber FROM admin WHERE idnumber = ?";
@@ -27,6 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 
     if ($stmt->num_rows > 0) {
         $_SESSION['msg'] = 'Admin with this ID already exists!';
+        $_SESSION['msg_type'] = 'warning';
         header("Location: superadmin-admincreation.php");
         exit();
     }
@@ -38,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($insert_query);
-    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $password, $department, $position, $faculty_rank);
+    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $position, $faculty_rank);
 
     if ($stmt->execute()) {
         // Check and insert into faculty if not already present
@@ -49,9 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 
         if ($faculty_check->num_rows == 0) {
             $faculty_insert = $conn->prepare("INSERT INTO faculty (
-                idnumber, first_name, mid_name, last_name, department, faculty_rank
-            ) VALUES (?, ?, ?, ?, ?, ?)");
-            $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $department, $faculty_rank);
+                idnumber, first_name, mid_name, last_name, password, department, faculty_rank
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $faculty_insert->bind_param("sssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $faculty_rank);
             $faculty_insert->execute();
             $faculty_insert->close();
         }
@@ -62,14 +63,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
         header("Location: superadmin-admincreation.php");
         exit();
     } else {
-        $_SESSION['msg'] = 'Failed to create admin. ID already exists.';
-        $_SESSION['msg_type'] = 'info'; // or 'error' if you want
+        $_SESSION['msg'] = 'Failed to create admin.';
+        $_SESSION['msg_type'] = 'danger';
         header("Location: superadmin-admincreation.php");
         exit();
     }
 
     $stmt->close();
-
     header("Location: superadmin-admincreation.php");
     exit();
 } else {

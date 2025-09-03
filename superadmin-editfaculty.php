@@ -139,10 +139,11 @@ while ($row = $rankQuery->fetch_assoc()) {
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Edit Faculty Status</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <?php include 'header.php'; ?>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>

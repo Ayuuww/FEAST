@@ -53,8 +53,11 @@ foreach ($faculties as $fac) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Overall SEF Report</title>
-  <?php include 'header.php'; ?>
+
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
 </head>
 
 <body>

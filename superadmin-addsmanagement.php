@@ -71,12 +71,11 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>Manage Ranks & Positions</title>
-
-  <?php include 'header.php' ?>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 
   <style>
     .table+.card-title {

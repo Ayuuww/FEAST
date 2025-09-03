@@ -30,12 +30,11 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+   
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
 
-  <title>FEAST / Reports </title>
-
-  <?php include 'header.php' ?>
 
   <style>
     .table td,

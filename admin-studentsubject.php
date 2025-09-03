@@ -137,12 +137,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+   
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
 
-  <title>FEAST / Student Subject</title>
-
-  <?php include 'header.php' ?>
 
   <style>
     div.dataTables_length {
@@ -192,7 +191,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
     }
   </style>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body>

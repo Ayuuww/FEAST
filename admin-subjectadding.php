@@ -52,12 +52,10 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Adding Subject</title>
-
-  <?php include 'header.php' ?>
+  
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
 
 </head>
 

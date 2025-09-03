@@ -1,108 +1,85 @@
 <?php
 session_start();
-include "conn/conn.php"; // connection to the database
+include "conn/conn.php";
 
-// Activity log function (moved to the top)
-function logActivity($conn, $user_id, $role, $action) {
-    $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $user_id, $role, $action);
+// Sanitize input
+$id = trim($_POST['idnumber']);
+$password = trim($_POST['password']);
+
+function tryLogin($conn, $table, $id, $password)
+{
+    $stmt = $conn->prepare("SELECT * FROM $table WHERE idnumber = ?");
+    $stmt->bind_param("s", $id);
     $stmt->execute();
-}
+    $result = $stmt->get_result();
 
-// Remember Me cookies
-if (isset($_POST['remember']) && $_POST['remember'] === 'true') {
-    setcookie("remember_idnumber", $_POST['idnumber'], time() + (86400 * 30), "/");
-    setcookie("remember_password", $_POST['password'], time() + (86400 * 30), "/"); // Encrypt if needed
-} else {
-    setcookie("remember_idnumber", "", time() - 3600, "/");
-    setcookie("remember_password", "", time() - 3600, "/");
-}
+    if ($row = $result->fetch_assoc()) {
+        // Verify hashed or plain password
+        if (password_verify($password, $row['password']) || $password === $row['password']) {
 
-$id       = mysqli_real_escape_string($conn, $_POST['idnumber']);
-$password = mysqli_real_escape_string($conn, $_POST['password']);
+            // Check status only if column exists
+            if (array_key_exists('status', $row) && $row['status'] !== 'active') {
+                $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
+                $_SESSION['msg_type'] = 'warning';
+                header("Location: pages-login.php");
+                exit();
+            }
 
-// ---- Check Superadmin ----
-$query2 = "SELECT * FROM superadmin WHERE idnumber='$id' AND password='$password'";
-$result2 = mysqli_query($conn, $query2);
-if ($row = mysqli_fetch_assoc($result2)) {
-    if ($row['status'] !== 'active') {
-        $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
-        header("Location: pages-login.php");
-        exit();
+            // Set session
+            $_SESSION['idnumber']   = $row['idnumber'];
+            $_SESSION['first_name'] = $row['first_name'];
+            $_SESSION['last_name']  = $row['last_name'];
+            $_SESSION['role']       = $row['role'];
+
+            // Optional extra session fields
+            if (isset($row['department']))   $_SESSION['department']   = $row['department'];
+            if (isset($row['faculty_rank'])) $_SESSION['faculty_rank'] = $row['faculty_rank'];
+            if (isset($row['position']))     $_SESSION['position']     = $row['position'];
+            if (isset($row['section']))      $_SESSION['section']      = $row['section'];
+
+            // ✅ Log activity
+            $activity = "Logged in";
+            $stmtLog = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity, timestamp) VALUES (?, ?, ?, NOW())");
+            $stmtLog->bind_param("sss", $row['idnumber'], $row['role'], $activity);
+            $stmtLog->execute();
+
+            // Redirect by role
+            switch ($_SESSION['role']) {
+                case 'superadmin':
+                    header("Location: superadmin-dashboard.php");
+                    break;
+                case 'admin':
+                    header("Location: admin-dashboard.php");
+                    break;
+                case 'faculty':
+                    header("Location: faculty-dashboard.php");
+                    break;
+                case 'student':
+                    header("Location: student-dashboard.php");
+                    break;
+                default:
+                    $_SESSION['msg'] = "Unknown role.";
+                    $_SESSION['msg_type'] = "error";
+                    header("Location: pages-login.php");
+            }
+            exit();
+        }
     }
-    $_SESSION['idnumber']   = $row['idnumber'];
-    $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name']  = $row['last_name'];
-    $_SESSION['role']       = 'superadmin';
-
-    logActivity($conn, $row['idnumber'], 'superadmin', 'Logged in');
-    header("Location: superadmin-dashboard.php");
-    exit();
+    return false;
 }
 
-// ---- Check Admin ----
-$query3 = "SELECT * FROM admin WHERE idnumber='$id' AND password='$password'";
-$result3 = mysqli_query($conn, $query3);
-if ($row = mysqli_fetch_assoc($result3)) {
-    if ($row['status'] !== 'active') {
-        $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
-        header("Location: pages-login.php");
-        exit();
-    }
-    $_SESSION['idnumber']   = $row['idnumber'];
-    $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name']  = $row['last_name'];
-    $_SESSION['department'] = $row['department'];
-    $_SESSION['position']   = $row['position'];
-    $_SESSION['role']       = 'admin';
-
-    logActivity($conn, $row['idnumber'], 'admin', 'Logged in');
-    header("Location: admin-dashboard.php");
-    exit();
+// Try each role table
+if (tryLogin($conn, "superadmin", $id, $password)) {
+}
+if (tryLogin($conn, "admin", $id, $password)) {
+}
+if (tryLogin($conn, "faculty", $id, $password)) {
+}
+if (tryLogin($conn, "student", $id, $password)) {
 }
 
-// ---- Check Faculty ----
-$query1 = "SELECT * FROM faculty WHERE idnumber='$id' AND password='$password'";
-$result1 = mysqli_query($conn, $query1);
-if ($row = mysqli_fetch_assoc($result1)) {
-    if ($row['status'] !== 'active') {
-        $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
-        header("Location: pages-login.php");
-        exit();
-    }
-    $_SESSION['idnumber']   = $row['idnumber'];
-    $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name']  = $row['last_name'];
-    $_SESSION['department'] = $row['department'];
-    $_SESSION['role']       = $row['role'];
-    $_SESSION['status']     = $row['status'];
-
-    logActivity($conn, $row['idnumber'], 'faculty', 'Logged in');
-    header("Location: faculty-dashboard.php");
-    exit();
-}
-
-// ---- Check Student ----
-$query = "SELECT * FROM student WHERE idnumber='$id' AND password='$password'";
-$result = mysqli_query($conn, $query);
-if ($row = mysqli_fetch_assoc($result)) {
-    $_SESSION['idnumber']   = $row['idnumber'];
-    $_SESSION['first_name'] = $row['first_name'];
-    $_SESSION['last_name']  = $row['last_name'];
-    $_SESSION['role']       = $row['role'];
-    $_SESSION['section']    = $row['section'];
-    $_SESSION['department'] = $row['department'];
-
-    logActivity($conn, $row['idnumber'], 'student', 'Logged in');
-    header("Location: student-dashboard.php");
-    exit();
-}
-
-// ---- Invalid Login ----
-$_SESSION['msg'] = 'Invalid ID or Password. Please try again.';
-$_SESSION['login_failed'] = true;
+// Invalid login
+$_SESSION['msg'] = "Invalid ID or Password.";
+$_SESSION['msg_type'] = "error";
 header("Location: pages-login.php");
 exit();
-
-
-?>

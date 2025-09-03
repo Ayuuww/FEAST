@@ -7,52 +7,6 @@ if (!isset($_SESSION['admin_print_data'])) {
     header("Location: admin-evaluate.php");
     exit();
 }
-class PDF_Extended extends FPDF
-{
-    function GetMultiCellHeight($w, $h, $txt)
-    {
-        $cw = &$this->CurrentFont['cw']; // now accessible
-        if ($w == 0) $w = $this->w - $this->rMargin - $this->x;
-        $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
-        $s = str_replace("\r", '', $txt);
-        $nb = strlen($s);
-        if ($nb > 0 and $s[$nb - 1] == "\n") $nb--;
-        $sep = -1;
-        $i = 0;
-        $j = 0;
-        $l = 0;
-        $nl = 1;
-
-        while ($i < $nb) {
-            $c = $s[$i];
-            if ($c == "\n") {
-                $i++;
-                $sep = -1;
-                $j = $i;
-                $l = 0;
-                $nl++;
-                continue;
-            }
-            if ($c == ' ') $sep = $i;
-            $l += $cw[$c];
-            if ($l > $wmax) {
-                if ($sep == -1) {
-                    if ($i == $j) $i++;
-                } else {
-                    $i = $sep + 1;
-                }
-                $sep = -1;
-                $j = $i;
-                $l = 0;
-                $nl++;
-            } else {
-                $i++;
-            }
-        }
-        return $h * $nl;
-    }
-}
-
 
 $data = $_SESSION['admin_print_data'];
 unset($_SESSION['admin_print_data']); // Prevent reprint on refresh
@@ -110,58 +64,12 @@ $verifications = [
     " Syllabus, Student outputs, Observations"
 ];
 
-// Initialize FPDF
-$pdf = new PDF_Extended('P', 'mm', 'A4');
+// Custom PDF class
+require 'printing-headerfooter.php';
+
+// Start PDF
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
-
-// University logo (always the same)
-$univ_logo = 'pics/DMMMSUlogo.png';
-
-// Department logos mapping
-$dept_logos = [
-    'CIS'  => 'pics/CISlogo.png',
-    'BPED' => 'pics/CElogo.png',
-    'CVM'  => 'pics/CVMlogo.jpg',
-    'CAFF' => 'pics/CAFFlogo.jpg',
-    'CAS'  => 'pics/CASlogo.jpg',
-    'CA'   => 'pics/CAlogo.jpg',
-];
-
-// Department headers mapping
-$dept_headers = [
-    'CIS'  => 'College of Information Systems',
-    'BPED' => 'College of Physical Education',
-    'CVM'  => 'College of Veterinary Medicine',
-    'CAFF' => 'College of Agroforestry and Forestry',
-    'CAS'  => 'College of Arts and Sciences',
-    'CA'   => 'College of Agriculture',
-];
-
-// Get evaluatee department from $data
-$evaluateeDept = $data['department'] ?? 'N/A';
-
-// Department logo + header
-$dept_logo   = $dept_logos[$evaluateeDept] ?? $univ_logo;
-$dept_header = $dept_headers[$evaluateeDept] ?? $evaluateeDept;
-
-// Insert left logo
-$pdf->Image($univ_logo, 15, 10, 25);
-
-// Insert right logo
-$pdf->Image($dept_logo, 170, 10, 25);
-
-// Set font for header
-$pdf->SetFont('Arial', 'B', 10);
-
-// University header
-$pdf->Cell(0, 15, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
-
-// Department header (dynamic)
-$pdf->Cell(0, -7, strtoupper($dept_header), 0, 1, 'C');
-
-// Location line
-$pdf->Cell(0, 15, 'Bacnotan, La Union', 0, 1, 'C');
-$pdf->Ln(10);
 
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, -5, 'Supervisor-to-Faculty Evaluation Summary', 0, 1, 'C');

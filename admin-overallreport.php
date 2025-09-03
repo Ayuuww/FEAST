@@ -75,8 +75,11 @@ foreach ($faculties as $fac) {
 <html>
 
 <head>
-  <title>Overall Evaluation Report</title>
-  <?php include 'header.php'; ?>
+   
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
 </head>
 
 <body>

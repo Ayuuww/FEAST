@@ -33,6 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $new = $_POST['new_password'];
     $retype = $_POST['renew_password'];
 
+    // Get current hashed password
     $query = $conn->prepare("SELECT password FROM superadmin WHERE idnumber = ?");
     $query->bind_param("s", $idnumber);
     $query->execute();
@@ -40,13 +41,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $query->fetch();
     $query->close();
 
-    if ($current !== $db_password) {
+    // Check hashed password
+    if (!password_verify($current, $db_password)) {
       $error_msg = "Incorrect current password.";
     } elseif ($new !== $retype) {
       $error_msg = "New passwords do not match.";
     } else {
+      // Hash the new password before saving
+      $hashed_new = password_hash($new, PASSWORD_DEFAULT);
+
       $update = $conn->prepare("UPDATE superadmin SET password=? WHERE idnumber=?");
-      $update->bind_param("ss", $new, $idnumber);
+      $update->bind_param("ss", $hashed_new, $idnumber);
       if ($update->execute()) {
         $success_msg = "Password updated successfully.";
       } else {
@@ -70,11 +75,11 @@ $stmt->close();
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>FEAST / Profile</title>
-  <?php include 'header.php' ?>
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
 </head>
 
 <body>

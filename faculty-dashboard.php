@@ -65,12 +65,10 @@ while ($row = $sectionResult->fetch_assoc()) {
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Home </title>
-
-  <?php include 'header.php' ?>
+    
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
 
   <style>
     .welcome-box {

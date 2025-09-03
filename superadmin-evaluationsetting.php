@@ -51,14 +51,11 @@ $current_year = $setting['academic_year'];
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Evaluation Setting </title>
-
-  <?php include 'header.php' ?>
-
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
   <style>
     body {
       font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", Helvetica, Arial, sans-serif;

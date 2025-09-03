@@ -1,3 +1,8 @@
+<meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>FEAST</title>
+
 <meta name="robots" content="noindex, nofollow">
 <meta content="" name="description">
 <meta content="" name="keywords">
@@ -25,6 +30,7 @@
 <!-- Template Main CSS File -->
 <link href="assets/css/style.css" rel="stylesheet">
 
+<script src="jquery/jquery-3.6.0.min.js"></script>
 <!-- =======================================================
   * Template Name: NiceAdmin
   * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/

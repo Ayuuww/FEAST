@@ -19,11 +19,11 @@ $result = mysqli_query($conn, $query);
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / AdminList </title>
-  <?php include 'header.php' ?>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>

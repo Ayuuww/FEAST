@@ -14,11 +14,11 @@ if (isset($_SESSION['msg'])) {
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST - Register</title>
-  <?php include 'header.php'?>
+      
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 
   <style>
     @media (max-width: 576px) {

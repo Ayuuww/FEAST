@@ -45,8 +45,11 @@ foreach ($faculties as $fac) {
 <html>
 
 <head>
-  <title>Overall SET Report</title>
-  <?php include 'header.php'; ?>
+   
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
 </head>
 
 <body>

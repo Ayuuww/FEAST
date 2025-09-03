@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 24, 2025 at 04:55 PM
+-- Generation Time: Sep 03, 2025 at 12:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,114 +40,76 @@ CREATE TABLE `activity_logs` (
 --
 
 INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) VALUES
-(60, '100-0000-0', 'admin', 'Logged in', '2025-07-19 19:26:19'),
-(61, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty with a rating of 97.33%', '2025-07-19 19:38:49'),
-(62, '221-0388-1', 'student', 'Logged in', '2025-07-19 19:55:08'),
-(63, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:04:48'),
-(64, '100-0000-0', 'admin', 'Logged in', '2025-07-19 20:08:08'),
-(65, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:19:17'),
-(66, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:28:43'),
-(67, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:31:15'),
-(68, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:40:46'),
-(69, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 20:44:31'),
-(70, '001-0000-0', 'admin', 'Logged in', '2025-07-19 20:53:18'),
-(71, '001-0000-0', 'faculty', 'Logged in', '2025-07-19 20:54:47'),
-(72, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 21:17:50'),
-(73, '000-0000-0', 'student', 'Logged in', '2025-07-19 21:25:27'),
-(74, '100-0000-0', 'admin', 'Logged in', '2025-07-19 21:28:22'),
-(75, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 21:35:09'),
-(76, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 21:35:48'),
-(77, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 22:03:27'),
-(78, '100-0000-0', 'admin', 'Logged in', '2025-07-19 22:04:15'),
-(79, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty with a rating of 98.67%', '2025-07-19 22:05:08'),
-(80, '100-0000-0', 'admin', 'Logged in', '2025-07-19 22:11:27'),
-(81, '221-0387-1', 'superadmin', 'Logged in', '2025-07-19 22:21:51'),
-(82, '221-0387-1', 'superadmin', 'Logged in', '2025-07-21 00:55:15'),
-(83, '100-0000-0', 'admin', 'Logged in', '2025-07-21 00:58:22'),
-(84, '001-0000-0', 'faculty', 'Logged in', '2025-07-21 01:08:26'),
-(85, '001-0000-0', 'faculty', 'Logged in', '2025-07-21 19:20:56'),
-(86, '000-0000-0', 'student', 'Logged in', '2025-07-21 20:58:29'),
-(87, '000-0000-0', 'student', 'Rated 100% for ISPC-101 handled by Maricel Maam Faculty', '2025-07-21 21:00:02'),
-(88, '221-0388-1', 'student', 'Logged in', '2025-07-21 21:01:08'),
-(89, '100-0000-0', 'admin', 'Logged in', '2025-07-21 22:05:14'),
-(90, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-21 22:05:49'),
-(91, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-21 22:19:15'),
-(92, '221-0387-1', 'superadmin', 'Logged in', '2025-07-21 22:20:25'),
-(93, '100-0000-0', 'admin', 'Logged in', '2025-07-21 22:20:46'),
-(94, '221-0387-1', 'superadmin', 'Logged in', '2025-07-21 22:23:55'),
-(95, '100-0000-0', 'admin', 'Logged in', '2025-07-21 22:24:18'),
-(96, '221-0388-1', 'student', 'Logged in', '2025-07-21 22:35:19'),
-(97, '100-0000-0', 'admin', 'Logged in', '2025-07-21 22:52:02'),
-(98, '100-0000-0', 'admin', 'Logged in', '2025-07-21 23:01:26'),
-(99, '000-0000-0', 'student', 'Logged in', '2025-07-21 23:02:12'),
-(100, '000-0000-0', 'student', 'Rated 98.67% for ISPC-101 handled by Maricel Maam Faculty', '2025-07-21 23:05:02'),
-(101, '000-0000-0', 'student', 'Rated 97.33% for ISBA-101 handled by Maam Edith Admin', '2025-07-21 23:14:15'),
-(102, '221-0388-1', 'student', 'Logged in', '2025-07-21 23:17:41'),
-(103, '221-0388-1', 'student', 'Rated 97.33% for ISPC-101 handled by Maricel Maam Faculty', '2025-07-21 23:18:03'),
-(104, '221-0388-1', 'student', 'Rated 98.67% for ISBA-101 handled by Maam Edith Admin', '2025-07-21 23:19:31'),
-(105, '221-0387-1', 'superadmin', 'Logged in', '2025-07-21 23:20:02'),
-(106, '000-0000-0', 'student', 'Logged in', '2025-07-21 23:20:40'),
-(107, '000-0000-0', 'student', 'Logged in', '2025-07-23 00:24:56'),
-(108, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 00:25:20'),
-(109, '100-0000-0', 'admin', 'Logged in', '2025-07-23 00:25:51'),
-(110, '000-0000-0', 'student', 'Rated 97.33% for ISAE-101 handled by Maricel Maam Faculty', '2025-07-23 00:30:48'),
-(111, '221-0388-1', 'student', 'Logged in', '2025-07-23 00:43:53'),
-(112, '221-0388-1', 'student', 'Rated 98.67% for ISAE-101 handled by Maricel Maam Faculty', '2025-07-23 00:44:27'),
-(113, '100-0000-0', 'admin', 'Logged in', '2025-07-23 01:27:22'),
-(114, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 01:35:11'),
-(115, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 01:43:14'),
-(116, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 01:59:21'),
-(117, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-07-23 02:02:08'),
-(118, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-07-23 02:08:56'),
-(119, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-07-23 02:11:51'),
-(120, '100-0000-0', 'admin', 'Logged in', '2025-07-23 14:08:30'),
-(121, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 14:18:23'),
-(122, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 14:20:02'),
-(123, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:01:27'),
-(124, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:14:19'),
-(125, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 18:17:03'),
-(126, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:22:56'),
-(127, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 18:54:50'),
-(128, '100-0000-0', 'admin', 'Logged in', '2025-07-23 18:55:57'),
-(129, '100-0000-0', 'admin', 'Logged in', '2025-07-23 20:04:50'),
-(130, '221-0387-1', 'superadmin', 'Logged in', '2025-07-23 20:12:48'),
-(131, '100-0000-0', 'admin', 'Logged in', '2025-07-23 20:55:20'),
-(132, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 20:55:33'),
-(133, '500-0000-0', 'admin', 'Logged in', '2025-07-23 21:33:02'),
-(134, '001-0000-0', 'faculty', 'Logged in', '2025-07-23 21:39:11'),
-(135, '100-0000-0', 'admin', 'Logged in', '2025-07-24 10:37:53'),
-(136, '100-0000-0', 'admin', 'Logged in', '2025-07-24 13:35:01'),
-(137, '221-0387-1', 'superadmin', 'Logged in', '2025-07-24 13:38:33'),
-(138, '100-0000-0', 'admin', 'Logged in', '2025-07-24 13:39:05'),
-(139, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 2nd Semester', '2025-07-24 13:39:27'),
-(140, '001-0000-0', 'faculty', 'Logged in', '2025-07-24 13:40:23'),
-(141, '000-0000-1', 'student', 'Logged in', '2025-07-24 13:51:11'),
-(142, '100-0000-0', 'admin', 'Logged in', '2025-07-24 13:51:33'),
-(143, '000-0000-0', 'student', 'Logged in', '2025-07-24 16:43:55'),
-(144, '000-0000-0', 'student', 'Rated 98.67% for ISPC-101 handled by Maricel Maam Faculty', '2025-07-24 16:44:16'),
-(145, '100-0000-0', 'admin', 'Logged in', '2025-07-24 16:44:45'),
-(146, '001-0000-0', 'faculty', 'Logged in', '2025-07-24 17:04:55'),
-(147, '100-0000-0', 'admin', 'Logged in', '2025-07-24 17:39:56'),
-(148, '000-0000-1', 'student', 'Logged in', '2025-07-24 17:41:39'),
-(149, '000-0000-1', 'student', 'Rated 74.67% for ISBA-101 handled by Maam Edith Admin', '2025-07-24 17:42:03'),
-(150, '100-0000-0', 'admin', 'Logged in', '2025-07-24 17:42:48'),
-(151, '221-0387-1', 'superadmin', 'Logged in', '2025-07-24 17:56:14'),
-(152, '100-0000-0', 'admin', 'Logged in', '2025-07-24 21:34:58'),
-(153, '200-0000-0', 'admin', 'Logged in', '2025-07-24 21:37:29'),
-(154, '100-0000-0', 'admin', 'Logged in', '2025-07-24 21:59:42'),
-(155, '100-0000-0', 'admin', 'Evaluated Faculty: Rufo B. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:00:05'),
-(156, '100-0000-0', 'admin', 'Evaluated Faculty: Excel M. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:02:38'),
-(157, '400-0000-0', 'admin', 'Logged in', '2025-07-24 22:07:30'),
-(158, '221-0387-1', 'superadmin', 'Logged in', '2025-07-24 22:10:10'),
-(159, '200-0000-0', 'admin', 'Logged in', '2025-07-24 22:10:51'),
-(160, '200-0000-0', 'admin', 'Evaluated Faculty: Shirley M. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:15:24'),
-(161, '221-0387-1', 'superadmin', 'Logged in', '2025-07-24 22:15:50'),
-(162, '100-0000-0', 'admin', 'Logged in', '2025-07-24 22:28:34'),
-(163, '221-0387-1', 'superadmin', 'Logged in', '2025-07-24 22:29:21'),
-(164, '100-0000-0', 'admin', 'Logged in', '2025-07-24 22:31:38'),
-(165, '100-0000-0', 'admin', 'Evaluated Faculty: Excel M. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:31:58'),
-(166, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:32:28'),
-(167, '100-0000-0', 'admin', 'Evaluated Faculty: Rufo B. Faculty for 2025-2026 2nd Semester', '2025-07-24 22:32:48');
+(11, '221-0387-1', 'superadmin', 'Logged in', '2025-08-21 15:03:24'),
+(12, '221-0387-1', 'superadmin', 'Evaluation turned on', '2025-08-21 15:03:27'),
+(13, '221-0387-1', 'superadmin', 'Evaluation turned off', '2025-08-21 15:05:45'),
+(14, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'2nd Semester - 2025-2026\' to \'1st Semester - 2025-2026\'', '2025-08-21 15:17:59'),
+(15, '100-0000-0', 'admin', 'Logged in', '2025-08-21 15:23:06'),
+(16, '221-0387-1', 'superadmin', 'Logged in', '2025-08-21 15:27:01'),
+(17, '221-0387-1', 'superadmin', 'Evaluation turned on', '2025-08-21 15:29:55'),
+(18, '221-0387-1', 'superadmin', 'Evaluation turned on', '2025-08-21 15:31:16'),
+(19, '221-0387-1', 'superadmin', 'Logged in', '2025-08-21 15:34:55'),
+(20, '221-0387-1', 'superadmin', 'Logged in', '2025-08-21 15:35:08'),
+(21, '221-0387-1', 'superadmin', 'Logged in', '2025-08-21 15:37:20'),
+(22, '221-0387-1', 'superadmin', 'Logged in', '2025-08-25 16:39:50'),
+(23, '221-0387-1', 'superadmin', 'Logged in', '2025-09-01 03:05:14'),
+(24, '221-0387-1', 'superadmin', 'Evaluation turned off', '2025-09-01 03:05:38'),
+(25, '100-0000-0', 'admin', 'Logged in', '2025-09-01 03:16:06'),
+(26, '221-0387-1', 'superadmin', 'Logged in', '2025-09-01 03:32:39'),
+(27, '221-0387-1', 'superadmin', 'Evaluation turned on', '2025-09-01 03:32:43'),
+(28, '400-0000-0', 'admin', 'Logged in', '2025-09-01 18:55:06'),
+(29, '100-0000-0', 'admin', 'Logged in', '2025-09-01 18:59:34'),
+(30, '400-0000-0', 'admin', 'Logged in', '2025-09-01 19:00:33'),
+(31, '100-0000-0', 'admin', 'Logged in', '2025-09-01 19:01:02'),
+(32, '400-0000-0', 'admin', 'Logged in', '2025-09-01 19:01:16'),
+(33, '100-0000-0', 'admin', 'Logged in', '2025-09-01 19:03:18'),
+(34, '400-0000-0', 'admin', 'Logged in', '2025-09-01 19:05:04'),
+(35, '400-0000-0', 'admin', 'Logged in', '2025-09-01 19:09:12'),
+(36, '300-0000-0', 'admin', 'Logged in', '2025-09-01 19:20:45'),
+(37, '200-0000-0', 'admin', 'Logged in', '2025-09-01 19:47:11'),
+(38, '100-0000-0', 'admin', 'Logged in', '2025-09-01 19:54:40'),
+(39, '100-0000-0', 'admin', 'Logged in', '2025-09-01 20:19:28'),
+(40, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-09-01 20:34:12'),
+(41, '100-0000-0', 'admin', 'Evaluated Faculty: Excel M. Faculty for 2025-2026 1st Semester', '2025-09-01 20:37:12'),
+(42, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-09-01 20:39:31'),
+(43, '100-0000-0', 'admin', 'Evaluated Faculty: Rufo B. Faculty for 2025-2026 1st Semester', '2025-09-01 20:41:46'),
+(44, '100-0000-0', 'admin', 'Evaluated Faculty: Maam E. Admin for 2025-2026 1st Semester', '2025-09-01 20:45:13'),
+(45, '100-0000-0', 'admin', 'Evaluated Faculty: Maricel M. Faculty for 2025-2026 1st Semester', '2025-09-01 20:47:33'),
+(46, '100-0000-0', 'admin', 'Evaluated Faculty: Rufo B. Faculty for 2025-2026 1st Semester', '2025-09-01 20:49:43'),
+(47, '000-0000-0', 'student', 'Logged in', '2025-09-01 20:51:25'),
+(48, '000-0000-1', 'student', 'Logged in', '2025-09-01 20:56:38'),
+(49, '300-0000-0', 'admin', 'Logged in', '2025-09-01 20:57:11'),
+(50, '300-0000-0', 'admin', 'Logged in', '2025-09-01 20:58:21'),
+(51, '000-0000-1', 'student', 'Rated 92% for MD101 handled by Jose Christoper Faculty', '2025-09-01 20:58:39'),
+(52, '000-0000-1', 'student', 'Rated 94.67% for MD101 handled by Jose Christoper Faculty', '2025-09-01 21:03:02'),
+(53, '300-0000-0', 'admin', 'Evaluated Faculty: Jose C. Faculty for 2025-2026 1st Semester', '2025-09-01 21:03:48'),
+(54, '000-0000-1', 'student', 'Rated 84% for MD101 handled by Jose Christoper Faculty', '2025-09-01 21:08:24'),
+(55, '100-0000-0', 'admin', 'Logged in', '2025-09-02 07:54:07'),
+(56, '221-0387-1', 'superadmin', 'Logged in', '2025-09-02 07:54:42'),
+(57, '008-0000-0', 'faculty', 'Logged in', '2025-09-02 08:16:20'),
+(58, '000-0000-0', 'student', 'Logged in', '2025-09-02 09:07:20'),
+(59, '008-0000-0', 'faculty', 'Logged in', '2025-09-02 09:08:18'),
+(60, '100-0000-0', 'admin', 'Logged in', '2025-09-02 09:42:50'),
+(61, '100-0000-0', 'admin', 'Logged in', '2025-09-02 09:45:27'),
+(62, '221-0387-1', 'superadmin', 'Logged in', '2025-09-02 11:17:46'),
+(63, '100-0000-0', 'admin', 'Logged in', '2025-09-02 11:27:23'),
+(64, '100-0000-0', 'admin', 'Logged in', '2025-09-02 11:53:57'),
+(65, '200-0000-0', 'admin', 'Logged in', '2025-09-02 12:14:42'),
+(66, '200-0000-0', 'admin', 'Logged in', '2025-09-03 01:00:40'),
+(67, '200-0000-0', 'admin', 'Evaluated Faculty: Program C. Admin for 2025-2026 1st Semester', '2025-09-03 16:40:04'),
+(68, '200-0000-0', 'admin', 'Evaluated Faculty: Shirley M. Faculty for 2025-2026 1st Semester', '2025-09-03 16:41:24'),
+(69, '000-0000-0', 'student', 'Logged in', '2025-09-03 16:42:31'),
+(70, '221-0387-1', 'superadmin', 'Logged in', '2025-09-03 16:42:47'),
+(71, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2025-2026\' to \'1st Semester - 2024-2025\'', '2025-09-03 16:42:58'),
+(72, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2024-2025\' to \'1st Semester - 2023-2024\'', '2025-09-03 16:44:33'),
+(73, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2023-2024\' to \'2nd Semester - 2023-2024\'', '2025-09-03 16:45:07'),
+(74, '004-0000-0', 'faculty', 'Logged in', '2025-09-03 16:46:24'),
+(75, '002-0000-0', 'faculty', 'Logged in', '2025-09-03 16:46:37'),
+(76, '000-0000-1', 'student', 'Logged in', '2025-09-03 16:47:19'),
+(77, '100-0000-0', 'admin', 'Logged in', '2025-09-03 16:48:30'),
+(78, '000-0000-0', 'student', 'Logged in', '2025-09-03 17:14:32'),
+(79, '400-0000-0', 'admin', 'Logged in', '2025-09-03 17:17:00'),
+(80, '100-0000-0', 'admin', 'Logged in', '2025-09-03 17:33:56');
 
 -- --------------------------------------------------------
 
@@ -175,7 +137,7 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (39, NULL, NULL, NULL, 'CAS'),
 (41, NULL, NULL, NULL, 'CVM'),
 (42, 'Instructor II', NULL, NULL, NULL),
-(43, NULL, NULL, NULL, 'BPED-Math'),
+(43, NULL, NULL, NULL, 'BPED'),
 (44, 'Instructor III', NULL, NULL, NULL),
 (46, NULL, NULL, '1-C', NULL),
 (47, NULL, NULL, '1-D', NULL),
@@ -193,7 +155,9 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (61, 'Associate Professor I', NULL, NULL, NULL),
 (62, NULL, NULL, '2-D', NULL),
 (63, NULL, NULL, '4-A', NULL),
-(64, NULL, NULL, NULL, 'CAFF');
+(64, NULL, NULL, NULL, 'CAFF'),
+(65, NULL, 'Research Facilitator', NULL, NULL),
+(66, NULL, 'Head of Department', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -222,7 +186,7 @@ INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passwor
 ('100-0000-0', 'Maam', 'Edith', 'Admin', 'ILOVEDMMMSU', 'CIS', 'Dean', 'admin', 'active', 'Associate Professor I'),
 ('200-0000-0', 'Program', 'Chair', 'Admin', 'ILOVEDMMMSU', 'CAS', 'Program Chair', 'admin', 'active', 'Professor V'),
 ('300-0000-0', 'Vergil', 'Cry', 'Admin', 'ILOVEDMMMSU', 'CVM', 'Dean', 'admin', 'active', 'Professor IV'),
-('400-0000-0', 'Yelan', 'Hydro', 'Admin', 'ILOVEDMMMSU', 'BPED-Math', 'Program Chair', 'admin', 'active', 'Professor III'),
+('400-0000-0', 'Yelan', 'Hydro', 'Admin', 'ILOVEDMMMSU', 'BPED', 'Program Chair', 'admin', 'active', 'Professor III'),
 ('500-0000-0', 'Klee', 'Pyro', 'Admin', 'ILOVEDMMMSU', 'CAFF', 'Dean', 'admin', 'active', 'Professor IV');
 
 -- --------------------------------------------------------
@@ -253,7 +217,13 @@ INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator
 (46, '200-0000-0', '002-0000-0', 'Program Chair', '2025-2026', '2nd Semester', 75, 100.00, '', 'CAS', '2025-07-24 22:15:24'),
 (47, '100-0000-0', '003-0000-0', 'Dean', '2025-2026', '2nd Semester', 44, 58.67, '', 'CIS', '2025-07-24 22:31:58'),
 (48, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '2nd Semester', 68, 90.67, 'Great Instructor', 'CIS', '2025-07-24 22:32:28'),
-(49, '100-0000-0', '008-0000-0', 'Dean', '2025-2026', '2nd Semester', 44, 58.67, '', 'CIS', '2025-07-24 22:32:48');
+(49, '100-0000-0', '008-0000-0', 'Dean', '2025-2026', '2nd Semester', 44, 58.67, '', 'CIS', '2025-07-24 22:32:48'),
+(54, '100-0000-0', '100-0000-0', 'Dean', '2025-2026', '1st Semester', 63, 84.00, 'Nice teaching', 'CIS', '2025-09-01 20:45:13'),
+(55, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '1st Semester', 61, 81.33, '', 'CIS', '2025-09-01 20:47:33'),
+(56, '100-0000-0', '008-0000-0', 'Dean', '2025-2026', '1st Semester', 62, 82.67, '', 'CIS', '2025-09-01 20:49:43'),
+(57, '300-0000-0', '005-0000-0', 'Dean', '2025-2026', '1st Semester', 72, 96.00, '', 'CVM', '2025-09-01 21:03:48'),
+(58, '200-0000-0', '200-000-0', 'Program Chair', '2025-2026', '1st Semester', 68, 90.67, '', 'CAS', '2025-09-03 16:40:04'),
+(59, '200-0000-0', '002-0000-0', 'Program Chair', '2025-2026', '1st Semester', 71, 94.67, '', 'CAS', '2025-09-03 16:41:24');
 
 -- --------------------------------------------------------
 
@@ -282,7 +252,13 @@ INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`
 (22, '200-0000-0', '002-0000-0', '2nd Semester', '2025-2026', 75, 100.00, '', '2025-07-24 22:15:24', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}'),
 (23, '100-0000-0', '003-0000-0', '2nd Semester', '2025-2026', 44, 58.67, '', '2025-07-24 22:31:58', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":2,\"q4\":1,\"q5\":2,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":3,\"q11\":2,\"q12\":1,\"q13\":2,\"q14\":3}'),
 (24, '100-0000-0', '001-0000-0', '2nd Semester', '2025-2026', 68, 90.67, 'Great Instructor', '2025-07-24 22:32:28', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":3,\"q8\":3,\"q9\":4,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":4,\"q14\":5}'),
-(25, '100-0000-0', '008-0000-0', '2nd Semester', '2025-2026', 44, 58.67, '', '2025-07-24 22:32:48', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":2,\"q4\":1,\"q5\":2,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":3,\"q11\":2,\"q12\":1,\"q13\":2,\"q14\":3}');
+(25, '100-0000-0', '008-0000-0', '2nd Semester', '2025-2026', 44, 58.67, '', '2025-07-24 22:32:48', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":2,\"q4\":1,\"q5\":2,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":3,\"q11\":2,\"q12\":1,\"q13\":2,\"q14\":3}'),
+(30, '100-0000-0', '100-0000-0', '1st Semester', '2025-2026', 63, 84.00, 'Nice teaching', '2025-09-01 20:45:13', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":3,\"q9\":4,\"q10\":3,\"q11\":3,\"q12\":4,\"q13\":5,\"q14\":5}'),
+(31, '100-0000-0', '001-0000-0', '1st Semester', '2025-2026', 61, 81.33, '', '2025-09-01 20:47:33', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":4,\"q9\":4,\"q10\":4,\"q11\":3,\"q12\":2,\"q13\":3,\"q14\":4}'),
+(32, '100-0000-0', '008-0000-0', '1st Semester', '2025-2026', 62, 82.67, '', '2025-09-01 20:49:43', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":3,\"q8\":3,\"q9\":3,\"q10\":4,\"q11\":5,\"q12\":4,\"q13\":4,\"q14\":4}'),
+(33, '300-0000-0', '005-0000-0', '1st Semester', '2025-2026', 72, 96.00, '', '2025-09-01 21:03:48', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}'),
+(34, '200-0000-0', '200-000-0', '1st Semester', '2025-2026', 68, 90.67, '', '2025-09-03 16:40:04', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":4,\"q6\":4,\"q7\":5,\"q8\":4,\"q9\":4,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":5}'),
+(35, '200-0000-0', '002-0000-0', '1st Semester', '2025-2026', 71, 94.67, '', '2025-09-03 16:41:24', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":4,\"q14\":4}');
 
 -- --------------------------------------------------------
 
@@ -318,7 +294,8 @@ INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `sub
 (106, '000-0000-0', 'CIS', 'ISAE-101', 'Fundamentals', '2025-2026', '001-0000-0', 73.00, 97.33, '', '2025-07-22 16:30:48', '1st Semester', '1-A'),
 (107, '221-0388-1', 'CIS', 'ISAE-101', 'Fundamentals', '2025-2026', '001-0000-0', 74.00, 98.67, 'Nice', '2025-07-22 16:44:27', '1st Semester', '4-B'),
 (108, '000-0000-0', 'CIS', 'ISPC-101', 'Computer Programming I', '2025-2026', '001-0000-0', 74.00, 98.67, '', '2025-07-24 08:44:16', '2nd Semester', '1-A'),
-(109, '000-0000-1', 'CIS', 'ISBA-101', 'Accounting', '2025-2026', '100-0000-0', 56.00, 74.67, 'Nice Teaching', '2025-07-24 09:42:03', '2nd Semester', '4-B');
+(109, '000-0000-1', 'CIS', 'ISBA-101', 'Accounting', '2025-2026', '100-0000-0', 56.00, 74.67, 'Nice Teaching', '2025-07-24 09:42:03', '2nd Semester', '4-B'),
+(112, '000-0000-1', 'CVM', 'MD101', 'Medicine', '2025-2026', '005-0000-0', 63.00, 84.00, '', '2025-09-01 13:08:24', '1st Semester', '4-B');
 
 -- --------------------------------------------------------
 
@@ -338,7 +315,7 @@ CREATE TABLE `evaluation_settings` (
 --
 
 INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_at`) VALUES
-(1, '2nd Semester', '2025-2026', '2025-07-24 05:38:44');
+(1, '2nd Semester', '2023-2024', '2025-09-03 08:45:07');
 
 -- --------------------------------------------------------
 
@@ -348,15 +325,16 @@ INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_a
 
 CREATE TABLE `evaluation_switch` (
   `id` int(11) NOT NULL,
-  `status` enum('on','off') NOT NULL DEFAULT 'off'
+  `status` enum('on','off') NOT NULL DEFAULT 'off',
+  `user_id` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `evaluation_switch`
 --
 
-INSERT INTO `evaluation_switch` (`id`, `status`) VALUES
-(1, 'on');
+INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`) VALUES
+(1, 'on', '221-0387-1');
 
 -- --------------------------------------------------------
 
@@ -384,15 +362,15 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('001-0000-0', 'Maricel', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor V', 'faculty', 'active'),
 ('002-0000-0', 'Shirley', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CAS', 'Professor V', 'faculty', 'active'),
 ('003-0000-0', 'Excel', 'Maam', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor II', 'faculty', 'active'),
-('004-0000-0', 'Mark', 'Kristian', 'Faculty', 'ILOVEDMMMSU', 'BPED-Math', 'Professor III', 'faculty', 'active'),
+('004-0000-0', 'Mark', 'Kristian', 'Faculty', 'ILOVEDMMMSU', 'BPED', 'Professor III', 'faculty', 'active'),
 ('005-0000-0', 'Jose', 'Christoper', 'Faculty', 'ILOVEDMMMSU', 'CVM', 'Professor I', 'faculty', 'active'),
 ('006-0000-0', 'Van', 'Apollo', 'Faculty', 'ILOVEDMMMSU', 'CVM', 'Professor II', 'faculty', 'active'),
-('007-0000-0', 'Delwin', 'Caligma', 'Faculty', 'ILOVEDMMMSU', 'BPED-Math', 'Professor IV', 'faculty', 'active'),
+('007-0000-0', 'Delwin', 'Caligma', 'Faculty', 'ILOVEDMMMSU', 'BPED', 'Professor IV', 'faculty', 'active'),
 ('008-0000-0', 'Rufo', 'Baro', 'Faculty', 'ILOVEDMMMSU', 'CIS', 'Professor IV', 'faculty', 'active'),
 ('100-0000-0', 'Maam', 'Edith', 'Admin', NULL, 'CIS', 'Associate Professor I', 'faculty', 'active'),
 ('200-000-0', 'Program', 'Chair', 'Admin', NULL, 'CAS', 'Professor V', 'faculty', 'active'),
 ('300-0000-0', 'Vergil', 'Cry', 'Admin', NULL, 'CVM', 'Professor IV', 'faculty', 'active'),
-('400-0000-0', 'Yelan', 'Hydro', 'Admin', NULL, 'BPED-Math', 'Professor III', 'faculty', 'active'),
+('400-0000-0', 'Yelan', 'Hydro', 'Admin', NULL, 'BPED', 'Professor III', 'faculty', 'active'),
 ('500-0000-0', 'Klee', 'Pyro', 'Admin', NULL, 'CAFF', 'Professor IV', 'faculty', 'active');
 
 -- --------------------------------------------------------
@@ -472,7 +450,8 @@ INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`
 (32, '000-0000-0', 'ISAE-101', '001-0000-0', 'CIS', '2025-2026', '1st Semester', '2025-07-23 00:30:48', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":5,\"q14\":5}', 73, 97.33, ''),
 (33, '221-0388-1', 'ISAE-101', '001-0000-0', 'CIS', '2025-2026', '1st Semester', '2025-07-23 00:44:27', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 74, 98.67, 'Nice'),
 (34, '000-0000-0', 'ISPC-101', '001-0000-0', 'CIS', '2025-2026', '2nd Semester', '2025-07-24 16:44:16', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 74, 98.67, ''),
-(35, '000-0000-1', 'ISBA-101', '100-0000-0', 'CIS', '2025-2026', '2nd Semester', '2025-07-24 17:42:03', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":3,\"q9\":3,\"q10\":2,\"q11\":2,\"q12\":2,\"q13\":2,\"q14\":3}', 56, 74.67, 'Nice Teaching');
+(35, '000-0000-1', 'ISBA-101', '100-0000-0', 'CIS', '2025-2026', '2nd Semester', '2025-07-24 17:42:03', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":3,\"q9\":3,\"q10\":2,\"q11\":2,\"q12\":2,\"q13\":2,\"q14\":3}', 56, 74.67, 'Nice Teaching'),
+(38, '000-0000-1', 'MD101', '005-0000-0', 'CVM', '2025-2026', '1st Semester', '2025-09-01 21:08:24', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":3,\"q8\":4,\"q9\":4,\"q10\":3,\"q11\":5,\"q12\":5,\"q13\":4,\"q14\":3}', 63, 84.00, '');
 
 -- --------------------------------------------------------
 
@@ -512,7 +491,8 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (79, '000-0000-1', 'ISPE-110', '2025-2026', '2nd Semester', '003-0000-0', NULL),
 (80, '000-0000-1', 'ISBA-101', '2025-2026', '2nd Semester', '100-0000-0', NULL),
 (81, '000-0000-1', 'ISPC-101', '2025-2026', '2nd Semester', '001-0000-0', NULL),
-(82, '000-0000-1', 'ISAE-101', '2025-2026', '2nd Semester', '001-0000-0', NULL);
+(82, '000-0000-1', 'ISAE-101', '2025-2026', '2nd Semester', '001-0000-0', NULL),
+(83, '000-0000-1', 'MD101', '2025-2026', '1st Semester', '005-0000-0', NULL);
 
 -- --------------------------------------------------------
 
@@ -538,7 +518,8 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `d
 (38, 'ISBA-101', 'Accounting', '100-0000-0', NULL, 'CIS'),
 (39, 'ISAE-101', 'Fundamentals', '001-0000-0', NULL, 'CIS'),
 (42, 'ISPE-110', 'IT Audit', '003-0000-0', NULL, 'CIS'),
-(43, 'PATHFIT-1', 'Physical Education', '200-000-0', NULL, 'CAS');
+(43, 'PATHFIT-1', 'Physical Education', '200-000-0', NULL, 'CAS'),
+(44, 'MD101', 'Medicine', '005-0000-0', NULL, 'CVM');
 
 -- --------------------------------------------------------
 
@@ -547,7 +528,7 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `d
 --
 
 CREATE TABLE `superadmin` (
-  `idnumber` varchar(11) NOT NULL,
+  `idnumber` varchar(111) NOT NULL,
   `first_name` varchar(255) NOT NULL,
   `mid_name` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -561,8 +542,7 @@ CREATE TABLE `superadmin` (
 --
 
 INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `status`) VALUES
-('221-0387-1', 'Clark Joshua', 'Joshua', 'Rojas', '12345678', 'superadmin', 'active'),
-('221-1230-1', 'Super', 'Admin', 'Superadmin', '12345678', 'superadmin', 'active');
+('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '12345678', 'superadmin', 'active');
 
 --
 -- Indexes for dumped tables
@@ -629,7 +609,8 @@ ALTER TABLE `evaluation_settings`
 -- Indexes for table `evaluation_switch`
 --
 ALTER TABLE `evaluation_switch`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `superadmin_id_key` (`user_id`);
 
 --
 -- Indexes for table `faculty`
@@ -694,31 +675,31 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=168;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=67;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation_submissions`
 --
 ALTER TABLE `admin_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=110;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -742,19 +723,19 @@ ALTER TABLE `faculty_peer_evaluation`
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
 --
 ALTER TABLE `student_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- Constraints for dumped tables
@@ -786,6 +767,12 @@ ALTER TABLE `evaluation`
   ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `student` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_title_key` FOREIGN KEY (`subject_title`) REFERENCES `subject` (`title`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `evaluation_switch`
+--
+ALTER TABLE `evaluation_switch`
+  ADD CONSTRAINT `superadmin_id_key` FOREIGN KEY (`user_id`) REFERENCES `superadmin` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `faculty`

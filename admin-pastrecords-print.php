@@ -72,8 +72,11 @@ if ($stmt) { // Check if prepare was successful
 }
 
 
-// PDF generation
-$pdf = new FPDF('L', 'mm', 'A4');
+// Custom PDF class
+require 'printing-headerfooter.php';
+
+// Start PDF
+$pdf = new PDF_EXTENDED('L', 'mm', 'A4');
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);

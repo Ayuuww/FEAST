@@ -7,9 +7,12 @@ $idnumber   = mysqli_real_escape_string($conn, $_POST['idnumber']);
 $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
 $mid_name   = mysqli_real_escape_string($conn, $_POST['mid_name']);
 $last_name  = mysqli_real_escape_string($conn, $_POST['last_name']);
-$password   = mysqli_real_escape_string($conn, $_POST['password']);
+$password   = trim($_POST['password']); // don’t escape before hashing
 $rank       = mysqli_real_escape_string($conn, $_POST['faculty_rank']);
 $department = mysqli_real_escape_string($conn, $_POST['department']);
+
+// ✅ Hash password before saving
+$hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
 // Check if ID number already exists
 $check = $conn->prepare("SELECT COUNT(*) FROM faculty WHERE idnumber = ?");
@@ -20,22 +23,22 @@ $check->fetch();
 $check->close();
 
 if ($exists > 0) {
-  $_SESSION['msg'] = "ID number already exists. Please enter a different one.";
-  $_SESSION['msg_type'] = "warning";
-  header("Location: superadmin-facultycreation.php");
-  exit();
+    $_SESSION['msg'] = "ID number already exists. Please enter a different one.";
+    $_SESSION['msg_type'] = "warning";
+    header("Location: superadmin-facultycreation.php");
+    exit();
 }
 
-// Insert if not duplicate
+// Insert if not duplicate (store hashed password)
 $stmt = $conn->prepare("INSERT INTO faculty (idnumber, first_name, mid_name, last_name, password, faculty_rank, department) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $password, $rank, $department);
+$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed_password, $rank, $department);
 
 if ($stmt->execute()) {
-  $_SESSION['msg'] = "Faculty account has been created successfully.";
-  $_SESSION['msg_type'] = "success";
+    $_SESSION['msg'] = "Faculty account has been created successfully.";
+    $_SESSION['msg_type'] = "success";
 } else {
-  $_SESSION['msg'] = "Failed to create faculty account.";
-  $_SESSION['msg_type'] = "danger";
+    $_SESSION['msg'] = "Failed to create faculty account.";
+    $_SESSION['msg_type'] = "danger";
 }
 $stmt->close();
 

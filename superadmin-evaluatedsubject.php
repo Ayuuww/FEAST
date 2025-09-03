@@ -2,63 +2,87 @@
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a student
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-  header("Location: pages-login.php");
-  exit();
+// Check if the user is logged in
+if (!isset($_SESSION['idnumber'])) {
+    header("Location: pages-login.php");
+    exit();
 }
 
-// Fetching the faculty subjects evaluated
-$faculty_id = $_SESSION['idnumber'];
+// Fetch user's role and faculty status from the superadmin table
+$id_number = $_SESSION['idnumber'];
+$user_check_query = "SELECT role, faculty FROM superadmin WHERE idnumber = ?";
+$user_stmt = $conn->prepare($user_check_query);
+$user_stmt->bind_param("s", $id_number);
+$user_stmt->execute();
+$user_result = $user_stmt->get_result();
+$user_data = $user_result->fetch_assoc();
+$user_stmt->close();
 
-$query = "SELECT 
-            e.subject_code,
-            s.title AS subject_title,
-            e.academic_year,
-            e.semester,
-            AVG(e.total_score) AS avg_score,
-            AVG(e.computed_rating) AS avg_rating,
-            GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
-          FROM evaluation e
-          JOIN subject s ON e.subject_code = s.code
-          WHERE e.faculty_id = ?
-          AND e.comment IS NOT NULL AND e.comment != ''
-          GROUP BY e.subject_code, s.title, e.academic_year, e.semester
-          ORDER BY e.academic_year DESC, e.semester DESC
-          LIMIT 10";
+// If the user's role is not superadmin, redirect.
+if (!$user_data || $user_data['role'] !== 'superadmin') {
+    header("Location: pages-login.php");
+    exit();
+}
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param("s", $faculty_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// Check if the superadmin is also a faculty member
+$is_faculty = ($user_data['faculty'] === 'Yes');
 
-// Total evaluation
-$countQuery = "SELECT subject_code, COUNT(*) as total FROM evaluation WHERE faculty_id = ? GROUP BY subject_code";
-$countStmt = $conn->prepare($countQuery);
-$countStmt->bind_param("s", $faculty_id);
-$countStmt->execute();
-$countResult = $countStmt->get_result();
-
+// Initialize variables
+$result = null;
 $subjectCounts = [];
-while ($row = $countResult->fetch_assoc()) {
-  $subjectCounts[$row['subject_code']] = $row['total'];
+$show_table = false;
+
+if ($is_faculty) {
+    $show_table = true;
+    $faculty_id = $_SESSION['idnumber'];
+
+    // Fetching the faculty subjects evaluated
+    $query = "SELECT 
+                  e.subject_code,
+                  s.title AS subject_title,
+                  e.academic_year,
+                  e.semester,
+                  AVG(e.total_score) AS avg_score,
+                  AVG(e.computed_rating) AS avg_rating,
+                  GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
+              FROM evaluation e
+              JOIN subject s ON e.subject_code = s.code
+              WHERE e.faculty_id = ?
+              GROUP BY e.subject_code, s.title, e.academic_year, e.semester
+              ORDER BY e.academic_year DESC, e.semester DESC";
+
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("s", $faculty_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
+
+    // Total evaluation count
+    $countQuery = "SELECT subject_code, COUNT(*) as total 
+                   FROM evaluation 
+                   WHERE faculty_id = ? 
+                   GROUP BY subject_code";
+    $countStmt = $conn->prepare($countQuery);
+    $countStmt->bind_param("s", $faculty_id);
+    $countStmt->execute();
+    $countResult = $countStmt->get_result();
+
+    while ($row = $countResult->fetch_assoc()) {
+        $subjectCounts[$row['subject_code']] = $row['total'];
+    }
+    $countStmt->close();
 }
-
-
-
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Home </title>
-
-  <?php include 'header.php' ?>
+        
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 
 </head>
 
@@ -86,88 +110,93 @@ while ($row = $countResult->fetch_assoc()) {
     <section class="section dashboard">
       <div class="row">
 
-        <div class="card">
-          <div class="card-body">
-            <h5 class="card-title">Evaluated Subjects You Handle</h5>
+        <?php if ($show_table): ?>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Evaluated Subjects You Handle</h5>
+              <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th>Subject Code</th>
+                      <th>Title</th>
+                      <th>Total Score</th>
+                      <th>Computed Rating</th>
+                      <th>Comments</th>
+                      <th>Semester</th>
+                      <th>School Year</th>
+                      <th>Total Evaluations</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if ($result && $result->num_rows > 0): ?>
+                      <?php $index = 0; ?>
+                      <?php while ($row = $result->fetch_assoc()): ?>
+                        <tr>
+                          <td><?= htmlspecialchars($row['subject_code']) ?></td>
+                          <td><?= htmlspecialchars($row['subject_title']) ?></td>
+                          <td><?= number_format($row['avg_score'], 2) ?></td>
+                          <td><?= number_format($row['avg_rating'], 2) ?>%</td>
+                          <td>
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#commentModal<?= $index ?>">
+                              <i class="bi bi-chat-dots"></i> View
+                            </button>
 
-            <div class="table-responsive">
-              <table class="table table-bordered table-striped">
-                <thead>
-                  <tr>
-                    <th>Subject Code</th>
-                    <th>Title</th>
-                    <th>Total Score</th>
-                    <th>Computed Rating</th>
-                    <th>Comments</th>
-                    <th>Semester</th>
-                    <th>School Year</th>
-                    <th>Total Evaluations</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if ($result->num_rows > 0): ?>
-                    <?php $index = 0; ?>
-                    <?php while ($row = $result->fetch_assoc()): ?>
-                      <tr>
-                        <td><?= htmlspecialchars($row['subject_code']) ?></td>
-                        <td><?= htmlspecialchars($row['subject_title']) ?></td>
-                        <td><?= number_format($row['avg_score'], 2) ?></td>
-                        <td><?= number_format($row['avg_rating'], 2) ?>%</td>
-                        <td>
-                          <!-- Modal Trigger Button -->
-                          <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#commentModal<?= $index ?>">
-                            <i class="bi bi-chat-dots"></i> View
-                          </button>
-
-                          <!-- Modal -->
-                          <div class="modal fade" id="commentModal<?= $index ?>" tabindex="-1" aria-labelledby="commentModalLabel<?= $index ?>" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-scrollable">
-                              <div class="modal-content">
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="commentModalLabel<?= $index ?>">Comments for <?= htmlspecialchars($row['subject_code']) ?></h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                  <?php
-                                  $comments = isset($row['all_comments']) ? explode('||', $row['all_comments']) : [];
-                                  if (count($comments)) {
-                                    foreach ($comments as $comment) {
-                                      $cleaned = trim($comment);
-                                      if ($cleaned !== '') {
-                                        echo "<div class='mb-2'>• " . htmlspecialchars($cleaned) . "</div>";
+                            <div class="modal fade" id="commentModal<?= $index ?>" tabindex="-1" aria-labelledby="commentModalLabel<?= $index ?>" aria-hidden="true">
+                              <div class="modal-dialog modal-dialog-scrollable">
+                                <div class="modal-content">
+                                  <div class="modal-header">
+                                    <h5 class="modal-title" id="commentModalLabel<?= $index ?>">Comments for <?= htmlspecialchars($row['subject_code']) ?></h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  </div>
+                                  <div class="modal-body">
+                                    <?php
+                                    $comments = isset($row['all_comments']) ? explode('||', $row['all_comments']) : [];
+                                    if (count($comments)) {
+                                      foreach ($comments as $comment) {
+                                        $cleaned = trim($comment);
+                                        if ($cleaned !== '') {
+                                          echo "<div class='mb-2'>• " . htmlspecialchars($cleaned) . "</div>";
+                                        }
                                       }
+                                    } else {
+                                      echo "<p class='text-muted'>No comments available.</p>";
                                     }
-                                  } else {
-                                    echo "<p class='text-muted'>No comments available.</p>";
-                                  }
-                                  ?>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    ?>
+                                  </div>
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td><?= htmlspecialchars($row['semester']) ?></td>
-                        <td><?= htmlspecialchars($row['academic_year']) ?></td>
-                        <td><?= $subjectCounts[$row['subject_code']] ?? 'N/A' ?></td>
+                          </td>
+                          <td><?= htmlspecialchars($row['semester']) ?></td>
+                          <td><?= htmlspecialchars($row['academic_year']) ?></td>
+                          <td><?= $subjectCounts[$row['subject_code']] ?? 'N/A' ?></td>
+                        </tr>
+                        <?php $index++; ?>
+                      <?php endwhile; ?>
+                    <?php else: ?>
+                      <tr>
+                        <td colspan="8" class="text-center">No evaluations have been submitted for your subjects yet.</td>
                       </tr>
-                      <?php $index++; ?>
-                    <?php endwhile; ?>
-                  <?php else: ?>
-                    <tr>
-                      <td colspan="8" class="text-center">No evaluations have been submitted for your subjects yet.</td>
-                    </tr>
-                  <?php endif; ?>
-                </tbody>
-              </table>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-
+        <?php else: ?>
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Subject Evaluations</h5>
+              <p class="text-center text-muted">You do not have a faculty account. Only faculty members can view subject evaluations.</p>
+            </div>
+          </div>
+        <?php endif; ?>
       </div>
-    </section>
+    </section><!-- End Section -->
 
   </main><!-- End #main -->
 

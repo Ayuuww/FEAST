@@ -20,11 +20,11 @@ $result = mysqli_query($conn, $query);
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / Super Admin List</title>
-  <?php include 'header.php' ?>
+        
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>
@@ -67,6 +67,9 @@ $result = mysqli_query($conn, $query);
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
+                    <th>Academic Rank</th>
+                    <th>Department</th>
+                    <th>Position</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
@@ -80,6 +83,9 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['department']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['position']; ?></td>
                       <td class="text-capitalize"><?php echo $row['status']; ?></td>
                       <td>
                         <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>

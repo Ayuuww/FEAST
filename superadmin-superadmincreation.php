@@ -12,18 +12,17 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 // Create a new super admin account
 
 
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-
-  <title>FEAST / SuperAdmin Creation</title>
-  <?php include 'header.php' ?>
+        
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+   
 </head>
 
 <body>
@@ -50,14 +49,28 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     <!-- Super Admin Creation Section -->
     <section class="section">
       <div class="row justify-content-center">
-        <div class="col-lg-6 ">
+        <div class="col-lg-6">
           <div class="card">
-            <div class="card-body ">
+            <div class="card-body">
+
+              <?php if (isset($_SESSION['msg'])): ?>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                      icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : 'info' ?>',
+                      title: '<?= htmlspecialchars($_SESSION['msg']) ?>',
+                      showConfirmButton: false,
+                      timer: 1500,
+                      timerProgressBar: true
+                    });
+                  });
+                </script>
+                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+              <?php endif; ?>
 
               <h5 class="card-title text-center">Create New Super Admin</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
-                <!-- ID Number -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
@@ -66,7 +79,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- First Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
@@ -74,7 +86,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- Middle Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
@@ -82,7 +93,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- Last Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
@@ -90,27 +100,67 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- Password -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="password" name="pass" class="form-control" placeholder="Password" id="password" minlength="8" required>
-                    <label class="form-label">Password</label>
-                    <div class="invalid-feedback">Password must be at least 8 characters!</div>
+                    <select class="form-select" name="position" required>
+                      <option value="" disabled selected>-- Select Position --</option>
+                      <?php
+                      $positions = mysqli_query($conn, "SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != ''");
+                      while ($row = mysqli_fetch_assoc($positions)) {
+                        echo '<option value="' . htmlspecialchars($row['position_name']) . '">' . htmlspecialchars($row['position_name']) . '</option>';
+                      }
+                      ?>
+                    </select>
+                    <label for="position">Position</label>
                   </div>
                 </div>
 
-                <!-- Confirm Password -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
-                    <div class="invalid-feedback" id="mess">Password do not match</div>
-                    <label class="form-label">Confirm Password</label>
+                    <select class="form-select" name="faculty" id="faculty" required>
+                      <option value="" disabled selected>Is this a Faculty?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                    <label for="faculty">Faculty?</label>
                   </div>
                 </div>
 
-                <!-- Submit -->
+                <div class="col-md-6" id="department_div" style="display:none;">
+                  <div class="form-floating">
+                    <select class="form-select" name="department" id="department" required>
+                      <option value="" disabled selected>Select Department</option>
+                      <?php
+                      // Make sure you have the database connection active ($conn)
+                      $departments = mysqli_query($conn, "SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+                      while ($row = mysqli_fetch_assoc($departments)) {
+                        echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                      }
+                      ?>
+                    </select>
+                    <label for="department">Department</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6" id="faculty_rank_div" style="display:none;">
+                  <div class="form-floating">
+                    <select class="form-select" name="faculty_rank" id="faculty_rank">
+                      <option value="" disabled selected>-- Select Rank --</option>
+                      <?php
+                      $rank_query = mysqli_query($conn, "SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
+                      while ($rank = mysqli_fetch_assoc($rank_query)) {
+                        echo '<option value="' . htmlspecialchars($rank['rank_name']) . '">' . htmlspecialchars($rank['rank_name']) . '</option>';
+                      }
+                      ?>
+                    </select>
+                    <label for="faculty_rank">Faculty Rank</label>
+                  </div>
+                </div>
+
+                <input type="hidden" name="password" value="ILOVEDMMMSU">
+
                 <div class="col-4 offset-4">
-                  <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                  <button class="btn btn-success w-100" name="submit" type="submit">Create Account</button>
                 </div>
 
               </form>
@@ -141,21 +191,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <script>
-    var checkpass = function() {
-
-      if (document.getElementById('password').value == document.getElementById('conpass').value) {
-        document.getElementById('mess').style.display = 'none';
-        document.getElementById('conpass').style.borderColor = 'green';
-
-      } else {
-        document.getElementById('mess').style.display = 'block';
-        document.getElementById('conpass').style.borderColor = 'red';
-      }
-
-    }
-  </script>
-
   <?php if (isset($_SESSION['msg'])): ?>
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -170,6 +205,35 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     </script>
     <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
   <?php endif; ?>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const facultySelect = document.getElementById('faculty');
+      const departmentDiv = document.getElementById('department_div');
+      const departmentSelect = document.getElementById('department');
+      const facultyRankDiv = document.getElementById('faculty_rank_div');
+      const facultyRankSelect = document.getElementById('faculty_rank');
+
+      facultySelect.addEventListener('change', function() {
+        if (this.value === 'Yes') {
+          // Show both department and faculty rank
+          departmentDiv.style.display = 'block';
+          departmentSelect.setAttribute('required', 'required');
+          facultyRankDiv.style.display = 'block';
+          facultyRankSelect.setAttribute('required', 'required');
+        } else {
+          // Hide both and reset their values
+          departmentDiv.style.display = 'none';
+          departmentSelect.removeAttribute('required');
+          departmentSelect.selectedIndex = 0; // Reset to default option
+
+          facultyRankDiv.style.display = 'none';
+          facultyRankSelect.removeAttribute('required');
+          facultyRankSelect.selectedIndex = 0; // Reset to default option
+        }
+      });
+    });
+  </script>
 
 
 </body>
