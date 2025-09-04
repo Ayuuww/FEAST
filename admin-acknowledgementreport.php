@@ -35,10 +35,11 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <title>Acknowledgement Report</title>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <?php include 'header.php'; ?>
+  
+  <!-- Head -->
+  <?php include 'head.php' ?>
+  <!-- End Head -->
+
   <style>
     .table th,
     .table td {

@@ -18,10 +18,13 @@ $faculty_id = $_GET['faculty_id'];
 $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
+$stmt->bind_result($lname, $fname, $mname, $dept, $faculty_rank);
 $stmt->fetch();
 $stmt->close();
-$faculty_name = "$fname $mname $lname";
+
+$faculty_name = strtoupper("$fname $mname $lname");
+$dept_display = strtoupper($dept);
+$rank_display = ucwords($faculty_rank);
 
 // Semester & Year
 $semester = $academic_year = "N/A";
@@ -78,9 +81,14 @@ while ($row = mysqli_fetch_assoc($comments_q)) {
     $comments[] = $row['comment'];
 }
 
-// Generate PDF
-$pdf = new FPDF();
+// Custom PDF class (with header/footer if you want to use one)
+require 'superadmin-printing-headerfooter.php';
+
+// Start PDF
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
+$pdf->department = $dept;
 $pdf->AddPage();
+
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
 
@@ -94,7 +102,7 @@ $pdf->Cell(80, 8, 'Name of Faculty Evaluated:', 1);
 $pdf->Cell(110, 8, $faculty_name, 1, 1);
 
 $pdf->Cell(80, 8, 'Department/College:', 1);
-$pdf->Cell(110, 8, $department, 1, 1);
+$pdf->Cell(110, 8, $dept_display, 1, 1);
 
 $pdf->Cell(80, 8, 'Current Faculty Rank:', 1);
 $pdf->Cell(110, 8, $faculty_rank, 1, 1);

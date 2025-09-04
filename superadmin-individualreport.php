@@ -15,7 +15,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 <html lang="en">
 
 <head>
-        
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -63,12 +63,42 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     <div class="card p-4 mb-4">
       <form method="GET" action="superadmin-individualreport.php">
         <div class="row align-items-end mb-4">
-          <div class="col-md-6">
+
+          <!-- Department Filter -->
+          <div class="col-md-4">
+            <label for="department" class="form-label">Select Department</label>
+            <select class="form-select" name="department" id="department" onchange="this.form.submit()">
+              <option value="">-- All Departments --</option>
+              <?php
+              $dept_query = mysqli_query($conn, "SELECT DISTINCT department FROM faculty ORDER BY department ASC");
+              while ($row = mysqli_fetch_assoc($dept_query)) {
+                $selected = (isset($_GET['department']) && $_GET['department'] == $row['department']) ? "selected" : "";
+                echo "<option value='{$row['department']}' $selected>{$row['department']}</option>";
+              }
+              ?>
+            </select>
+          </div>
+
+          <!-- Faculty Filter -->
+          <div class="col-md-4">
             <label for="faculty_id" class="form-label">Select Faculty</label>
             <select class="form-select" name="faculty_id" id="faculty_id" required>
               <option value="" disabled selected>-- Choose Faculty --</option>
               <?php
-              $faculty_query = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name FROM faculty ORDER BY last_name ASC");
+              if (isset($_GET['department']) && $_GET['department'] !== '') {
+                // If department is chosen, filter faculty by department
+                $department = mysqli_real_escape_string($conn, $_GET['department']);
+                $faculty_query = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
+                                                  FROM faculty 
+                                                  WHERE department = '$department'
+                                                  ORDER BY last_name ASC");
+              } else {
+                // If no department chosen, show all faculty
+                $faculty_query = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
+                                                  FROM faculty 
+                                                  ORDER BY last_name ASC");
+              }
+
               while ($row = mysqli_fetch_assoc($faculty_query)) {
                 $full_name = $row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name'];
                 echo "<option value='{$row['idnumber']}' " .
@@ -78,11 +108,13 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
               ?>
             </select>
           </div>
+
           <div class="col-md-auto">
             <button type="submit" class="btn btn-success mt-3 mt-md-0 w-100">Generate</button>
           </div>
         </div>
       </form>
+
 
       <?php
       if (isset($_GET['faculty_id'])) {
@@ -138,16 +170,16 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
         $table_rows = '';
 
         while ($row = mysqli_fetch_assoc($result)) {
-            $subject = htmlspecialchars($row['subject_code']);
-            $section = htmlspecialchars($row['student_section']);
-            $students = $row['num_students'];
-            $avg = number_format($row['avg_rating'], 2);
-            $weighted = number_format($row['weighted_value'], 2);
+          $subject = htmlspecialchars($row['subject_code']);
+          $section = htmlspecialchars($row['student_section']);
+          $students = $row['num_students'];
+          $avg = number_format($row['avg_rating'], 2);
+          $weighted = number_format($row['weighted_value'], 2);
 
-            $total_students += $students;
-            $total_weighted_value += $row['weighted_value'];
+          $total_students += $students;
+          $total_weighted_value += $row['weighted_value'];
 
-            $table_rows .= "<tr>
+          $table_rows .= "<tr>
                 <td>$subject</td>
                 <td>$section</td>
                 <td>$students</td>
@@ -290,7 +322,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
           </tr>
         </table>
 
-        <a href="individualreport-printing.php?faculty_id=<?= $faculty_id ?>" class="btn btn-secondary mt-3 col-md-3 offset-4" target="_blank">
+        <a href="superadmin-individualreport-printing.php?faculty_id=<?= $faculty_id ?>" class="btn btn-secondary mt-3 col-md-3 offset-4" target="_blank">
           Print Report
         </a>
 
