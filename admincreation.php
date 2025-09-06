@@ -50,9 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 
         if ($faculty_check->num_rows == 0) {
             $faculty_insert = $conn->prepare("INSERT INTO faculty (
-                idnumber, first_name, mid_name, last_name, password, department, faculty_rank
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $faculty_insert->bind_param("sssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $faculty_rank);
+                idnumber, first_name, mid_name, last_name, department, faculty_rank
+            ) VALUES (?, ?, ?, ?, ?, ?)");
+            $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $department, $faculty_rank);
             $faculty_insert->execute();
             $faculty_insert->close();
         }

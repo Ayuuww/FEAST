@@ -109,29 +109,30 @@ if ($stmt_sef_avg) {
     $stmt_sef_avg->close();
 }
 
-// Supervisor Name using prepared statements
-$evaluator_name = '';
-$stmt_evaluator = $conn->prepare("SELECT evaluator_id FROM admin_evaluation WHERE " . $admin_eval_where_sql . " ORDER BY evaluation_date DESC LIMIT 1");
-if ($stmt_evaluator) {
-    $stmt_evaluator->bind_param($params_types, ...$params_values);
-    $stmt_evaluator->execute();
-    $stmt_evaluator->bind_result($admin_evaluator_id);
-    if ($stmt_evaluator->fetch()) {
-        $stmt_evaluator->close(); // Close the first statement before preparing a new one
-
-        $stmt_admin_info = $conn->prepare("SELECT first_name, mid_name, last_name FROM admin WHERE idnumber = ?");
-        if ($stmt_admin_info) {
-            $stmt_admin_info->bind_param("s", $admin_evaluator_id);
-            $stmt_admin_info->execute();
-            $stmt_admin_info->bind_result($admin_fname, $admin_mname, $admin_lname);
-            if ($stmt_admin_info->fetch()) {
-                $evaluator_name = strtoupper($admin_fname . ' ' . $admin_mname . ' ' . $admin_lname);
-            }
-            $stmt_admin_info->close();
-        }
-    } else {
-        $stmt_evaluator->close(); // Close if no result found
+// Supervisor Name (Dean / Program Chair / Chair) of the same department
+$evaluator_name = 'N/A';
+$stmt_supervisor = $conn->prepare("
+    SELECT first_name, mid_name, last_name, position
+    FROM admin
+    WHERE department = ?
+      AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
+    ORDER BY 
+      CASE 
+        WHEN position LIKE 'Dean%' THEN 1
+        WHEN position LIKE 'Program Chair%' THEN 2
+        WHEN position LIKE 'Chair%' THEN 3
+        ELSE 4
+      END
+    LIMIT 1
+");
+if ($stmt_supervisor) {
+    $stmt_supervisor->bind_param("s", $dept);
+    $stmt_supervisor->execute();
+    $stmt_supervisor->bind_result($sfn, $smn, $sln, $spos);
+    if ($stmt_supervisor->fetch()) {
+        $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
     }
+    $stmt_supervisor->close();
 }
 
 
@@ -189,24 +190,25 @@ $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'SUPERVISOR', 0, 1);
 
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 8, 'Signature:', 1);
-$pdf->Cell(50, 8, '', 1);
-$pdf->Cell(15, 8, 'Name:', 1);
-$pdf->Cell(65, 8, $evaluator_name, 1);
-$pdf->Cell(10, 8, 'Date:', 1);
-$pdf->Cell(30, 8, date('F j, Y'), 1, 1);
+$pdf->Cell(20, 8, 'Signature:', 0);
+$pdf->Cell(50, 8, '', 0);
+$pdf->Cell(15, 8, 'Name:', 0);
+$pdf->Cell(65, 8, $evaluator_name, 0); // Already has name + position
+
+$pdf->Cell(10, 8, 'Date:', 0);
+$pdf->Cell(30, 8, date('F j, Y'), 0, 1);
 
 $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'FACULTY', 0, 1);
 
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 8, 'Signature:', 1);
-$pdf->Cell(50, 8, '', 1);
-$pdf->Cell(15, 8, 'Name:', 1);
-$pdf->Cell(65, 8, $full_name, 1);
-$pdf->Cell(10, 8, 'Date:', 1);
-$pdf->Cell(30, 8, date('F j, Y'), 1, 1);
+$pdf->Cell(20, 8, 'Signature:', 0);
+$pdf->Cell(50, 8, '', 0);
+$pdf->Cell(15, 8, 'Name:', 0);
+$pdf->Cell(65, 8, $full_name, 0);
+$pdf->Cell(10, 8, 'Date:', 0);
+$pdf->Cell(30, 8, date('F j, Y'), 0, 1);
 
 $pdf->Output();
 exit;

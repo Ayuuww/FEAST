@@ -17,7 +17,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <!-- Reports -->
     <li class="nav-item">
-      <?php $reportsPages = ['superadmin-individualreport.php', 'superadmin-acknowledgementreport.php', 'superadmin-pastrecords.php']; ?>
+      <?php $reportsPages = ['superadmin-individualreport.php', 'superadmin-acknowledgementreport.php','superadmin-overallreport-set.php','superadmin-overallreport-sef.php','superadmin-overallreport.php', 'superadmin-pastrecords.php']; ?>
       <a class="nav-link <?= in_array($currentPage, $reportsPages) ? '' : 'collapsed' ?>"
         data-bs-target="#reports" data-bs-toggle="collapse" href="#">
         <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -32,6 +32,21 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <li>
           <a href="superadmin-acknowledgementreport.php" class="<?= $currentPage == 'superadmin-acknowledgementreport.php' ? 'active' : '' ?>">
             <i class="bi bi-circle"></i><span>Acknowledgement Report</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-overallreport-set.php" class="<?= $currentPage == 'superadmin-overallreport-set.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>College SET Report</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-overallreport-sef.php" class="<?= $currentPage == 'superadmin-overallreport-sef.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>College SEF Report</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-overallreport.php" class="<?= $currentPage == 'superadmin-overallreport.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>College SET/SEF Report</span>
           </a>
         </li>
         <li>

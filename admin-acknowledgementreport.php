@@ -35,7 +35,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 <html lang="en">
 
 <head>
-  
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -106,9 +106,9 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             </select>
           </div>
           <div class="col-md-3">
-            <label for="semester" class="form-label">Select Semester</label>
+            <label for="semester" class="form-label">Semester</label>
             <select class="form-select" name="semester" id="semester">
-              <option value="">-- All Semesters --</option>
+              <option value="" disabled selected>-- Select Semesters --</option>
               <?php
               // Reset pointer for semesters_query if needed
               mysqli_data_seek($semesters_query, 0);
@@ -121,9 +121,9 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             </select>
           </div>
           <div class="col-md-3">
-            <label for="academic_year" class="form-label">Select Academic Year</label>
+            <label for="academic_year" class="form-label">Academic Year</label>
             <select class="form-select" name="academic_year" id="academic_year">
-              <option value="">-- All Academic Years --</option>
+              <option value="" disabled selected>-- Select Academic Years --</option>
               <?php
               // Reset pointer for academic_years_query if needed
               mysqli_data_seek($academic_years_query, 0);
@@ -239,29 +239,29 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
           $stmt_sef_avg->close();
         }
 
-        // Get the latest supervisor (admin evaluator) based on filters
-        $evaluator_name = '';
-        $stmt_evaluator = $conn->prepare("SELECT evaluator_id FROM admin_evaluation WHERE " . $admin_eval_where_sql . " ORDER BY evaluation_date DESC LIMIT 1");
-        if ($stmt_evaluator) {
-          $stmt_evaluator->bind_param($params_types, ...$params_values);
-          $stmt_evaluator->execute();
-          $stmt_evaluator->bind_result($admin_evaluator_id);
-          if ($stmt_evaluator->fetch()) {
-            $stmt_evaluator->close(); // Close the first statement before preparing a new one
 
-            $stmt_admin_info = $conn->prepare("SELECT first_name, mid_name, last_name FROM admin WHERE idnumber = ?");
-            if ($stmt_admin_info) {
-              $stmt_admin_info->bind_param("s", $admin_evaluator_id);
-              $stmt_admin_info->execute();
-              $stmt_admin_info->bind_result($admin_fname, $admin_mname, $admin_lname);
-              if ($stmt_admin_info->fetch()) {
-                $evaluator_name = strtoupper($admin_fname . ' ' . $admin_mname . ' ' . $admin_lname);
-              }
-              $stmt_admin_info->close();
-            }
-          } else {
-            $stmt_evaluator->close(); // Close if no result found
+        // Get the supervisor (Dean / Chair / Program Chair) of the same department
+        $evaluator_name = 'N/A';
+        $stmt_supervisor = $conn->prepare("SELECT first_name, mid_name, last_name, position
+                              FROM admin
+                              WHERE department = ?
+                                AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
+                              ORDER BY 
+                                CASE 
+                                  WHEN position LIKE 'Dean%' THEN 1
+                                  WHEN position LIKE 'Program Chair%' THEN 2
+                                  WHEN position LIKE 'Chair%' THEN 3
+                                  ELSE 4
+                                END
+                              LIMIT 1");
+        if ($stmt_supervisor) {
+          $stmt_supervisor->bind_param("s", $dept);
+          $stmt_supervisor->execute();
+          $stmt_supervisor->bind_result($sfn, $smn, $sln, $spos);
+          if ($stmt_supervisor->fetch()) {
+            $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
           }
+          $stmt_supervisor->close();
         }
       ?>
 
@@ -327,7 +327,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
               <th>Signature</th>
               <td class="signature-box"></td>
               <th>Name</th>
-              <td><?= htmlspecialchars($full_name) ?></td>
+              <td class="signature-box"><?= htmlspecialchars($full_name) ?></td>
               <th>Date Signed</th>
               <td class="signature-box"></td>
             </tr>

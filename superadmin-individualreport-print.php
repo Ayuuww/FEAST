@@ -12,6 +12,18 @@ if (!isset($_GET['faculty_id'])) {
     die("No faculty selected.");
 }
 
+$prepared_by_name = "Unknown";
+
+$login_id = $_SESSION['idnumber'];
+$prep_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM superadmin WHERE idnumber = ?");
+$prep_stmt->bind_param("s", $login_id);
+$prep_stmt->execute();
+$prep_stmt->bind_result($prep_fname, $prep_mname, $prep_lname);
+if ($prep_stmt->fetch()) {
+    $prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
+}
+$prep_stmt->close();
+
 $faculty_id = $_GET['faculty_id'];
 
 // Faculty Info
@@ -89,8 +101,40 @@ $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->department = $dept;
 $pdf->AddPage();
 
+// Reviewed By name
+$reviewed_by_name = "N/A";
+$rev_stmt = $conn->prepare("
+    SELECT first_name, mid_name, last_name, position
+    FROM admin
+    WHERE department = ?
+      AND (
+          position LIKE '%Dean%' 
+          OR position LIKE '%Chair%' 
+          OR position LIKE '%Program Head%' 
+          OR position LIKE '%Coordinator%'
+      )
+    ORDER BY 
+      CASE 
+        WHEN position LIKE '%Dean%' THEN 1
+        WHEN position LIKE '%Chair%' THEN 2
+        WHEN position LIKE '%Program Head%' THEN 3
+        WHEN position LIKE '%Coordinator%' THEN 4
+        ELSE 5
+      END
+    LIMIT 1
+");
+
+// FIX: Change $department to $dept
+$rev_stmt->bind_param("s", $dept);
+$rev_stmt->execute();
+$rev_stmt->bind_result($rev_fname, $rev_mname, $rev_lname, $rev_position);
+if ($rev_stmt->fetch()) {
+    $reviewed_by_name = trim("$rev_fname $rev_mname $rev_lname");
+}
+$rev_stmt->close();
+
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, $dept_display . " " . 'INDIVIDUAL FACULTY EVALUATION REPORT', 0, 1, 'C');
 
 // Section A: Faculty Info
 $pdf->Ln(5);
@@ -180,18 +224,39 @@ $pdf->Cell(0, 20, '', 1, 1);
 $pdf->Cell(0, 8, 'Action Plan:', 1, 1);
 $pdf->Cell(0, 20, '', 1, 1);
 
-// Footer
-$pdf->Ln(10);
-$pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(60, 8, 'Prepared by (Staff Signature):', 1);
-$pdf->Cell(60, 8, '', 1);
-$pdf->Cell(30, 8, 'Name:', 1);
-$pdf->Cell(40, 8, '', 1, 1);
+// Current position
+$x = $pdf->GetX();
+$y = $pdf->GetY();
 
-$pdf->Cell(60, 8, 'Reviewed by (Authorized Official):', 1);
-$pdf->Cell(60, 8, '', 1);
-$pdf->Cell(30, 8, 'Name:', 1);
-$pdf->Cell(40, 8, '', 1);
+$pdf->Ln(10);
+$pdf->SetFont('Arial', '', 10);
+
+// Row 1: Prepared by
+$pdf->SetXY($x, $y);
+$pdf->MultiCell(35, 8, "Prepared by\n(Staff Signature):", 0, 0);
+
+$pdf->SetXY($x + 35, $y);
+$pdf->Cell(20, 16, '', 0, 0); // Signature space
+
+$pdf->Cell(15, 16, 'Name:', 0, 0);
+$pdf->Cell(75, 16, $prepared_by_name, 0, 0);
+
+$pdf->Cell(10, 16, 'Date:', 0, 0);
+$pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
+
+// Row 2: Reviewed by
+$y2 = $pdf->GetY(); // Move to next line
+$pdf->SetXY($x, $y2);
+$pdf->MultiCell(35, 8, "Reviewed by\n(Authorized Official):", 0, 0);
+
+$pdf->SetXY($x + 35, $y2);
+$pdf->Cell(20, 16, '', 0, 0); // Signature space
+
+$pdf->Cell(15, 16, 'Name:', 0, 0);
+$pdf->Cell(75, 16, $reviewed_by_name, 0, 0);
+
+$pdf->Cell(10, 16, 'Date:', 0, 0);
+$pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
 
 $pdf->Output('I', 'Individual-Faculty-Evaluation.pdf');
 ?>

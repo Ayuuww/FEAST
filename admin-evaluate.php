@@ -8,10 +8,18 @@ $evalStatus = mysqli_fetch_assoc($evalRes)['status'] ?? 'off';
 $evaluation_closed = $evalStatus === 'off';
 
 // Check if the user is logged in and is an admin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['idnumber'])) {
+  // User not logged in at all → go to login
   header("Location: pages-login.php");
   exit();
 }
+
+if ($_SESSION['role'] !== 'admin') {
+  $_SESSION['access_denied'] = "Access denied. Only admins are allowed to access this page.";
+  header("Location: admin-dashboard.php");
+  exit();
+}
+
 
 $evaluator_id = $_SESSION['idnumber'];
 
@@ -24,6 +32,13 @@ $admin_data = $admin_result->fetch_assoc();
 $department = $admin_data['department'] ?? '';
 $evaluator_position = $admin_data['position'] ?? 'Not Set';
 $admin_info_stmt->close();
+
+// ✅ Restrict allowed positions
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair']; // adjust spelling to match DB values
+if (!in_array($evaluator_position, $allowed_positions)) {
+  $_SESSION['access_denied'] = "Access denied. Your position ($evaluator_position) is not allowed to perform faculty evaluations.";
+}
+
 
 
 // super admin set academic year and semester to default
@@ -436,7 +451,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       </div>
     </section>
   </main>
-  
+
   <?php include 'footer.php' ?>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
@@ -542,6 +557,24 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       });
     </script>
     <?php unset($_SESSION['last_evaluated_faculty_id']); ?> <?php endif; ?>
+
+  <?php if (isset($_SESSION['access_denied'])): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: <?= json_encode($_SESSION['access_denied']) ?>,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33',
+          footer: 'Need help? Contact Superadmin'
+        }).then(() => {
+          window.location.href = "admin-dashboard.php"; // ✅ redirect after user clicks OK
+        });
+      });
+    </script>
+    <?php unset($_SESSION['access_denied']); ?>
+  <?php endif; ?>
 
 </body>
 

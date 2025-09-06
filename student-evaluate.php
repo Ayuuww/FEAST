@@ -42,57 +42,54 @@ if ($setting_result && $setting_result->num_rows > 0) {
 
 // Fetching subjects and their respective faculty that have NOT been evaluated yet by the student
 $student_id = $_SESSION['idnumber'];
-$academic_year = $default_year; // Use default year from settings
-$semester = $default_semester; // Use default semester from settings
+// Allow superadmin to override semester and year from query string or form
+// Always enforce active settings from superadmin
+$academic_year = $default_year;
+$semester = $default_semester;
 
 // MODIFIED QUERY: This query selects subjects from student_subject
 // and LEFT JOINs with faculty/admin. It then uses NOT EXISTS
 // to ensure that no corresponding entry for the current student,
 // subject, faculty, academic year, and semester exists in the 'evaluation' table.
-$query = "
-    SELECT
-        ss.subject_code,
-        s.title AS subject_title,
-        COALESCE(f.idnumber, a.idnumber) AS faculty_id,
-        COALESCE(f.first_name, a.first_name) AS first_name,
-        COALESCE(f.mid_name, a.mid_name) AS mid_name,
-        COALESCE(f.last_name, a.last_name) AS last_name,
-        COALESCE(f.status, a.status) AS status,
-        COALESCE(f.department, a.department) AS department,
-        CASE
-            WHEN f.idnumber IS NOT NULL THEN 'faculty'
-            WHEN a.idnumber IS NOT NULL THEN 'admin'
-            ELSE 'unknown'
-        END AS role
-    FROM
-        student_subject ss
-    JOIN
-        subject s ON ss.subject_code = s.code
-    LEFT JOIN
-        faculty f ON ss.faculty_id = f.idnumber AND f.status = 'active'
-    LEFT JOIN
-        admin a ON ss.admin_id = a.idnumber AND a.status = 'active'
-    WHERE
-        ss.student_id = ?
-        AND ss.academic_year = ? -- Added academic_year filter for student_subject
-        AND ss.semester = ?     -- Added semester filter for student_subject
-        AND NOT EXISTS (
-            SELECT 1
-            FROM evaluation e
-            WHERE
-                e.student_id = ss.student_id
-                AND e.subject_code = ss.subject_code
-                AND e.faculty_id = COALESCE(ss.faculty_id, ss.admin_id)
-                AND e.academic_year = ?
-                AND e.semester = ?
-        )
-";
+$query = "SELECT
+              ss.subject_code,
+              s.title AS subject_title,
+              COALESCE(f.idnumber, a.idnumber) AS faculty_id,
+              COALESCE(f.first_name, a.first_name) AS first_name,
+              COALESCE(f.mid_name, a.mid_name) AS mid_name,
+              COALESCE(f.last_name, a.last_name) AS last_name,
+              COALESCE(f.status, a.status) AS status,
+              COALESCE(f.department, a.department, s.department) AS department,
+              CASE
+                  WHEN f.idnumber IS NOT NULL THEN 'faculty'
+                  WHEN a.idnumber IS NOT NULL THEN 'admin'
+                  ELSE 'unknown'
+              END AS role
+          FROM student_subject ss
+          JOIN subject s 
+            ON ss.subject_code = s.code
+          LEFT JOIN faculty f 
+            ON ss.faculty_id = f.idnumber AND f.status = 'active'
+          LEFT JOIN admin a 
+            ON ss.admin_id = a.idnumber AND a.status = 'active'
+          WHERE ss.student_id = ?
+            AND ss.academic_year = ?
+            AND ss.semester = ?
+            AND NOT EXISTS (
+                SELECT 1 
+                FROM evaluation e
+                WHERE e.student_id   = ss.student_id
+                  AND e.subject_code = ss.subject_code
+                  AND e.faculty_id   = COALESCE(ss.faculty_id, ss.admin_id)
+                  AND e.academic_year = ss.academic_year
+                  AND e.semester      = ss.semester
+            )";
 
 $stmt = $conn->prepare($query);
-// Bind academic_year and semester twice for the outer query and the subquery
-$stmt->bind_param("sssss", $student_id, $academic_year, $semester, $academic_year, $semester);
+$stmt->bind_param("sss", $student_id, $academic_year, $semester);
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 $subjects = [];
 while ($row = $result->fetch_assoc()) {
@@ -351,7 +348,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                         <table class="table table-bordered text-center align-middle">
                           <thead class="table-light">
                             <tr>
-                              <th class="text-start">A. Manage of Teacking and Learning</th>
+                              <th class="text-start">A. Manage of Teaching and Learning</th>
                               <?php for ($i = 5; $i >= 1; $i--): ?>
                                 <th><?= $i ?></th>
                               <?php endfor; ?>

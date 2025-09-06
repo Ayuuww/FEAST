@@ -169,17 +169,24 @@ $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, 'A. Faculty Information', 0, 1);
 
-$pdf->SetFont('Arial', 'b', 11);
+$pdf->SetFont('Arial', '', 11);
 $pdf->Cell(80, 8, 'Name of Faculty Evaluated:', 1);
+$pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(110, 8, $faculty_name, 1, 1);
 
+$pdf->SetFont('Arial', '', 11);
 $pdf->Cell(80, 8, 'Department/College:', 1);
+$pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(110, 8, $department, 1, 1);
 
+$pdf->SetFont('Arial', '', 11);
 $pdf->Cell(80, 8, 'Current Faculty Rank:', 1);
+$pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(110, 8, $faculty_rank, 1, 1);
 
+$pdf->SetFont('Arial', '', 11);
 $pdf->Cell(80, 8, 'Semester / Academic Year:', 1);
+$pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(110, 8, "$sem / $sy", 1, 1); // Display filtered values
 
 // Section B: Summary
@@ -255,34 +262,79 @@ $pdf->Cell(0, 20, '', 1, 1);
 $pdf->Ln(10);
 $pdf->SetFont('Arial', '', 10);
 
-// Current position
+// --- Prepared by: Logged-in Admin ---
+$prepared_by_name = '';
+$admin_id = $_SESSION['idnumber'];
+
+$admin_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role FROM admin WHERE idnumber = ?");
+$admin_stmt->bind_param("s", $admin_id);
+$admin_stmt->execute();
+$admin_stmt->bind_result($afn, $amn, $aln, $arole);
+if ($admin_stmt->fetch()) {
+    $prepared_by_name = strtoupper(trim("$afn $amn $aln"));
+}
+$admin_stmt->close();
+
+// --- Reviewed by: Head Admin of same Department ---
+$reviewed_by_name = '';
+$rev_stmt = $conn->prepare("
+    SELECT first_name, mid_name, last_name, position
+    FROM admin
+    WHERE department = ?
+      AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
+    ORDER BY 
+      CASE 
+        WHEN position LIKE 'Dean%' THEN 1
+        WHEN position LIKE 'Program Chair%' THEN 2
+        WHEN position LIKE 'Chair%' THEN 3
+        ELSE 4
+      END
+    LIMIT 1
+");
+$rev_stmt->bind_param("s", $department);
+$rev_stmt->execute();
+$rev_stmt->bind_result($rfn, $rmn, $rln, $rpos);
+if ($rev_stmt->fetch()) {
+    $reviewed_by_name = strtoupper(trim("$rfn $rmn $rln"));
+}
+$rev_stmt->close();
+
+// --- Signatory Section ---
+$pdf->Ln(10);
+$pdf->SetFont('Arial', '', 10);
+
 $x = $pdf->GetX();
 $y = $pdf->GetY();
 
-// Row 1: Prepared by
+// Row 1: Prepared by (Logged-in Admin)
 $pdf->SetXY($x, $y);
-$pdf->MultiCell(35, 8, "Prepared by\n(Staff Signature):", 0,); // 2 lines, height 8 each
+$pdf->MultiCell(35, 8, "Prepared by\n(Staff Signature):", 0);
 
 $pdf->SetXY($x + 35, $y);
 $pdf->Cell(40, 16, '', 0, 0); // Signature
 
-$pdf->Cell(25, 16, 'Name:', 0, 0);
-$pdf->Cell(45, 16, $evaluator_name ?? '', 0, 0);
 
+$pdf->Cell(12, 16, 'Name:', 0, 0);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(60, 16, $prepared_by_name, 0, 0);
+
+$pdf->SetFont('Arial', '', 10);
 $pdf->Cell(15, 16, 'Date:', 0, 0);
-$pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
+$pdf->Cell(0, 16, date('F j, Y'), 0, 1);
 
-// Row 2: Reviewed by
-$y2 = $pdf->GetY(); // Move to next line
+// Row 2: Reviewed by (Dean/Chair of Department)
+$y2 = $pdf->GetY();
 $pdf->SetXY($x, $y2);
 $pdf->MultiCell(35, 8, "Reviewed by\n(Authorized Official):", 0);
 
 $pdf->SetXY($x + 35, $y2);
 $pdf->Cell(40, 16, '', 0, 0); // Signature
 
-$pdf->Cell(25, 16, 'Name:', 0, 0);
-$pdf->Cell(45, 16, '', 0, 0); // Leave blank or insert official name
+$pdf->Cell(12, 16, 'Name:', 0, 0);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(60, 16, $reviewed_by_name, 0, );
 
+$pdf->SetFont('Arial', '', 10);
 $pdf->Cell(15, 16, 'Date:', 0, 0);
 $pdf->Cell(0, 16, date('F j, Y'), 0, 1); // Auto date
 

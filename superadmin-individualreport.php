@@ -8,7 +8,109 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
+// Logged-in superadmin info
+$superadmin_id = $_SESSION['idnumber'];
+$prep_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM superadmin WHERE idnumber = ?");
+$prep_stmt->bind_param("s", $superadmin_id);
+$prep_stmt->execute();
+$prep_stmt->bind_result($prep_fname, $prep_mname, $prep_lname);
+$prep_stmt->fetch();
+$prep_stmt->close();
 
+$prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
+
+if (isset($_GET['faculty_id'])) {
+  $faculty_id = $_GET['faculty_id'];
+
+  // Faculty basic info
+  $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank 
+                          FROM faculty WHERE idnumber = ?");
+  $stmt->bind_param("s", $faculty_id);
+  $stmt->execute();
+  $stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
+  $stmt->fetch();
+  $stmt->close();
+
+  $faculty_name = "$fname $mname $lname";
+
+  $reviewed_by_name = "N/A";
+  $rev_stmt = $conn->prepare("
+    SELECT first_name, mid_name, last_name, position
+    FROM admin
+    WHERE department = ?
+      AND (
+          position LIKE '%Dean%' 
+          OR position LIKE '%Chair%' 
+          OR position LIKE '%Program Head%' 
+          OR position LIKE '%Coordinator%'
+      )
+    ORDER BY 
+      CASE 
+        WHEN position LIKE '%Dean%' THEN 1
+        WHEN position LIKE '%Chair%' THEN 2
+        WHEN position LIKE '%Program Head%' THEN 3
+        WHEN position LIKE '%Coordinator%' THEN 4
+        ELSE 5
+      END
+    LIMIT 1
+");
+
+  $rev_stmt->bind_param("s", $department);
+  $rev_stmt->execute();
+  $rev_stmt->bind_result($rev_fname, $rev_mname, $rev_lname, $rev_position);
+  if ($rev_stmt->fetch()) {
+    $reviewed_by_name = trim("$rev_fname $rev_mname $rev_lname");
+  }
+  $rev_stmt->close();
+
+
+  // ==========
+  // Apply filters (Semester & AY)
+  // ==========
+  $where = "WHERE e.faculty_id = '$faculty_id'";
+  $sef_where = "WHERE evaluatee_id = '$faculty_id'";
+
+  if (!empty($_GET['semester'])) {
+    $semester = mysqli_real_escape_string($conn, $_GET['semester']);
+    $where .= " AND e.semester = '$semester'";
+    $sef_where .= " AND semester = '$semester'";
+  }
+
+  if (!empty($_GET['academic_year'])) {
+    $academic_year = mysqli_real_escape_string($conn, $_GET['academic_year']);
+    $where .= " AND e.academic_year = '$academic_year'";
+    $sef_where .= " AND academic_year = '$academic_year'";
+  }
+
+  // ===========================
+  // B. Summary of Average SET Rating
+  // ===========================
+  $result = mysqli_query($conn, "SELECT 
+                                    e.subject_code,
+                                    TRIM(e.student_section) AS student_section,
+                                    COUNT(*) AS num_students,
+                                    ROUND(AVG(e.computed_rating), 2) AS avg_rating,
+                                    ROUND(COUNT(*) * AVG(e.computed_rating), 2) AS weighted_value
+                                  FROM evaluation e
+                                  $where
+                                  GROUP BY e.subject_code, TRIM(e.student_section)");
+
+  // ===========================
+  // C. Supervisor Evaluation (SEF)
+  // ===========================
+  $sef_result = mysqli_query($conn, "SELECT AVG(computed_rating) as sef_rating 
+                                     FROM admin_evaluation 
+                                     $sef_where");
+
+  // ===========================
+  // D. Comments
+  // ===========================
+  $comments_q = mysqli_query($conn, "SELECT comment 
+                                   FROM evaluation e
+                                   $where
+                                   AND comment IS NOT NULL AND comment <> '' 
+                                   LIMIT 5");
+}
 ?>
 
 <!DOCTYPE html>
@@ -65,7 +167,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
         <div class="row align-items-end mb-4">
 
           <!-- Department Filter -->
-          <div class="col-md-4">
+          <div class="col-md-2">
             <label for="department" class="form-label">Select Department</label>
             <select class="form-select" name="department" id="department" onchange="this.form.submit()">
               <option value="">-- All Departments --</option>
@@ -104,6 +206,36 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                 echo "<option value='{$row['idnumber']}' " .
                   (isset($_GET['faculty_id']) && $_GET['faculty_id'] == $row['idnumber'] ? "selected" : "") .
                   ">$full_name</option>";
+              }
+              ?>
+            </select>
+          </div>
+
+          <!-- Semester Filter -->
+          <div class="col-md-2">
+            <label for="semester" class="form-label">Semester</label>
+            <select class="form-select" name="semester" id="semester" onchange="this.form.submit()">
+              <option value="" disabled selected>-- Select Semester --</option>
+              <?php
+              $sem_query = mysqli_query($conn, "SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
+              while ($row = mysqli_fetch_assoc($sem_query)) {
+                $selected = (isset($_GET['semester']) && $_GET['semester'] == $row['semester']) ? "selected" : "";
+                echo "<option value='{$row['semester']}' $selected>{$row['semester']}</option>";
+              }
+              ?>
+            </select>
+          </div>
+
+          <!-- Academic Year Filter -->
+          <div class="col-md-2">
+            <label for="academic_year" class="form-label">Academic Year</label>
+            <select class="form-select" name="academic_year" id="academic_year" onchange="this.form.submit()">
+              <option value="" disabled selected>-- Select Academic Year --</option>
+              <?php
+              $year_query = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+              while ($row = mysqli_fetch_assoc($year_query)) {
+                $selected = (isset($_GET['academic_year']) && $_GET['academic_year'] == $row['academic_year']) ? "selected" : "";
+                echo "<option value='{$row['academic_year']}' $selected>{$row['academic_year']}</option>";
               }
               ?>
             </select>
@@ -308,21 +440,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
             <th class="wide-cell">Prepared by (Staff Signature)</th>
             <td class="signature-cell"></td>
             <th class="wide-cell">Name:</th>
-            <td class="signature-cell"></td>
+            <td class="text-capitalize"><?= htmlspecialchars($prepared_by_name) ?></td>
             <th class="wide-cell">Date:</th>
-            <td class="signature-cell"></td>
+            <td class="signature-cell"><?= date('F j, Y') ?></td>
           </tr>
           <tr>
             <th class="wide-cell">Reviewed by (Authorized Official)</th>
             <td class="signature-cell"></td>
             <th class="wide-cell">Name:</th>
-            <td class="signature-cell"></td>
+            <td class="signature-cell"><?= htmlspecialchars($reviewed_by_name) ?></td>
             <th class="wide-cell">Date:</th>
-            <td class="signature-cell"></td>
+            <td class="signature-cell"><?= date('F j, Y') ?></td>
           </tr>
         </table>
 
-        <a href="superadmin-individualreport-printing.php?faculty_id=<?= $faculty_id ?>" class="btn btn-secondary mt-3 col-md-3 offset-4" target="_blank">
+        <a href="superadmin-individualreport-print.php?faculty_id=<?= $faculty_id ?>" class="btn btn-secondary mt-3 col-md-3 offset-4" target="_blank">
           Print Report
         </a>
 

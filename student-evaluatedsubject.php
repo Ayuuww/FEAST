@@ -28,10 +28,13 @@ $query = "SELECT
           LEFT JOIN admin a ON e.faculty_id = a.idnumber
           LEFT JOIN student_subject ss 
               ON ss.subject_code = s.code 
-            AND ss.student_id = e.student_id
-            AND ss.faculty_id = e.faculty_id
+             AND ss.student_id = e.student_id
+             AND ss.faculty_id = e.faculty_id
+             AND ss.academic_year = e.academic_year   -- added filter
+             AND ss.semester = e.semester             -- added filter
           WHERE e.student_id = ?
-          ORDER BY e.created_at DESC ";
+          ORDER BY e.created_at DESC";
+
 
 $stmt = $conn->prepare($query); // FIXED: prepare the statement
 $stmt->bind_param("s", $student_id);

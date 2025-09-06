@@ -24,13 +24,44 @@ $selected_faculty_id = $_GET['faculty_id'] ?? '';
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
+$reviewer_name = "N/A";
+
+$reviewer_name = "N/A";
+
+$reviewer_query = $conn->prepare("
+    SELECT first_name, mid_name, last_name, position 
+    FROM admin 
+    WHERE department = ? 
+      AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
+    LIMIT 1
+");
+$reviewer_query->bind_param("s", $admin_department); // FIXED: use correct variable
+$reviewer_query->execute();
+$reviewer_query->bind_result($r_fname, $r_mname, $r_lname, $r_position);
+if ($reviewer_query->fetch()) {
+  $reviewer_name = trim("$r_fname $r_mname $r_lname");
+}
+$reviewer_query->close();
+
+
+// Get logged-in admin info (for Prepared by)
+$prepared_by_name = "N/A";
+$admin_info_query = $conn->prepare("SELECT first_name, mid_name, last_name, position FROM admin WHERE idnumber = ?");
+$admin_info_query->bind_param("s", $admin_id);
+$admin_info_query->execute();
+$admin_info_query->bind_result($a_fname, $a_mname, $a_lname, $a_position);
+if ($admin_info_query->fetch()) {
+  $prepared_by_name = "$a_fname $a_mname $a_lname ";
+}
+$admin_info_query->close();
+
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-   
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -99,9 +130,9 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             </select>
           </div>
           <div class="col-md-3">
-            <label for="semester" class="form-label">Select Semester</label>
+            <label for="semester" class="form-label">Semester</label>
             <select class="form-select" name="semester" id="semester">
-              <option value="">-- All Semesters --</option>
+              <option value="" disabled selected>-- Select Semesters --</option>
               <?php
               while ($sem_row = mysqli_fetch_assoc($semesters_query)) {
                 echo "<option value='{$sem_row['semester']}' " .
@@ -112,9 +143,9 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             </select>
           </div>
           <div class="col-md-3">
-            <label for="academic_year" class="form-label">Select Academic Year</label>
+            <label for="academic_year" class="form-label">Academic Year</label>
             <select class="form-select" name="academic_year" id="academic_year">
-              <option value="">-- All Academic Years --</option>
+              <option value="" disabled selected>-- Select Academic Years --</option>
               <?php
               while ($ay_row = mysqli_fetch_assoc($academic_years_query)) {
                 echo "<option value='{$ay_row['academic_year']}' " .
@@ -396,7 +427,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             <th class="wide-cell">Prepared by (Staff Signature)</th>
             <td class="signature-cell"></td>
             <th class="wide-cell">Name:</th>
-            <td class="signature-cell"></td>
+            <td class="signature-cell"><?= htmlspecialchars($prepared_by_name) ?></td>
             <th class="wide-cell">Date:</th>
             <td class="signature-cell"><?= date('F j, Y') ?></td>
           </tr>
@@ -404,7 +435,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             <th class="wide-cell">Reviewed by (Authorized Official)</th>
             <td class="signature-cell"></td>
             <th class="wide-cell">Name:</th>
-            <td class="signature-cell"></td>
+            <td class="signature-cell"><?= htmlspecialchars($reviewer_name) ?></td>
             <th class="wide-cell">Date:</th>
             <td class="signature-cell"><?= date('F j, Y') ?></td>
           </tr>
@@ -450,4 +481,5 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
   <script src="assets/js/main.js"></script>
 
 </body>
+
 </html>
