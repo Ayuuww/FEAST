@@ -106,17 +106,17 @@
         </li>
         <li>
           <a href="admin-overallreport-set.php" class="<?= $current_page == 'admin-overallreport-set.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Overall Report SET</span>
+            <i class="bi bi-circle"></i><span>College Report SET</span>
           </a>
         </li>
         <li>
           <a href="admin-overallreport-sef.php" class="<?= $current_page == 'admin-overallreport-sef.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Overall Report SEF</span>
+            <i class="bi bi-circle"></i><span>College Report SEF</span>
           </a>
         </li>
         <li>
           <a href="admin-overallreport.php" class="<?= $current_page == 'admin-overallreport.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Overall Report (SET & SEF)</span>
+            <i class="bi bi-circle"></i><span>College Report (SET & SEF)</span>
           </a>
         </li>
         <li>

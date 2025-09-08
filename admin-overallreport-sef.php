@@ -15,7 +15,27 @@ $stmt->bind_result($admin_department);
 $stmt->fetch();
 $stmt->close();
 
-// Fetch all faculty in this department
+// 🔹 Get filters
+$semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
+$year_filter     = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+
+// 🔹 Fetch distinct semesters
+$semesters = [];
+$res = $conn->query("SELECT DISTINCT semester FROM admin_evaluation ORDER BY semester ASC");
+while ($row = $res->fetch_assoc()) {
+  if (!empty($row['semester'])) $semesters[] = $row['semester'];
+}
+$res->close();
+
+// 🔹 Fetch distinct academic years
+$years = [];
+$res = $conn->query("SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
+while ($row = $res->fetch_assoc()) {
+  if (!empty($row['academic_year'])) $years[] = $row['academic_year'];
+}
+$res->close();
+
+// Fetch faculty
 $query = $conn->prepare("
   SELECT idnumber, last_name, first_name, mid_name
   FROM faculty
@@ -27,31 +47,48 @@ $query->execute();
 $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
 $query->close();
 
-// Build table rows
 $rows = '';
 foreach ($faculties as $fac) {
   $fid = $fac['idnumber'];
-  $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-  $r = $conn->query("
+  // 🔹 Evaluation query with filters
+  $sql = "
     SELECT COUNT(*) AS evals, AVG(computed_rating) AS avg_rating
     FROM admin_evaluation
-    WHERE evaluatee_id = '$fid'
-  ")->fetch_assoc();
+    WHERE evaluatee_id = ?
+  ";
+  $params = [$fid];
+  $types = "s";
+
+  if (!empty($semester_filter)) {
+    $sql .= " AND semester = ?";
+    $params[] = $semester_filter;
+    $types .= "s";
+  }
+  if (!empty($year_filter)) {
+    $sql .= " AND academic_year = ?";
+    $params[] = $year_filter;
+    $types .= "s";
+  }
+
+  $stmtEval = $conn->prepare($sql);
+  $stmtEval->bind_param($types, ...$params);
+  $stmtEval->execute();
+  $r = $stmtEval->get_result()->fetch_assoc();
+  $stmtEval->close();
 
   $count = (int)$r['evals'];
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
+  $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-  $rows .= "<tr>
-              <td>{$name}</td>
-              <td>{$count}</td>
-              <td>{$avg} %</td>
-            </tr>";
+  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg} %</td></tr>";
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
   <!-- Head -->
@@ -89,6 +126,40 @@ foreach ($faculties as $fac) {
                   Overall SEF Report – <?= htmlspecialchars($admin_department) ?>
                 </h4>
 
+                <form method="GET" class="mb-3">
+                  <div class="row align-items-end">
+                    <div class="col-md-4">
+                      <label for="semester" class="form-label">Select Semester</label>
+                      <select name="semester" id="semester" class="form-select">
+                        <option value="">-- All Semesters --</option>
+                        <?php foreach ($semesters as $sem): ?>
+                          <option value="<?= htmlspecialchars($sem) ?>" <?= $semester_filter == $sem ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($sem) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label for="academic_year" class="form-label">Select Academic Year</label>
+                      <select name="academic_year" id="academic_year" class="form-select">
+                        <option value="">-- All Academic Years --</option>
+                        <?php foreach ($years as $yr): ?>
+                          <option value="<?= htmlspecialchars($yr) ?>" <?= $year_filter == $yr ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($yr) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
+
+                    <div class="col-md-auto">
+                      <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-filter"></i> Generate Report
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
                 <div class="table-responsive">
                   <table class="table table-bordered table-hover">
                     <thead class="table-light">
@@ -105,7 +176,8 @@ foreach ($faculties as $fac) {
                 </div>
 
                 <div class="text-end mt-3">
-                  <a href="admin-overallreport-sef-print.php" class="btn btn-secondary" target="_blank">
+                  <a href="admin-overallreport-sef-print.php?semester=<?= urlencode($semester_filter) ?>&academic_year=<?= urlencode($year_filter) ?>"
+                    class="btn btn-secondary" target="_blank">
                     <i class="bi bi-printer"></i> Print Report
                   </a>
                 </div>
@@ -135,4 +207,5 @@ foreach ($faculties as $fac) {
   <script src="assets/js/main.js"></script>
 
 </body>
+
 </html>

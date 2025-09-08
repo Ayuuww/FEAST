@@ -88,15 +88,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
     </li>
 
-    <!-- Records -->
-    <li class="nav-item">
-      <a class="nav-link <?= $currentPage == 'superadmin-records.php' ? 'active' : 'collapsed' ?>"
-        href="superadmin-records.php">
-        <i class="ri-record-circle-fill"></i>
-        <span>Records</span>
-      </a>
-    </li>
-
     <li class="nav-heading">Account Management</li>
 
     <!-- Manage -->

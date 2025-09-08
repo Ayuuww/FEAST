@@ -1,163 +1,195 @@
 <?php
 require('fpdf/fpdf.php');
 include 'conn/conn.php';
+include 'printing-headerfooter.php'; // <-- include your extended class
 session_start();
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'faculty') {
     die('Access denied');
 }
 
-$faculty_id = $_SESSION['idnumber'];
+$faculty_id   = $_SESSION['idnumber'];
 $academic_year = $_GET['academic_year'] ?? '';
-$semester      = $_GET['semester'] ?? ''; // NEW: Get the semester filter
+$semester      = $_GET['semester'] ?? '';
 $subject_code  = $_GET['subject_code'] ?? '';
 
-// Fetch faculty info
-$stmt = $conn->prepare("SELECT department, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
-if ($stmt) {
-    $stmt->bind_param("s", $faculty_id);
-    $stmt->execute();
-    $stmt->bind_result($department, $fname, $mname, $lname);
-    $stmt->fetch();
-    $stmt->close();
-} else {
-    // Handle error if prepare fails
-    error_log("Failed to prepare faculty info statement: " . $conn->error);
-    $department = $fname = $mname = $lname = 'N/A'; // Default values
-}
+// Faculty info
+$stmt = $conn->prepare("SELECT department,faculty_rank, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+$stmt->bind_param("s", $faculty_id);
+$stmt->execute();
+$stmt->bind_result($department,$faculty_rank, $fname, $mname, $lname);
+$stmt->fetch();
+$stmt->close();
 
-$full_name = "$fname $mname $lname";
+$faculty_name = trim("$fname $mname $lname");
 
-// Build evaluation query for PDF content
+// Save department in session (so headerfooter can read it)
+$_SESSION['department'] = $department;
+
+// --- Build evaluation query ---
 $params = [$faculty_id];
 $types = "s";
 $sql = "SELECT subject_code, subject_title, student_section, academic_year, semester, created_at,
                COUNT(*) AS student_count,
                AVG(total_score) AS avg_total_score,
-               AVG(computed_rating) AS avg_computed_rating,
-               GROUP_CONCAT(comment SEPARATOR ' | ') AS comments
+               AVG(computed_rating) AS avg_computed_rating
         FROM evaluation
         WHERE faculty_id = ?";
 
-if ($academic_year) {
-    $sql .= " AND academic_year = ?";
-    $params[] = $academic_year;
-    $types .= "s";
-}
-// NEW: Add semester filter to the main query
-if ($semester) {
-    $sql .= " AND semester = ?";
-    $params[] = $semester;
-    $types .= "s";
-}
-if ($subject_code) {
-    $sql .= " AND subject_code = ?";
-    $params[] = $subject_code;
-    $types .= "s";
-}
+if ($academic_year) { $sql .= " AND academic_year = ?"; $params[] = $academic_year; $types .= "s"; }
+if ($semester)      { $sql .= " AND semester = ?";      $params[] = $semester;      $types .= "s"; }
+if ($subject_code)  { $sql .= " AND subject_code = ?";  $params[] = $subject_code;  $types .= "s"; }
 
 $sql .= " GROUP BY subject_code, student_section, semester, academic_year
           ORDER BY created_at DESC";
 
 $stmt = $conn->prepare($sql);
-if ($stmt) {
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    $results = $stmt->get_result();
-    $stmt->close();
-} else {
-    // Handle error if prepare fails
-    error_log("Failed to prepare evaluation data statement: " . $conn->error);
-    $results = false; // Indicate an error
-}
+$stmt->bind_param($types, ...$params);
+$stmt->execute();
+$result = $stmt->get_result();
+$stmt->close();
 
-
-// Start PDF
-$pdf = new FPDF('L', 'mm', 'A4');
+// --- Use your extended PDF ---
+$pdf = new PDF_EXTENDED('L','mm','A4');
+$pdf->AliasNbPages();
 $pdf->AddPage();
 
-$pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, "Student Evaluation Report", 0, 1, 'C');
+// Faculty + filter info
+$pdf->SetFont('Arial','',11);
+$pdf->Cell(0,6,"Name: $faculty_name",0,1,'L');
+$pdf->Cell(0,6,"Department: $department",0,1,'L');
 
-$pdf->SetFont('Arial', '', 11);
-$pdf->Cell(0, 7, "Name of Faculty: $full_name", 0, 1, 'C');
-$pdf->Cell(0, 7, "Department/College: $department", 0, 1, 'C');
+$filters = [];
+// Handle Semester display
+if ($semester) {
+    $sem_display = "Semester: $semester";
+} else {
+    $sem_display = "Semester: 1st / 2nd Semester";
+}
 
-// Filter info for the PDF header
-$filterInfo = [];
+// Handle Academic Year display
 if ($academic_year) {
-    $filterInfo[] = "A.Y.: " . $academic_year;
-}
-if ($semester) { // NEW: Include semester in filter info
-    $filterInfo[] = "Semester: " . $semester;
-}
-if ($subject_code) {
-    $filterInfo[] = "Subject: " . $subject_code;
+    $ay_display = "Academic Year: $academic_year";
+} else {
+    $ay_display = "Academic Year: All Academic Years";
 }
 
-if (!empty($filterInfo)) {
-    $pdf->Cell(0, 10, "Filters: " . implode(' | ', $filterInfo), 0, 1, 'C');
-}
-$pdf->Ln(2);
+// Print them one by one
+$pdf->Cell(0,6,$sem_display,0,1,'L');
+$pdf->Cell(0,6,$ay_display,0,1,'L');
+$pdf->Cell(0,6,"Date Printed: ".date("F j, Y"),0,1,'L');
+$pdf->Ln(3);
 
-// Table headers
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->SetFillColor(230, 230, 230);
-$headers = ['Date', 'Subject Code', 'Subject Title', 'Section', 'A.Y.', 'Semester', 'Avg Score', 'Rating (%)', 'No. Students', 'Comments'];
-$widths = [25, 30, 50, 20, 25, 20, 22, 22, 25, 55]; // Adjusted width for Comments to fit A4 landscape
-
-foreach ($headers as $i => $header) {
-    $pdf->Cell($widths[$i], 10, $header, 1, 0, 'C', true);
+// Table header
+$headers = ['Date','Subject Code','Subject Title','Section','A.Y.','Semester','Avg Score','Rating (%)','Students'];
+$widths  = [25, 28, 55, 25, 28, 28, 22, 25, 28];
+$pdf->SetFont('Arial','B',9);
+$pdf->SetFillColor(230,230,230);
+foreach ($headers as $i=>$h) {
+    $pdf->Cell($widths[$i],8,$h,1,0,'C',true);
 }
 $pdf->Ln();
 
 // Table data
-$pdf->SetFont('Arial', '', 9);
-if ($results && $results->num_rows > 0) {
-    while ($row = $results->fetch_assoc()) {
-        $pdf->Cell($widths[0], 8, date("M j, Y", strtotime($row['created_at'])), 1);
-        $pdf->Cell($widths[1], 8, $row['subject_code'], 1);
-        $pdf->Cell($widths[2], 8, $row['subject_title'], 1);
-        $pdf->Cell($widths[3], 8, $row['student_section'], 1);
-        $pdf->Cell($widths[4], 8, $row['academic_year'], 1);
-        $pdf->Cell($widths[5], 8, $row['semester'], 1);
-        $pdf->Cell($widths[6], 8, number_format($row['avg_total_score'], 2), 1, 0, 'C');
-        $pdf->Cell($widths[7], 8, number_format($row['avg_computed_rating'], 2) . '%', 1, 0, 'C');
-        $pdf->Cell($widths[8], 8, $row['student_count'], 1, 0, 'C');
-
-        // Handle comments that are too long for the cell
-        $comments = $row['comments'];
-        $comment_cell_width = $widths[9];
-        $pdf->SetX($pdf->GetX()); // Set X to the current position before printing MultiCell
-
-        if ($pdf->GetStringWidth($comments) > $comment_cell_width - 2) { // -2 for padding
-            $pdf->MultiCell($comment_cell_width, 4, $comments, 1, 'L'); // Use MultiCell for wrapping
-            $current_y = $pdf->GetY();
-            $last_cell_height = $pdf->GetY() - $current_y;
-            // Move back to the beginning of the row for the next cells if MultiCell created new lines
-            $pdf->SetY($current_y - 4); // Reset Y to the top of the multicell
-            $pdf->SetX($pdf->GetX() - $comment_cell_width - array_sum(array_slice($widths, 0, 9))); // Adjust X back to previous cell
-        } else {
-            $pdf->Cell($comment_cell_width, 8, $comments, 1, 0, 'L');
-        }
-        $pdf->Ln(); // Move to the next line after the row
+$pdf->SetFont('Arial','',9);
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $pdf->Cell($widths[0],7,date("M j, Y",strtotime($row['created_at'])),1);
+        $pdf->Cell($widths[1],7,$row['subject_code'],1);
+        $pdf->Cell($widths[2],7,$row['subject_title'],1);
+        $pdf->Cell($widths[3],7,$row['student_section'],1);
+        $pdf->Cell($widths[4],7,$row['academic_year'],1);
+        $pdf->Cell($widths[5],7,$row['semester'],1);
+        $pdf->Cell($widths[6],7,number_format($row['avg_total_score'],2),1,0,'C');
+        $pdf->Cell($widths[7],7,number_format($row['avg_computed_rating'],2).'%',1,0,'C');
+        $pdf->Cell($widths[8],7,$row['student_count'],1,0,'C');
+        $pdf->Ln();
     }
 } else {
-    // Display a message if no records are found under the given filters
-    $pdf->Cell(array_sum($widths), 10, "No evaluation records found for the selected filters.", 1, 1, 'C');
+    $pdf->Cell(array_sum($widths),8,"No evaluation records found.",1,1,'C');
 }
 
+// --- Summary of Comments ---
+// $pdf->AddPage();
+$pdf->Ln(4);
+$pdf->SetFont('Arial','B',12);
 
-// Footer
+if ($subject_code) {
+    $pdf->Cell(0,8,"Summary of Comments for Subject: $subject_code",0,1,'L');
+} else {
+    $pdf->Cell(0,8,"Summary of Comments",0,1,'L');
+}
+$pdf->Ln(3);    
+
+$comment_sql = "SELECT subject_code, comment 
+                FROM evaluation 
+                WHERE faculty_id = ? 
+                  AND comment IS NOT NULL 
+                  AND TRIM(comment) <> ''";
+$comment_params = [$faculty_id];
+$comment_types  = "s";
+
+if ($academic_year) { 
+    $comment_sql .= " AND academic_year = ?"; 
+    $comment_params[] = $academic_year; 
+    $comment_types .= "s"; 
+}
+if ($semester) { 
+    $comment_sql .= " AND semester = ?";      
+    $comment_params[] = $semester;      
+    $comment_types .= "s"; 
+}
+if ($subject_code) { 
+    $comment_sql .= " AND subject_code = ?"; 
+    $comment_params[] = $subject_code; 
+    $comment_types .= "s"; 
+}
+
+$stmt2 = $conn->prepare($comment_sql);
+$stmt2->bind_param($comment_types, ...$comment_params);
+$stmt2->execute();
+$comments = $stmt2->get_result();
+$stmt2->close();
+
+$positive = [];
+$others = [];
+
+if ($comments->num_rows > 0) {
+    while ($c = $comments->fetch_assoc()) {
+        $comment = trim($c['comment']);
+        if ($comment !== '') {
+            // check for positive keywords
+            if (preg_match('/\b(excellent|nice|great|good|very good|amazing|outstanding)\b/i', $comment)) {
+                $positive[] = $c['subject_code'].": ".$comment;
+            } else {
+                $others[] = $c['subject_code'].": ".$comment;
+            }
+        }
+    }
+
+    // Merge prioritized comments
+    $all_comments = array_merge($positive, $others);
+
+    $pdf->SetFont('Arial','',10);
+    $i = 1;
+    foreach ($all_comments as $comment) {
+        $pdf->MultiCell(0,6,"$i. ".$comment,0,'L');
+        $i++;
+    }
+} else {
+    $pdf->SetFont('Arial','',10);
+    $pdf->Cell(0,6,"No comments available.",0,1,'L');
+}
+
+// Prepared by
 $pdf->Ln(10);
-$pdf->SetFont('Arial', '', 11);
-$pdf->Cell(0, 6, 'Prepared by:', 0, 1, 'L');
-$pdf->Ln(6);
-$pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(90, 6, $full_name, 0, 1, 'L');
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(90, 6, 'Faculty Member', 0, 1, 'L');
-$pdf->Cell(90, 6, 'Date Signed: ' . date('F d, Y'), 0, 1, 'L');
+$pdf->SetFont('Arial','',11);
+$pdf->Cell(0,6,"Prepared by:",0,1,'L');
+$pdf->Ln(8);
+$pdf->SetFont('Arial','B',11);
+$pdf->Cell(90,6,$faculty_name,0,1,'L');
+$pdf->SetFont('Arial','',10);
+$pdf->Cell(90,6,"$faculty_rank",0,1,'L');
+$pdf->Cell(90,6,"Date Signed: ".date("F d, Y"),0,1,'L');
 
-$pdf->Output('I', 'faculty-pastrecords.pdf');
-?>
+$pdf->Output('I','faculty-pastrecords.pdf');

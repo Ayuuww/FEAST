@@ -17,7 +17,7 @@ $selected_academic_year= isset($_GET['academic_year']) ? $_GET['academic_year'] 
 
 // Get admin name for Prepared by
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name 
-                        FROM admin WHERE idnumber = ?");
+                        FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $stmt->bind_result($a_fname, $a_mname, $a_lname);
@@ -44,6 +44,9 @@ $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year']
 
 // Custom PDF class
 require 'printing-headerfooter.php';
+
+// Set department for header
+$_SESSION['department'] = $selected_department;
 
 // Start PDF
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');

@@ -67,6 +67,7 @@ $result = mysqli_query($conn, $query);
                     <th>Middle Name</th>
                     <th>Last Name</th>
                     <th>Department</th>
+                    <th>Academic Rank</th>
                     <th>Position</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -82,6 +83,7 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
                       <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
                       <td class="text-uppercase"><?php echo $row['department']; ?></td>
+                      <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
                       <td class="text-capitalize"><?php echo $row['position']; ?></td>
                       <td class="text-capitalize"><?php echo $row['status']; ?></td>
                       <td>

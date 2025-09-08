@@ -59,7 +59,7 @@ class PDF_EXTENDED extends FPDF
 
     // College name
     $this->SetFont('Arial', 'B', 12);
-    $this->Cell(173, 7, strtoupper($college_name), 0, 1, 'C');
+    $this->Cell(200, 7, strtoupper($college_name), 0, 1, 'C');
 
     // Website | Phone | Email
     $this->SetFont('Arial', '', 9);

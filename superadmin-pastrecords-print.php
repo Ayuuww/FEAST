@@ -1,36 +1,34 @@
 <?php
 require('fpdf/fpdf.php');
 include 'conn/conn.php';
-include 'printing-headerfooter.php';
+include 'printing-headerfooter.php'; // <-- include your extended class
 session_start();
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     die('Access denied');
 }
 
-$admin_id     = $_SESSION['idnumber'];
+$faculty_id   = $_SESSION['idnumber'];
 $academic_year = $_GET['academic_year'] ?? '';
 $semester      = $_GET['semester'] ?? '';
 $subject_code  = $_GET['subject_code'] ?? '';
 
-// Fetch admin info
-$stmt = $conn->prepare("SELECT department, faculty_rank, first_name, mid_name, last_name, position 
-                        FROM admin 
-                        WHERE idnumber = ?");
-$stmt->bind_param("s", $admin_id);
+// Faculty info
+$stmt = $conn->prepare("SELECT department,faculty_rank, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+$stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($department, $faculty_rank, $fname, $mname, $lname, $position);
+$stmt->bind_result($department,$faculty_rank, $fname, $mname, $lname);
 $stmt->fetch();
 $stmt->close();
 
-$admin_name = trim("$fname $mname $lname");
+$faculty_name = trim("$fname $mname $lname");
 
-// Save department for header/footer
+// Save department in session (so headerfooter can read it)
 $_SESSION['department'] = $department;
 
 // --- Build evaluation query ---
-$params = [$admin_id];
-$types  = "s";
+$params = [$faculty_id];
+$types = "s";
 $sql = "SELECT subject_code, subject_title, student_section, academic_year, semester, created_at,
                COUNT(*) AS student_count,
                AVG(total_score) AS avg_total_score,
@@ -51,28 +49,34 @@ $stmt->execute();
 $result = $stmt->get_result();
 $stmt->close();
 
-// --- PDF ---
+// --- Use your extended PDF ---
 $pdf = new PDF_EXTENDED('L','mm','A4');
 $pdf->AliasNbPages();
 $pdf->AddPage();
 
-// Admin + filter info
+// Faculty + filter info
 $pdf->SetFont('Arial','',11);
-$pdf->Cell(0,6,"Name: $admin_name",0,1,'L');
+$pdf->Cell(0,6,"Name: $faculty_name",0,1,'L');
 $pdf->Cell(0,6,"Department: $department",0,1,'L');
 
+$filters = [];
+// Handle Semester display
 if ($semester) {
-    $pdf->Cell(0,6,"Semester: $semester",0,1,'L');
+    $sem_display = "Semester: $semester";
 } else {
-    $pdf->Cell(0,6,"Semester: All Semesters",0,1,'L');
+    $sem_display = "Semester: 1st / 2nd Semester";
 }
 
+// Handle Academic Year display
 if ($academic_year) {
-    $pdf->Cell(0,6,"Academic Year: $academic_year",0,1,'L');
+    $ay_display = "Academic Year: $academic_year";
 } else {
-    $pdf->Cell(0,6,"Academic Year: All Academic Years",0,1,'L');
+    $ay_display = "Academic Year: All Academic Years";
 }
 
+// Print them one by one
+$pdf->Cell(0,6,$sem_display,0,1,'L');
+$pdf->Cell(0,6,$ay_display,0,1,'L');
 $pdf->Cell(0,6,"Date Printed: ".date("F j, Y"),0,1,'L');
 $pdf->Ln(3);
 
@@ -122,12 +126,24 @@ $comment_sql = "SELECT subject_code, comment
                 WHERE faculty_id = ? 
                   AND comment IS NOT NULL 
                   AND TRIM(comment) <> ''";
-$comment_params = [$admin_id];
+$comment_params = [$faculty_id];
 $comment_types  = "s";
 
-if ($academic_year) { $comment_sql .= " AND academic_year = ?"; $comment_params[] = $academic_year; $comment_types .= "s"; }
-if ($semester)     { $comment_sql .= " AND semester = ?";      $comment_params[] = $semester;      $comment_types .= "s"; }
-if ($subject_code) { $comment_sql .= " AND subject_code = ?";  $comment_params[] = $subject_code;  $comment_types .= "s"; }
+if ($academic_year) { 
+    $comment_sql .= " AND academic_year = ?"; 
+    $comment_params[] = $academic_year; 
+    $comment_types .= "s"; 
+}
+if ($semester) { 
+    $comment_sql .= " AND semester = ?";      
+    $comment_params[] = $semester;      
+    $comment_types .= "s"; 
+}
+if ($subject_code) { 
+    $comment_sql .= " AND subject_code = ?"; 
+    $comment_params[] = $subject_code; 
+    $comment_types .= "s"; 
+}
 
 $stmt2 = $conn->prepare($comment_sql);
 $stmt2->bind_param($comment_types, ...$comment_params);
@@ -136,12 +152,13 @@ $comments = $stmt2->get_result();
 $stmt2->close();
 
 $positive = [];
-$others   = [];
+$others = [];
 
 if ($comments->num_rows > 0) {
     while ($c = $comments->fetch_assoc()) {
         $comment = trim($c['comment']);
         if ($comment !== '') {
+            // check for positive keywords
             if (preg_match('/\b(excellent|nice|great|good|very good|amazing|outstanding)\b/i', $comment)) {
                 $positive[] = $c['subject_code'].": ".$comment;
             } else {
@@ -149,6 +166,8 @@ if ($comments->num_rows > 0) {
             }
         }
     }
+
+    // Merge prioritized comments
     $all_comments = array_merge($positive, $others);
 
     $pdf->SetFont('Arial','',10);
@@ -162,16 +181,15 @@ if ($comments->num_rows > 0) {
     $pdf->Cell(0,6,"No comments available.",0,1,'L');
 }
 
-// --- Prepared by ---
+// Prepared by
 $pdf->Ln(10);
 $pdf->SetFont('Arial','',11);
 $pdf->Cell(0,6,"Prepared by:",0,1,'L');
 $pdf->Ln(8);
 $pdf->SetFont('Arial','B',11);
-$pdf->Cell(90,6,$admin_name,0,1,'L');
+$pdf->Cell(90,6,$faculty_name,0,1,'L');
 $pdf->SetFont('Arial','',10);
-$pdf->Cell(90,6,$faculty_rank,0,1,'L');
+$pdf->Cell(90,6,"$faculty_rank",0,1,'L');
 $pdf->Cell(90,6,"Date Signed: ".date("F d, Y"),0,1,'L');
 
-$pdf->Output('I','admin-pastrecords.pdf');
-?>
+$pdf->Output('I','superadmin-pastrecords.pdf');

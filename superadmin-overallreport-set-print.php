@@ -48,17 +48,27 @@ $pdf->AddPage();
 // Title (use department code directly)
 $pdf->SetFont('Arial', 'B', 14);
 $title = $selected_department . ' COLLEGE SET REPORT';
-if (!empty($selected_semester)) {
-  $title .= " | Semester: " . $selected_semester;
+
+// Handle Semester display
+if ($selected_semester) {
+    $sem_display = "Semester: $selected_semester";
+} else {
+    $sem_display = "Semester: 1st / 2nd Semester";
 }
-if (!empty($selected_academic_year)) {
-  $title .= " | AY: " . $selected_academic_year;
+
+// Handle Academic Year display
+if ($selected_academic_year) {
+    $ay_display = "Academic Year: $selected_academic_year";
+} else {
+    $ay_display = "Academic Year: All Academic Years";
 }
 
 $pdf->Cell(0, 10, $title, 0, 1, 'C');
 
 
 $pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 8, $sem_display, 0, 1);
+$pdf->Cell(0, 8, $ay_display, 0, 1);
 $pdf->Cell(0, 8, 'Date Generated: ' . date('F j, Y'), 0, 1);
 $pdf->Ln(5);
 
@@ -110,21 +120,35 @@ $r = $conn->query("
   $pdf->Ln();
 }
 
-// Signature / Supervisor Section
-$pdf->Ln(12);
-$pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 8, 'Supervisor(s):', 0, 1);
-
 $pdf->SetFont('Arial', '', 11);
-if (!empty($supervisors)) {
-  foreach ($supervisors as $sup) {
-    $pdf->Ln(10);
-    $pdf->Cell(0, 6, $sup['name'], 0, 1);
-    $pdf->Cell(0, 6, $sup['position'], 0, 1);
+
+// Get logged-in superadmin info
+$prepared_by = "";
+if (isset($_SESSION['idnumber'])) {
+  $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
+                          FROM superadmin 
+                          WHERE idnumber = ?");
+  $stmt->bind_param("s", $_SESSION['idnumber']);
+  $stmt->execute();
+  $res = $stmt->get_result()->fetch_assoc();
+  $stmt->close();
+
+  if ($res) {
+    $fullname = trim($res['last_name'] . ', ' . $res['first_name'] . ' ' . $res['mid_name']);
+    $position = trim($res['position']);
+    $prepared_by = $fullname;
   }
-} else {
-  $pdf->Cell(0, 6, 'No supervisor (admin) found for this department.', 0, 1);
 }
+
+// Prepared by & Date Signed
+$pdf->Ln(4);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(120, 6, "Prepared by:", 0, 0, 'L');
+$pdf->Cell(0, 6, "Date Signed: " . date("F d, Y"), 0, 1, 'L');
+$pdf->Ln(10);
+$pdf->Cell(140, 6, $prepared_by, 0, 1, 'L');
+$pdf->Cell(0, 6, $position, 0, 1, 'L');
+$pdf->Cell(140, 0, '_________________________', 0, 0, 'L');
 
 $pdf->Output('I', 'College-SET-Report.pdf');
 ?>

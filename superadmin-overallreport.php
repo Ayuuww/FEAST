@@ -188,36 +188,6 @@ if (!empty($selected_department)) {
                     <?= !empty($selected_academic_year) ? " | AY: " . htmlspecialchars($selected_academic_year) : "" ?>
                   </h4>
 
-                  <!-- SET Table -->
-                  <!-- <h5 class="mt-4 mb-2">Student Evaluation of Teachers (SET)</h5>
-                  <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-hover">
-                      <thead class="table-light text-center">
-                        <tr>
-                          <th>Faculty Name</th>
-                          <th>No. of Student Evaluations</th>
-                          <th>Average SET Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody><?= $set_rows ?></tbody>
-                    </table>
-                  </div> -->
-
-                  <!-- SEF Table -->
-                  <!-- <h5 class="mb-2">Supervisor Evaluation of Faculty (SEF)</h5>
-                  <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-hover">
-                      <thead class="table-light text-center">
-                        <tr>
-                          <th>Faculty Name</th>
-                          <th>No. of Supervisor Evaluations</th>
-                          <th>Average SEF Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody><?= $sef_rows ?></tbody>
-                    </table>
-                  </div> -->
-
                   <!-- Overall Table -->
                   <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
                   <div class="table-responsive mb-4">

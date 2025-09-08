@@ -7,78 +7,141 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-$faculty_id = $_GET['faculty_id'] ?? '';
+$superadmin_id = $_SESSION['idnumber'];
 $academic_year = $_GET['academic_year'] ?? '';
-$subject_code = $_GET['subject_code'] ?? ''; // moved up
+$semester      = $_GET['semester'] ?? '';
+$subject_code  = $_GET['subject_code'] ?? '';
 
-$faculty_list = $conn->query("SELECT idnumber, first_name, mid_name, last_name FROM faculty WHERE status = 'active' ORDER BY last_name ASC");
+// --- Get subject list for this superadmin’s evaluations ---
+$subject_list = null;
+$sqlSubjects = "SELECT DISTINCT subject_code, subject_title 
+                FROM evaluation 
+                WHERE faculty_id = ?";
+$paramsSub = [$superadmin_id];
+$typesSub = "s";
 
-$params = [];
-$sql = "SELECT subject_code, subject_title, student_section, academic_year, semester, created_at,
-                COUNT(*) AS student_count,
-                AVG(total_score) AS avg_total_score,
-                AVG(computed_rating) AS avg_computed_rating,
-                GROUP_CONCAT(comment SEPARATOR ' | ') AS comments
-          FROM evaluation
-          WHERE 1=1";
-
-if ($faculty_id) {
-  $sql .= " AND faculty_id = ?";
-  $params[] = $faculty_id;
+if ($academic_year) {
+  $sqlSubjects .= " AND academic_year = ?";
+  $paramsSub[] = $academic_year;
+  $typesSub .= "s";
 }
+if ($semester) {
+  $sqlSubjects .= " AND semester = ?";
+  $paramsSub[] = $semester;
+  $typesSub .= "s";
+}
+if ($subject_code) {
+  $sqlSubjects .= " AND subject_code = ?";
+  $paramsSub[] = $subject_code;
+  $typesSub .= "s";
+}
+
+$sqlSubjects .= " ORDER BY subject_title ASC";
+
+$stmtSub = $conn->prepare($sqlSubjects);
+if ($stmtSub) {
+  $stmtSub->bind_param($typesSub, ...$paramsSub);
+  $stmtSub->execute();
+  $subject_list = $stmtSub->get_result();
+  $stmtSub->close();
+}
+
+// --- Main query: evaluations of this superadmin (as faculty_id) ---
+$params = [$superadmin_id];
+$types = "s";
+$sql = "SELECT subject_code, subject_title, student_section, academic_year, semester, created_at,
+               COUNT(*) AS student_count,
+               AVG(total_score) AS avg_total_score,
+               AVG(computed_rating) AS avg_computed_rating,
+               GROUP_CONCAT(comment SEPARATOR ' | ') AS comments
+        FROM evaluation
+        WHERE faculty_id = ?";
+
 if ($academic_year) {
   $sql .= " AND academic_year = ?";
   $params[] = $academic_year;
+  $types .= "s";
+}
+if ($semester) {
+  $sql .= " AND semester = ?";
+  $params[] = $semester;
+  $types .= "s";
 }
 if ($subject_code) {
   $sql .= " AND subject_code = ?";
   $params[] = $subject_code;
+  $types .= "s";
 }
 
-$sql .= " GROUP BY subject_code, student_section, semester, academic_year ORDER BY created_at DESC";
+$sql .= " GROUP BY subject_code, student_section, semester, academic_year
+          ORDER BY created_at DESC";
+
 $stmt = $conn->prepare($sql);
-
-if (!empty($params)) {
-  $types = str_repeat('s', count($params));
+if ($stmt) {
   $stmt->bind_param($types, ...$params);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $stmt->close();
+} else {
+  $result = false;
 }
 
-
-
-// Get subject list based on selected faculty (optional academic year filter)
-$subject_list = null;
-if ($faculty_id) {
-  $subject_sql = "SELECT DISTINCT subject_code, subject_title 
-                    FROM evaluation 
-                    WHERE faculty_id = ?";
-  $params = [$faculty_id];
-  $types = "s";
-
-  if ($academic_year) {
-    $subject_sql .= " AND academic_year = ?";
-    $params[] = $academic_year;
-    $types .= "s";
+// --- Academic years dropdown ---
+$years_query = $conn->prepare("SELECT DISTINCT academic_year FROM evaluation WHERE faculty_id = ? ORDER BY academic_year DESC");
+$years_data = [];
+if ($years_query) {
+  $years_query->bind_param("s", $superadmin_id);
+  $years_query->execute();
+  $years_result = $years_query->get_result();
+  while ($row = $years_result->fetch_assoc()) {
+    $years_data[] = $row;
   }
-
-  $subject_stmt = $conn->prepare($subject_sql);
-  $subject_stmt->bind_param($types, ...$params);
-  $subject_stmt->execute();
-  $subject_list = $subject_stmt->get_result();
+  $years_query->close();
 }
 
-$stmt->execute();
-$result = $stmt->get_result();
+// --- Semesters dropdown ---
+$semesters_data = [];
+$semester_sql = "SELECT DISTINCT semester FROM evaluation WHERE faculty_id = ?";
+$semester_types = "s";
+$semester_params = [$superadmin_id];
+
+if ($academic_year) {
+  $semester_sql .= " AND academic_year = ?";
+  $semester_types .= "s";
+  $semester_params[] = $academic_year;
+}
+
+$semester_sql .= " ORDER BY 
+    CASE semester 
+        WHEN '1st Semester' THEN 1 
+        WHEN '2nd Semester' THEN 2 
+        WHEN 'Summer' THEN 3 
+        ELSE 4 
+    END";
+
+$semesters_query = $conn->prepare($semester_sql);
+if ($semesters_query) {
+  $semesters_query->bind_param($semester_types, ...$semester_params);
+  $semesters_query->execute();
+  $semesters_result = $semesters_query->get_result();
+  while ($row = $semesters_result->fetch_assoc()) {
+    if (!empty(trim($row['semester']))) {
+      $semesters_data[] = $row;
+    }
+  }
+  $semesters_query->close();
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-        
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -91,96 +154,89 @@ $result = $stmt->get_result();
 
 
   <main id="main" class="main">
-
     <div class="pagetitle">
-      <h1>Past Faculty Evaluation Records</h1>
+      <h1>My Past Evaluation Records</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Reports</li>
           <li class="breadcrumb-item active">Past Records</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
     <section class="section">
       <div class="card">
         <div class="card-body table-responsive">
           <h5 class="card-title">Filter Evaluations</h5>
 
-          <form method="GET" class="row g-3 mb-4">
-            <div class="col-md-12">
-              <a href="superadmin-pastrecords.php" class="btn btn-secondary btn-sm">Clear Filters</a>
+          <form method="GET" class="row g-3 mb-4 align-items-end">
+            <div class="col-md-auto">
+              <a href="superadmin-pastrecords-self.php" class="btn btn-secondary btn-sm">Clear Filters</a>
             </div>
 
-            <div class="col-md-4">
-              <select name="faculty_id" class="form-select" required onchange="this.form.submit()">
-                <option value="">-- Select Faculty --</option>
-                <?php mysqli_data_seek($faculty_list, 0);
-                while ($faculty = $faculty_list->fetch_assoc()): ?>
-                  <?php
-                  $full_name = $faculty['last_name'] . ', ' . $faculty['first_name'] . ' ' . $faculty['mid_name'];
-                  $selected = $faculty_id == $faculty['idnumber'] ? 'selected' : '';
-                  ?>
-                  <option value="<?= $faculty['idnumber'] ?>" <?= $selected ?>><?= $full_name ?></option>
-                <?php endwhile; ?>
+            <div class="col-md-3">
+              <label for="academic_year" class="form-label">Academic Year</label>
+              <select name="academic_year" id="academic_year" class="form-select" onchange="this.form.submit()">
+                <option value="">-- All Academic Years --</option>
+                <?php foreach ($years_data as $yr): ?>
+                  <option value="<?= htmlspecialchars($yr['academic_year']) ?>" <?= ($academic_year == $yr['academic_year']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($yr['academic_year']) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
 
-            <div class="col-md-4">
-              <select name="academic_year" class="form-select" onchange="this.form.submit()">
-                <option value="">-- Select Academic Year --</option>
-                <?php
-                $years = $conn->query("SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
-                while ($yr = $years->fetch_assoc()):
-                  $sel = ($academic_year == $yr['academic_year']) ? 'selected' : '';
-                ?>
-                  <option value="<?= $yr['academic_year'] ?>" <?= $sel ?>><?= $yr['academic_year'] ?></option>
-                <?php endwhile; ?>
+            <div class="col-md-3">
+              <label for="semester" class="form-label">Semester</label>
+              <select name="semester" id="semester" class="form-select" onchange="this.form.submit()">
+                <option value="">-- All Semesters --</option>
+                <?php foreach ($semesters_data as $sem_opt): ?>
+                  <option value="<?= htmlspecialchars($sem_opt['semester']) ?>" <?= ($semester == $sem_opt['semester']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($sem_opt['semester']) ?>
+                  </option>
+                <?php endforeach; ?>
               </select>
             </div>
 
-            <?php if ($faculty_id && $subject_list && $subject_list->num_rows > 0): ?>
+            <?php if ($subject_list && $subject_list->num_rows): ?>
               <div class="col-md-4">
-                <select name="subject_code" class="form-select" onchange="this.form.submit()">
-                  <option value="">-- Select Subject --</option>
-                  <?php while ($sub = $subject_list->fetch_assoc()):
-                    $selected = ($subject_code == $sub['subject_code']) ? 'selected' : '';
-                  ?>
-                    <option value="<?= $sub['subject_code'] ?>" <?= $selected ?>>
-                      <?= $sub['subject_code'] . ' - ' . $sub['subject_title'] ?>
+                <label for="subject_code" class="form-label">Subject</label>
+                <select name="subject_code" id="subject_code" class="form-select" onchange="this.form.submit()">
+                  <option value="">-- All Subjects --</option>
+                  <?php foreach ($subject_list as $sub): ?>
+                    <option value="<?= htmlspecialchars($sub['subject_code']) ?>" <?= ($subject_code == $sub['subject_code']) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($sub['subject_code']) . " - " . htmlspecialchars($sub['subject_title']) ?>
                     </option>
-                  <?php endwhile; ?>
+                  <?php endforeach; ?>
                 </select>
               </div>
             <?php endif; ?>
           </form>
 
-
-
-          <?php if ($faculty_id && $result->num_rows > 0): ?>
-
-            <a href="pastrecords-print.php?faculty_id=<?= $faculty_id ?>&academic_year=<?= $academic_year ?>&subject_code=<?= $subject_code ?>" target="_blank" class="btn btn-outline-secondary mb-3">
-              <i class="bi bi-printer"></i> Print Evaluation Report
+          <?php if ($result && $result->num_rows): ?>
+            <a href="superadmin-pastrecords-print.php?academic_year=<?= urlencode($academic_year) ?>&semester=<?= urlencode($semester) ?>&subject_code=<?= urlencode($subject_code) ?>" target="_blank" class="btn btn-outline-secondary mb-3">
+              <i class="bi bi-printer"></i> Print My Evaluations
             </a>
 
             <table class="table table-bordered datatable">
               <thead>
                 <tr>
-                  <th>Date Evaluated</th>
-                  <th>Subject Code</th>
-                  <th>Subject Title</th>
-                  <th>Student Section</th>
-                  <th>Academic Year</th>
+                  <th>Date</th>
+                  <th>Subject</th>
+                  <th>Title</th>
+                  <th>Section</th>
+                  <th>A.Y.</th>
                   <th>Semester</th>
-                  <th>Total Score</th>
+                  <th>Avg Score</th>
                   <th>Rating (%)</th>
                   <th>Comments</th>
-                  <th># of Students</th>
+                  <th>No. Students</th>
                 </tr>
               </thead>
               <tbody>
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php $i = 0;
+                while ($row = $result->fetch_assoc()): $i++; ?>
+                  <?php $modalId = "commentModal" . $i; ?>
                   <tr>
                     <td><?= date("F j, Y", strtotime($row['created_at'])) ?></td>
                     <td><?= htmlspecialchars($row['subject_code']) ?></td>
@@ -190,16 +246,48 @@ $result = $stmt->get_result();
                     <td><?= htmlspecialchars($row['semester']) ?></td>
                     <td><?= number_format($row['avg_total_score'], 2) ?></td>
                     <td><?= number_format($row['avg_computed_rating'], 2) ?>%</td>
-                    <td><?= htmlspecialchars($row['comments']) ?></td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
+                        <i class="bi bi-chat-dots"></i> View
+                      </button>
+
+                      <div class="modal fade" id="<?= $modalId ?>" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-scrollable">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title">Comments</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                              <?php foreach (explode(' | ', $row['comments']) as $c): ?>
+                                <?php if (trim($c) !== ''): ?>
+                                  <div class="mb-2">• <?= htmlspecialchars($c) ?></div>
+                                <?php endif; ?>
+                              <?php endforeach; ?>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                     <td><?= $row['student_count'] ?></td>
                   </tr>
                 <?php endwhile; ?>
               </tbody>
             </table>
-          <?php elseif ($faculty_id): ?>
-            <div class="alert alert-warning">No records found for this faculty<?= $academic_year ? " in A.Y. $academic_year" : "" ?>.</div>
           <?php else: ?>
-            <div class="alert alert-info">Please select a faculty member to view past evaluations.</div>
+            <div class="alert alert-info">
+              You have no past evaluation records
+              <?php
+              $f = [];
+              if ($academic_year) $f[] = "for A.Y. " . htmlspecialchars($academic_year);
+              if ($semester) $f[] = "in " . htmlspecialchars($semester);
+              if ($subject_code) $f[] = "on subject " . htmlspecialchars($subject_code);
+              echo implode(" ", $f) . ".";
+              ?>
+            </div>
           <?php endif; ?>
         </div>
       </div>

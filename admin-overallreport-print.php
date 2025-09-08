@@ -19,6 +19,18 @@ $stmt->close();
 
 $prepared_by = "$a_fname $a_mname $a_lname";
 
+// --- Filters ---
+$semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
+$academic_filter = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+
+$where_clause = "";
+if (!empty($semester_filter)) {
+  $where_clause .= " AND semester = '" . $conn->real_escape_string($semester_filter) . "' ";
+}
+if (!empty($academic_filter)) {
+  $where_clause .= " AND academic_year = '" . $conn->real_escape_string($academic_filter) . "' ";
+}
+
 // Get all faculty
 $query = $conn->prepare("SELECT idnumber, last_name, first_name, mid_name FROM faculty WHERE department = ? ORDER BY last_name ASC");
 $query->bind_param("s", $admin_department);
@@ -34,8 +46,24 @@ $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, "$admin_department Overall Faculty Evaluation Report ", 0, 1, 'C');
+$pdf->Cell(0, 10, "$admin_department Overall Faculty Evaluation Report", 0, 1, 'C');
 $pdf->Ln(3);
+
+// Show filter info
+$pdf->SetFont('Arial', '', 11);
+
+$semester_text = 'All Semesters';
+if (!empty($semester_filter)) {
+    $semester_text = $semester_filter;
+} else {
+    // If no specific filter → show "1st Semester / 2nd Semester"
+    $semester_text = '1st Semester / 2nd Semester';
+}
+
+$pdf->Cell(0, 8, "Semester: " . $semester_text, 0, 1, 'L');
+$pdf->Cell(0, 8, "Academic Year: " . (!empty($academic_filter) ? $academic_filter : 'All Academic Years'), 0, 1, 'L');
+$pdf->Cell(0, 8, "Date: " . date('F j, Y'), 0, 1, 'L');
+$pdf->Ln(5);
 
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
@@ -53,15 +81,23 @@ foreach ($headers as $i => $h) {
 $pdf->Ln();
 
 // Table Data
-$pdf->SetFont('Arial', 'B', 10);
+$pdf->SetFont('Arial', '', 10);
 foreach ($faculties as $fac) {
     $fid = $fac['idnumber'];
     $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-    $set = $conn->query("SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating FROM evaluation WHERE faculty_id = '$fid'")->fetch_assoc();
+    $set = $conn->query("
+        SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating 
+        FROM evaluation 
+        WHERE faculty_id = '$fid' $where_clause
+    ")->fetch_assoc();
     $set_avg = $set['students'] ? number_format((float)$set['avg_rating'], 2) : '0.00';
 
-    $sef = $conn->query("SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating FROM admin_evaluation WHERE evaluatee_id = '$fid'")->fetch_assoc();
+    $sef = $conn->query("
+        SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating 
+        FROM admin_evaluation 
+        WHERE evaluatee_id = '$fid' $where_clause
+    ")->fetch_assoc();
     $sef_avg = $sef['admins'] ? number_format((float)$sef['avg_rating'], 2) : '0.00';
 
     $overall = ($set['students'] && $sef['admins'])

@@ -17,6 +17,26 @@ $stmt->bind_result($admin_department);
 $stmt->fetch();
 $stmt->close();
 
+// --- Filters ---
+$semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
+$academic_filter = isset($_GET['academic_year']) ? $_GET['academic_year'] : '';
+
+// 🔹 Fetch distinct semesters
+$semesters = [];
+$res = $conn->query("SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
+while ($row = $res->fetch_assoc()) {
+  if (!empty($row['semester'])) $semesters[] = $row['semester'];
+}
+$res->close();
+
+// 🔹 Fetch distinct academic years
+$years = [];
+$res = $conn->query("SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+while ($row = $res->fetch_assoc()) {
+  if (!empty($row['academic_year'])) $years[] = $row['academic_year'];
+}
+$res->close();
+
 // Get all faculty in this department
 $query = $conn->prepare("
   SELECT idnumber, last_name, first_name, mid_name
@@ -30,52 +50,87 @@ $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
 $query->close();
 
 // Initialize rows
-$set_rows = '';
-$sef_rows = '';
 $overall_rows = '';
 
 foreach ($faculties as $fac) {
   $fid = $fac['idnumber'];
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-  // SET data (Student evaluations)
-  $set_result = $conn->query("
-    SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
-    FROM evaluation
-    WHERE faculty_id = '$fid'
-  ")->fetch_assoc();
+  // SET (student evaluations)
+  $sql = "SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
+          FROM evaluation WHERE faculty_id = ?";
+  $types = "s";
+  $params = [$fid];
+
+  if (!empty($semester_filter)) {
+    $sql .= " AND semester = ?";
+    $params[] = $semester_filter;
+    $types .= "s";
+  }
+  if (!empty($academic_filter)) {
+    $sql .= " AND academic_year = ?";
+    $params[] = $academic_filter;
+    $types .= "s";
+  }
+
+  $stmtEval = $conn->prepare($sql);
+  $stmtEval->bind_param($types, ...$params);
+  $stmtEval->execute();
+  $set_result = $stmtEval->get_result()->fetch_assoc();
+  $stmtEval->close();
 
   $set_count = (int)$set_result['students'];
   $set_avg = $set_count ? number_format((float)$set_result['avg_rating'], 2) : '0.00';
-  $set_rows .= "<tr><td>{$name}</td><td class='text-center'>{$set_count}</td><td class='text-center'>{$set_avg} %</td></tr>";
 
-  // SEF data (Supervisor evaluations)
-  $sef_result = $conn->query("
-    SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating
-    FROM admin_evaluation
-    WHERE evaluatee_id = '$fid'
-  ")->fetch_assoc();
+  // SEF (supervisor evaluations)
+  $sql = "SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating
+          FROM admin_evaluation WHERE evaluatee_id = ?";
+  $types = "s";
+  $params = [$fid];
+
+  if (!empty($semester_filter)) {
+    $sql .= " AND semester = ?";
+    $params[] = $semester_filter;
+    $types .= "s";
+  }
+  if (!empty($academic_filter)) {
+    $sql .= " AND academic_year = ?";
+    $params[] = $academic_filter;
+    $types .= "s";
+  }
+
+  $stmtEval = $conn->prepare($sql);
+  $stmtEval->bind_param($types, ...$params);
+  $stmtEval->execute();
+  $sef_result = $stmtEval->get_result()->fetch_assoc();
+  $stmtEval->close();
 
   $sef_count = (int)$sef_result['admins'];
   $sef_avg = $sef_count ? number_format((float)$sef_result['avg_rating'], 2) : '0.00';
-  $sef_rows .= "<tr><td>{$name}</td><td class='text-center'>{$sef_count}</td><td class='text-center'>{$sef_avg} %</td></tr>";
 
-  // Overall Evaluation
-  $set_avg_val = (float)$set_avg;
-  $sef_avg_val = (float)$sef_avg;
+  // Overall Average
+  $overall_avg = ($set_count && $sef_count)
+    ? number_format(((float)$set_avg + (float)$sef_avg) / 2, 2)
+    : ($set_count ? $set_avg : ($sef_count ? $sef_avg : '0.00'));
 
-  $overall_avg = ($set_count && $sef_count) ? number_format(($set_avg_val + $sef_avg_val) / 2, 2) : ($set_count ? $set_avg : ($sef_count ? $sef_avg : '0.00'));
-
-  $overall_rows .= "<tr><td>{$name}</td><td class='text-center'>{$set_avg} %</td><td class='text-center'>{$sef_avg} %</td><td class='text-center'>{$overall_avg} %</td></tr>";
+  $overall_rows .= "
+    <tr>
+      <td>{$name}</td>
+      <td class='text-center'>{$set_avg}</td>
+      <td class='text-center'>{$sef_avg}</td>
+      <td class='text-center'>{$overall_avg}</td>
+    </tr>
+  ";
 }
 ?>
+
 
 
 <!DOCTYPE html>
 <html>
 
 <head>
-   
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -92,13 +147,6 @@ foreach ($faculties as $fac) {
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Overall Faculty Evaluation Report</h1>
-      <nav>
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Reports</li>
-          <li class="breadcrumb-item active">Overall Report</li>
-        </ol>
-      </nav>
     </div>
 
     <section class="section dashboard">
@@ -111,60 +159,59 @@ foreach ($faculties as $fac) {
                   Overall Evaluation Report – <?= htmlspecialchars($admin_department) ?>
                 </h4>
 
-                <!-- SET Table -->
-                <h5 class="mt-4 mb-2">Student Evaluation of Teachers (SET)</h5>
-                <div class="table-responsive mb-4">
-                  <table class="table table-bordered table-hover">
-                    <thead class="table-light text-center">
-                      <tr>
-                        <th>Faculty Name</th>
-                        <th>No. of Student Evaluations</th>
-                        <th>Average SET Rating</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?= $set_rows ?> <!-- This should be built in your PHP script -->
-                    </tbody>
-                  </table>
-                </div>
+                <form method="GET" class="mb-3">
+                  <div class="row align-items-end">
+                    <div class="col-md-4">
+                      <label for="semester" class="form-label">Select Semester</label>
+                      <select name="semester" id="semester" class="form-select">
+                        <option value="">-- All Semesters --</option>
+                        <?php foreach ($semesters as $sem): ?>
+                          <option value="<?= htmlspecialchars($sem) ?>" <?= $semester_filter == $sem ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($sem) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
 
-                <!-- SEF Table -->
-                <h5 class="mb-2">Supervisor Evaluation of Faculty (SEF)</h5>
-                <div class="table-responsive mb-4">
-                  <table class="table table-bordered table-hover">
-                    <thead class="table-light text-center">
-                      <tr>
-                        <th>Faculty Name</th>
-                        <th>No. of Supervisor Evaluations</th>
-                        <th>Average SEF Rating</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?= $sef_rows ?> <!-- This should be built in your PHP script -->
-                    </tbody>
-                  </table>
-                </div>
+                    <div class="col-md-4">
+                      <label for="academic_year" class="form-label">Select Academic Year</label>
+                      <select name="academic_year" id="academic_year" class="form-select">
+                        <option value="">-- All Academic Years --</option>
+                        <?php foreach ($years as $yr): ?>
+                          <option value="<?= htmlspecialchars($yr) ?>" <?= $academic_filter == $yr ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($yr) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
 
-                <!-- Combined Overall Evaluation Table -->
-                <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
+                    <div class="col-md-auto">
+                      <button type="submit" class="btn btn-success w-100">
+                        <i class="bi bi-filter"></i> Generate Report
+                      </button>
+                    </div>
+                  </div>
+                </form>
+                
+                <!-- Table -->
                 <div class="table-responsive mb-4">
                   <table class="table table-bordered table-hover">
                     <thead class="table-light text-center">
                       <tr>
                         <th>Faculty Name</th>
-                        <th>SET Avg (%)</th>
-                        <th>SEF Avg (%)</th>
-                        <th>Overall Average (%)</th>
+                        <th>SET Avg</th>
+                        <th>SEF Avg</th>
+                        <th>Overall Average</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <?= $overall_rows ?> <!-- Should be generated by combining SET & SEF averages -->
+                      <?= $overall_rows ?>
                     </tbody>
                   </table>
                 </div>
 
                 <div class="text-end mb-3">
-                  <a href="admin-overallreport-print.php" class="btn btn-secondary" target="_blank">
+                  <a href="admin-overallreport-print.php?semester=<?= urlencode($semester_filter) ?>&academic_year=<?= urlencode($academic_filter) ?>" class="btn btn-secondary" target="_blank">
                     <i class="bi bi-printer"></i> Print Report
                   </a>
                 </div>
@@ -175,8 +222,6 @@ foreach ($faculties as $fac) {
         </div>
       </div>
     </section>
-
-
   </main>
 
   <?php include 'footer.php'; ?>
