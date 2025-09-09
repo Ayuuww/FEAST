@@ -57,11 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -112,19 +112,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
             <form method="POST">
-              <div class="mb-3">
-                <div class="form-floating">
-                  <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
-                  <label class="form-label">ID Number</label>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <div class="form-floating">
+                    <input type="text" class="form-control"
+                      value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
+                      disabled>
+                    <label class="form-label">Full Name</label>
+                  </div>
                 </div>
-              </div>
-              <div class="mb-3">
-                <div class="form-floating">
-                  <input type="text" class="form-control"
-                    value="<?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>"
-                    disabled>
-                  <label class="form-label">Full Name</label>
+                <div class="col-md-6 mb-3">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" value="<?= $student['idnumber'] ?>" disabled>
+                    <label class="form-label">ID Number</label>
+                  </div>
                 </div>
+
               </div>
 
               <div class="row">
@@ -159,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
               </div>
 
-              <button type="submit" class="btn btn-success">Update</button>
+              <button type="submit" class="btn btn-success">Update Status</button>
               <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
             </form>
           </div>
@@ -169,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </main><!-- end of main -->
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
+  <?php include 'footer.php' ?>
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

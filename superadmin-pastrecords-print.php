@@ -1,30 +1,38 @@
 <?php
 require('fpdf/fpdf.php');
 include 'conn/conn.php';
-include 'printing-headerfooter.php'; // <-- include your extended class
+include 'printing-headerfooter.php';
 session_start();
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     die('Access denied');
 }
 
-$faculty_id   = $_SESSION['idnumber'];
+// Get the selected faculty (from GET, chosen in pastrecords page)
+$faculty_id   = $_GET['faculty_id'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
 $semester      = $_GET['semester'] ?? '';
 $subject_code  = $_GET['subject_code'] ?? '';
 
-// Faculty info
-$stmt = $conn->prepare("SELECT department,faculty_rank, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
-$stmt->bind_param("s", $faculty_id);
-$stmt->execute();
-$stmt->bind_result($department,$faculty_rank, $fname, $mname, $lname);
-$stmt->fetch();
-$stmt->close();
+// Superadmin info
+$superadmin_id = $_SESSION['idnumber'];
+$super_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank 
+                              FROM superadmin WHERE idnumber = ?");
+$super_stmt->bind_param("s", $superadmin_id);
+$super_stmt->execute();
+$super_stmt->bind_result($sa_fname, $sa_mname, $sa_lname, $sa_department, $sa_faculty_rank);
+$super_stmt->fetch();
+$super_stmt->close();
+$superadmin_name = trim("$sa_fname $sa_mname $sa_lname");
 
-$faculty_name = trim("$fname $mname $lname");
+// Save department in session (for header/footer logos)
+$_SESSION['department'] = $sa_department;
 
-// Save department in session (so headerfooter can read it)
-$_SESSION['department'] = $department;
+// Always use superadmin’s ID as faculty_id
+$faculty_id = $superadmin_id;
+
+// Save department in session (for header/footer logos)
+$_SESSION['department'] = $sa_department;
 
 // --- Build evaluation query ---
 $params = [$faculty_id];
@@ -49,32 +57,17 @@ $stmt->execute();
 $result = $stmt->get_result();
 $stmt->close();
 
-// --- Use your extended PDF ---
+// --- Start PDF ---
 $pdf = new PDF_EXTENDED('L','mm','A4');
 $pdf->AliasNbPages();
 $pdf->AddPage();
 
-// Faculty + filter info
 $pdf->SetFont('Arial','',11);
-$pdf->Cell(0,6,"Name: $faculty_name",0,1,'L');
-$pdf->Cell(0,6,"Department: $department",0,1,'L');
 
-$filters = [];
-// Handle Semester display
-if ($semester) {
-    $sem_display = "Semester: $semester";
-} else {
-    $sem_display = "Semester: 1st / 2nd Semester";
-}
+// Filters
+$sem_display = $semester ? "Semester: $semester" : "Semester: 1st / 2nd Semester";
+$ay_display  = $academic_year ? "Academic Year: $academic_year" : "Academic Year: All Academic Years";
 
-// Handle Academic Year display
-if ($academic_year) {
-    $ay_display = "Academic Year: $academic_year";
-} else {
-    $ay_display = "Academic Year: All Academic Years";
-}
-
-// Print them one by one
 $pdf->Cell(0,6,$sem_display,0,1,'L');
 $pdf->Cell(0,6,$ay_display,0,1,'L');
 $pdf->Cell(0,6,"Date Printed: ".date("F j, Y"),0,1,'L');
@@ -109,17 +102,11 @@ if ($result->num_rows > 0) {
     $pdf->Cell(array_sum($widths),8,"No evaluation records found.",1,1,'C');
 }
 
-// --- Summary of Comments ---
-// $pdf->AddPage();
+// --- Comments Section ---
 $pdf->Ln(4);
 $pdf->SetFont('Arial','B',12);
-
-if ($subject_code) {
-    $pdf->Cell(0,8,"Summary of Comments for Subject: $subject_code",0,1,'L');
-} else {
-    $pdf->Cell(0,8,"Summary of Comments",0,1,'L');
-}
-$pdf->Ln(3);    
+$pdf->Cell(0,8,"Summary of Comments",0,1,'L');
+$pdf->Ln(3);
 
 $comment_sql = "SELECT subject_code, comment 
                 FROM evaluation 
@@ -135,8 +122,8 @@ if ($academic_year) {
     $comment_types .= "s"; 
 }
 if ($semester) { 
-    $comment_sql .= " AND semester = ?";      
-    $comment_params[] = $semester;      
+    $comment_sql .= " AND semester = ?"; 
+    $comment_params[] = $semester; 
     $comment_types .= "s"; 
 }
 if ($subject_code) { 
@@ -152,23 +139,24 @@ $comments = $stmt2->get_result();
 $stmt2->close();
 
 $positive = [];
-$others = [];
+$others   = [];
 
 if ($comments->num_rows > 0) {
     while ($c = $comments->fetch_assoc()) {
         $comment = trim($c['comment']);
         if ($comment !== '') {
-            // check for positive keywords
+            // Check for positive keywords
             if (preg_match('/\b(excellent|nice|great|good|very good|amazing|outstanding)\b/i', $comment)) {
-                $positive[] = $c['subject_code'].": ".$comment;
+                $positive[] = $c['subject_code'] . ": " . $comment;
             } else {
-                $others[] = $c['subject_code'].": ".$comment;
+                $others[] = $c['subject_code'] . ": " . $comment;
             }
         }
     }
 
-    // Merge prioritized comments
+    // Merge prioritized comments and limit to 5
     $all_comments = array_merge($positive, $others);
+    $all_comments = array_slice($all_comments, 0, 5);
 
     $pdf->SetFont('Arial','',10);
     $i = 1;
@@ -176,20 +164,27 @@ if ($comments->num_rows > 0) {
         $pdf->MultiCell(0,6,"$i. ".$comment,0,'L');
         $i++;
     }
+
+    // Optional: show message if there were more than 5 comments
+    if ($comments->num_rows > 5) {
+        $pdf->Ln(2);
+        $pdf->SetFont('Arial','I',9);
+        $pdf->Cell(0,6,"(Only 5 comments shown. More are available in the system.)",0,1,'L');
+    }
 } else {
     $pdf->SetFont('Arial','',10);
     $pdf->Cell(0,6,"No comments available.",0,1,'L');
 }
 
-// Prepared by
+// --- Prepared by (Superadmin) ---
 $pdf->Ln(10);
 $pdf->SetFont('Arial','',11);
 $pdf->Cell(0,6,"Prepared by:",0,1,'L');
 $pdf->Ln(8);
 $pdf->SetFont('Arial','B',11);
-$pdf->Cell(90,6,$faculty_name,0,1,'L');
+$pdf->Cell(90,6,$superadmin_name,0,1,'L');
 $pdf->SetFont('Arial','',10);
-$pdf->Cell(90,6,"$faculty_rank",0,1,'L');
+$pdf->Cell(90,6,$sa_faculty_rank,0,1,'L');
 $pdf->Cell(90,6,"Date Signed: ".date("F d, Y"),0,1,'L');
 
 $pdf->Output('I','superadmin-pastrecords.pdf');

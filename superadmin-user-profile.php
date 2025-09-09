@@ -9,59 +9,106 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 $idnumber = $_SESSION['idnumber'];
-$success_msg = "";
-$error_msg = "";
+$swal = ""; // For SweetAlert2 messages
 
 // Handle profile update
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if (isset($_POST['update_profile'])) {
     $first_name = $_POST['first_name'];
-    $mid_name = $_POST['mid_name'];
-    $last_name = $_POST['last_name'];
+    $mid_name   = $_POST['mid_name'];
+    $last_name  = $_POST['last_name'];
 
+    // Always update superadmin
     $stmt = $conn->prepare("UPDATE superadmin SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
-    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $idnumber);
-    if ($stmt->execute()) {
-      $success_msg = "Profile updated successfully.";
-    } else {
-      $error_msg = "Failed to update profile.";
+    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+    $superadmin_updated = $stmt->execute();
+    $stmt->close();
+
+    // Check if superadmin is also a faculty
+    $check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber=?");
+    $check->bind_param("s", $idnumber);
+    $check->execute();
+    $check->store_result();
+
+    if ($check->num_rows > 0) {
+      // Update faculty too
+      $stmt = $conn->prepare("UPDATE faculty SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
+      $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+      $stmt->execute();
+      $stmt->close();
     }
+    $check->close();
+
+    $swal = "Swal.fire({
+      icon: 'success',
+      title: 'Profile Updated',
+      text: 'Your profile has been updated successfully!',
+      confirmButtonColor: '#198754'
+    });";
   }
+
 
   if (isset($_POST['change_password'])) {
     $current = $_POST['current_password'];
-    $new = $_POST['new_password'];
-    $retype = $_POST['renew_password'];
+    $new     = $_POST['new_password'];
+    $retype  = $_POST['renew_password'];
 
-    // Get current hashed password
-    $query = $conn->prepare("SELECT password FROM superadmin WHERE idnumber = ?");
+    // Get password from superadmin
+    $query = $conn->prepare("SELECT password FROM superadmin WHERE idnumber=?");
     $query->bind_param("s", $idnumber);
     $query->execute();
     $query->bind_result($db_password);
     $query->fetch();
     $query->close();
 
-    // Check hashed password
     if (!password_verify($current, $db_password)) {
-      $error_msg = "Incorrect current password.";
+      $swal = "Swal.fire({
+          icon: 'error',
+          title: 'Incorrect Password',
+          text: 'Your current password is incorrect.',
+          confirmButtonColor: '#dc3545'
+        });";
     } elseif ($new !== $retype) {
-      $error_msg = "New passwords do not match.";
+      $swal = "Swal.fire({
+          icon: 'warning',
+          title: 'Password Mismatch',
+          text: 'New passwords do not match.',
+          confirmButtonColor: '#ffc107'
+        });";
     } else {
-      // Hash the new password before saving
       $hashed_new = password_hash($new, PASSWORD_DEFAULT);
 
+      // Update superadmin
       $update = $conn->prepare("UPDATE superadmin SET password=? WHERE idnumber=?");
       $update->bind_param("ss", $hashed_new, $idnumber);
-      if ($update->execute()) {
-        $success_msg = "Password updated successfully.";
-      } else {
-        $error_msg = "Failed to update password.";
+      $superadmin_updated = $update->execute();
+      $update->close();
+
+      // Check if also faculty
+      $check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber=?");
+      $check->bind_param("s", $idnumber);
+      $check->execute();
+      $check->store_result();
+
+      if ($check->num_rows > 0) {
+        $update = $conn->prepare("UPDATE faculty SET password=? WHERE idnumber=?");
+        $update->bind_param("ss", $hashed_new, $idnumber);
+        $update->execute();
+        $update->close();
       }
+      $check->close();
+
+      $swal = "Swal.fire({
+          icon: 'success',
+          title: 'Password Changed',
+          text: 'Your password has been updated successfully!',
+          confirmButtonColor: '#198754'
+        });";
     }
   }
 }
 
-// Fetch current profile data
+// Fetch profile data
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
@@ -69,6 +116,7 @@ $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
 ?>
+
 
 
 <!DOCTYPE html>
@@ -104,9 +152,6 @@ $stmt->close();
     <section class="section profile">
       <div class="row justify-content-center">
         <div class="col-xl-6">
-          <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
-          <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
-
           <div class="card">
             <div class="card-body pt-3">
               <ul class="nav nav-tabs nav-tabs-bordered">
@@ -189,6 +234,15 @@ $stmt->close();
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- SweetAlert2 -->
+  <script src=""></script>
+
+  <?php if (!empty($swal)): ?>
+    <script>
+      <?= $swal ?>
+    </script>
+  <?php endif; ?>
 
 </body>
 

@@ -16,24 +16,35 @@ $error_msg = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if (isset($_POST['update_profile'])) {
     $first_name = $_POST['first_name'];
-    $mid_name = $_POST['mid_name'];
-    $last_name = $_POST['last_name'];
+    $mid_name   = $_POST['mid_name'];
+    $last_name  = $_POST['last_name'];
 
+    // Update admin table
     $stmt = $conn->prepare("UPDATE admin SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
-    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $idnumber);
-    if ($stmt->execute()) {
+    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+    $admin_updated = $stmt->execute();
+    $stmt->close();
+
+    // Update faculty table too
+    $stmt = $conn->prepare("UPDATE faculty SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
+    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+    $faculty_updated = $stmt->execute();
+    $stmt->close();
+
+    if ($admin_updated || $faculty_updated) {
       $success_msg = "Profile updated successfully.";
     } else {
       $error_msg = "Failed to update profile.";
     }
   }
 
+
   if (isset($_POST['change_password'])) {
     $current = $_POST['current_password'];
     $new     = $_POST['new_password'];
     $retype  = $_POST['renew_password'];
 
-    // Get stored hashed password
+    // Get stored hashed password (from admin)
     $query = $conn->prepare("SELECT password FROM admin WHERE idnumber = ?");
     $query->bind_param("s", $idnumber);
     $query->execute();
@@ -41,18 +52,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $query->fetch();
     $query->close();
 
-    // ✅ Verify current password using password_verify
     if (!password_verify($current, $db_password)) {
       $error_msg = "Incorrect current password.";
     } elseif ($new !== $retype) {
       $error_msg = "New passwords do not match.";
     } else {
-      // ✅ Hash the new password before storing
       $hashed_new = password_hash($new, PASSWORD_DEFAULT);
 
+      // Update admin table
       $update = $conn->prepare("UPDATE admin SET password=? WHERE idnumber=?");
       $update->bind_param("ss", $hashed_new, $idnumber);
-      if ($update->execute()) {
+      $admin_updated = $update->execute();
+      $update->close();
+
+      // Update faculty table too
+      $update = $conn->prepare("UPDATE faculty SET password=? WHERE idnumber=?");
+      $update->bind_param("ss", $hashed_new, $idnumber);
+      $faculty_updated = $update->execute();
+      $update->close();
+
+      if ($admin_updated || $faculty_updated) {
         $success_msg = "Password updated successfully.";
       } else {
         $error_msg = "Failed to update password.";
@@ -69,6 +88,7 @@ $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
 ?>
+
 
 
 <!DOCTYPE html>
@@ -103,10 +123,7 @@ $stmt->close();
 
     <section class="section profile">
       <div class="row justify-content-center">
-        <div class="col-xl-8">
-          <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
-          <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
-
+        <div class="col-xl-6">
           <div class="card">
             <div class="card-body pt-3">
               <ul class="nav nav-tabs nav-tabs-bordered">
@@ -197,6 +214,29 @@ $stmt->close();
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- SweetAlert2 Messages -->
+  <?php if ($success_msg): ?>
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: '<?= $success_msg ?>',
+        confirmButtonColor: '#198754'
+      });
+    </script>
+  <?php endif; ?>
+
+  <?php if ($error_msg): ?>
+    <script>
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '<?= $error_msg ?>',
+        confirmButtonColor: '#dc3545'
+      });
+    </script>
+  <?php endif; ?>
 
 </body>
 

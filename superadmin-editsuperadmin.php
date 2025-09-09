@@ -3,12 +3,13 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Ensure user is logged in as superadmin
+// Superadmin login check
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
+// Get superadmin ID
 if (!isset($_GET['id'])) {
   echo "Superadmin ID is missing.";
   exit();
@@ -16,7 +17,7 @@ if (!isset($_GET['id'])) {
 
 $superadmin_id = $_GET['id'];
 
-// Fetch superadmin details
+// Fetch superadmin info
 $stmt = $conn->prepare("SELECT * FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $superadmin_id);
 $stmt->execute();
@@ -28,11 +29,38 @@ if (!$superadmin) {
   exit();
 }
 
+// Fetch dropdowns from adds table
+$positions = [];
+$ranks = [];
+$departments = [];
+
+$pos_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL ORDER BY position_name ASC");
+while ($row = $pos_result->fetch_assoc()) {
+  $positions[] = $row['position_name'];
+}
+
+$rank_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
+while ($row = $rank_result->fetch_assoc()) {
+  $ranks[] = $row['rank_name'];
+}
+
+$dept_result = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
+while ($row = $dept_result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+
+// Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $new_status = $_POST['status'];
+  $new_position = $_POST['position'];
+  $new_rank = $_POST['faculty_rank'];
+  $new_department = $_POST['department'];
+  $new_faculty = $_POST['faculty'];
 
-  $stmt = $conn->prepare("UPDATE superadmin SET status = ? WHERE idnumber = ?");
-  $stmt->bind_param("ss", $new_status, $superadmin_id);
+  $stmt = $conn->prepare("UPDATE superadmin 
+                          SET status = ?, position = ?, faculty_rank = ?, department = ?, faculty = ? 
+                          WHERE idnumber = ?");
+  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_department, $new_faculty, $superadmin_id);
   $stmt->execute();
 
   header("Location: superadmin-editsuperadmin.php?id=$superadmin_id&update=success");
@@ -40,16 +68,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -63,69 +90,120 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Edit Superadmin Status</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-superadminlist.php">Superadmin</a></li>
+          <li class="breadcrumb-item active">Edit</li>
+        </ol>
+      </nav>
     </div>
 
     <section class="section">
       <div class="row justify-content-center">
-        <div class="card col-md-6 p-4">
-          <h5 class="card-title">Superadmin Details</h5>
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Superadmin Information</h5>
 
-          <!-- Display update message -->
-          <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
-            <script>
-              Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Superadmin status updated successfully!',
-                timer: 2000,
-                showConfirmButton: false,
-              });
+              <?php if ($superadmin): ?>
+                <form method="POST">
 
-              // Optional: Remove ?update=success from URL after showing the alert
-              if (window.location.search.includes('update=success')) {
-                const url = new URL(window.location);
-                url.searchParams.delete('update');
-                window.history.replaceState({}, document.title, url.pathname + url.search);
-              }
-            </script>
-          <?php endif; ?>
-
-          <?php if ($superadmin): ?>
-            <form method="POST">
-              <div class="mb-3 form-floating">
-                <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name']; ?>" disabled>
-                <label>Full Name</label>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <div class="form-floating">
-                    <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
-                    <label>ID Number</label>
+                  <!-- Full Name -->
+                  <div class="mb-3">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name'] ?>" disabled>
+                      <label>Full Name</label>
+                    </div>
                   </div>
-                </div>
 
-                <div class="col-md-6 mb-3 ">
-                  <div class="form-floating">
-                    <select name="status" class="form-select" required>
-                      <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                      <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                    </select>
-                    <label>Status</label>
+                  <div class="row">
+                    <!-- ID Number -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
+                        <label>ID Number</label>
+                      </div>
+                    </div>
+
+                    <!-- Department -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" value="<?php echo $superadmin['department']; ?>" disabled>
+                        <label class="form-label">Department</label>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              <button type="submit" class="btn btn-success">Update Status</button>
-              <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
-            </form>
-          <?php else: ?>
-            <div class="alert alert-danger">Superadmin not found.</div>
-          <?php endif; ?>
+                  <div class="row">
+                    <!-- Status -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="status" class="form-select" required>
+                          <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                          <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                        </select>
+                        <label>Status</label>
+                      </div>
+                    </div>
+
+                    <!-- Position -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="position" class="form-select" required>
+                          <option value="" disabled>-- Select Position --</option>
+                          <?php foreach ($positions as $pos): ?>
+                            <option value="<?= htmlspecialchars($pos) ?>" <?= $superadmin['position'] === $pos ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($pos) ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label>Position</label>
+                      </div>
+                    </div>
+
+                    <!-- Current Rank -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control"
+                          value="<?php echo !empty($superadmin['faculty_rank']) ? $superadmin['faculty_rank'] : 'Not Set'; ?>"
+                          disabled>
+                        <label class="form-label">Current Faculty Rank</label>
+                      </div>
+                    </div>
+
+                    <!-- Faculty Rank -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="faculty_rank" class="form-select" required>
+                          <option value="" disabled>-- Select Rank --</option>
+                          <?php foreach ($ranks as $rank): ?>
+                            <option value="<?= htmlspecialchars($rank) ?>" <?= $superadmin['faculty_rank'] === $rank ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($rank) ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label>Faculty Rank</label>
+                      </div>
+                    </div>
+
+                    
+                  </div>
+
+                  <button type="submit" class="btn btn-success">Update  Status</button>
+                  <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
+                </form>
+              <?php else: ?>
+                <div class="alert alert-danger">Superadmin not found.</div>
+              <?php endif; ?>
+
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  </main><!-- end main -->
+  </main>
+  <!-- end main -->
 
   <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>
@@ -145,6 +223,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Updated Successfully',
+        text: 'Superadmin info has been updated!',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    </script>
+  <?php endif; ?>
 
 </body>
 

@@ -9,7 +9,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-
 // Get admin ID
 if (!isset($_GET['id'])) {
   echo "Admin ID is missing.";
@@ -37,32 +36,36 @@ while ($row = $position_result->fetch_assoc()) {
   $positions[] = $row['position_name'];
 }
 
+// Fetch faculty ranks from 'adds' table (assuming stored there too)
+$ranks = [];
+$rank_result = $conn->query("SELECT rank_name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
+while ($row = $rank_result->fetch_assoc()) {
+  $ranks[] = $row['rank_name'];
+}
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $new_status = $_POST['status'];
   $new_position = $_POST['position'];
+  $new_rank = $_POST['faculty_rank'];
 
-  $stmt = $conn->prepare("UPDATE admin SET status = ?, position = ? WHERE idnumber = ?");
-  $stmt->bind_param("sss", $new_status, $new_position, $admin_id);
+  $stmt = $conn->prepare("UPDATE admin SET status = ?, position = ?, faculty_rank = ? WHERE idnumber = ?");
+  $stmt->bind_param("ssss", $new_status, $new_position, $new_rank, $admin_id);
   $stmt->execute();
 
   header("Location: superadmin-editadmin.php?id=$admin_id&update=success");
   exit();
 }
-
-
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -124,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
 
                   <div class="row">
+                    
                     <!-- Status -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
@@ -149,9 +153,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Position</label>
                       </div>
                     </div>
+
+                    <!-- Current Rank -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control"
+                          value="<?php echo !empty($admin['faculty_rank']) ? $admin['faculty_rank'] : 'Not Set'; ?>"
+                          disabled>
+                        <label class="form-label">Current Faculty Rank</label>
+                      </div>
+                    </div>
+
+
+                    <!-- Faculty Rank -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="faculty_rank" class="form-select" required>
+                          <option value="" disabled>-- Select Rank --</option>
+                          <?php foreach ($ranks as $rank): ?>
+                            <option value="<?= htmlspecialchars($rank) ?>" <?= $admin['faculty_rank'] === $rank ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($rank) ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label>Faculty Rank</label>
+                      </div>
+                    </div>
+
+                    
                   </div>
 
-                  <button type="submit" class="btn btn-success">Update</button>
+                  <button type="submit" class="btn btn-success">Update  Status</button>
                   <a href="superadmin-adminlist.php" class="btn btn-secondary">Back</a>
 
                 </form>
@@ -168,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </main>
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
+  <?php include 'footer.php' ?>
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

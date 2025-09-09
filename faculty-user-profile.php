@@ -20,7 +20,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $last_name = $_POST['last_name'];
 
     $stmt = $conn->prepare("UPDATE faculty SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
-    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $idnumber);
+    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
     if ($stmt->execute()) {
       $success_msg = "Profile updated successfully.";
     } else {
@@ -104,10 +104,7 @@ $stmt->close();
 
     <section class="section profile">
       <div class="row justify-content-center">
-        <div class="col-xl-8">
-          <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
-          <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
-
+        <div class="col-xl-6">
           <div class="card">
             <div class="card-body pt-3">
               <ul class="nav nav-tabs nav-tabs-bordered">
@@ -198,6 +195,33 @@ $stmt->close();
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <?php if ($success_msg): ?>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "<?= $success_msg ?>",
+          confirmButtonColor: "#198754"
+        });
+      });
+    </script>
+  <?php endif; ?>
+
+  <?php if ($error_msg): ?>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "<?= $error_msg ?>",
+          confirmButtonColor: "#dc3545"
+        });
+      });
+    </script>
+  <?php endif; ?>
+  
 
 </body>
 

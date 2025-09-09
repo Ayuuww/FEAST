@@ -139,11 +139,11 @@ while ($row = $rankQuery->fetch_assoc()) {
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -255,26 +255,28 @@ while ($row = $rankQuery->fetch_assoc()) {
                     </div>
                   </div>
 
-                  <!-- Current Rank -->
-                  <div class="col-md-12 mb-3">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo $faculty['faculty_rank'] ?? 'Not Set'; ?>" disabled>
-                      <label class="form-label">Current Faculty Rank</label>
+                  <div class="row">
+                    <!-- Current Rank -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" value="<?php echo $faculty['faculty_rank'] ?? 'Not Set'; ?>" disabled>
+                        <label class="form-label">Current Faculty Rank</label>
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Promoting section -->
-                  <div class="col-md-12 mb-3">
-                    <div class="form-floating">
-                      <select class="form-select" name="faculty_rank">
-                        <option value="" disabled <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>Select Rank</option>
-                        <?php foreach ($facultyRanks as $rank): ?>
-                          <option value="<?= htmlspecialchars($rank) ?>" <?= ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($rank) ?>
-                          </option>
-                        <?php endforeach; ?>
-                      </select>
-                      <label>Faculty Rank Promotion</label>
+                    <!-- Promoting section -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select class="form-select" name="faculty_rank">
+                          <option value="" disabled <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>Select Rank</option>
+                          <?php foreach ($facultyRanks as $rank): ?>
+                            <option value="<?= htmlspecialchars($rank) ?>" <?= ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($rank) ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label>Faculty Rank Promotion</label>
+                      </div>
                     </div>
                   </div>
 
@@ -307,7 +309,7 @@ while ($row = $rankQuery->fetch_assoc()) {
   </main>
 
   <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
+  <?php include 'footer.php' ?>
   <!-- End Footer -->
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

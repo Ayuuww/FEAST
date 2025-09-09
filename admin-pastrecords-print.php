@@ -150,6 +150,7 @@ if ($comments->num_rows > 0) {
         }
     }
     $all_comments = array_merge($positive, $others);
+    $all_comments = array_slice($all_comments, 0, 5);
 
     $pdf->SetFont('Arial','',10);
     $i = 1;

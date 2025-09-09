@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $section    = $_POST['section'];
 
     $stmt = $conn->prepare("UPDATE student SET first_name=?, mid_name=?, last_name=?, section=? WHERE idnumber=?");
-    $stmt->bind_param("ssssss", $first_name, $mid_name, $last_name, $section, $idnumber);
+    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $section, $idnumber);
 
     if ($stmt->execute()) {
       $success_msg = "Profile updated successfully.";
@@ -71,6 +71,14 @@ $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
+
+$section_query = $conn->query("
+  SELECT DISTINCT TRIM(section_name) AS section_name
+  FROM adds
+  WHERE section_name IS NOT NULL AND TRIM(section_name) <> ''
+  ORDER BY section_name ASC
+");
+
 ?>
 
 
@@ -106,10 +114,7 @@ $stmt->close();
 
     <section class="section profile">
       <div class="row justify-content-center">
-        <div class="col-xl-8">
-          <?php if ($success_msg): ?><div class="alert alert-success"><?= $success_msg ?></div><?php endif; ?>
-          <?php if ($error_msg): ?><div class="alert alert-danger"><?= $error_msg ?></div><?php endif; ?>
-
+        <div class="col-xl-6">
           <div class="card">
             <div class="card-body pt-3">
               <ul class="nav nav-tabs nav-tabs-bordered">
@@ -125,46 +130,37 @@ $stmt->close();
                       <label class="col-md-4 col-lg-3 col-form-label">Last Name</label>
                       <div class="col-md-8 col-lg-9"><input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">First Name</label>
                       <div class="col-md-8 col-lg-9"><input name="first_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['first_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Middle Name</label>
                       <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Section</label>
                       <div class="col-md-8 col-lg-9">
                         <select name="section" class="form-select text-capitalize" required>
                           <option value="" disabled <?= empty($data['section']) ? 'selected' : '' ?>>Select Section</option>
                           <?php
-                          $sections = [
-                            '1-A',
-                            '1-B',
-                            '1-C',
-                            '1-D',
-                            '2-A',
-                            '2-B',
-                            '2-C',
-                            '2-D',
-                            '3-A',
-                            '3-B',
-                            '3-C',
-                            '3-D',
-                            '4-A',
-                            '4-B',
-                            '4-C',
-                            '4-D'
-                          ];
-                          foreach ($sections as $section) {
-                            $selected = ($data['section'] == $section) ? 'selected' : '';
+                          $result = mysqli_query($conn, "SELECT DISTINCT TRIM(section_name) AS section_name
+                                                                        FROM adds
+                                                                        WHERE section_name IS NOT NULL AND TRIM(section_name) <> ''
+                                                                        ORDER BY section_name ASC ");
+                          while ($row = mysqli_fetch_assoc($result)) {
+                            $section = htmlspecialchars($row['section_name']);
+                            $selected = ($data['section'] == $row['section_name']) ? 'selected' : '';
                             echo "<option value=\"$section\" $selected>$section</option>";
                           }
                           ?>
                         </select>
                       </div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Department/College</label>
                       <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>"></div>
@@ -228,6 +224,28 @@ $stmt->close();
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <?php if ($success_msg): ?>
+    <script>
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: '<?= $success_msg ?>',
+        confirmButtonColor: '#198754'
+      });
+    </script>
+  <?php endif; ?>
+
+  <?php if ($error_msg): ?>
+    <script>
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: '<?= $error_msg ?>',
+        confirmButtonColor: '#dc3545'
+      });
+    </script>
+  <?php endif; ?>
 
 </body>
 
