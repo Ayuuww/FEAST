@@ -14,7 +14,7 @@ if ($filter === 'today') {
     $where = "WHERE YEAR(`timestamp`) = YEAR(CURDATE())";
 }
 
-$query = "SELECT `timestamp`, role, activity FROM activity_logs $where 
+$query = "SELECT `timestamp`, role, user_id, activity FROM activity_logs $where 
           ORDER BY `timestamp` DESC 
           LIMIT $limit OFFSET $offset";
 

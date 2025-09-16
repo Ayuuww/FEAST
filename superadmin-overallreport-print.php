@@ -7,7 +7,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     die('Access denied');
 }
 
-$admin_id = $_SESSION['idnumber'];
+$superadmin = $_SESSION['idnumber'];
 
 // Get department and admin name
 // Get filters from request
@@ -16,15 +16,15 @@ $selected_semester     = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year= isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
 // Get admin name for Prepared by
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name 
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position
                         FROM superadmin WHERE idnumber = ?");
-$stmt->bind_param("s", $admin_id);
+$stmt->bind_param("s", $superadmin);
 $stmt->execute();
-$stmt->bind_result($a_fname, $a_mname, $a_lname);
+$stmt->bind_result($s_fname, $s_mname, $s_lname, $position);
 $stmt->fetch();
 $stmt->close();
 
-$prepared_by = "$a_fname $a_mname $a_lname";
+$prepared_by = "$s_fname $s_mname $s_lname";
 
 // Get all faculty in the selected department
 $query = $conn->prepare("SELECT idnumber, last_name, first_name, mid_name 
@@ -126,8 +126,8 @@ $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(140, 6, "Prepared by:", 0, 0, 'L');
 $pdf->Cell(0, 6, "Date Signed: " . date("F d, Y"), 0, 1, 'L');
 $pdf->Ln(10);
-$pdf->Cell(140, 6, $prepared_by, 0, 0, 'L');
-$pdf->Cell(0, 6, '', 0, 1, 'L');
+$pdf->Cell(140, 6, $prepared_by, 0, 1, 'L');
+$pdf->Cell(0, 6, $position, 0, 1, 'L');
 $pdf->Cell(140, 0, '_________________________', 0, 0, 'L');
 
 $pdf->Output('I', 'overall-evaluation-report.pdf');

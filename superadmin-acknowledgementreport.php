@@ -235,9 +235,15 @@ if (!empty($faculty_id)) {
           <div class="col-md-2">
             <label for="semester" class="form-label">Semester</label>
             <select class="form-select" name="semester" id="semester">
-              <option value="" disabled selected>-- Select Semester --</option>
+              <option value="" <?= empty($sem_filter) ? 'selected' : '' ?>>-- All Semesters --</option>
               <?php
-              $sem_query = mysqli_query($conn, "SELECT DISTINCT semester FROM admin_evaluation ORDER BY semester ASC");
+              $sem_query = mysqli_query($conn, "SELECT DISTINCT semester FROM (
+                                                    SELECT semester FROM admin_evaluation
+                                                    UNION
+                                                    SELECT semester FROM evaluation
+                                                  ) AS all_semesters
+                                                  ORDER BY semester ASC
+                                                ");
               while ($row = mysqli_fetch_assoc($sem_query)) {
                 $selected = ($sem_filter === $row['semester']) ? "selected" : "";
                 echo "<option value='{$row['semester']}' $selected>{$row['semester']}</option>";
@@ -249,9 +255,15 @@ if (!empty($faculty_id)) {
           <div class="col-md-2">
             <label for="academic_year" class="form-label">Academic Year</label>
             <select class="form-select" name="academic_year" id="academic_year">
-              <option value="" disabled selected>-- Select Academic Year --</option>
+              <option value="" <?= empty($ay_filter) ? 'selected' : '' ?>>-- All Academic Years --</option>
               <?php
-              $ay_query = mysqli_query($conn, "SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
+              $ay_query = mysqli_query($conn, "SELECT DISTINCT academic_year FROM (
+                                                  SELECT academic_year FROM admin_evaluation
+                                                  UNION
+                                                  SELECT academic_year FROM evaluation
+                                                ) AS all_years
+                                                ORDER BY academic_year DESC
+                                              ");
               while ($row = mysqli_fetch_assoc($ay_query)) {
                 $selected = ($ay_filter === $row['academic_year']) ? "selected" : "";
                 echo "<option value='{$row['academic_year']}' $selected>{$row['academic_year']}</option>";

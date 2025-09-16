@@ -606,7 +606,7 @@ function timeAgo($datetime)
                             <div class="activite-label">${timeAgo}</div>
                             <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
                             <div class="activity-content">
-                              <span class="fw-bold">${log.role.charAt(0).toUpperCase() + log.role.slice(1)}:</span> ${log.activity}
+                              <span class="fw-bold">${log.user_id}:</span> ${log.activity}
                             </div>
                           </div>`;
                         activityList.insertAdjacentHTML("beforeend", item);
