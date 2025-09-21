@@ -87,11 +87,11 @@ function timeAgo($datetime)
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 
 </head>
 
@@ -543,14 +543,26 @@ function timeAgo($datetime)
               <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
               <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                 <li class="dropdown-header text-start">
-                  <h6>Filter</h6>
+                  <h6>Date Filter</h6>
                 </li>
                 <li><a class="dropdown-item activity-filter" href="#" data-filter="today">Today</a></li>
                 <li><a class="dropdown-item activity-filter" href="#" data-filter="month">This Month</a></li>
                 <li><a class="dropdown-item activity-filter" href="#" data-filter="year">This Year</a></li>
                 <li><a class="dropdown-item activity-filter" href="#" data-filter="all">All</a></li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li class="dropdown-header text-start">
+                  <h6>Role Filter</h6>
+                </li>
+                <li><a class="dropdown-item activity-role-filter" href="#" data-role="student">Student</a></li>
+                <li><a class="dropdown-item activity-role-filter" href="#" data-role="faculty">Faculty</a></li>
+                <li><a class="dropdown-item activity-role-filter" href="#" data-role="admin">Admin</a></li>
+                <li><a class="dropdown-item activity-role-filter" href="#" data-role="superadmin">Superadmin</a></li>
+                <li><a class="dropdown-item activity-role-filter" href="#" data-role="all">All Roles</a></li>
               </ul>
             </div>
+
 
             <div class="card-body" style="max-height: 400px; overflow-y: auto;" id="activityContainer">
               <h5 class="card-title">Recent Activity <span id="filter-label">| All</span></h5>
@@ -558,6 +570,7 @@ function timeAgo($datetime)
                 <div class="activity" id="activity-list"></div>
               </div>
 
+              <div class="activity" id="activity-list"></div>
               <div id="loadingIndicator" class="text-center my-2" style="display: none;">
                 <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
               </div>
@@ -567,8 +580,9 @@ function timeAgo($datetime)
                 const limit = 10;
                 let loading = false;
                 let filter = 'all';
+                let role = 'all';
+
                 const activityList = document.getElementById("activity-list");
-                const activityContainer = document.getElementById("activityContainer");
                 const loadingIndicator = document.getElementById("loadingIndicator");
 
                 function getTimeAgo(datetime) {
@@ -589,15 +603,12 @@ function timeAgo($datetime)
                   loading = true;
                   loadingIndicator.style.display = 'block';
 
-                  // If resetting, offset must be set BEFORE fetching
                   if (reset) offset = 0;
 
-                  fetch(`activity-fetch.php?limit=${limit}&offset=${offset}&filter=${filter}`)
+                  fetch(`activity-fetch.php?limit=${limit}&offset=${offset}&filter=${filter}&role=${role}`)
                     .then(res => res.json())
                     .then(data => {
-                      if (reset) {
-                        activityList.innerHTML = '';
-                      }
+                      if (reset) activityList.innerHTML = '';
 
                       data.forEach(log => {
                         const timeAgo = getTimeAgo(log.timestamp);
@@ -612,10 +623,12 @@ function timeAgo($datetime)
                         activityList.insertAdjacentHTML("beforeend", item);
                       });
 
-                      if (data.length > 0) {
-                        offset += data.length; // more accurate than += limit
-                      }
-
+                      if (data.length > 0) offset += data.length;
+                      loading = false;
+                      loadingIndicator.style.display = 'none';
+                    })
+                    .catch(err => {
+                      console.error("Fetch error:", err);
                       loading = false;
                       loadingIndicator.style.display = 'none';
                     });
@@ -625,10 +638,7 @@ function timeAgo($datetime)
                   loadLogs();
 
                   activityContainer.addEventListener("scroll", () => {
-                    if (
-                      activityContainer.scrollTop + activityContainer.clientHeight >= activityContainer.scrollHeight - 5 &&
-                      !loading
-                    ) {
+                    if (activityContainer.scrollTop + activityContainer.clientHeight >= activityContainer.scrollHeight - 5 && !loading) {
                       loadLogs();
                     }
                   });
@@ -637,7 +647,15 @@ function timeAgo($datetime)
                     btn.addEventListener("click", (e) => {
                       e.preventDefault();
                       filter = btn.dataset.filter;
-                      offset = 0;
+                      document.getElementById("filter-label").textContent = `| ${btn.textContent}`;
+                      loadLogs(true);
+                    });
+                  });
+
+                  document.querySelectorAll(".activity-role-filter").forEach(btn => {
+                    btn.addEventListener("click", (e) => {
+                      e.preventDefault();
+                      role = btn.dataset.role;
                       document.getElementById("filter-label").textContent = `| ${btn.textContent}`;
                       loadLogs(true);
                     });
@@ -658,9 +676,9 @@ function timeAgo($datetime)
                 <li class="dropdown-header text-start">
                   <h6>Filter</h6>
                 </li>
-                <li><a class="dropdown-item role-filter" data-role="student" href="#">Student</a></li>
-                <li><a class="dropdown-item role-filter" data-role="faculty" href="#">Faculty</a></li>
-                <li><a class="dropdown-item role-filter" data-role="admin" href="#">Program Chair / Dean</a></li>
+                <li><a class="dropdown-item chart-role-filter" data-role="student" href="#">Student</a></li>
+                <li><a class="dropdown-item chart-role-filter" data-role="faculty" href="#">Faculty</a></li>
+                <li><a class="dropdown-item chart-role-filter" data-role="admin" href="#">Chair Person / Dean</a></li>
               </ul>
             </div>
 
@@ -698,7 +716,7 @@ function timeAgo($datetime)
               }
 
               // ADMIN per department (Program Chair or Dean)
-              $admin_query = "SELECT department, COUNT(*) AS total FROM admin WHERE position IN ('Program Chair', 'Dean') GROUP BY department";
+              $admin_query = "SELECT department, COUNT(*) AS total FROM admin WHERE position IN ('Program Chair', 'Dean', 'Chair Person') GROUP BY department";
               $admin_result = mysqli_query($conn, $admin_query);
               $admin_data = [];
               while ($row = mysqli_fetch_assoc($admin_result)) {
@@ -718,13 +736,13 @@ function timeAgo($datetime)
 
                   const sectionDetails = <?= json_encode($student_sections); ?>;
 
-                  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1', '#ff9f40', '#4CAF50' ,'#e78ca0ff', '#a220dfff', '#f80800ff', '#0f010cff', '#47a4e2ff', '#1e6928ff'];
+                  const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#6f42c1', '#ff9f40', '#4CAF50', '#e78ca0ff', '#a220dfff', '#f80800ff', '#0f010cff', '#47a4e2ff', '#1e6928ff'];
 
                   function updateChart(role) {
                     const labelMap = {
                       student: "Student",
                       faculty: "Faculty",
-                      admin: "Program Chair / Dean"
+                      admin: "Chair Person / Dean"
                     };
 
                     document.getElementById("roleLabel").textContent = "| " + labelMap[role];
@@ -775,13 +793,14 @@ function timeAgo($datetime)
                   updateChart('student');
 
                   // Dropdown menu listener
-                  document.querySelectorAll(".role-filter").forEach(item => {
+                  document.querySelectorAll(".chart-role-filter").forEach(item => {
                     item.addEventListener("click", e => {
                       e.preventDefault();
                       const role = item.getAttribute("data-role");
                       updateChart(role);
                     });
                   });
+
                 });
               </script>
             </div>
@@ -1007,7 +1026,7 @@ function timeAgo($datetime)
             });
           </script>
           <!-- End Top 10 Highest Rated (supervisor) -->
-           
+
         </div><!-- End Right side columns -->
 
       </div>

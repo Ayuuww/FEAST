@@ -137,7 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 <html lang="en">
 
 <head>
-   
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -331,7 +331,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
                 </div>
 
                 <div class="col-md-4">
-                  <label for="subject_code" class="form-label">Subjects</label>
+                  <label for="subject_code" class="form-label">Subjects (Hold Ctrl for Multiple Selection)</label>
                   <select id="subject_code" name="subject_code[]" class="form-select" multiple>
                     <?php
                     // Reset subject_result pointer if needed, or re-run query if the page needs fresh data after form submission
@@ -350,7 +350,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
                     foreach ($subjects_by_faculty as $faculty => $subjects) : ?>
                       <optgroup label="<?= htmlspecialchars("Instructor: $faculty") ?>">
                         <?php foreach ($subjects as $sub) : ?>
-                          <option value="<?= $sub['code'] ?>" data-faculty-id="<?= $sub['faculty_id'] ?? '' ?>" data-admin-id="<?= $sub['admin_id'] ?? '' ?>">
+                          <option value="<?= $sub['code'] ?>"
+                            data-faculty="<?= $faculty ?>"
+                            data-faculty-id="<?= $sub['faculty_id'] ?? '' ?>"
+                            data-admin-id="<?= $sub['admin_id'] ?? '' ?>">
                             <?= $sub['code'] . ": " . $sub['title'] ?>
                           </option>
                         <?php endforeach; ?>
@@ -403,8 +406,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
       $('#subject_code').select2({
         placeholder: "Select Subjects",
         width: '100%',
-        allowClear: true
+        allowClear: true,
+        matcher: function(params, data) {
+          if ($.trim(params.term) === '') {
+            return data;
+          }
+          if (typeof data.text === 'undefined') {
+            return null;
+          }
+
+          // search in subject text + faculty name
+          const term = params.term.toLowerCase();
+          const text = data.text.toLowerCase();
+          const faculty = $(data.element).data('faculty')?.toLowerCase() || '';
+
+          if (text.indexOf(term) > -1 || faculty.indexOf(term) > -1) {
+            return data;
+          }
+          return null;
+        }
       });
+
 
       function filterStudents() {
         const selectedDept = $('#departmentFilter').val();
