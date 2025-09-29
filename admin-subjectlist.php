@@ -1,9 +1,8 @@
 <?php
-
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a superadmin
+// Check if the user is logged in and is an admin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
@@ -11,41 +10,54 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get the admin's department
-$dept_query = mysqli_query($conn, "SELECT department FROM admin WHERE idnumber = '$admin_id' LIMIT 1");
-$admin_dept = '';
+// Get the admin's department + position using prepared statement
+$dept_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+$dept_stmt->bind_param("s", $admin_id);
+$dept_stmt->execute();
+$dept_res = $dept_stmt->get_result();
+$admin_data = $dept_res->fetch_assoc() ?? [];
+$dept_stmt->close();
 
-if ($dept_query && mysqli_num_rows($dept_query) > 0) {
-  $admin_data = mysqli_fetch_assoc($dept_query);
-  $admin_dept = $admin_data['department'];
+$admin_dept = $admin_data['department'] ?? '';
+$admin_position = $admin_data['position'] ?? '';
+
+// ✅ Restrict allowed positions (only allow Dean/Chair/Program Chair)
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+if (!in_array($admin_position, $allowed_positions)) {
+  $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to view the subject list.";
+  header("Location: admin-dashboard.php");
+  exit();
 }
 
+// Fetching subjects and faculty/admin names safely with prepared statement
+$sub_q = "
+  SELECT subject.*,
+         COALESCE(f.first_name, a.first_name) AS first_name,
+         COALESCE(f.mid_name, a.mid_name) AS mid_name,
+         COALESCE(f.last_name, a.last_name) AS last_name,
+         CASE
+             WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
+             WHEN subject.admin_id IS NOT NULL THEN 'Admin'
+             ELSE 'Unknown'
+         END AS handler_role
+  FROM subject
+  LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
+  LEFT JOIN admin a ON subject.admin_id = a.idnumber
+  WHERE subject.department = ?
+  ORDER BY subject.code ASC
+";
 
-// Fetching subjects and faculty names
-$query = "  SELECT subject.*,
-            COALESCE(faculty.first_name, admin.first_name) AS first_name,
-            COALESCE(faculty.mid_name, admin.mid_name) AS mid_name,
-            COALESCE(faculty.last_name, admin.last_name) AS last_name,
-            CASE
-                WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
-                WHEN subject.admin_id IS NOT NULL THEN 'Admin'
-                ELSE 'Unknown'
-            END AS handler_role
-            FROM subject
-            LEFT JOIN faculty ON subject.faculty_id = faculty.idnumber
-            LEFT JOIN admin ON subject.admin_id = admin.idnumber
-            WHERE subject.department = '$admin_dept'";
-
-$result = mysqli_query($conn, $query);
-
+$sub_stmt = $conn->prepare($sub_q);
+$sub_stmt->bind_param("s", $admin_dept);
+$sub_stmt->execute();
+$result = $sub_stmt->get_result();
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -61,7 +73,6 @@ $result = mysqli_query($conn, $query);
   <!-- End Sidebar-->
 
   <main id="main" class="main">
-
     <div class="pagetitle">
       <h1>List of Subjects</h1>
       <nav>
@@ -77,24 +88,22 @@ $result = mysqli_query($conn, $query);
       <script>
         document.addEventListener("DOMContentLoaded", function() {
           Swal.fire({
-            icon: '<?php echo $_SESSION['msg_type'] ?? 'info'; ?>', // Use session msg_type for icon
-            title: '<?php echo $_SESSION['msg']; ?>',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
+            icon: '<?php echo $_SESSION['msg_type'] ?? 'info'; ?>',
+            title: '<?php echo addslashes($_SESSION['msg']); ?>',
+            showConfirmButton: true,
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
           });
         });
       </script>
       <?php
-      unset($_SESSION['msg']);
-      unset($_SESSION['msg_type']); // Unset msg_type as well
+      unset($_SESSION['msg'], $_SESSION['msg_type']);
       ?>
     <?php endif; ?>
 
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
-
           <div class="card">
             <div class="card-body table-responsive">
               <h5 class="card-title">Datatables</h5>
@@ -102,40 +111,38 @@ $result = mysqli_query($conn, $query);
               <table class="table datatable">
                 <thead>
                   <tr>
-                    <th>
-                      <b>Subject Code</b>
-                    </th>
+                    <th><b>Subject Code</b></th>
                     <th>Descriptive Title</th>
                     <th>Faculty Name</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+                  <?php while ($row = $result->fetch_assoc()) : ?>
                     <tr>
-                      <td class="text-uppercase"><?php echo $row['code']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['title']; ?></td>
+                      <td class="text-uppercase"><?php echo htmlspecialchars($row['code']); ?></td>
+                      <td class="text-capitalize"><?php echo htmlspecialchars($row['title']); ?></td>
                       <td class="text-capitalize">
-                        <?php echo $row['first_name'] . " " . $row['mid_name'] . " " . $row['last_name']; ?>
+                        <?php echo htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])); ?>
                       </td>
                       <td>
                         <form method="post" class="delete-form" action="deletesubject.php">
-                          <input type="hidden" name="code" value="<?php echo $row['code']; ?>">
+                          <input type="hidden" name="code" value="<?php echo htmlspecialchars($row['code']); ?>">
                           <button type="button" class="btn btn-danger btn-sm delete-btn" data-subject="<?php echo htmlspecialchars($row['title']); ?>">Delete</button>
                         </form>
                       </td>
                     </tr>
-                  <?php } ?>
+                  <?php endwhile; ?>
                 </tbody>
               </table>
+
             </div>
           </div>
-
         </div>
       </div>
     </section>
-
   </main>
+
 
   <?php include 'footer.php' ?>
 

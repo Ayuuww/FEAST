@@ -9,11 +9,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     $mid_name     = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
     $last_name    = mysqli_real_escape_string($conn, trim($_POST['last_name']));
     $password     = trim($_POST['password']); // don't escape before hashing
-    $department   = mysqli_real_escape_string($conn, trim($_POST['department']));
     $position     = mysqli_real_escape_string($conn, trim($_POST['position']));
-    $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank']))
-        ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank']))
-        : null;
+    $is_faculty   = isset($_POST['faculty']) ? $_POST['faculty'] : "No"; // Yes or No
+
+    // Faculty-specific fields
+    if ($is_faculty === "Yes") {
+        $department   = mysqli_real_escape_string($conn, trim($_POST['department']));
+        $faculty_rank = isset($_POST['faculty_rank']) && !empty(trim($_POST['faculty_rank']))
+            ? mysqli_real_escape_string($conn, trim($_POST['faculty_rank']))
+            : null;
+    } else {
+        $department = null;
+        $faculty_rank = null;
+    }
 
     // ✅ Hash the password before storing
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -35,38 +43,47 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 
     // Insert into admin table
     $insert_query = "INSERT INTO admin (
-        idnumber, first_name, mid_name, last_name, password, department, position, faculty_rank
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        idnumber, first_name, mid_name, last_name, password, department, position, faculty_rank, is_faculty
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($insert_query);
-    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $department, $position, $faculty_rank);
+    $stmt->bind_param(
+        "sssssssss",
+        $id,
+        $first_name,
+        $mid_name,
+        $last_name,
+        $hashed_password,
+        $department,
+        $position,
+        $faculty_rank,
+        $is_faculty
+    );
 
     if ($stmt->execute()) {
-        // Check and insert into faculty if not already present
-        $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
-        $faculty_check->bind_param("s", $id);
-        $faculty_check->execute();
-        $faculty_check->store_result();
+        // If faculty, also sync into faculty table
+        if ($is_faculty === "Yes") {
+            $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
+            $faculty_check->bind_param("s", $id);
+            $faculty_check->execute();
+            $faculty_check->store_result();
 
-        if ($faculty_check->num_rows == 0) {
-            $faculty_insert = $conn->prepare("INSERT INTO faculty (
-                idnumber, first_name, mid_name, last_name, department, faculty_rank
-            ) VALUES (?, ?, ?, ?, ?, ?)");
-            $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $department, $faculty_rank);
-            $faculty_insert->execute();
-            $faculty_insert->close();
+            if ($faculty_check->num_rows == 0) {
+                $faculty_insert = $conn->prepare("INSERT INTO faculty (
+                    idnumber, first_name, mid_name, last_name, department, faculty_rank
+                ) VALUES (?, ?, ?, ?, ?, ?)");
+                $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $department, $faculty_rank);
+                $faculty_insert->execute();
+                $faculty_insert->close();
+            }
+            $faculty_check->close();
         }
-        $faculty_check->close();
 
         $_SESSION['msg'] = 'Admin created successfully!';
         $_SESSION['msg_type'] = 'success';
-        header("Location: superadmin-admincreation.php");
-        exit();
     } else {
         $_SESSION['msg'] = 'Failed to create admin.';
         $_SESSION['msg_type'] = 'danger';
-        header("Location: superadmin-admincreation.php");
-        exit();
     }
 
     $stmt->close();
@@ -75,4 +92,3 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 } else {
     echo "<script>alert('Please fill in all required fields.'); window.location.href='superadmin-admincreation.php';</script>";
 }
-?>

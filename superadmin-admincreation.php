@@ -19,11 +19,11 @@ $query = "SELECT * FROM superadmin";
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 
 </head>
 
@@ -78,7 +78,7 @@ $query = "SELECT * FROM superadmin";
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
                     <label for="idnumber" class="form-label">ID Number</label>
-                    <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
+                    <div class="invalid-feedback">Please enter a valid ID number (only numbers and hyphens are allowed)!</div>
                   </div>
                 </div>
 
@@ -106,21 +106,11 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Password -->
+                <!-- Hidden Default Password -->
                 <input type="hidden" name="password" value="ILOVEDMMMSU">
 
-
-                <!-- Confirm Password
-                      <div class="col-md-6">
-                          <div class="form-floating">
-                              <input type="password" name="password" class="form-control" placeholder="Confirm Password" id="conpass" onkeyup='checkpass();' required>
-                              <div class="invalid-feedback" id="mess">Password do not match</div>
-                              <label class="form-label">Confirm Password</label>
-                          </div>
-                      </div> -->
-
                 <!-- Position -->
-                <div class="col-md-4">
+                <div class="col-md-6">
                   <div class="form-floating">
                     <select class="form-select" name="position" required>
                       <option value="" disabled selected>-- Select Position --</option>
@@ -135,10 +125,22 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Department -->
-                <div class="col-md-4">
+                <!-- Is Faculty -->
+                <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="department" required>
+                    <select class="form-select" name="is_faculty" id="is_faculty" required>
+                      <option value="" disabled selected>Is this a Faculty?</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                    <label for="is_faculty">Faculty?</label>
+                  </div>
+                </div>
+
+                <!-- Department (hidden until faculty=yes) -->
+                <div class="col-md-6" id="department_div" style="display:none;">
+                  <div class="form-floating">
+                    <select class="form-select" name="department" id="department">
                       <option value="" disabled selected>Select Department</option>
                       <?php
                       $departments = mysqli_query($conn, "SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
@@ -151,15 +153,15 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Faculty Rank (hidden by default, shown if faculty=yes) -->
-                <div class="col-md-4 " id="">
+                <!-- Faculty Rank (hidden until faculty=yes) -->
+                <div class="col-md-6" id="faculty_rank_div" style="display:none;">
                   <div class="form-floating">
-                    <select class="form-select" name="faculty_rank" id="">
-                      <option value="" selected disabled>-- Select Rank --</option>
+                    <select class="form-select" name="faculty_rank" id="faculty_rank">
+                      <option value="" disabled selected>-- Select Rank --</option>
                       <?php
                       $rank_query = mysqli_query($conn, "SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
                       while ($rank = mysqli_fetch_assoc($rank_query)) {
-                        echo '<option value="' . $rank['rank_name'] . '">' . $rank['rank_name'] . '</option>';
+                        echo '<option value="' . htmlspecialchars($rank['rank_name']) . '">' . htmlspecialchars($rank['rank_name']) . '</option>';
                       }
                       ?>
                     </select>
@@ -169,7 +171,7 @@ $query = "SELECT * FROM superadmin";
 
                 <!-- Submit -->
                 <div class="col-4 offset-4">
-                  <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
+                  <button class="btn btn-success w-100" name="submit" type="submit">Create Account</button>
                 </div>
 
               </form>
@@ -202,21 +204,32 @@ $query = "SELECT * FROM superadmin";
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <!-- <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const facultyDropdown = document.getElementById('faculty');
-        const facultyRankContainer = document.getElementById('facultyRankContainer');
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const facultySelect = document.getElementById('is_faculty');
+      const departmentDiv = document.getElementById('department_div');
+      const departmentSelect = document.getElementById('department');
+      const facultyRankDiv = document.getElementById('faculty_rank_div');
+      const facultyRankSelect = document.getElementById('faculty_rank');
 
-        facultyDropdown.addEventListener('change', function () {
-          if (facultyDropdown.value.toLowerCase() === 'yes') {
-            facultyRankContainer.style.display = 'block';
-          } else {
-            facultyRankContainer.style.display = 'none';
-            document.getElementById('faculty_rank').selectedIndex = 0; // reset selection
-          }
-        });
+      facultySelect.addEventListener('change', function() {
+        if (this.value === 'Yes') {
+          departmentDiv.style.display = 'block';
+          departmentSelect.setAttribute('required', 'required');
+          facultyRankDiv.style.display = 'block';
+          facultyRankSelect.setAttribute('required', 'required');
+        } else {
+          departmentDiv.style.display = 'none';
+          departmentSelect.removeAttribute('required');
+          departmentSelect.selectedIndex = 0;
+
+          facultyRankDiv.style.display = 'none';
+          facultyRankSelect.removeAttribute('required');
+          facultyRankSelect.selectedIndex = 0;
+        }
       });
-    </script> -->
+    });
+  </script>
 
   <?php if (isset($_SESSION['msg'])): ?>
     <script>

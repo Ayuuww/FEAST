@@ -68,11 +68,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $is_faculty = $_POST['is_faculty'] ?? 'no';
 
     $role = 'admin';
-    $insertAdmin = $conn->prepare(" INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty_rank) 
-                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
+    $insertAdmin = $conn->prepare("INSERT INTO admin 
+    (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty_rank, is_faculty) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $insertAdmin->bind_param(
-      "ssssssssss",
+      "sssssssssss",
       $faculty['idnumber'],
       $faculty['first_name'],
       $faculty['mid_name'],
@@ -82,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $new_status,
       $faculty['department'],
       $position,
+      $faculty['faculty_rank'], // from faculty table
       $is_faculty
     );
 
@@ -108,7 +109,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssss", $new_status, $new_role, $faculty_rank, $faculty_id);
     $stmt->execute();
 
+    // ✅ Also sync to admin table if this faculty is also an admin
+    $checkAdmin = $conn->prepare("SELECT idnumber FROM admin WHERE idnumber = ?");
+    $checkAdmin->bind_param("s", $faculty_id);
+    $checkAdmin->execute();
+    $adminResult = $checkAdmin->get_result();
+
+    if ($adminResult->num_rows > 0) {
+      $updateAdmin = $conn->prepare("UPDATE admin SET status = ?, faculty_rank = ? WHERE idnumber = ?");
+      $updateAdmin->bind_param("sss", $new_status, $faculty_rank, $faculty_id);
+      $updateAdmin->execute();
+    }
+
     $success = "Faculty updated successfully!";
+
 
     // Re-fetch updated faculty data
     $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");

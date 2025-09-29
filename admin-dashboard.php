@@ -1,5 +1,9 @@
 <?php
 session_start();
+if (isset($_SESSION['access_denied'])) {
+  $access_denied = $_SESSION['access_denied'];
+  unset($_SESSION['access_denied']);
+}
 include 'conn/conn.php'; // DB connection
 
 // Check if the user is logged in and is an admin
@@ -66,6 +70,47 @@ $admin_eval_count = $result->fetch_assoc()['total'] ?? 0;
 // Combine both
 $total_evaluations = $student_eval_count + $admin_eval_count;
 
+/// Student evaluations trend (uses created_at)
+$eval_trend_query = "
+  SELECT DATE_FORMAT(e.created_at, '%Y-%m') AS eval_month, COUNT(*) AS total
+  FROM evaluation e
+  JOIN faculty f ON e.faculty_id = f.idnumber
+  WHERE f.department = ?
+  GROUP BY eval_month
+  ORDER BY eval_month ASC
+";
+$stmt = $conn->prepare($eval_trend_query);
+$stmt->bind_param("s", $department);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$months = [];
+$eval_counts = [];
+while ($row = $result->fetch_assoc()) {
+  $months[] = $row['eval_month'] . "-01";
+  $eval_counts[] = (int)$row['total'];
+}
+
+// Admin evaluations trend (uses evaluation_date instead of created_at!)
+$admin_eval_trend_query = "
+  SELECT DATE_FORMAT(ae.evaluation_date, '%Y-%m') AS eval_month, COUNT(*) AS total
+  FROM admin_evaluation ae
+  JOIN faculty f ON ae.evaluatee_id = f.idnumber
+  WHERE f.department = ?
+  GROUP BY eval_month
+  ORDER BY eval_month ASC
+";
+$stmt = $conn->prepare($admin_eval_trend_query);
+$stmt->bind_param("s", $department);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$admin_months = [];
+$admin_eval_counts = [];
+while ($row = $result->fetch_assoc()) {
+  $admin_months[] = $row['eval_month'] . "-01";
+  $admin_eval_counts[] = (int)$row['total'];
+}
 ?>
 
 
@@ -159,324 +204,17 @@ $total_evaluations = $student_eval_count + $admin_eval_count;
           </div>
         </div><!-- End Total Evaluation Card -->
 
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Evaluation Trends <span>| Monthly</span></h5>
+              <div id="evalTrendChart"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="row">
-        <!-- Student Evaluation Ratings by Faculty (Same Department) -->
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><strong>Faculty Evaluation Ratings</strong> (Student Evaluation)</h5>
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="studentEvalYear" class="form-select">
-                      <option value="All">All</option>
-                      <?php
-                      $years = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
-                      while ($y = mysqli_fetch_assoc($years)) {
-                        echo '<option value="' . $y['academic_year'] . '">' . $y['academic_year'] . '</option>';
-                      }
-                      ?>
-                    </select>
-                    <label>Academic Year</label>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="studentEvalSem" class="form-select">
-                      <option value="All">All</option>
-                      <option value="1st Semester">1st Semester</option>
-                      <option value="2nd Semester">2nd Semester</option>
-                      <option value="Summer">Summer</option>
-                    </select>
-                    <label>Semester</label>
-                  </div>
-                </div>
-              </div>
-
-              <div id="studentEvalChart" style="min-height: 400px;" class="echart"></div>
-            </div>
-          </div>
-        </div>
-
-        <script>
-          function loadStudentEvalChart(year = 'All', semester = 'All') {
-            fetch(`fetch-student-eval-by-dept.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
-              .then(res => res.json())
-              .then(data => {
-                const chart = echarts.init(document.querySelector("#studentEvalChart"));
-                chart.setOption({
-                  title: {
-                    text: 'Student Evaluation Scores by Faculty',
-                    left: 'center'
-                  },
-                  tooltip: {
-                    trigger: 'item',
-                    formatter: function(params) {
-                      return `<strong>${params.data.name}</strong><br>Avg Rating: ${params.data.value}%`;
-                    }
-                  },
-                  grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                  },
-                  xAxis: {
-                    type: 'value',
-                    name: 'Avg Rating (%)',
-                    min: 0,
-                    max: 100
-                  },
-                  yAxis: {
-                    type: 'category',
-                    data: data.names,
-                    inverse: true
-                  },
-                  series: [{
-                    name: 'Rating',
-                    type: 'bar',
-                    data: data.ratings,
-                    itemStyle: {
-                      color: '#1976D2'
-                    }
-                  }],
-                  animationDuration: 1000,
-                  animationEasing: 'cubicOut'
-                });
-              });
-          }
-
-          document.addEventListener("DOMContentLoaded", () => {
-            const yearSel = document.getElementById("studentEvalYear");
-            const semSel = document.getElementById("studentEvalSem");
-
-            function reloadChart() {
-              loadStudentEvalChart(yearSel.value, semSel.value);
-            }
-
-            yearSel.addEventListener("change", reloadChart);
-            semSel.addEventListener("change", reloadChart);
-
-            loadStudentEvalChart(); // Initial load
-          });
-        </script>
-        <!-- End of cahrt -->
-
-        <!-- Supervisor Evaluation Ratings by Faculty (Same Department) -->
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><strong>Faculty Evaluation Ratings</strong> (Supervisor Evaluation)</h5>
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="supervisorEvalYear" class="form-select">
-                      <option value="All">All</option>
-                      <?php
-                      $years = mysqli_query($conn, "SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
-                      while ($y = mysqli_fetch_assoc($years)) {
-                        echo '<option value="' . $y['academic_year'] . '">' . $y['academic_year'] . '</option>';
-                      }
-                      ?>
-                    </select>
-                    <label>Academic Year</label>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="supervisorEvalSem" class="form-select">
-                      <option value="All">All</option>
-                      <option value="1st Semester">1st Semester</option>
-                      <option value="2nd Semester">2nd Semester</option>
-                      <option value="Summer">Summer</option>
-                    </select>
-                    <label>Semester</label>
-                  </div>
-                </div>
-              </div>
-
-              <div id="supervisorEvalChart" style="min-height: 400px;" class="echart"></div>
-            </div>
-          </div>
-        </div>
-        <script>
-          function loadSupervisorEvalChart(year = 'All', semester = 'All') {
-            fetch(`fetch-supervisor-eval-by-dept.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
-              .then(res => res.json())
-              .then(data => {
-                const chart = echarts.init(document.querySelector("#supervisorEvalChart"));
-                chart.setOption({
-                  title: {
-                    text: 'Supervisor Evaluation Scores by Faculty',
-                    left: 'center'
-                  },
-                  tooltip: {
-                    trigger: 'item',
-                    formatter: function(params) {
-                      return `<strong>${params.data.name}</strong><br>Avg Rating: ${params.data.value}%`;
-                    }
-                  },
-                  grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                  },
-                  xAxis: {
-                    type: 'value',
-                    name: 'Avg Rating (%)',
-                    min: 0,
-                    max: 100
-                  },
-                  yAxis: {
-                    type: 'category',
-                    data: data.names,
-                    inverse: true
-                  },
-                  series: [{
-                    name: 'Rating',
-                    type: 'bar',
-                    data: data.ratings,
-                    itemStyle: {
-                      color: '#E91E63'
-                    }
-                  }],
-                  animationDuration: 1000,
-                  animationEasing: 'cubicOut'
-                });
-              });
-          }
-
-          document.addEventListener("DOMContentLoaded", () => {
-            const yearSel = document.getElementById("supervisorEvalYear");
-            const semSel = document.getElementById("supervisorEvalSem");
-
-            function reloadChart() {
-              loadSupervisorEvalChart(yearSel.value, semSel.value);
-            }
-
-            yearSel.addEventListener("change", reloadChart);
-            semSel.addEventListener("change", reloadChart);
-
-            loadSupervisorEvalChart(); // Default load
-          });
-        </script>
-        <!-- End of Chart -->
-
-        <!-- Overall Evaluation Ratings by Faculty (Same Department) -->
-        <div class="col-lg-4">
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title"><strong>Faculty Evaluation Ratings</strong> (Overall - Student and Supervisor)</h5>
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="overallEvalYear" class="form-select">
-                      <option value="All">All</option>
-                      <?php
-                      $years = mysqli_query($conn, "SELECT DISTINCT academic_year FROM (
-                          SELECT academic_year FROM evaluation
-                          UNION
-                          SELECT academic_year FROM admin_evaluation
-                        ) AS all_years ORDER BY academic_year DESC");
-                      while ($y = mysqli_fetch_assoc($years)) {
-                        echo '<option value="' . $y['academic_year'] . '">' . $y['academic_year'] . '</option>';
-                      }
-                      ?>
-                    </select>
-                    <label>Academic Year</label>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select id="overallEvalSem" class="form-select">
-                      <option value="All">All</option>
-                      <option value="1st Semester">1st Semester</option>
-                      <option value="2nd Semester">2nd Semester</option>
-                      <option value="Summer">Summer</option>
-                    </select>
-                    <label>Semester</label>
-                  </div>
-                </div>
-              </div>
-
-              <div id="overallEvalChart" style="min-height: 400px;" class="echart"></div>
-            </div>
-          </div>
-        </div>
-        <script>
-          function loadOverallEvalChart(year = 'All', semester = 'All') {
-            fetch(`fetch-overall-eval-by-dept.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
-              .then(res => res.json())
-              .then(data => {
-                const chart = echarts.init(document.querySelector("#overallEvalChart"));
-                chart.setOption({
-                  title: {
-                    text: 'Combined Evaluation Scores by Faculty',
-                    left: 'center'
-                  },
-                  tooltip: {
-                    trigger: 'item',
-                    formatter: function(params) {
-                      return `<strong>${params.data.name}</strong><br>Avg Rating: ${params.data.value}%`;
-                    }
-                  },
-                  grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '3%',
-                    containLabel: true
-                  },
-                  xAxis: {
-                    type: 'value',
-                    name: 'Avg Rating (%)',
-                    min: 0,
-                    max: 100
-                  },
-                  yAxis: {
-                    type: 'category',
-                    data: data.names,
-                    inverse: true
-                  },
-                  series: [{
-                    name: 'Rating',
-                    type: 'bar',
-                    data: data.ratings,
-                    itemStyle: {
-                      color: '#9C27B0'
-                    }
-                  }],
-                  animationDuration: 1000,
-                  animationEasing: 'cubicOut'
-                });
-              });
-          }
-
-          document.addEventListener("DOMContentLoaded", () => {
-            const yearSel = document.getElementById("overallEvalYear");
-            const semSel = document.getElementById("overallEvalSem");
-
-            function reloadChart() {
-              loadOverallEvalChart(yearSel.value, semSel.value);
-            }
-
-            yearSel.addEventListener("change", reloadChart);
-            semSel.addEventListener("change", reloadChart);
-
-            loadOverallEvalChart(); // Initial load
-          });
-        </script>
-
-
-      </div>
     </section>
 
   </main><!-- End #main -->
@@ -500,6 +238,74 @@ $total_evaluations = $student_eval_count + $admin_eval_count;
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <?php if (isset($access_denied)): ?>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Denied',
+          text: <?= json_encode($access_denied) ?>,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33',
+          footer: 'Need help? Contact Superadmin'
+        }).then(() => {
+          window.location.href = "admin-dashboard.php"; // ✅ redirect stays on dashboard
+        });
+      });
+    </script>
+  <?php endif; ?>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      new ApexCharts(document.querySelector("#evalTrendChart"), {
+        series: [{
+          name: 'Student Evaluations',
+          data: <?= json_encode($eval_counts) ?>
+        }, {
+          name: 'Admin Evaluations',
+          data: <?= json_encode($admin_eval_counts) ?>
+        }],
+        chart: {
+          height: 350,
+          type: 'line',
+          toolbar: {
+            show: false
+          }
+        },
+        markers: {
+          size: 4
+        },
+        colors: ['#4154f1', '#ff771d'], // blue for students, orange for admins
+        fill: {
+          type: "gradient",
+          gradient: {
+            shadeIntensity: 1,
+            opacityFrom: 0.3,
+            opacityTo: 0.4,
+            stops: [0, 90, 100]
+          }
+        },
+        dataLabels: {
+          enabled: true
+        },
+        stroke: {
+          curve: 'smooth',
+          width: 2
+        },
+        xaxis: {
+          type: 'datetime',
+          categories: <?= json_encode($months) ?>
+        },
+        tooltip: {
+          x: {
+            format: 'MMM yyyy'
+          }
+        }
+      }).render();
+    });
+  </script>
+
 
 </body>
 

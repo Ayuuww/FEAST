@@ -1,9 +1,8 @@
 <?php
-
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a superadmin
+// Check if the user is logged in and is an admin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
@@ -11,13 +10,23 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get the admin's department
-$dept_query = mysqli_query($conn, "SELECT department FROM admin WHERE idnumber = '$admin_id' LIMIT 1");
-$admin_dept = '';
+// ✅ Get the admin's department + position
+$admin_info_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+$admin_info_stmt->bind_param("s", $admin_id);
+$admin_info_stmt->execute();
+$admin_result = $admin_info_stmt->get_result();
+$admin_data = $admin_result->fetch_assoc();
+$admin_info_stmt->close();
 
-if ($dept_query && mysqli_num_rows($dept_query) > 0) {
-  $admin_data = mysqli_fetch_assoc($dept_query);
-  $admin_dept = $admin_data['department'];
+$admin_dept = $admin_data['department'] ?? '';
+$admin_position = $admin_data['position'] ?? '';
+
+// ✅ Restrict allowed positions
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+if (!in_array($admin_position, $allowed_positions)) {
+  $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to add subjects.";
+  header("Location: admin-dashboard.php");
+  exit();
 }
 
 // Get real faculty in same department
@@ -25,7 +34,7 @@ $faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, la
                                        FROM faculty 
                                        WHERE status = 'active' AND department = '$admin_dept'");
 
-// Get admin-as-faculty in same department (excluding self if needed)
+// Get admin-as-faculty in same department (optional, if needed)
 $admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
                                      FROM admin 
                                      WHERE department = '$admin_dept'");
@@ -42,17 +51,15 @@ $admin_data = [];
 while ($row = mysqli_fetch_assoc($admin_result)) {
   $admin_data[] = $row;
 }
-
-
-
 ?>
+
 
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -232,6 +239,19 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
       }
     }, 5000); // 5 seconds
   </script>
+
+  <?php if (isset($_SESSION['msg'])): ?>
+    <script>
+      Swal.fire({
+        icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
+        title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
+        text: <?= json_encode($_SESSION['msg']) ?>,
+        confirmButtonColor: '#3085d6'
+      });
+    </script>
+    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+  <?php endif; ?>
+
 
 </body>
 

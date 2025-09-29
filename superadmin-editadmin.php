@@ -44,17 +44,61 @@ while ($row = $rank_result->fetch_assoc()) {
 }
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $new_status = $_POST['status'];
+  $new_status   = $_POST['status'];
   $new_position = $_POST['position'];
-  $new_rank = $_POST['faculty_rank'];
+  $new_rank     = $_POST['faculty_rank'];
+  $is_faculty   = $_POST['is_faculty'];
 
-  $stmt = $conn->prepare("UPDATE admin SET status = ?, position = ?, faculty_rank = ? WHERE idnumber = ?");
-  $stmt->bind_param("ssss", $new_status, $new_position, $new_rank, $admin_id);
+  // ✅ Update admin table
+  $stmt = $conn->prepare("UPDATE admin 
+                          SET status = ?, position = ?, faculty_rank = ?, is_faculty = ? 
+                          WHERE idnumber = ?");
+  $stmt->bind_param("sssss", $new_status, $new_position, $new_rank, $is_faculty, $admin_id);
   $stmt->execute();
+
+  if ($is_faculty === 'yes') {
+    // ✅ Ensure this admin also exists in faculty table
+    $checkFaculty = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
+    $checkFaculty->bind_param("s", $admin_id);
+    $checkFaculty->execute();
+    $facultyResult = $checkFaculty->get_result();
+
+    if ($facultyResult->num_rows > 0) {
+      // 🔄 Update faculty info
+      $updateFaculty = $conn->prepare("UPDATE faculty 
+                                       SET status = ?, faculty_rank = ?, department = ? 
+                                       WHERE idnumber = ?");
+      $updateFaculty->bind_param("ssss", $new_status, $new_rank, $admin['department'], $admin_id);
+      $updateFaculty->execute();
+    } else {
+      // ➕ Insert into faculty if not exists
+      $insertFaculty = $conn->prepare("INSERT INTO faculty 
+        (idnumber, first_name, mid_name, last_name, department, status, faculty_rank) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)");
+      $insertFaculty->bind_param(
+        "sssssss",
+        $admin['idnumber'],
+        $admin['first_name'],
+        $admin['mid_name'],
+        $admin['last_name'],
+        $admin['department'],
+        $new_status,
+        $new_rank
+      );
+      $insertFaculty->execute();
+    }
+  } else {
+    // ❌ If marked as non-faculty → optional: deactivate instead of delete
+    $removeFaculty = $conn->prepare("UPDATE faculty SET status = 'inactive' WHERE idnumber = ?");
+    $removeFaculty->bind_param("s", $admin_id);
+    $removeFaculty->execute();
+  }
 
   header("Location: superadmin-editadmin.php?id=$admin_id&update=success");
   exit();
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -127,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
 
                   <div class="row">
-                    
+
                     <!-- Status -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
@@ -153,6 +197,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="form-label">Position</label>
                       </div>
                     </div>
+
+                    <!-- Is Faculty? -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="is_faculty" class="form-select" required>
+                          <option value="yes" <?php if ($admin['is_faculty'] === 'yes') echo 'selected'; ?>>Yes</option>
+                          <option value="no" <?php if ($admin['is_faculty'] === 'no') echo 'selected'; ?>>No</option>
+                        </select>
+                        <label class="form-label">Is Faculty?</label>
+                      </div>
+                    </div>
+
 
                     <!-- Current Rank -->
                     <div class="col-md-6 mb-3">
@@ -180,10 +236,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       </div>
                     </div>
 
-                    
+
                   </div>
 
-                  <button type="submit" class="btn btn-success">Update  Status</button>
+                  <button type="submit" class="btn btn-success">Update Status</button>
                   <a href="superadmin-adminlist.php" class="btn btn-secondary">Back</a>
 
                 </form>

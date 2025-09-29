@@ -1,41 +1,76 @@
 <?php
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php'; // DB connection
 
-// Check if the user is logged in and is a student
+// Check if the user is logged in and is an admin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Fetching the faculty subjects evaluated
 $admin_id = $_SESSION['idnumber'];
 
-// Fetch subject evaluations with comments
-$query = "SELECT 
-            e.subject_code,
-            s.title AS subject_title,
-            e.academic_year,
-            e.semester,
-            AVG(e.total_score) AS avg_score,
-            AVG(e.computed_rating) AS avg_rating,
-            GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
-          FROM evaluation e
-          JOIN subject s ON e.subject_code = s.code
-          WHERE e.faculty_id = ?
-            AND e.comment IS NOT NULL AND e.comment != ''
-          GROUP BY e.subject_code, s.title, e.academic_year, e.semester
-          ORDER BY e.academic_year DESC, e.semester DESC";
+// ✅ Get the active academic year and semester from evaluation_settings
+$periodQuery = "SELECT academic_year, semester 
+                FROM evaluation_settings 
+                ORDER BY updated_at DESC LIMIT 1";
+$periodResult = $conn->query($periodQuery);
+$active = $periodResult->fetch_assoc();
+$current_year = $active['academic_year'];
+$current_sem = $active['semester'];
 
+// ✅ Selected filters (defaults to active period)
+$selected_year = isset($_GET['year']) ? $_GET['year'] : $current_year;
+$selected_sem  = isset($_GET['sem']) ? $_GET['sem'] : $current_sem;
+
+// ✅ Fetch distinct academic years & semesters for dropdowns
+$years = $conn->query("SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+$sems  = $conn->query("SELECT DISTINCT semester FROM evaluation ORDER BY semester DESC");
+
+// ✅ Fetch evaluated subjects for selected period
+// ✅ Fetch all subjects handled by the faculty, with evaluation stats if available
+$query = "
+  SELECT 
+    ss.subject_code,
+    subj.subject_title,
+    ss.academic_year,
+    ss.semester,
+    COUNT(DISTINCT e.id) AS evaluated_count,
+    COUNT(DISTINCT ss.student_id) AS enrolled_count,
+    AVG(e.total_score) AS avg_score,
+    AVG(e.computed_rating) AS avg_rating,
+    GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
+  FROM student_subject ss
+  JOIN (
+      SELECT subject_code, subject_title 
+      FROM evaluation
+      GROUP BY subject_code, subject_title
+  ) subj ON subj.subject_code = ss.subject_code
+  LEFT JOIN evaluation e 
+    ON e.subject_code = ss.subject_code
+   AND e.academic_year = ss.academic_year
+   AND e.semester = ss.semester
+   AND e.faculty_id = ss.faculty_id
+  WHERE ss.faculty_id = ?
+    AND ss.academic_year = ?
+    AND ss.semester = ?
+  GROUP BY ss.subject_code, subj.subject_title, ss.academic_year, ss.semester
+  ORDER BY ss.academic_year DESC, ss.semester DESC
+";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("s", $admin_id);
+$stmt->bind_param("sss", $admin_id, $selected_year, $selected_sem);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Count evaluations per subject
-$countQuery = "SELECT subject_code, COUNT(*) as total FROM evaluation WHERE faculty_id = ? GROUP BY subject_code";
+// ✅ Count evaluations per subject
+$countQuery = "SELECT subject_code, COUNT(*) as total 
+               FROM evaluation 
+               WHERE faculty_id = ? 
+                 AND academic_year = ? 
+                 AND semester = ?
+               GROUP BY subject_code";
 $countStmt = $conn->prepare($countQuery);
-$countStmt->bind_param("s", $admin_id);
+$countStmt->bind_param("sss", $admin_id, $selected_year, $selected_sem);
 $countStmt->execute();
 $countResult = $countStmt->get_result();
 
@@ -44,15 +79,29 @@ while ($row = $countResult->fetch_assoc()) {
   $subjectCounts[$row['subject_code']] = $row['total'];
 }
 
+// ✅ Count enrolled students per subject
+$enrolledQuery = "SELECT subject_code, COUNT(*) as total 
+                  FROM student_subject 
+                  WHERE faculty_id = ? 
+                    AND academic_year = ? 
+                    AND semester = ?
+                  GROUP BY subject_code";
+$enrolledStmt = $conn->prepare($enrolledQuery);
+$enrolledStmt->bind_param("sss", $admin_id, $selected_year, $selected_sem);
+$enrolledStmt->execute();
+$enrolledResult = $enrolledStmt->get_result();
 
-
+$enrolledCounts = [];
+while ($row = $enrolledResult->fetch_assoc()) {
+  $enrolledCounts[$row['subject_code']] = $row['total'];
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-   
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -69,24 +118,50 @@ while ($row = $countResult->fetch_assoc()) {
   <!-- End Sidebar-->
 
   <main id="main" class="main">
-
     <div class="pagetitle">
       <h1>Subjects</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item active">Subject</li>
+          <li class="breadcrumb-item active">Subjects</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
     <section class="section dashboard">
       <div class="row">
-
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Evaluated Subjects You Handle</h5>
 
+            <!-- Filter Form -->
+            <form method="get" class="row g-3 mb-3">
+              <div class="col-md-4">
+                <label for="year" class="form-label">Academic Year</label>
+                <select class="form-select" name="year" id="year">
+                  <?php while ($y = $years->fetch_assoc()): ?>
+                    <option value="<?= $y['academic_year'] ?>" <?= $selected_year == $y['academic_year'] ? 'selected' : '' ?>>
+                      <?= $y['academic_year'] ?>
+                    </option>
+                  <?php endwhile; ?>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="sem" class="form-label">Semester</label>
+                <select class="form-select" name="sem" id="sem">
+                  <?php while ($s = $sems->fetch_assoc()): ?>
+                    <option value="<?= $s['semester'] ?>" <?= $selected_sem == $s['semester'] ? 'selected' : '' ?>>
+                      <?= $s['semester'] ?>
+                    </option>
+                  <?php endwhile; ?>
+                </select>
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">Filter</button>
+              </div>
+            </form>
+
+            <!-- Table -->
             <div class="table-responsive">
               <table class="table table-bordered table-striped datatable">
                 <thead>
@@ -101,7 +176,6 @@ while ($row = $countResult->fetch_assoc()) {
                     <th>Total Evaluations</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   <?php if ($result->num_rows > 0): ?>
                     <?php $index = 0; ?>
@@ -117,16 +191,15 @@ while ($row = $countResult->fetch_assoc()) {
                         <td><?= number_format($row['avg_rating'], 2) ?>%</td>
                         <td>
                           <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#<?= $modalId ?>">
-                           <i class="bi bi-chat-dots"></i> View
+                            <i class="bi bi-chat-dots"></i> View
                           </button>
-
                           <!-- Modal -->
-                          <div class="modal fade" id="<?= $modalId ?>" tabindex="-1" aria-labelledby="<?= $modalId ?>Label" aria-hidden="true">
+                          <div class="modal fade" id="<?= $modalId ?>" tabindex="-1" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-scrollable">
                               <div class="modal-content">
                                 <div class="modal-header">
-                                  <h5 class="modal-title" id="<?= $modalId ?>Label">Comments for <?= htmlspecialchars($row['subject_title']) ?></h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                  <h5 class="modal-title">Comments for <?= htmlspecialchars($row['subject_title']) ?></h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
                                   <?php
@@ -152,25 +225,28 @@ while ($row = $countResult->fetch_assoc()) {
                         </td>
                         <td><?= htmlspecialchars($row['semester']) ?></td>
                         <td><?= htmlspecialchars($row['academic_year']) ?></td>
-                        <td><?= $subjectCounts[$row['subject_code']] ?? 'N/A' ?></td>
+                        <td>
+                          <?php
+                          $evaluated = $row['evaluated_count'] ?? 0;
+                          $enrolled  = $row['enrolled_count'] ?? 0;
+                          echo "$evaluated / $enrolled";
+                          ?>
+                        </td>
                       </tr>
                       <?php $index++; ?>
                     <?php endwhile; ?>
                   <?php else: ?>
                     <tr>
-                      <td colspan="8" class="text-center">No evaluations have been submitted for your subjects yet.</td>
+                      <td colspan="8" class="text-center">No evaluations found for this semester/year.</td>
                     </tr>
                   <?php endif; ?>
                 </tbody>
-
               </table>
             </div>
           </div>
         </div>
-
       </div>
     </section>
-
   </main><!-- End #main -->
 
   <!-- ======= Footer ======= -->

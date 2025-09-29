@@ -2,9 +2,34 @@
 session_start();
 include 'conn/conn.php';
 
-// Fetch the current academic year and semester from evaluation_settings
-// This assumes your evaluation_settings table holds the SINGLE current active period.
-// If you have multiple entries, adjust the ORDER BY and LIMIT to get the correct 'current' one.
+// ✅ Check if the user is logged in and is an admin
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+  header("Location: pages-login.php");
+  exit();
+}
+
+$admin_id = $_SESSION['idnumber'];
+
+// ✅ Get admin’s department + position
+$dept_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+$dept_stmt->bind_param("s", $admin_id);
+$dept_stmt->execute();
+$dept_res = $dept_stmt->get_result();
+$admin_data = $dept_res->fetch_assoc() ?? [];
+$dept_stmt->close();
+
+$admin_dept = $admin_data['department'] ?? '';
+$admin_position = $admin_data['position'] ?? '';
+
+// ✅ Restrict allowed positions
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+if (!in_array($admin_position, $allowed_positions)) {
+  $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to assign student subjects.";
+  header("Location: admin-dashboard.php");
+  exit();
+}
+
+// ✅ Continue with fetching current academic year/semester
 $current_period_query = "SELECT academic_year, semester FROM evaluation_settings ORDER BY updated_at DESC LIMIT 1";
 $current_period_result = mysqli_query($conn, $current_period_query);
 
