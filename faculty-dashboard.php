@@ -65,7 +65,7 @@ while ($row = $sectionResult->fetch_assoc()) {
 <html lang="en">
 
 <head>
-    
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
@@ -171,98 +171,69 @@ while ($row = $sectionResult->fetch_assoc()) {
         </div>
       </div>
 
-      <!-- Top Rated Subject -->
+      <!-- Faculty Evaluation Progress -->
       <div class="row mt-4">
-        <div class="col-lg-6">
+        <div class="col-lg-12">
           <div class="card shadow">
             <div class="card-body">
-              <h5 class="card-title">Top Rated Subjects (Handled by You)</h5>
-              <canvas id="ratedSubjectsChart" style="height: 400px;"></canvas>
+              <h5 class="card-title">Your Evaluation Progress (Per Subject)</h5>
+              <canvas id="facultyProgressChart" style="height: 400px;"></canvas>
               <script>
                 document.addEventListener("DOMContentLoaded", () => {
-                  const ctx = document.getElementById("ratedSubjectsChart").getContext("2d");
+                  fetch("fetch-faculty-progress.php")
+                    .then(response => response.json())
+                    .then(chartData => {
+                      const ctx = document.getElementById("facultyProgressChart").getContext("2d");
+                      new Chart(ctx, {
+                        type: "bar",
+                        data: chartData,
+                        options: {
+                          responsive: true,
+                          plugins: {
+                            legend: {
+                              position: "top"
+                            },
+                            tooltip: {
+                              callbacks: {
+                                label: function(context) {
+                                  let value = context.raw;
+                                  let datasetLabel = context.dataset.label;
+                                  let idx = context.dataIndex;
+                                  let done = chartData.meta.done[idx];
+                                  let total = chartData.meta.total[idx];
 
-                  new Chart(ctx, {
-                    type: "bar",
-                    data: {
-                      labels: <?= json_encode($chartLabels) ?>,
-                      datasets: [{
-                        label: 'Average Rating (%)',
-                        data: <?= json_encode($chartValues) ?>,
-                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                      }]
-                    },
-                    ticks: {
-                      beginAtZero: true,
-                      callback: function(value) {
-                        return value + "%";
-                      }
-                    },
-                    options: {
-                      responsive: true,
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            precision: 0
+                                  if (datasetLabel.includes("Completed")) {
+                                    return `${datasetLabel}: ${value}% (${done}/${total} students)`;
+                                  } else {
+                                    return `${datasetLabel}: ${value}% (${total - done}/${total} students)`;
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          scales: {
+                            x: {
+                              stacked: true
+                            },
+                            y: {
+                              stacked: true,
+                              beginAtZero: true,
+                              max: 100,
+                              title: {
+                                display: true,
+                                text: "Evaluation Progress (%)"
+                              }
+                            }
                           }
                         }
-                      }
-                    }
-                  });
+                      });
+                    })
+                    .catch(err => console.error("Error loading faculty progress:", err));
                 });
-              </script><!-- end of chart -->
+              </script>
             </div>
           </div>
         </div>
-
-        <!-- Top Rated by Section -->
-        <div class="col-lg-6 mt-4 mt-lg-0">
-          <div class="card shadow">
-            <div class="card-body">
-              <h5 class="card-title">Top Rated by Section (Your Subjects)</h5>
-              <canvas id="ratedSectionChart" style="height: 400px;"></canvas>
-            </div>
-          </div>
-        </div>
-        <script>
-          document.addEventListener("DOMContentLoaded", () => {
-            const sectionCtx = document.getElementById("ratedSectionChart").getContext("2d");
-
-            new Chart(sectionCtx, {
-              type: "bar",
-              data: {
-                labels: <?= json_encode($sectionLabels) ?>,
-                datasets: [{
-                  label: 'Average Rating (%)',
-                  data: <?= json_encode($sectionValues) ?>,
-                  backgroundColor: 'rgba(255, 159, 64, 0.7)',
-                  borderColor: 'rgba(255, 159, 64, 1)',
-                  borderWidth: 1
-                }]
-              },
-              ticks: {
-                beginAtZero: true,
-                callback: function(value) {
-                  return value + "%";
-                }
-              },
-              options: {
-                responsive: true,
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      precision: 0
-                    }
-                  }
-                }
-              }
-            });
-          });
-        </script>
       </div>
 
     </section>

@@ -72,12 +72,11 @@ $total_evaluations = $student_eval_count + $admin_eval_count;
 
 /// Student evaluations trend (uses created_at)
 $eval_trend_query = "
-  SELECT DATE_FORMAT(e.created_at, '%Y-%m') AS eval_month, COUNT(*) AS total
-  FROM evaluation e
-  JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department = ?
-  GROUP BY eval_month
-  ORDER BY eval_month ASC
+  SELECT e.created_at AS eval_time
+FROM evaluation e
+JOIN faculty f ON e.faculty_id = f.idnumber
+WHERE f.department = ?
+ORDER BY e.created_at ASC
 ";
 $stmt = $conn->prepare($eval_trend_query);
 $stmt->bind_param("s", $department);
@@ -86,19 +85,20 @@ $result = $stmt->get_result();
 
 $months = [];
 $eval_counts = [];
+$count = 0;
 while ($row = $result->fetch_assoc()) {
-  $months[] = $row['eval_month'] . "-01";
-  $eval_counts[] = (int)$row['total'];
+  $count++;
+  $months[] = $row['eval_time'];   // exact timestamp
+  $eval_counts[] = $count;         // cumulative count
 }
 
 // Admin evaluations trend (uses evaluation_date instead of created_at!)
 $admin_eval_trend_query = "
-  SELECT DATE_FORMAT(ae.evaluation_date, '%Y-%m') AS eval_month, COUNT(*) AS total
-  FROM admin_evaluation ae
-  JOIN faculty f ON ae.evaluatee_id = f.idnumber
-  WHERE f.department = ?
-  GROUP BY eval_month
-  ORDER BY eval_month ASC
+  SELECT ae.evaluation_date AS eval_time
+FROM admin_evaluation ae
+JOIN faculty f ON ae.evaluatee_id = f.idnumber
+WHERE f.department = ?
+ORDER BY ae.evaluation_date ASC
 ";
 $stmt = $conn->prepare($admin_eval_trend_query);
 $stmt->bind_param("s", $department);
@@ -107,9 +107,11 @@ $result = $stmt->get_result();
 
 $admin_months = [];
 $admin_eval_counts = [];
+$admin_count = 0;
 while ($row = $result->fetch_assoc()) {
-  $admin_months[] = $row['eval_month'] . "-01";
-  $admin_eval_counts[] = (int)$row['total'];
+  $admin_count++;
+  $admin_months[] = $row['eval_time'];  // exact timestamp
+  $admin_eval_counts[] = $admin_count;  // cumulative count
 }
 ?>
 
@@ -204,6 +206,7 @@ while ($row = $result->fetch_assoc()) {
           </div>
         </div><!-- End Total Evaluation Card -->
 
+        <!-- Evaluation Trends Chart -->
         <div class="col-12">
           <div class="card">
             <div class="card-body">
@@ -212,6 +215,206 @@ while ($row = $result->fetch_assoc()) {
             </div>
           </div>
         </div>
+
+        <!-- Admin Progress Chart -->
+        <div class="col-12">
+          <div class="card">
+            <!-- Filter -->
+            <div class="filter">
+              <a class="icon" href="#" data-bs-toggle="dropdown">
+                <i class="bi bi-three-dots"></i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height: 400px; overflow-y: auto;">
+
+                <!-- Academic Year filter -->
+                <li class="dropdown-header">Academic Year</li>
+                <li><a class="dropdown-item progress-year-filter active" href="#" data-year="All">All</a></li>
+                <?php
+                $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+                while ($row = mysqli_fetch_assoc($year_result)): ?>
+                  <li><a class="dropdown-item progress-year-filter" href="#" data-year="<?= $row['academic_year'] ?>"><?= $row['academic_year'] ?></a></li>
+                <?php endwhile; ?>
+
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+
+                <!-- Semester filter -->
+                <li class="dropdown-header">Semester</li>
+                <li><a class="dropdown-item progress-semester-filter active" href="#" data-semester="All">All</a></li>
+                <?php
+                $sem_result = mysqli_query($conn, "SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
+                while ($row = mysqli_fetch_assoc($sem_result)): ?>
+                  <li><a class="dropdown-item progress-semester-filter" href="#" data-semester="<?= $row['semester'] ?>"><?= $row['semester'] ?></a></li>
+                <?php endwhile; ?>
+              </ul>
+            </div>
+
+            <div class="card-body">
+              <h5 class="card-title">
+                Evaluation Progress <span id="progressLabel">| All Years | All Semesters</span>
+              </h5>
+              <canvas id="adminProgressChart" style="max-height: 400px;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          let progressYear = 'All';
+          let progressSemester = 'All';
+          let adminProgressChart = null;
+
+          function fetchProgressData(year = 'All', semester = 'All') {
+            document.getElementById("progressLabel").textContent =
+              `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester}`;
+
+            fetch(`fetch-admin-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
+              .then(response => response.json())
+              .then(chartData => {
+                if (adminProgressChart) {
+                  adminProgressChart.data.labels = chartData.labels;
+                  adminProgressChart.data.datasets = chartData.datasets;
+                  adminProgressChart.update();
+                } else {
+                  const ctx = document.querySelector('#adminProgressChart').getContext('2d');
+                  adminProgressChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                      responsive: true,
+                      plugins: {
+                        legend: {
+                          position: 'top'
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: function(context) {
+                              let datasetLabel = context.dataset.label || '';
+                              let value = context.raw;
+                              let idx = context.dataIndex;
+
+                              let done = context.chart.data.meta.done[idx];
+                              let total = context.chart.data.meta.total[idx];
+
+                              if (datasetLabel.includes("Completed")) {
+                                return `${datasetLabel}: ${value}% (${done}/${total} students)`;
+                              } else {
+                                return `${datasetLabel}: ${value}% (${total - done}/${total} students)`;
+                              }
+                            }
+                          }
+                        }
+                      },
+                      scales: {
+                        x: {
+                          stacked: true
+                        }, // stack on x-axis
+                        y: {
+                          stacked: true,
+                          max: 100,
+                          beginAtZero: true
+                        } // force 0–100%
+                      }
+                    }
+                  });
+                }
+              })
+              .catch(err => console.error("Fetch error:", err));
+          }
+
+
+          document.addEventListener("DOMContentLoaded", () => {
+            fetchProgressData();
+
+            // Academic year filter
+            document.querySelectorAll(".progress-year-filter").forEach(item => {
+              item.addEventListener("click", e => {
+                e.preventDefault();
+                progressYear = item.getAttribute("data-year");
+                fetchProgressData(progressYear, progressSemester);
+                document.querySelectorAll(".progress-year-filter").forEach(i => i.classList.remove("active"));
+                item.classList.add("active");
+              });
+            });
+
+            // Semester filter
+            document.querySelectorAll(".progress-semester-filter").forEach(item => {
+              item.addEventListener("click", e => {
+                e.preventDefault();
+                progressSemester = item.getAttribute("data-semester");
+                fetchProgressData(progressYear, progressSemester);
+                document.querySelectorAll(".progress-semester-filter").forEach(i => i.classList.remove("active"));
+                item.classList.add("active");
+              });
+            });
+          });
+        </script>
+        <!-- End Admin Progress Chart Card -->
+
+        <!-- Admin as Faculty Progress Chart -->
+        <div class="col-12 mt-4">
+          <div class="card shadow">
+            <div class="card-body">
+              <h5 class="card-title">Your Evaluation Progress <span>| Handled Subjects</span></h5>
+              <canvas id="adminFacultyProgressChart" style="height: 400px;"></canvas>
+              <script>
+                document.addEventListener("DOMContentLoaded", () => {
+                  fetch("fetch-admin-faculty-progress.php")
+                    .then(response => response.json())
+                    .then(chartData => {
+                      const ctx = document.getElementById("adminFacultyProgressChart").getContext("2d");
+                      new Chart(ctx, {
+                        type: "bar",
+                        data: chartData,
+                        options: {
+                          responsive: true,
+                          plugins: {
+                            legend: {
+                              position: "top"
+                            },
+                            tooltip: {
+                              callbacks: {
+                                label: function(context) {
+                                  let datasetLabel = context.dataset.label;
+                                  let value = context.raw;
+                                  let idx = context.dataIndex;
+
+                                  let done = chartData.meta.done[idx];
+                                  let total = chartData.meta.total[idx];
+
+                                  if (datasetLabel.includes("Completed")) {
+                                    return `${datasetLabel}: ${value}% (${done}/${total} students)`;
+                                  } else {
+                                    return `${datasetLabel}: ${value}% (${total - done}/${total} students)`;
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          scales: {
+                            x: {
+                              stacked: true
+                            },
+                            y: {
+                              stacked: true,
+                              beginAtZero: true,
+                              max: 100,
+                              title: {
+                                display: true,
+                                text: "Evaluation Progress (%)"
+                              }
+                            }
+                          }
+                        }
+                      });
+                    })
+                    .catch(err => console.error("Error loading faculty progress:", err));
+                });
+              </script>
+            </div>
+          </div>
+        </div>
+        <!-- End Admin as Faculty Progress Chart -->
 
       </div>
 
@@ -305,7 +508,6 @@ while ($row = $result->fetch_assoc()) {
       }).render();
     });
   </script>
-
 
 </body>
 
