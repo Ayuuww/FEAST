@@ -42,6 +42,13 @@ class PDF_EXTENDED extends FPDF
         'phone'   => '+63923-4567890',
         'email'   => 'caff.nluc@dmmmsu.edu.ph'
       ]
+      ,
+      'IES' => [
+        'college' => 'INSTITUTE OF ENVIRONMENTAL SCIENCE',
+        'website' => 'www.dmmmsu.edu.ph',
+        'phone'   => '',
+        'email'   => 'ies.nluc@dmmmsu.edu.ph'
+      ]
     ];
 
     // Use faculty’s department instead of session
