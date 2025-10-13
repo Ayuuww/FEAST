@@ -10,7 +10,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// ✅ Get the active academic year and semester from evaluation_settings
+// Get the active academic year and semester from evaluation_settings
 $periodQuery = "SELECT academic_year, semester 
                 FROM evaluation_settings 
                 ORDER BY updated_at DESC LIMIT 1";
@@ -19,16 +19,16 @@ $active = $periodResult->fetch_assoc();
 $current_year = $active['academic_year'];
 $current_sem = $active['semester'];
 
-// ✅ Selected filters (defaults to active period)
+// Selected filters (defaults to active period)
 $selected_year = isset($_GET['year']) ? $_GET['year'] : $current_year;
 $selected_sem  = isset($_GET['sem']) ? $_GET['sem'] : $current_sem;
 
-// ✅ Fetch distinct academic years & semesters for dropdowns
+// Fetch distinct academic years & semesters for dropdowns
 $years = $conn->query("SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
 $sems  = $conn->query("SELECT DISTINCT semester FROM evaluation ORDER BY semester DESC");
 
-// ✅ Fetch evaluated subjects for selected period
-// ✅ Fetch all subjects handled by the faculty, with evaluation stats if available
+// Fetch evaluated subjects for selected period
+// Fetch all subjects handled by the faculty, with evaluation stats if available
 $query = "
   SELECT 
     ss.subject_code,
@@ -39,12 +39,11 @@ $query = "
     COUNT(DISTINCT ss.student_id) AS enrolled_count,
     AVG(e.total_score) AS avg_score,
     AVG(e.computed_rating) AS avg_rating,
-    GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
+    GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
   FROM student_subject ss
   JOIN (
-      SELECT subject_code, subject_title 
+      SELECT DISTINCT subject_code, subject_title 
       FROM evaluation
-      GROUP BY subject_code, subject_title
   ) subj ON subj.subject_code = ss.subject_code
   LEFT JOIN evaluation e 
     ON e.subject_code = ss.subject_code

@@ -31,7 +31,7 @@ while ($fac = mysqli_fetch_assoc($faculty_res)) {
              FROM admin_evaluation
              WHERE evaluator_position IN ('Dean', 'Chair Person', 'Program Chair')
                AND evaluatee_id = '{$faculty_id}'";
-               
+
   if ($year) {
     $eval_sql .= " AND academic_year = '{$year}'";
   }
@@ -54,12 +54,12 @@ echo json_encode([
   "labels"   => $labels,
   "datasets" => [
     [
-      "label" => "Completed (%)",
+      "label" => "Completed",
       "data"  => $completed,
       "backgroundColor" => "rgba(75, 192, 192, 0.85)"
     ],
     [
-      "label" => "Pending (%)",
+      "label" => "Pending",
       "data"  => $pending,
       "backgroundColor" => "rgba(255, 99, 132, 0.7)"
     ]

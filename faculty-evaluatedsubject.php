@@ -35,9 +35,9 @@ $query = "
     s.title AS subject_title,
     ss.academic_year,
     ss.semester,
-    AVG(e.total_score) AS avg_score,
-    AVG(e.computed_rating) AS avg_rating,
-    GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
+    AVG(DISTINCT e.total_score) AS avg_score,
+    AVG(DISTINCT e.computed_rating) AS avg_rating,
+    GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
   FROM student_subject ss
   JOIN subject s ON ss.subject_code = s.code
   LEFT JOIN evaluation e 
@@ -51,7 +51,6 @@ $query = "
   GROUP BY ss.subject_code, s.title, ss.academic_year, ss.semester
   ORDER BY ss.academic_year DESC, ss.semester DESC
 ";
-
 $stmt = $conn->prepare($query);
 $stmt->bind_param("sss", $faculty_id, $selected_year, $selected_sem);
 $stmt->execute();

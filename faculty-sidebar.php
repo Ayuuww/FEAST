@@ -20,7 +20,7 @@
     <li class="nav-item">
       <a class="nav-link <?= ($current_page == 'faculty-evaluatedsubject.php') ? 'active' : 'collapsed' ?>" href="faculty-evaluatedsubject.php">
         <i class="bi bi-book"></i>
-        <span>Subjects</span>
+        <span>Subjects Evaluated<</span>
       </a>
     </li><!-- End Subjects Nav -->
 

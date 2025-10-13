@@ -210,7 +210,7 @@ if (count($comments) > 0) {
 }
 
 // Section E
-$pdf->Ln(5);
+$pdf->Ln(8);
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 10, 'E. Development Plan', 0, 1);
 

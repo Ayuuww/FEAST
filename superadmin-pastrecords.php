@@ -171,7 +171,7 @@ if ($semesters_query) {
 
           <form method="GET" class="row g-3 mb-4 align-items-end">
             <div class="col-md-auto">
-              <a href="superadmin-pastrecords-self.php" class="btn btn-secondary btn-sm">Clear Filters</a>
+              <a href="superadmin-pastrecords.php" class="btn btn-secondary btn-sm">Clear Filters</a>
             </div>
 
             <div class="col-md-3">

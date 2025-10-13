@@ -365,6 +365,21 @@ if (!empty($conditions)) {
                               data: chartData,
                               options: {
                                 responsive: true,
+                                plugins: {
+                                  tooltip: {
+                                    callbacks: {
+                                      label: function(context) {
+                                        // only show dataset label like "Completed" or "Pending"
+                                        return context.dataset.label;
+                                      }
+                                    }
+                                  },
+                                  legend: {
+                                    labels: {
+                                      usePointStyle: true
+                                    }
+                                  }
+                                },
                                 scales: {
                                   x: {
                                     stacked: true
@@ -381,6 +396,7 @@ if (!empty($conditions)) {
                                 }
                               }
                             });
+
                           }
                         });
                     }
@@ -531,11 +547,12 @@ if (!empty($conditions)) {
                                   tooltip: {
                                     callbacks: {
                                       label: function(context) {
-                                        let subject = chartData.subjects[context.dataIndex];
-                                        return `${context.dataset.label}: ${context.raw}% (${subject})`;
+                                        const ratio = chartData.ratios[context.dataIndex]; // e.g. "4/6"
+                                        return `${context.dataset.label}: ${ratio}`;
                                       }
                                     }
                                   }
+
                                 },
                                 scales: {
                                   x: {
@@ -603,7 +620,7 @@ if (!empty($conditions)) {
             <!-- End Evaluation Progress Evaluation Chart -->
 
             <!-- Superadmin as Faculty Progress Chart -->
-            <div class="col-12 mt-4">
+            <div class="col-12">
               <div class="card shadow">
                 <div class="card-body">
                   <h5 class="card-title">Your Evaluation Progress <span>| Handled Subjects</span></h5>

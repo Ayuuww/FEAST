@@ -47,33 +47,29 @@ if ($is_faculty) {
   $faculty_id = $_SESSION['idnumber'];
 
   $query = "
-      SELECT 
-        ss.subject_code,
-        subj.subject_title,
-        ss.academic_year,
-        ss.semester,
-        COUNT(DISTINCT e.id) AS evaluated_count,
-        COUNT(DISTINCT ss.student_id) AS enrolled_count,
-        AVG(e.total_score) AS avg_score,
-        AVG(e.computed_rating) AS avg_rating,
-        GROUP_CONCAT(e.comment SEPARATOR '||') AS all_comments
-      FROM student_subject ss
-      LEFT JOIN (
-          SELECT subject_code, subject_title 
-          FROM evaluation 
-          GROUP BY subject_code, subject_title
-      ) subj ON subj.subject_code = ss.subject_code
-      LEFT JOIN evaluation e 
-        ON e.subject_code = ss.subject_code
-       AND e.academic_year = ss.academic_year
-       AND e.semester = ss.semester
-       AND e.faculty_id = ss.faculty_id
-      WHERE ss.faculty_id = ?
-        AND ss.academic_year = ?
-        AND ss.semester = ?
-      GROUP BY ss.subject_code, subj.subject_title, ss.academic_year, ss.semester
-      ORDER BY ss.academic_year DESC, ss.semester DESC
-  ";
+    SELECT 
+      ss.subject_code,
+      MAX(e.subject_title) AS subject_title,
+      ss.academic_year,
+      ss.semester,
+      COUNT(DISTINCT e.id) AS evaluated_count,
+      COUNT(DISTINCT ss.student_id) AS enrolled_count,
+      AVG(e.total_score) AS avg_score,
+      AVG(e.computed_rating) AS avg_rating,
+      GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
+    FROM student_subject ss
+    LEFT JOIN evaluation e 
+      ON e.subject_code = ss.subject_code
+     AND e.academic_year = ss.academic_year
+     AND e.semester = ss.semester
+     AND e.faculty_id = ss.faculty_id
+    WHERE ss.faculty_id = ?
+      AND ss.academic_year = ?
+      AND ss.semester = ?
+    GROUP BY ss.subject_code, ss.academic_year, ss.semester
+    ORDER BY ss.academic_year DESC, ss.semester DESC
+";
+
   $stmt = $conn->prepare($query);
   $stmt->bind_param("sss", $faculty_id, $selected_year, $selected_sem);
   $stmt->execute();

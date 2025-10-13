@@ -58,7 +58,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     </li>
 
     <!-- Evaluation -->
-    <?php $evalPages = ['superadmin-evaluationsetting.php', 'superadmin-evaluationswitch.php']; ?>
+    <?php $evalPages = ['superadmin-evaluationsetting.php', 'superadmin-evaluationswitch.php', 'superadmin-evaluationprogress.php']; ?>
     <li class="nav-item">
       <a class="nav-link <?= in_array($currentPage, $evalPages) ? '' : 'collapsed' ?>"
         data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
@@ -76,6 +76,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i class="bi bi-circle"></i><span>On/Off</span>
           </a>
         </li>
+        <li>
+          <a href="superadmin-evaluationprogress.php" class="<?= $currentPage == 'superadmin-evaluationprogress.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>Progress</span>
+          </a>
+        </li>
       </ul>
     </li>
 
@@ -84,7 +89,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       <a class="nav-link <?= $currentPage == 'superadmin-evaluatedsubject.php' ? 'active' : 'collapsed' ?>"
         href="superadmin-evaluatedsubject.php">
         <i class="bi bi-book-fill"></i>
-        <span>Subject</span>
+        <span>Subject Evaluated</span>
       </a>
     </li>
 

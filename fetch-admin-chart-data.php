@@ -33,6 +33,7 @@ $labels = [];
 $subjects = [];
 $completed = [];
 $pending = [];
+$ratios = []; // <-- NEW
 
 while ($row = mysqli_fetch_assoc($res)) {
   $faculty_id   = $row['faculty_id'];
@@ -66,25 +67,28 @@ while ($row = mysqli_fetch_assoc($res)) {
   $comp_res = mysqli_query($conn, $comp_sql);
   $completed_cnt = (int) (mysqli_fetch_assoc($comp_res)['cnt'] ?? 0);
 
+  // Compute percentage
   $progress = $expected > 0 ? round(($completed_cnt / $expected) * 100, 2) : 0;
 
   $labels[]    = $row['faculty_name'] . " — " . $row['subject_name'];
   $subjects[]  = $row['subject_name'];
   $completed[] = $progress;
   $pending[]   = round(100 - $progress, 2);
+  $ratios[]    = "{$completed_cnt}/{$expected}"; // <-- NEW: ratio for tooltip
 }
 
 echo json_encode([
   "labels"   => $labels,
   "subjects" => $subjects,
+  "ratios"   => $ratios, // <-- NEW
   "datasets" => [
     [
-      "label" => "Completed (%)",
+      "label" => "Completed",
       "data"  => $completed,
       "backgroundColor" => "rgba(75, 192, 192, 0.85)"
     ],
     [
-      "label" => "Pending (%)",
+      "label" => "Pending",
       "data"  => $pending,
       "backgroundColor" => "rgba(255, 99, 132, 0.7)"
     ]

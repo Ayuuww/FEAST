@@ -77,6 +77,14 @@
       </a>
     </li><!-- End Evaluated Subject Nav -->
 
+    <!-- Student Subject -->
+    <li class="nav-item">
+      <a class="nav-link <?= $current_page == 'admin-evaluationprogress.php' ? '' : 'collapsed' ?>" href="admin-evaluationprogress.php">
+        <i class="ri-book-fill"></i>
+        <span>Evaluation Progress</span>
+      </a>
+    </li><!-- End Student Subject Nav -->
+
     <!-- Reports -->
     <li class="nav-item">
       <?php 

@@ -7,10 +7,7 @@ include 'conn/conn.php'; // DB connection
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>FEAST - Login</title>
-  <?php include 'header.php' ?>
+  <?php include 'head.php' ?>
 
   <style>
     body,

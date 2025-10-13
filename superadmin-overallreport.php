@@ -141,7 +141,7 @@ if (!empty($selected_department)) {
     <section class="section dashboard">
       <div class="container mt-4">
         <div class="row justify-content-center">
-          <div class="col-lg-11">
+          <div class="col-lg-10">
             <div class="card">
               <div class="card-body">
                 <h4 class="card-title text-center my-3">
@@ -176,7 +176,7 @@ if (!empty($selected_department)) {
                       </select>
                     </div>
                     <div class="col-md-auto">
-                      <button type="submit" class="btn btn-success w-100">Generate</button>
+                      <button type="submit" class="btn btn-success w-100">Generate Report</button>
                     </div>
                   </div>
                 </form>
