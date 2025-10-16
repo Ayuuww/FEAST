@@ -16,6 +16,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
+// ✅ Get current active evaluation period (latest row)
+$setting_query = "SELECT semester, academic_year FROM evaluation_settings ORDER BY updated_at DESC LIMIT 1";
+$setting_result = $conn->query($setting_query);
+
+if ($setting_result && $setting_result->num_rows > 0) {
+  $setting = $setting_result->fetch_assoc();
+  $current_semester = $setting['semester'];
+  $current_acad_year = $setting['academic_year'];
+} else {
+  // Default values in case table is empty
+  $current_semester = '1st Semester';
+  $current_acad_year = '2025-2026';
+}
+
+
 // Get admin's department
 $dept_query = "SELECT department FROM admin WHERE idnumber = ?";
 $stmt = $conn->prepare($dept_query);
@@ -47,10 +62,11 @@ $totalstudent = $student_row['total'] ?? 0;
 $student_eval_query = "
   SELECT COUNT(*) AS total FROM evaluation e
   JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department = ?";
-
+  WHERE f.department = ?
+  AND e.academic_year = ?
+  AND e.semester = ?";
 $stmt = $conn->prepare($student_eval_query);
-$stmt->bind_param("s", $department);
+$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
 $stmt->execute();
 $result = $stmt->get_result();
 $student_eval_count = $result->fetch_assoc()['total'] ?? 0;
@@ -59,10 +75,11 @@ $student_eval_count = $result->fetch_assoc()['total'] ?? 0;
 $admin_eval_query = "
   SELECT COUNT(*) AS total FROM admin_evaluation ae
   JOIN faculty f ON ae.evaluatee_id = f.idnumber
-  WHERE f.department = ? ";
-
+  WHERE f.department = ?
+  AND ae.academic_year = ?
+  AND ae.semester = ?";
 $stmt = $conn->prepare($admin_eval_query);
-$stmt->bind_param("s", $department);
+$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
 $stmt->execute();
 $result = $stmt->get_result();
 $admin_eval_count = $result->fetch_assoc()['total'] ?? 0;
@@ -73,13 +90,15 @@ $total_evaluations = $student_eval_count + $admin_eval_count;
 /// Student evaluations trend (uses created_at)
 $eval_trend_query = "
   SELECT e.created_at AS eval_time
-FROM evaluation e
-JOIN faculty f ON e.faculty_id = f.idnumber
-WHERE f.department = ?
-ORDER BY e.created_at ASC
+  FROM evaluation e
+  JOIN faculty f ON e.faculty_id = f.idnumber
+  WHERE f.department = ?
+  AND e.academic_year = ?
+  AND e.semester = ?
+  ORDER BY e.created_at ASC
 ";
 $stmt = $conn->prepare($eval_trend_query);
-$stmt->bind_param("s", $department);
+$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -95,13 +114,15 @@ while ($row = $result->fetch_assoc()) {
 // Admin evaluations trend (uses evaluation_date instead of created_at!)
 $admin_eval_trend_query = "
   SELECT ae.evaluation_date AS eval_time
-FROM admin_evaluation ae
-JOIN faculty f ON ae.evaluatee_id = f.idnumber
-WHERE f.department = ?
-ORDER BY ae.evaluation_date ASC
+  FROM admin_evaluation ae
+  JOIN faculty f ON ae.evaluatee_id = f.idnumber
+  WHERE f.department = ?
+  AND ae.academic_year = ?
+  AND ae.semester = ?
+  ORDER BY ae.evaluation_date ASC
 ";
 $stmt = $conn->prepare($admin_eval_trend_query);
-$stmt->bind_param("s", $department);
+$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -352,7 +373,7 @@ while ($row = $result->fetch_assoc()) {
         <!-- End Admin Progress Chart Card -->
 
         <!-- Admin as Faculty Progress Chart -->
-        <div class="col-12 mt-4">
+        <div class="col-12">
           <div class="card shadow">
             <div class="card-body">
               <h5 class="card-title">Your Evaluation Progress <span>| Handled Subjects</span></h5>

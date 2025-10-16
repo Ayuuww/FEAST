@@ -14,8 +14,7 @@ $academic_year = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_e
 $semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null;
 
 // Base SQL: Find students who have NOT evaluated their faculty
-$sql = "
-SELECT 
+$sql = " SELECT 
     s.idnumber AS student_id,
     CONCAT(s.first_name, ' ', s.last_name) AS student_name,
     s.department AS student_department,
@@ -35,8 +34,7 @@ LEFT JOIN evaluation e
     AND e.subject_code = ss.subject_code
     AND e.academic_year = ss.academic_year
     AND e.semester = ss.semester
-WHERE e.id IS NULL  /* ❗ means student has not yet evaluated */
-";
+WHERE e.id IS NULL  /* ❗ means student has not yet evaluated */ ";
 
 // Apply filters dynamically
 if ($department) {
@@ -182,7 +180,7 @@ $result = mysqli_query($conn, $sql);
                 <table class="table datatable">
                   <thead class="table text-center">
                     <tr>
-                      <th>#</th>
+                      <th>ID Number</th>
                       <th>Student Name</th>
                       <th>Department</th>
                       <th>Subject Code</th>
@@ -199,7 +197,7 @@ $result = mysqli_query($conn, $sql);
                       $i = 1;
                       while ($row = mysqli_fetch_assoc($result)) {
                         echo "<tr>
-                                <td class='text-center'>{$i}</td>
+                                <td class='text-center'>{$row['student_id']}</td>
                                 <td>{$row['student_name']}</td>
                                 <td>{$row['student_department']}</td>
                                 <td>{$row['subject_code']}</td>

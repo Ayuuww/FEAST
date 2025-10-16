@@ -26,6 +26,7 @@ SELECT
     s.idnumber AS student_id,
     CONCAT(s.first_name, ' ', s.last_name) AS student_name,
     s.department AS student_department,
+    s.section AS student_section,
     subj.code AS subject_code,
     subj.title AS subject_title,
     f.idnumber AS faculty_id,
@@ -157,9 +158,9 @@ $subjects = mysqli_query($conn, "
               <table class="table datatable">
                 <thead class="table text-center">
                   <tr>
-                    <th>#</th>
+                    <th>ID Number</th>
                     <th>Student Name</th>
-                    <th>Department</th>
+                    <th>Section</th>
                     <th>Subject Code</th>
                     <th>Subject Title</th>
                     <th>Faculty Name</th>
@@ -174,9 +175,9 @@ $subjects = mysqli_query($conn, "
                     $i = 1;
                     while ($row = mysqli_fetch_assoc($result)) {
                       echo "<tr>
-                              <td class='text-center'>{$i}</td>
+                              <td class='text-center'>{$row['student_id']}</td>
                               <td>{$row['student_name']}</td>
-                              <td>{$row['student_department']}</td>
+                              <td>{$row['student_section']}</td>
                               <td>{$row['subject_code']}</td>
                               <td>{$row['subject_title']}</td>
                               <td>{$row['faculty_name']}</td>
