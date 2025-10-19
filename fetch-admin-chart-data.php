@@ -2,95 +2,101 @@
 header('Content-Type: application/json; charset=utf-8');
 include 'conn/conn.php';
 
+// Sanitize user inputs
 $year     = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['year']) : null;
-$semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null;
+$semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null; // <-- ADDED BACK
 $dept     = isset($_GET['dept']) && $_GET['dept'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['dept']) : null;
 
-$sql = "SELECT f.idnumber AS faculty_id,
-               CONCAT(f.first_name, ' ', f.last_name) AS faculty_name,
-               s.code AS subject_code,
-               s.title AS subject_name,
-               f.department
-        FROM faculty f
-        JOIN subject s ON s.faculty_id = f.idnumber";
+// --- Build the WHERE clause for the subqueries ---
+$subquery_conditions = [];
+if ($year) {
+    $subquery_conditions[] = "academic_year = '{$year}'";
+}
+if ($semester) { // <-- ADDED BACK
+    $subquery_conditions[] = "semester = '{$semester}'";
+}
+$subquery_where_clause = !empty($subquery_conditions) ? "WHERE " . implode(" AND ", $subquery_conditions) : "";
+// --- End of new part ---
 
-$conds = [];
+// THE FINAL, CORRECTED SQL QUERY
+$sql = "
+    SELECT
+        f.idnumber AS faculty_id,
+        CONCAT(f.first_name, ' ', f.last_name) AS faculty_name,
+        s.title AS subject_name,
+        exp.expected_count,
+        COALESCE(comp.completed_count, 0) AS completed_count
+    FROM
+        (
+            -- Subquery to get expected students, WITH FILTERS APPLIED
+            SELECT faculty_id, subject_code, COUNT(DISTINCT student_id) as expected_count
+            FROM student_subject
+            {$subquery_where_clause}
+            GROUP BY faculty_id, subject_code
+        ) AS exp
+    LEFT JOIN
+        (
+            -- Subquery to get completed evaluations, WITH THE SAME FILTERS APPLIED
+            SELECT faculty_id, subject_code, COUNT(DISTINCT student_id) as completed_count
+            FROM evaluation
+            {$subquery_where_clause}
+            GROUP BY faculty_id, subject_code
+        ) AS comp ON exp.faculty_id = comp.faculty_id
+                  AND exp.subject_code = comp.subject_code
+    JOIN
+        faculty f ON exp.faculty_id = f.idnumber
+    JOIN
+        subject s ON exp.subject_code = s.code
+";
+
+// The department filter is applied on the main query
+$main_conditions = [];
 if ($dept) {
-  $conds[] = "f.department = '{$dept}'";
+    $main_conditions[] = "f.department = '{$dept}'";
 }
-if (!empty($conds)) {
-  $sql .= " WHERE " . implode(" AND ", $conds);
+if (!empty($main_conditions)) {
+    $sql .= " WHERE " . implode(" AND ", $main_conditions);
 }
+
 $sql .= " ORDER BY f.last_name, f.first_name, s.title";
 
-$res = mysqli_query($conn, $sql);
-if (!$res) {
-  echo json_encode(['error' => mysqli_error($conn)]);
-  exit;
+$result = mysqli_query($conn, $sql);
+if (!$result) {
+    echo json_encode(['error' => mysqli_error($conn), 'sql' => $sql]);
+    exit;
 }
 
 $labels = [];
-$subjects = [];
-$completed = [];
-$pending = [];
-$ratios = []; // <-- NEW
+$completed_percent = [];
+$pending_percent = [];
+$ratios = [];
 
-while ($row = mysqli_fetch_assoc($res)) {
-  $faculty_id   = $row['faculty_id'];
-  $subject_code = $row['subject_code'];
+while ($row = mysqli_fetch_assoc($result)) {
+    $expected = (int) $row['expected_count'];
+    $completed = (int) $row['completed_count'];
+    
+    $progress = ($expected > 0) ? round(($completed / $expected) * 100, 2) : 0;
 
-  // Expected students
-  $exp_sql = "SELECT COUNT(DISTINCT ss.student_id) AS cnt
-                FROM student_subject ss
-                WHERE ss.subject_code = '" . mysqli_real_escape_string($conn, $subject_code) . "'
-                  AND ss.faculty_id = '" . mysqli_real_escape_string($conn, $faculty_id) . "'";
-  if ($year) {
-    $exp_sql .= " AND ss.academic_year = '{$year}'";
-  }
-  if ($semester) {
-    $exp_sql .= " AND ss.semester = '{$semester}'";
-  }
-  $exp_res = mysqli_query($conn, $exp_sql);
-  $expected = (int) (mysqli_fetch_assoc($exp_res)['cnt'] ?? 0);
-
-  // Completed evals
-  $comp_sql = "SELECT COUNT(DISTINCT e.student_id) AS cnt
-                 FROM evaluation e
-                 WHERE e.subject_code = '" . mysqli_real_escape_string($conn, $subject_code) . "'
-                   AND e.faculty_id = '" . mysqli_real_escape_string($conn, $faculty_id) . "'";
-  if ($year) {
-    $comp_sql .= " AND e.academic_year = '{$year}'";
-  }
-  if ($semester) {
-    $comp_sql .= " AND e.semester = '{$semester}'";
-  }
-  $comp_res = mysqli_query($conn, $comp_sql);
-  $completed_cnt = (int) (mysqli_fetch_assoc($comp_res)['cnt'] ?? 0);
-
-  // Compute percentage
-  $progress = $expected > 0 ? round(($completed_cnt / $expected) * 100, 2) : 0;
-
-  $labels[]    = $row['faculty_name'] . " — " . $row['subject_name'];
-  $subjects[]  = $row['subject_name'];
-  $completed[] = $progress;
-  $pending[]   = round(100 - $progress, 2);
-  $ratios[]    = "{$completed_cnt}/{$expected}"; // <-- NEW: ratio for tooltip
+    $labels[] = $row['faculty_name'] . " — " . $row['subject_name'];
+    $completed_percent[] = $progress;
+    $pending_percent[] = 100 - $progress;
+    $ratios[] = "{$completed}/{$expected}";
 }
 
+// Prepare the JSON response for Chart.js
 echo json_encode([
-  "labels"   => $labels,
-  "subjects" => $subjects,
-  "ratios"   => $ratios, // <-- NEW
-  "datasets" => [
-    [
-      "label" => "Completed",
-      "data"  => $completed,
-      "backgroundColor" => "rgba(75, 192, 192, 0.85)"
-    ],
-    [
-      "label" => "Pending",
-      "data"  => $pending,
-      "backgroundColor" => "rgba(255, 99, 132, 0.7)"
+    "labels" => $labels,
+    "ratios" => $ratios,
+    "datasets" => [
+        [
+            "label" => "Completed",
+            "data" => $completed_percent,
+            "backgroundColor" => "rgba(75, 192, 192, 0.85)"
+        ],
+        [
+            "label" => "Pending",
+            "data" => $pending_percent,
+            "backgroundColor" => "rgba(255, 99, 132, 0.7)"
+        ]
     ]
-  ]
 ]);

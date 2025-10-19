@@ -8,9 +8,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     $first_name   = mysqli_real_escape_string($conn, trim($_POST['first_name']));
     $mid_name     = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
     $last_name    = mysqli_real_escape_string($conn, trim($_POST['last_name']));
-    $password     = trim($_POST['password']); // don't escape before hashing
+    $password     = trim($_POST['password']);
     $position     = mysqli_real_escape_string($conn, trim($_POST['position']));
-    $is_faculty   = isset($_POST['faculty']) ? $_POST['faculty'] : "No"; // Yes or No
+    $is_faculty   = isset($_POST['is_faculty']) ? $_POST['is_faculty'] : "No"; // ✅ FIXED NAME HERE
 
     // Faculty-specific fields
     if ($is_faculty === "Yes") {
@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
         $faculty_rank = null;
     }
 
-    // ✅ Hash the password before storing
+    // ✅ Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
     // Check if admin with same ID already exists
@@ -45,7 +45,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     $insert_query = "INSERT INTO admin (
         idnumber, first_name, mid_name, last_name, password, department, position, faculty_rank, is_faculty
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
     $stmt = $conn->prepare($insert_query);
     $stmt->bind_param(
         "sssssssss",
@@ -61,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
     );
 
     if ($stmt->execute()) {
-        // If faculty, also sync into faculty table
+        // Sync to faculty table if Yes
         if ($is_faculty === "Yes") {
             $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
             $faculty_check->bind_param("s", $id);
@@ -92,3 +91,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
 } else {
     echo "<script>alert('Please fill in all required fields.'); window.location.href='superadmin-admincreation.php';</script>";
 }
+

@@ -347,7 +347,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
                       <optgroup label="<?= htmlspecialchars($department) ?>">
                         <?php foreach ($students as $student) : ?>
                           <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
-                            <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?> (<?= $student['subject_count'] ?> assigned)
+                            <?= $student['first_name'] . ' ' . $student['mid_name'] . ' ' . $student['last_name'] ?>
                           </option>
                         <?php endforeach; ?>
                       </optgroup>

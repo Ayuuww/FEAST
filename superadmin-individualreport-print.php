@@ -212,7 +212,7 @@ if (count($comments) > 0) {
 // Section E
 $pdf->Ln(8);
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 10, 'E. Development Plan', 0, 1);
+$pdf->Cell(0, 15, 'E. Development Plan', 0, 1);
 
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 8, 'Areas for Improvement:', 1, 1);

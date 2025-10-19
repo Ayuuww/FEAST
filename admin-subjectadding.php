@@ -246,7 +246,7 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
         icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
         title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
         text: <?= json_encode($_SESSION['msg']) ?>,
-        confirmButtonColor: '#3085d6'
+        confirmButtonColor: '#198754'
       });
     </script>
     <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>

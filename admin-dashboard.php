@@ -292,15 +292,23 @@ while ($row = $result->fetch_assoc()) {
             fetch(`fetch-admin-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
               .then(response => response.json())
               .then(chartData => {
+
                 if (adminProgressChart) {
+                  // --- UPDATE BLOCK ---
                   adminProgressChart.data.labels = chartData.labels;
                   adminProgressChart.data.datasets = chartData.datasets;
+                  adminProgressChart.data.meta = chartData.meta; // <-- THIS IS THE MISSING LINE
                   adminProgressChart.update();
                 } else {
+                  // --- CREATE BLOCK (Made more robust) ---
                   const ctx = document.querySelector('#adminProgressChart').getContext('2d');
                   adminProgressChart = new Chart(ctx, {
                     type: 'bar',
-                    data: chartData,
+                    data: { // Explicitly set data properties
+                      labels: chartData.labels,
+                      datasets: chartData.datasets,
+                      meta: chartData.meta
+                    },
                     options: {
                       responsive: true,
                       plugins: {
@@ -314,13 +322,15 @@ while ($row = $result->fetch_assoc()) {
                               let value = context.raw;
                               let idx = context.dataIndex;
 
+                              // This now reads the CORRECT, updated meta data
                               let done = context.chart.data.meta.done[idx];
                               let total = context.chart.data.meta.total[idx];
 
                               if (datasetLabel.includes("Completed")) {
                                 return `${datasetLabel}: ${value}% (${done}/${total} students)`;
                               } else {
-                                return `${datasetLabel}: ${value}% (${total - done}/${total} students)`;
+                                let notDone = total - done;
+                                return `${datasetLabel}: ${value}% (${notDone}/${total} students)`;
                               }
                             }
                           }
@@ -373,63 +383,196 @@ while ($row = $result->fetch_assoc()) {
         <!-- End Admin Progress Chart Card -->
 
         <!-- Admin as Faculty Progress Chart -->
+        <?php
+        // Use a temporary variable to avoid conflicts
+        $faculty_id_for_filters = $_SESSION['idnumber'];
+
+        // Get DISTINCT academic years this faculty has taught
+        $year_query = $conn->query("
+    SELECT DISTINCT academic_year FROM student_subject
+    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY academic_year DESC
+");
+        $admin_years = [];
+        while ($row = $year_query->fetch_assoc()) {
+          $admin_years[] = $row['academic_year'];
+        }
+
+        // Get DISTINCT semesters this faculty has taught
+        $sem_query = $conn->query("
+    SELECT DISTINCT semester FROM student_subject
+    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY semester ASC
+");
+        $admin_semesters = [];
+        while ($row = $sem_query->fetch_assoc()) {
+          $admin_semesters[] = $row['semester'];
+        }
+        ?>
+
         <div class="col-12">
           <div class="card shadow">
+
+            <div class="filter">
+              <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+              <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height: 400px; overflow-y: auto;">
+
+                <li class="dropdown-header">Academic Year</li>
+                <li><a class="dropdown-item admin-faculty-year-filter active" href="#" data-year="All">All</a></li>
+                <?php foreach ($admin_years as $year): ?>
+                  <li><a class="dropdown-item admin-faculty-year-filter" href="#" data-year="<?= $year ?>"><?= $year ?></a></li>
+                <?php endforeach; ?>
+
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+
+                <li class="dropdown-header">Semester</li>
+                <li><a class="dropdown-item admin-faculty-sem-filter active" href="#" data-sem="All">All</a></li>
+                <?php foreach ($admin_semesters as $sem): ?>
+                  <li><a class="dropdown-item admin-faculty-sem-filter" href="#" data-sem="<?= $sem ?>"><?= $sem ?></a></li>
+                <?php endforeach; ?>
+
+              </ul>
+            </div>
             <div class="card-body">
-              <h5 class="card-title">Your Evaluation Progress <span>| Handled Subjects</span></h5>
-              <canvas id="adminFacultyProgressChart" style="height: 400px;"></canvas>
+              <h5 class="card-title">
+                Your Evaluation Progress
+                <span id="adminFacultyTermLabel" class="text-muted small">| All Years | All Semesters</span>
+              </h5>
+
+              <div id="adminFacultyChartContainer">
+                <canvas id="adminFacultyProgressChart" style="height: 400px;"></canvas>
+              </div>
+
               <script>
-                document.addEventListener("DOMContentLoaded", () => {
-                  fetch("fetch-admin-faculty-progress.php")
+                // Set defaults to 'All'
+                let selectedAdminFacultyYear = 'All';
+                let selectedAdminFacultySem = 'All';
+                let adminFacultyChart = null; // Hold the chart instance
+
+                // 1. Re-usable function to fetch and render the chart
+                function fetchAdminFacultyProgressData(year = 'All', semester = 'All') {
+
+                  // Update the title label
+                  document.getElementById("adminFacultyTermLabel").textContent =
+                    `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester}`;
+
+                  // Update fetch URL to include filters
+                  fetch(`fetch-admin-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
                     .then(response => response.json())
                     .then(chartData => {
-                      const ctx = document.getElementById("adminFacultyProgressChart").getContext("2d");
-                      new Chart(ctx, {
-                        type: "bar",
-                        data: chartData,
-                        options: {
-                          responsive: true,
-                          plugins: {
-                            legend: {
-                              position: "top"
-                            },
-                            tooltip: {
-                              callbacks: {
-                                label: function(context) {
-                                  let datasetLabel = context.dataset.label;
-                                  let value = context.raw;
-                                  let idx = context.dataIndex;
+                      const chartContainer = document.getElementById("adminFacultyChartContainer");
 
-                                  let done = chartData.meta.done[idx];
-                                  let total = chartData.meta.total[idx];
+                      // Check for errors or no data
+                      if (!chartData || chartData.labels.length === 0) {
+                        if (adminFacultyChart) {
+                          adminFacultyChart.destroy();
+                          adminFacultyChart = null;
+                        }
+                        // Reset canvas container and show "no data" message
+                        chartContainer.innerHTML = '<canvas id="adminFacultyProgressChart" style="height: 400px;"></canvas>';
+                        document.getElementById("adminFacultyProgressChart").replaceWith("⚠️ No evaluation data found for the selected filters.");
+                        return;
+                      }
 
-                                  if (datasetLabel.includes("Completed")) {
-                                    return `${datasetLabel}: ${value}% (${done}/${total} students)`;
-                                  } else {
-                                    return `${datasetLabel}: ${value}% (${total - done}/${total} students)`;
+                      // If we had a "no data" message, clear it and restore canvas
+                      if (!document.getElementById("adminFacultyProgressChart")) {
+                        chartContainer.innerHTML = '<canvas id="adminFacultyProgressChart" style="height: 400px;"></canvas>';
+                      }
+
+                      // 2. Use the robust update/create pattern to fix tooltip bug
+                      if (adminFacultyChart) {
+                        // --- UPDATE BLOCK ---
+                        adminFacultyChart.data.labels = chartData.labels;
+                        adminFacultyChart.data.datasets = chartData.datasets;
+                        adminFacultyChart.data.meta = chartData.meta; // <-- THE FIX
+                        adminFacultyChart.update();
+                      } else {
+                        // --- CREATE BLOCK ---
+                        const ctx = document.getElementById("adminFacultyProgressChart").getContext("2d");
+                        adminFacultyChart = new Chart(ctx, { // Assign to global var
+                          type: "bar",
+                          data: { // Pass data as an object
+                            labels: chartData.labels,
+                            datasets: chartData.datasets,
+                            meta: chartData.meta // Store meta data
+                          },
+                          options: {
+                            responsive: true,
+                            plugins: {
+                              legend: {
+                                position: "top"
+                              },
+                              tooltip: {
+                                callbacks: {
+                                  label: function(context) {
+                                    let datasetLabel = context.dataset.label;
+                                    let value = context.raw;
+                                    let idx = context.dataIndex;
+
+                                    // Read from the chart's current data
+                                    let done = context.chart.data.meta.done[idx];
+                                    let total = context.chart.data.meta.total[idx];
+
+                                    if (datasetLabel.includes("Completed")) {
+                                      return `${datasetLabel}: ${value}% (${done}/${total} students)`;
+                                    } else {
+                                      let pendingCount = total - done;
+                                      return `${datasetLabel}: ${value}% (${pendingCount}/${total} students)`;
+                                    }
                                   }
                                 }
                               }
-                            }
-                          },
-                          scales: {
-                            x: {
-                              stacked: true
                             },
-                            y: {
-                              stacked: true,
-                              beginAtZero: true,
-                              max: 100,
-                              title: {
-                                display: true,
-                                text: "Evaluation Progress (%)"
+                            scales: {
+                              x: {
+                                stacked: true
+                              },
+                              y: {
+                                stacked: true,
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                  display: true,
+                                  text: "Evaluation Progress (%)"
+                                }
                               }
                             }
                           }
-                        }
-                      });
+                        });
+                      }
                     })
-                    .catch(err => console.error("Error loading faculty progress:", err));
+                    .catch(err => {
+                      console.error("Error loading faculty progress:", err);
+                      document.getElementById("adminFacultyChartContainer").innerHTML = "Error loading chart data.";
+                    });
+                }
+
+                // 3. Add Event Listeners
+                document.addEventListener("DOMContentLoaded", () => {
+                  // Initial fetch on page load
+                  fetchAdminFacultyProgressData();
+
+                  // Add listener for all year filter links
+                  document.querySelectorAll(".admin-faculty-year-filter").forEach(item => {
+                    item.addEventListener("click", (e) => {
+                      e.preventDefault();
+                      selectedAdminFacultyYear = item.getAttribute("data-year");
+                      fetchAdminFacultyProgressData(selectedAdminFacultyYear, selectedAdminFacultySem);
+                      document.querySelectorAll(".admin-faculty-year-filter").forEach(i => i.classList.remove("active"));
+                      item.classList.add("active");
+                    });
+                  });
+
+                  // Add listener for all semester filter links
+                  document.querySelectorAll(".admin-faculty-sem-filter").forEach(item => {
+                    item.addEventListener("click", (e) => {
+                      e.preventDefault();
+                      selectedAdminFacultySem = item.getAttribute("data-sem");
+                      fetchAdminFacultyProgressData(selectedAdminFacultyYear, selectedAdminFacultySem);
+                      document.querySelectorAll(".admin-faculty-sem-filter").forEach(i => i.classList.remove("active"));
+                      item.classList.add("active");
+                    });
+                  });
                 });
               </script>
             </div>

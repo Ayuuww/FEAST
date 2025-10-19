@@ -2,26 +2,69 @@
 session_start();
 include 'conn/conn.php';
 
-// Debugging (optional - comment out in production)
-// error_reporting(E_ALL);
-// ini_set('display_errors', 1);
+// --- Filters ---
+$year = isset($_GET['year']) && $_GET['year'] !== 'All' ? $conn->real_escape_string($_GET['year']) : null;
+$semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? $conn->real_escape_string($_GET['semester']) : null;
+$department = isset($_SESSION['department']) ? $conn->real_escape_string($_SESSION['department']) : null;
 
-// ✅ Get current evaluation setting (fallback-safe)
-$setting_sql = "SELECT semester, academic_year FROM evaluation_settings ORDER BY updated_at DESC LIMIT 1";
-$setting_result = $conn->query($setting_sql);
-if ($setting_result && $setting_result->num_rows > 0) {
-    $setting = $setting_result->fetch_assoc();
-    $current_semester = $setting['semester'];
-    $current_acad_year = $setting['academic_year'];
-} else {
-    $current_semester = null;
-    $current_acad_year = null;
+// --- Build WHERE clauses for subqueries ---
+$subquery_conditions = [];
+if ($year) {
+    $subquery_conditions[] = "academic_year = '{$year}'";
 }
+if ($semester) {
+    $subquery_conditions[] = "semester = '{$semester}'";
+}
+$subquery_where_clause = !empty($subquery_conditions) ? "WHERE " . implode(" AND ", $subquery_conditions) : "";
 
-// ✅ Filters (default = All)
-$year = isset($_GET['year']) && $_GET['year'] !== 'All' ? $_GET['year'] : null;
-$semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? $_GET['semester'] : null;
-$department = isset($_SESSION['department']) ? $_SESSION['department'] : null;
+// --- Build main query conditions ---
+$main_conditions = [];
+if ($department) {
+    $main_conditions[] = "f.department = '{$department}'";
+}
+$main_where_clause = !empty($main_conditions) ? "WHERE " . implode(" AND ", $main_conditions) : "";
+
+
+// --- THE NEW, SINGLE-QUERY ---
+$sql = "
+    SELECT
+        f.idnumber AS faculty_id,
+        CONCAT(f.first_name, ' ', f.last_name) AS faculty_name,
+        s.title AS subject_name,
+        COALESCE(exp.expected_count, 0) AS expected_count,
+        COALESCE(comp.completed_count, 0) AS completed_count
+    FROM
+        faculty f
+    JOIN
+        subject s ON f.idnumber = s.faculty_id
+    LEFT JOIN
+        (
+            -- Subquery to get expected students, WITH FILTERS
+            SELECT faculty_id, subject_code, COUNT(DISTINCT student_id) as expected_count
+            FROM student_subject
+            {$subquery_where_clause}
+            GROUP BY faculty_id, subject_code
+        ) AS exp ON f.idnumber = exp.faculty_id AND s.code = exp.subject_code
+    LEFT JOIN
+        (
+            -- Subquery to get completed evaluations, WITH FILTERS
+            SELECT faculty_id, subject_code, COUNT(DISTINCT student_id) as completed_count
+            FROM evaluation
+            {$subquery_where_clause}
+            GROUP BY faculty_id, subject_code
+        ) AS comp ON f.idnumber = comp.faculty_id AND s.code = comp.subject_code
+    
+    {$main_where_clause}
+    
+    ORDER BY
+        f.last_name, f.first_name, s.title
+";
+
+$result = mysqli_query($conn, $sql);
+if (!$result) {
+    echo json_encode(['error' => mysqli_error($conn), 'sql' => $sql]);
+    exit;
+}
 
 $labels = [];
 $completed = [];
@@ -29,92 +72,12 @@ $notCompleted = [];
 $doneCounts = [];
 $totalCounts = [];
 
-// ✅ Build faculty + subject list
-$sql = "
-    SELECT f.idnumber AS faculty_id,
-           CONCAT(f.first_name, ' ', f.last_name) AS faculty_name,
-           s.code AS subject_code,
-           s.title AS subject_name
-    FROM faculty f
-    JOIN subject s ON s.faculty_id = f.idnumber
-";
+while ($row = mysqli_fetch_assoc($result)) {
+    $expected = (int) $row['expected_count'];
+    $done = (int) $row['completed_count'];
 
-if ($department) {
-    $sql .= " WHERE f.department = ?";
-}
-
-$sql .= " ORDER BY f.last_name, f.first_name, s.title";
-
-$stmt = $conn->prepare($sql);
-if ($department) {
-    $stmt->bind_param("s", $department);
-}
-$stmt->execute();
-$result = $stmt->get_result();
-
-// ✅ Loop over faculty + subjects
-while ($row = $result->fetch_assoc()) {
-    $faculty_id = $row['faculty_id'];
-    $subject_code = $row['subject_code'];
-
-    // ✅ Expected students per subject
-    $exp_sql = "
-        SELECT COUNT(DISTINCT ss.student_id) AS total
-        FROM student_subject ss
-        WHERE ss.subject_code = ?
-          AND ss.faculty_id = ?
-    ";
-
-    $params = [$subject_code, $faculty_id];
-    $types = "ss";
-
-    if ($year) {
-        $exp_sql .= " AND ss.academic_year = ?";
-        $params[] = $year;
-        $types .= "s";
-    }
-    if ($semester) {
-        $exp_sql .= " AND ss.semester = ?";
-        $params[] = $semester;
-        $types .= "s";
-    }
-
-    $exp_stmt = $conn->prepare($exp_sql);
-    $exp_stmt->bind_param($types, ...$params);
-    $exp_stmt->execute();
-    $expected = (int)($exp_stmt->get_result()->fetch_assoc()['total'] ?? 0);
-    $exp_stmt->close();
-
-    // ✅ Completed evaluations
-    $done_sql = "
-        SELECT COUNT(DISTINCT e.student_id) AS done
-        FROM evaluation e
-        WHERE e.subject_code = ?
-          AND e.faculty_id = ?
-    ";
-
-    $params = [$subject_code, $faculty_id];
-    $types = "ss";
-
-    if ($year) {
-        $done_sql .= " AND e.academic_year = ?";
-        $params[] = $year;
-        $types .= "s";
-    }
-    if ($semester) {
-        $done_sql .= " AND e.semester = ?";
-        $params[] = $semester;
-        $types .= "s";
-    }
-
-    $done_stmt = $conn->prepare($done_sql);
-    $done_stmt->bind_param($types, ...$params);
-    $done_stmt->execute();
-    $done = (int)($done_stmt->get_result()->fetch_assoc()['done'] ?? 0);
-    $done_stmt->close();
-
-    // ✅ Compute percentages
-    $completedPercent = $expected > 0 ? round(($done / $expected) * 100, 2) : 0;
+    // This logic is now consistent
+    $completedPercent = ($expected > 0) ? round(($done / $expected) * 100, 2) : 0;
     $notCompletedPercent = 100 - $completedPercent;
 
     $labels[] = $row['faculty_name'] . " — " . $row['subject_name'];
@@ -124,7 +87,7 @@ while ($row = $result->fetch_assoc()) {
     $totalCounts[] = $expected;
 }
 
-// ✅ Return chart data (safe output)
+// --- Return chart data ---
 $data = [
     "labels" => $labels,
     "datasets" => [
