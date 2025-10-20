@@ -1,150 +1,49 @@
 <?php
 session_start();
-include 'conn/conn.php';
+include 'conn/conn.php'; // Connection to the database
 
+// Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Superadmin Info for "Prepared By"
+// Logged-in superadmin info for "Prepared By"
 $superadmin_id = $_SESSION['idnumber'];
+$prepared_by_name = "N/A";
 $prep_stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM superadmin WHERE idnumber = ?");
 $prep_stmt->bind_param("s", $superadmin_id);
 $prep_stmt->execute();
 $prep_stmt->bind_result($prep_fname, $prep_mname, $prep_lname);
-$prep_stmt->fetch();
-$prep_stmt->close();
-$prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
-
-// Get and sanitize filter values
-$faculty_id = $_GET['faculty_id'] ?? '';
-$sem_filter = $_GET['semester'] ?? '';
-$ay_filter = $_GET['academic_year'] ?? '';
-
-// Variables to hold report data
-$full_name = 'N/A';
-$dept = 'N/A';
-$rank = 'N/A';
-$sem = 'N/A';
-$sy = 'N/A';
-$set_avg = '0.00';
-$sef_avg = '0.00';
-$evaluator_name = '';
-
-if (!empty($faculty_id)) {
-  // 1. Get Faculty Info
-  $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
-  $stmt->bind_param("s", $faculty_id);
-  $stmt->execute();
-  $stmt->bind_result($fname, $mname, $lname, $dept_raw, $rank_raw);
-  if ($stmt->fetch()) {
-    $full_name = strtoupper(trim("$fname $mname $lname"));
-    $dept = strtoupper($dept_raw);
-    $rank = ucwords($rank_raw);
-  }
-  $stmt->close();
-
-  // 2. Get Semester/Academic Year (filtered if available)
-  $where_clause_ae = " WHERE evaluatee_id = ? ";
-  $where_clause_e = " WHERE faculty_id = ? ";
-  $params_ae = [$faculty_id];
-  $params_e = [$faculty_id];
-  $types_ae = "s";
-  $types_e = "s";
-
-  if (!empty($sem_filter)) {
-    $where_clause_ae .= " AND semester = ? ";
-    $where_clause_e .= " AND semester = ? ";
-    $params_ae[] = $sem_filter;
-    $params_e[] = $sem_filter;
-    $types_ae .= "s";
-    $types_e .= "s";
-  }
-  if (!empty($ay_filter)) {
-    $where_clause_ae .= " AND academic_year = ? ";
-    $where_clause_e .= " AND academic_year = ? ";
-    $params_ae[] = $ay_filter;
-    $params_e[] = $ay_filter;
-    $types_ae .= "s";
-    $types_e .= "s";
-  }
-
-  $stmt = $conn->prepare("SELECT semester, academic_year FROM admin_evaluation " . $where_clause_ae . " ORDER BY evaluation_date DESC LIMIT 1");
-  $stmt->bind_param($types_ae, ...$params_ae);
-  $stmt->execute();
-  $stmt->bind_result($sem_eval, $ay_eval);
-  if ($stmt->fetch()) {
-    $sem = $sem_eval;
-    $sy = $ay_eval;
-  }
-  $stmt->close();
-
-  if ($sem === 'N/A') {
-    $stmt = $conn->prepare("SELECT semester, academic_year FROM evaluation " . $where_clause_e . " ORDER BY id DESC LIMIT 1");
-    $stmt->bind_param($types_e, ...$params_e);
-    $stmt->execute();
-    $stmt->bind_result($sem_eval, $ay_eval);
-    if ($stmt->fetch()) {
-      $sem = $sem_eval;
-      $sy = $ay_eval;
-    }
-    $stmt->close();
-  }
-
-  // 3. Get SET and SEF Ratings
-  $stmt = $conn->prepare("SELECT AVG(computed_rating) FROM evaluation " . $where_clause_e);
-  $stmt->bind_param($types_e, ...$params_e);
-  $stmt->execute();
-  $stmt->bind_result($avg);
-  if ($stmt->fetch()) {
-    $set_avg = number_format($avg, 2);
-  }
-  $stmt->close();
-
-  $stmt = $conn->prepare("SELECT AVG(computed_rating) FROM admin_evaluation " . $where_clause_ae);
-  $stmt->bind_param($types_ae, ...$params_ae);
-  $stmt->execute();
-  $stmt->bind_result($avg);
-  if ($stmt->fetch()) {
-    $sef_avg = number_format($avg, 2);
-  }
-  $stmt->close();
-
-  // 4. Determine Evaluator/Supervisor Name
-  // A. First, find the latest evaluator from the admin_evaluation table
-  $eval_stmt = $conn->prepare("SELECT evaluator_id FROM admin_evaluation WHERE evaluatee_id = ? ORDER BY evaluation_date DESC LIMIT 1");
-  $eval_stmt->bind_param("s", $faculty_id);
-  $eval_stmt->execute();
-  $eval_stmt->bind_result($admin_id);
-  $eval_stmt->fetch();
-  $eval_stmt->close();
-
-  $evaluator_name = 'N/A';
-  $stmt_supervisor = $conn->prepare("SELECT first_name, mid_name, last_name, position
-                              FROM admin
-                              WHERE department = ?
-                                AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
-                              ORDER BY 
-                                CASE 
-                                  WHEN position LIKE 'Dean%' THEN 1
-                                  WHEN position LIKE 'Program Chair%' THEN 2
-                                  WHEN position LIKE 'Chair%' THEN 3
-                                  ELSE 4
-                                END
-                              LIMIT 1");
-  if ($stmt_supervisor) {
-    $stmt_supervisor->bind_param("s", $dept);
-    $stmt_supervisor->execute();
-    $stmt_supervisor->bind_result($sfn, $smn, $sln, $spos);
-    if ($stmt_supervisor->fetch()) {
-      $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
-    }
-    $stmt_supervisor->close();
-  }
+if ($prep_stmt->fetch()) {
+  $prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
 }
-?>
+$prep_stmt->close();
 
+// Get filter values from URL
+$selected_dept = $_GET['department'] ?? '';
+$selected_faculty_id = $_GET['faculty_id'] ?? '';
+$selected_semester = $_GET['semester'] ?? '';
+$selected_academic_year = $_GET['academic_year'] ?? '';
+
+// --- Fetch data for dropdowns ---
+$departments_result = $conn->query("SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC");
+
+$faculty_sql = "SELECT idnumber, first_name, mid_name, last_name FROM faculty";
+if (!empty($selected_dept)) {
+  $faculty_sql .= " WHERE department = ?";
+}
+$faculty_sql .= " ORDER BY last_name ASC";
+$faculty_list_stmt = $conn->prepare($faculty_sql);
+if (!empty($selected_dept)) {
+  $faculty_list_stmt->bind_param("s", $selected_dept);
+}
+$faculty_list_stmt->execute();
+$faculty_list_result = $faculty_list_stmt->get_result();
+
+$semesters_query = $conn->query("SELECT DISTINCT semester FROM evaluation WHERE semester IS NOT NULL AND semester != '' UNION SELECT DISTINCT semester FROM admin_evaluation WHERE semester IS NOT NULL AND semester != '' ORDER BY semester ASC");
+$academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluation WHERE academic_year IS NOT NULL AND academic_year != '' UNION SELECT DISTINCT academic_year FROM admin_evaluation WHERE academic_year IS NOT NULL AND academic_year != '' ORDER BY academic_year DESC");
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -154,17 +53,7 @@ if (!empty($faculty_id)) {
     .table th,
     .table td {
       text-align: left;
-      vertical-align: top;
-    }
-
-    .signature-box {
-      height: 60px;
-      min-width: 250px;
-      border-bottom: 1px solid #000;
-    }
-
-    .print-btn {
-      margin-top: 20px;
+      vertical-align: middle;
     }
   </style>
 </head>
@@ -186,186 +75,254 @@ if (!empty($faculty_id)) {
     </div>
 
     <div class="card p-4 mb-4">
-      <form method="GET" action="superadmin-acknowledgementreport.php">
+      <form method="GET" action="">
         <div class="row align-items-end mb-4">
-          <div class="col-md-2">
+          <div class="col-md-3">
             <label for="department" class="form-label">Select Department</label>
             <select class="form-select" name="department" id="department" onchange="this.form.submit()">
               <option value="">-- All Departments --</option>
-              <?php
-              $dept_query = mysqli_query($conn, "SELECT DISTINCT department FROM faculty ORDER BY department ASC");
-              while ($row = mysqli_fetch_assoc($dept_query)) {
-                $selected = (isset($_GET['department']) && $_GET['department'] == $row['department']) ? "selected" : "";
-                echo "<option value='{$row['department']}' $selected>{$row['department']}</option>";
-              }
-              ?>
+              <?php while ($row = $departments_result->fetch_assoc()): ?>
+                <option value="<?= htmlspecialchars($row['department']) ?>" <?= ($selected_dept == $row['department']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($row['department']) ?>
+                </option>
+              <?php endwhile; ?>
             </select>
           </div>
-
-          <div class="col-md-4">
+          <div class="col-md-3">
             <label for="faculty_id" class="form-label">Select Faculty</label>
             <select class="form-select" name="faculty_id" id="faculty_id" required>
-              <option value="" disabled selected>-- Choose Faculty --</option>
-              <?php
-              $faculty_query_sql = "SELECT idnumber, first_name, mid_name, last_name FROM faculty";
-              $params = [];
-              $types = '';
-              if (!empty($_GET['department'])) {
-                $faculty_query_sql .= " WHERE department = ?";
-                $params[] = $_GET['department'];
-                $types .= 's';
-              }
-              $faculty_query_sql .= " ORDER BY last_name ASC";
-              $stmt = $conn->prepare($faculty_query_sql);
-              if (!empty($params)) {
-                $stmt->bind_param($types, ...$params);
-              }
-              $stmt->execute();
-              $faculty_result = $stmt->get_result();
-              while ($row = $faculty_result->fetch_assoc()) {
-                $full_name_option = trim("{$row['last_name']}, {$row['first_name']} {$row['mid_name']}");
-                $selected = ($faculty_id === $row['idnumber']) ? "selected" : "";
-                echo "<option value='{$row['idnumber']}' $selected>$full_name_option</option>";
-              }
-              $stmt->close();
-              ?>
+              <option value="" disabled <?= empty($selected_faculty_id) ? 'selected' : ''; ?>>-- Choose Faculty --</option>
+              <?php while ($row = $faculty_list_result->fetch_assoc()):
+                $full_name = htmlspecialchars($row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name']);
+                $selected = ($selected_faculty_id == $row['idnumber']) ? "selected" : "";
+                echo "<option value='{$row['idnumber']}' $selected>$full_name</option>";
+              endwhile; ?>
             </select>
           </div>
-
           <div class="col-md-2">
             <label for="semester" class="form-label">Semester</label>
             <select class="form-select" name="semester" id="semester">
-              <option value="" <?= empty($sem_filter) ? 'selected' : '' ?>>-- All Semesters --</option>
-              <?php
-              $sem_query = mysqli_query($conn, "SELECT DISTINCT semester FROM (
-                                                    SELECT semester FROM admin_evaluation
-                                                    UNION
-                                                    SELECT semester FROM evaluation
-                                                  ) AS all_semesters
-                                                  ORDER BY semester ASC
-                                                ");
-              while ($row = mysqli_fetch_assoc($sem_query)) {
-                $selected = ($sem_filter === $row['semester']) ? "selected" : "";
-                echo "<option value='{$row['semester']}' $selected>{$row['semester']}</option>";
-              }
-              ?>
+              <option value="">-- All Semesters --</option>
+              <?php while ($sem_row = $semesters_query->fetch_assoc()): ?>
+                <option value="<?= htmlspecialchars($sem_row['semester']) ?>" <?= ($selected_semester == $sem_row['semester']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($sem_row['semester']) ?>
+                </option>
+              <?php endwhile; ?>
             </select>
           </div>
-
           <div class="col-md-2">
             <label for="academic_year" class="form-label">Academic Year</label>
             <select class="form-select" name="academic_year" id="academic_year">
-              <option value="" <?= empty($ay_filter) ? 'selected' : '' ?>>-- All Academic Years --</option>
-              <?php
-              $ay_query = mysqli_query($conn, "SELECT DISTINCT academic_year FROM (
-                                                  SELECT academic_year FROM admin_evaluation
-                                                  UNION
-                                                  SELECT academic_year FROM evaluation
-                                                ) AS all_years
-                                                ORDER BY academic_year DESC
-                                              ");
-              while ($row = mysqli_fetch_assoc($ay_query)) {
-                $selected = ($ay_filter === $row['academic_year']) ? "selected" : "";
-                echo "<option value='{$row['academic_year']}' $selected>{$row['academic_year']}</option>";
-              }
-              ?>
+              <option value="">-- All Academic Years --</option>
+              <?php while ($ay_row = $academic_years_query->fetch_assoc()): ?>
+                <option value="<?= htmlspecialchars($ay_row['academic_year']) ?>" <?= ($selected_academic_year == $ay_row['academic_year']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($ay_row['academic_year']) ?>
+                </option>
+              <?php endwhile; ?>
             </select>
           </div>
-
-          <div class="col-md-auto">
-            <button type="submit" class="btn btn-success">Generate</button>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100">Generate</button>
           </div>
         </div>
       </form>
 
-      <?php if (!empty($faculty_id)) { ?>
-        <div id="printSection">
-          <h5 class="text-center"><strong>FACULTY EVALUATION ACKNOWLEDGEMENT FORM</strong></h5>
+      <?php
+      if (!empty($selected_faculty_id)) {
+        $faculty_id = $selected_faculty_id;
 
-          <h6><strong>FACULTY MEMBER INFORMATION</strong></h6>
-          <table class="table table-bordered w-100">
+        // --- Build WHERE clauses and parameters ---
+        $params_types = "s";
+        $params_values = [$faculty_id];
+        $eval_where_clauses = ["faculty_id = ?"];
+        $admin_eval_where_clauses = ["evaluatee_id = ?"];
+
+        if (!empty($selected_semester)) {
+          $eval_where_clauses[] = "semester = ?";
+          $admin_eval_where_clauses[] = "semester = ?";
+          $params_types .= "s";
+          $params_values[] = $selected_semester;
+        }
+        if (!empty($selected_academic_year)) {
+          $eval_where_clauses[] = "academic_year = ?";
+          $admin_eval_where_clauses[] = "academic_year = ?";
+          $params_types .= "s";
+          $params_values[] = $selected_academic_year;
+        }
+        $eval_where_sql = implode(' AND ', $eval_where_clauses);
+        $admin_eval_where_sql = implode(' AND ', $admin_eval_where_clauses);
+
+        // --- Fetch all data needed for the report ---
+        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+        $stmt->bind_param("s", $faculty_id);
+        $stmt->execute();
+        $stmt->bind_result($fname, $mname, $lname, $dept, $rank);
+        $stmt->fetch();
+        $stmt->close();
+        $full_name = strtoupper(trim("$fname $mname $lname"));
+        $dept_display = strtoupper($dept);
+        $rank_display = ucwords($rank);
+
+        $sem = $selected_semester ?: "All Semesters";
+        $sy = $selected_academic_year ?: "All Academic Years";
+
+        // SET Rating
+        $set_avg = '0.00';
+        $stmt_set_avg = $conn->prepare("SELECT AVG(computed_rating) as avg FROM evaluation WHERE {$eval_where_sql}");
+        $stmt_set_avg->bind_param($params_types, ...$params_values);
+        $stmt_set_avg->execute();
+        $stmt_set_avg->bind_result($avg_res);
+        if ($stmt_set_avg->fetch() && $avg_res !== null) {
+          $set_avg = number_format($avg_res, 2);
+        }
+        $stmt_set_avg->close();
+
+        // SEF Rating
+        $sef_avg = '0.00';
+        $stmt_sef_avg = $conn->prepare("SELECT AVG(computed_rating) as avg FROM admin_evaluation WHERE {$admin_eval_where_sql}");
+        $stmt_sef_avg->bind_param($params_types, ...$params_values);
+        $stmt_sef_avg->execute();
+        $stmt_sef_avg->bind_result($avg_res);
+        if ($stmt_sef_avg->fetch() && $avg_res !== null) {
+          $sef_avg = number_format($avg_res, 2);
+        }
+        $stmt_sef_avg->close();
+
+        // ✅ --- START OF FIX ---
+
+        // Supervisor Name (FIXED QUERY)
+        $evaluator_name = 'N/A';
+        $stmt_supervisor = $conn->prepare("
+                    SELECT a.first_name, a.mid_name, a.last_name FROM admin a
+                    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+                    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%')
+                    ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
+        $stmt_supervisor->bind_param("s", $college_name_for_lookup);
+        $stmt_supervisor->execute();
+        $stmt_supervisor->bind_result($sfn, $smn, $sln);
+        if ($stmt_supervisor->fetch()) {
+          $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
+        }
+        $stmt_supervisor->close();
+        // ✅ --- END OF FIX ---
+      ?>
+
+        <div id="printSection" class="mt-4">
+          <h4 class="text-center mb-4"><strong>FACULTY EVALUATION ACKNOWLEDGEMENT FORM</strong></h4>
+          <h5 class="mt-4"><strong>FACULTY MEMBER INFORMATION</strong></h5>
+          <table class="table table-bordered">
             <tr>
-              <th>Name of Faculty</th>
-              <td><?= htmlspecialchars($full_name) ?></td>
+              <th style="width: 30%;">Name of Faculty</th>
+              <td style="width: 2%; text-align: center;">:</td>
+              <td style="font-weight: bold;"><?= htmlspecialchars($full_name) ?></td>
             </tr>
             <tr>
               <th>Department/College</th>
-              <td><?= htmlspecialchars($dept) ?></td>
+              <td style="text-align: center;">:</td>
+              <td style="font-weight: bold;"><?= htmlspecialchars($dept_display) ?></td>
             </tr>
             <tr>
               <th>Current Faculty Rank</th>
-              <td><?= htmlspecialchars($rank) ?></td>
+              <td style="text-align: center;">:</td>
+              <td style="font-weight: bold;"><?= htmlspecialchars($rank_display) ?></td>
             </tr>
             <tr>
               <th>Semester/Term & Academic Year</th>
-              <td><?= htmlspecialchars($sem) ?> / <?= htmlspecialchars($sy) ?></td>
+              <td style="text-align: center;">:</td>
+              <td style="font-weight: bold;"><?= htmlspecialchars($sem) ?> / <?= htmlspecialchars($sy) ?></td>
             </tr>
           </table>
 
-          <h6><strong>FACULTY EVALUATION SUMMARY</strong></h6>
-          <table class="table table-bordered text-center w-100">
+          <h5 class="mt-5"><strong>FACULTY EVALUATION SUMMARY</strong></h5>
+          <table class="table table-bordered text-center">
             <thead>
               <tr>
-                <th>Student Evaluation of Teachers (SET)</th>
-                <th>Supervisor's Evaluation of Faculty (SEF)</th>
+                <th colspan="2">Overall Rating</th>
+              </tr>
+              <tr>
+                <th style="width: 50%;">Student Evaluation of Teachers (SET)</th>
+                <th style="width: 50%;">Supervisor's Evaluation of Faculty (SAF)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><strong><?= $set_avg ?></strong></td>
-                <td><strong><?= $sef_avg ?></strong></td>
+                <td style="font-size: 1.1rem; font-weight: bold;"><?= htmlspecialchars($set_avg) ?></td>
+                <td style="font-size: 1.1rem; font-weight: bold;"><?= htmlspecialchars($sef_avg) ?></td>
               </tr>
             </tbody>
           </table>
 
-          <p>
-            I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above.
-            I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor.
-          </p>
+          <p class="mt-4" style="text-align: justify;">I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above. I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor.</p>
 
-          <h6><strong>SUPERVISOR</strong></h6>
-          <table class="table table-bordered w-100">
-            <tr>
-              <th>Signature</th>
-              <td class="signature-box"></td>
-              <th>Name</th>
-              <td class="signature-box"><?= htmlspecialchars($evaluator_name) ?></td>
-              <th>Date Signed</th>
-              <td class="signature-box"><?= date('F j, Y') ?></td>
-            </tr>
+          <table class="table table-bordered mt-5">
+            <thead>
+              <tr>
+                <th colspan="3" class="text-center bg-dark text-white">SUPERVISOR</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th style="width: 20%;">Signature</th>
+                <td style="width: 2%; text-align: center;">:</td>
+                <td style="height: 50px;"></td>
+              </tr>
+              <tr>
+                <th>Name</th>
+                <td style="text-align: center;">:</td>
+                <td><?= htmlspecialchars($evaluator_name) ?></td>
+              </tr>
+              <tr>
+                <th>Date Signed</th>
+                <td style="text-align: center;">:</td>
+                <td></td>
+              </tr>
+            </tbody>
           </table>
 
-          <h6><strong>FACULTY</strong></h6>
-          <table class="table table-bordered w-100 table-responsive">
-            <tr>
-              <th>Signature</th>
-              <td class="signature-box"></td>
-              <th>Name</th>
-              <td class="signature-box"><?= htmlspecialchars($full_name) ?></td>
-              <th>Date Signed</th>
-              <td class="signature-box"><?= date('F j, Y') ?></td>
-            </tr>
+          <table class="table table-bordered mt-4">
+            <thead>
+              <tr>
+                <th colspan="3" class="text-center bg-dark text-white">FACULTY</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th style="width: 20%;">Signature</th>
+                <td style="width: 2%; text-align: center;">:</td>
+                <td style="height: 50px;"></td>
+              </tr>
+              <tr>
+                <th>Name</th>
+                <td style="text-align: center;">:</td>
+                <td><?= htmlspecialchars($full_name) ?></td>
+              </tr>
+              <tr>
+                <th>Date Signed</th>
+                <td style="text-align: center;">:</td>
+                <td></td>
+              </tr>
+            </tbody>
           </table>
         </div>
 
-        <a href="superadmin-acknowledgementreport-print.php?faculty_id=<?= urlencode($faculty_id) ?>&semester=<?= urlencode($sem_filter) ?>&academic_year=<?= urlencode($ay_filter) ?>" target="_blank" class="offset-4 col-md-3 btn btn-secondary print-btn">
-          Print Acknowledgement
-        </a>
+        <div class="text-end mb-3">
+          <?php
+          $print_url = "superadmin-acknowledgementreport-print.php?faculty_id=" . urlencode($faculty_id);
+          if (!empty($selected_semester)) $print_url .= "&semester=" . urlencode($selected_semester);
+          if (!empty($selected_academic_year)) $print_url .= "&academic_year=" . urlencode($selected_academic_year);
+          ?>
+          <a href="<?= $print_url ?>" target="_blank" class="btn btn-secondary">
+            <i class="bi bi-printer"></i> Print Report
+          </a>
+        </div>
+
       <?php } ?>
     </div>
   </main>
 
   <?php include 'footer.php' ?>
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
   <script src="assets/js/main.js"></script>
 </body>
 

@@ -9,15 +9,35 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 }
 
 $admin_id = $_SESSION['idnumber'];
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, position 
+
+// 🔹 CHANGE 1: Fix Admin Info Query (Remove 'department')
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
                         FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$stmt->bind_result($fname, $mname, $lname, $admin_department, $position);
+// Bind to new variables (removed $admin_department)
+$stmt->bind_result($fname, $mname, $lname, $position);
 $stmt->fetch();
 $stmt->close();
 
 $admin_name = $lname . ', ' . $fname . ' ' . $mname;
+
+// 🔹 CHANGE 2: Add correct logic to fetch departments
+// Fetch all departments assigned to this admin
+$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt->bind_param("s", $admin_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$departments = [];
+while ($row = $result->fetch_assoc()) {
+    $departments[] = $row['department_name'];
+}
+$stmt->close();
+
+// For the PDF title
+$admin_department_display = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+
 
 // 🔹 Get filters
 $semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
@@ -31,9 +51,11 @@ $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, strtoupper($admin_department) . ' OVERALL SET REPORT', 0, 1, 'C');
+// Use the new display variable
+$pdf->Cell(0, 10, strtoupper($admin_department_display) . ' OVERALL SET REPORT', 0, 1, 'C');
 
-// 🔹 Show only filters & date
+// ... (rest of your semester/year filter logic is fine) ...
+
 $pdf->SetFont('Arial', '', 11);
 
 // Handle semester display
@@ -73,6 +95,11 @@ $pdf->Cell(0, 8, "Academic Year: $year_display", 0, 1);
 $pdf->Cell(0, 8, 'Date: ' . date('F j, Y'), 0, 1);
 $pdf->Ln(5);
 
+// Section Header
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->SetFillColor(240, 240, 240);
+$pdf->Cell(180, 10, strtoupper($admin_department_display) . " OVERALL EVALUATION SET", 0, 1, 'C', true);
+$pdf->Ln(2);
 
 // Table Headers
 $pdf->SetFont('Arial', 'B', 11);
@@ -81,17 +108,27 @@ $pdf->Cell(50, 10, 'Student Evaluations', 1);
 $pdf->Cell(50, 10, 'Average SET Rating', 1);
 $pdf->Ln();
 
-// Fetch faculty in this department
-$query = $conn->prepare("
-  SELECT idnumber, last_name, first_name, mid_name
-  FROM faculty
-  WHERE department = ?
-  ORDER BY last_name ASC
-");
-$query->bind_param("s", $admin_department);
-$query->execute();
-$faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-$query->close();
+// 🔹 CHANGE 3: Fix Faculty Query (use IN clause with $departments array)
+$faculties = [];
+if (!empty($departments)) {
+    // Create placeholders for IN clause, e.g., "department IN (?, ?, ?)"
+    $placeholders = implode(',', array_fill(0, count($departments), '?'));
+    $types = str_repeat('s', count($departments)); // e.g., "sss"
+
+    $sql = "
+        SELECT idnumber, last_name, first_name, mid_name
+        FROM faculty
+        WHERE department IN ($placeholders)
+        ORDER BY last_name ASC
+    ";
+
+    $query = $conn->prepare($sql);
+    // Unpack the departments array as arguments
+    $query->bind_param($types, ...$departments);
+    $query->execute();
+    $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+    $query->close();
+}
 
 $pdf->SetFont('Arial', '', 10);
 foreach ($faculties as $fac) {
@@ -129,7 +166,7 @@ foreach ($faculties as $fac) {
 
   $pdf->Cell(80, 8, $name, 1);
   $pdf->Cell(50, 8, $count, 1, 0, 'C');
-  $pdf->Cell(50, 8, "$avg%", 1, 0, 'C');
+  $pdf->Cell(50, 8, "$avg", 1, 0, 'C');
   $pdf->Ln();
 }
 

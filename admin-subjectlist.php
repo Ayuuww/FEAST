@@ -10,16 +10,33 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get the admin's department + position using prepared statement
-$dept_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+// ✅ Get admin's position
+$pos_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
+$pos_stmt->bind_param("s", $admin_id);
+$pos_stmt->execute();
+$pos_res = $pos_stmt->get_result();
+$admin_position = ($pos_res->fetch_assoc())['position'] ?? '';
+$pos_stmt->close();
+
+// ✅ Get all departments assigned to this admin
+$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $dept_res = $dept_stmt->get_result();
-$admin_data = $dept_res->fetch_assoc() ?? [];
+$departments = [];
+while ($row = $dept_res->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
 $dept_stmt->close();
 
-$admin_dept = $admin_data['department'] ?? '';
-$admin_position = $admin_data['position'] ?? '';
+// If admin has no department, block access
+if (empty($departments)) {
+  $_SESSION['msg'] = "No departments assigned to your account.";
+  $_SESSION['msg_type'] = "error";
+  header("Location: admin-dashboard.php");
+  exit();
+}
+
 
 // ✅ Restrict allowed positions (only allow Dean/Chair/Program Chair)
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
@@ -30,6 +47,9 @@ if (!in_array($admin_position, $allowed_positions)) {
 }
 
 // Fetching subjects and faculty/admin names safely with prepared statement
+// Prepare dynamic placeholders based on number of departments
+$placeholders = implode(',', array_fill(0, count($departments), '?'));
+
 $sub_q = "
   SELECT subject.*,
          COALESCE(f.first_name, a.first_name) AS first_name,
@@ -43,12 +63,15 @@ $sub_q = "
   FROM subject
   LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
   LEFT JOIN admin a ON subject.admin_id = a.idnumber
-  WHERE subject.department = ?
+  WHERE subject.department IN ($placeholders)
   ORDER BY subject.code ASC
 ";
 
 $sub_stmt = $conn->prepare($sub_q);
-$sub_stmt->bind_param("s", $admin_dept);
+
+// Bind all department names dynamically
+$types = str_repeat('s', count($departments));
+$sub_stmt->bind_param($types, ...$departments);
 $sub_stmt->execute();
 $result = $sub_stmt->get_result();
 ?>

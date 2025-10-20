@@ -50,14 +50,14 @@ $query = "
    AND e.academic_year = ss.academic_year
    AND e.semester = ss.semester
    AND e.faculty_id = ss.faculty_id
-  WHERE ss.faculty_id = ?
+  WHERE (ss.faculty_id = ? OR ss.admin_id = ?)
     AND ss.academic_year = ?
     AND ss.semester = ?
   GROUP BY ss.subject_code, subj.subject_title, ss.academic_year, ss.semester
   ORDER BY ss.academic_year DESC, ss.semester DESC
 ";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("sss", $admin_id, $selected_year, $selected_sem);
+$stmt->bind_param("ssss", $admin_id, $admin_id, $selected_year, $selected_sem);
 $stmt->execute();
 $result = $stmt->get_result();
 

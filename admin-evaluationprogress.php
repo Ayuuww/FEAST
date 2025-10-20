@@ -10,10 +10,25 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Fetch admin’s department automatically
-$dept_query = mysqli_query($conn, "SELECT department FROM faculty WHERE idnumber = '$admin_id' LIMIT 1");
-$dept_data = mysqli_fetch_assoc($dept_query);
-$department = $dept_data['department'] ?? null;
+// ✅ Fetch all departments assigned to this admin
+$dept_query = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$dept_query->bind_param("s", $admin_id);
+$dept_query->execute();
+$dept_result = $dept_query->get_result();
+
+$departments = [];
+while ($row = $dept_result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+$dept_query->close();
+
+// If no departments found, block access
+if (empty($departments)) {
+  $_SESSION['msg'] = "You are not assigned to any department. Please contact the Superadmin.";
+  $_SESSION['msg_type'] = "error";
+  header("Location: admin-dashboard.php");
+  exit();
+}
 
 // Filters
 $academic_year = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['year']) : null;
@@ -44,7 +59,7 @@ LEFT JOIN evaluation e
     AND e.academic_year = ss.academic_year
     AND e.semester = ss.semester
 WHERE e.id IS NULL
-  AND s.department = '{$department}'  /* ✅ Only show students in admin’s department */
+  AND s.department IN ('" . implode("','", $departments) . "')  /* ✅ Only show students in admin’s department */
 ";
 
 // Apply filters
@@ -67,8 +82,7 @@ $sems = mysqli_query($conn, "SELECT DISTINCT semester FROM student_subject ORDER
 $subjects = mysqli_query($conn, "
   SELECT DISTINCT subj.code, subj.title 
   FROM subject subj 
-  INNER JOIN faculty f ON subj.department = f.department 
-  WHERE f.department = '{$department}'
+  WHERE subj.department IN ('" . implode("','", $departments) . "')
   ORDER BY subj.title ASC
 ");
 

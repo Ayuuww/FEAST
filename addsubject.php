@@ -9,13 +9,15 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 // Get admin's department
 $admin_id = $_SESSION['idnumber'];
-$dept_query = mysqli_query($conn, "SELECT department FROM admin WHERE idnumber = '$admin_id' LIMIT 1");
 $admin_dept = '';
-
-if ($dept_query && mysqli_num_rows($dept_query) > 0) {
-  $admin_data = mysqli_fetch_assoc($dept_query);
-  $admin_dept = $admin_data['department'];
+$dept_query = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ? LIMIT 1");
+$dept_query->bind_param("s", $admin_id);
+$dept_query->execute();
+$result = $dept_query->get_result();
+if ($row = $result->fetch_assoc()) {
+  $admin_dept = $row['department_name'];
 }
+$dept_query->close();
 
 if (isset($_POST['addsubject'])) {
   $subject_code   = $_POST['code'];

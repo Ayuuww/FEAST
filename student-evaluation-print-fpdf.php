@@ -64,16 +64,17 @@ require 'printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
+// Header
 $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, 'Faculty Evaluation Summary', 0, 1, 'C');
 $pdf->Ln(3);
 
 // Faculty Info
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Name of Faculty being Evaluated: " . $faculty_name, 0, 1);
 $pdf->Cell(0, 6, "Department/College: " . $data['department'], 0, 1);
 $pdf->Cell(0, 6, "Subject Code/Title: " . $data['subject_code'] . " / " . $data['subject_title'], 0, 1);
-$pdf->Cell(0, 6, "Academic Year: " . $data['academic_year'], 0, 1);
+$pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 
 // Table Headers

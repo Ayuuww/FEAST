@@ -7,12 +7,22 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 }
 
 $admin_id = $_SESSION['idnumber'];
-$stmt = $conn->prepare("SELECT department FROM admin WHERE idnumber = ?");
+
+// Fetch all departments assigned to this admin
+$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$stmt->bind_result($admin_department);
-$stmt->fetch();
+$result = $stmt->get_result();
+
+$departments = [];
+while ($row = $result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
 $stmt->close();
+
+// Use first department as default (for display/title)
+$admin_department = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+
 
 // Get filter values from request
 $semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
@@ -38,17 +48,27 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->close();
 
-// Fetch all faculty in this department
-$query = $conn->prepare("
-  SELECT idnumber, last_name, first_name, mid_name
-  FROM faculty
-  WHERE department = ?
-  ORDER BY last_name ASC
-");
-$query->bind_param("s", $admin_department);
-$query->execute();
-$faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-$query->close();
+// Fetch all faculty in the admin's assigned departments
+$faculties = [];
+if (!empty($departments)) {
+  // Create placeholders for IN clause, e.g., "department IN (?, ?, ?)"
+  $placeholders = implode(',', array_fill(0, count($departments), '?'));
+  $types = str_repeat('s', count($departments)); // e.g., "sss"
+
+  $sql = "
+        SELECT idnumber, last_name, first_name, mid_name
+        FROM faculty
+        WHERE department IN ($placeholders)
+        ORDER BY last_name ASC
+    ";
+
+  $query = $conn->prepare($sql);
+  // Unpack the departments array as arguments
+  $query->bind_param($types, ...$departments);
+  $query->execute();
+  $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+  $query->close();
+}
 
 // Build table rows
 $rows = '';
@@ -86,7 +106,7 @@ foreach ($faculties as $fac) {
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
 
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
-  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg} %</td></tr>";
+  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg}</td></tr>";
 }
 ?>
 

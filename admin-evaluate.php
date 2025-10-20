@@ -23,15 +23,45 @@ if ($_SESSION['role'] !== 'admin') {
 
 $evaluator_id = $_SESSION['idnumber'];
 
-// Get current admin's department and position
-$admin_info_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+// ✅ Get current admin’s position
+$admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $admin_info_stmt->bind_param("s", $evaluator_id);
 $admin_info_stmt->execute();
 $admin_result = $admin_info_stmt->get_result();
 $admin_data = $admin_result->fetch_assoc();
-$department = $admin_data['department'] ?? '';
 $evaluator_position = $admin_data['position'] ?? 'Not Set';
 $admin_info_stmt->close();
+
+// ✅ Get all departments assigned to this admin
+$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$dept_stmt->bind_param("s", $evaluator_id);
+$dept_stmt->execute();
+$dept_result = $dept_stmt->get_result();
+
+$departments = [];
+while ($row = $dept_result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+$dept_stmt->close();
+
+// Use the first department for compatibility (or all)
+if (!empty($departments)) {
+  $department = $departments[0];
+} else {
+  // fallback: try to get faculty’s department or a default college name
+  $fallback_dept_query = $conn->prepare("
+      SELECT department_name 
+      FROM adds 
+      WHERE college IN (
+          SELECT college FROM adds LIMIT 1
+      ) LIMIT 1
+  ");
+  $fallback_dept_query->execute();
+  $result = $fallback_dept_query->get_result();
+  $department = ($row = $result->fetch_assoc()) ? $row['department_name'] : 'Unknown';
+  $fallback_dept_query->close();
+}
+
 
 // ✅ Restrict allowed positions
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair']; // adjust spelling to match DB values
@@ -56,41 +86,61 @@ if ($setting_result && $setting_result->num_rows > 0) {
 // --- IMPORTANT MODIFICATION HERE ---
 // Fetching faculty members from the same department as the admin
 // AND who have NOT been evaluated by this specific admin for the current academic year and semester
-$query = "
-    SELECT
-        f.idnumber,
-        f.first_name,
-        f.mid_name,
-        f.last_name,
-        f.faculty_rank,
-        f.department
-    FROM
-        faculty f
-    WHERE
-        f.department = ? -- Filter by admin's department
-        AND f.status = 'active' -- Only active faculty
-        AND NOT EXISTS ( -- Subquery to exclude already evaluated faculty
-            SELECT 1
-            FROM admin_evaluation ae
-            WHERE
-                ae.evaluatee_id = f.idnumber
-                AND ae.evaluator_id = ?
-                AND ae.academic_year = ?
-                AND ae.semester = ?
-        )
-    ORDER BY
-        f.last_name, f.first_name";
+// ✅ Modified query: include all departments assigned to this admin
+if (!empty($departments)) {
+  // Create placeholders (?, ?, ?) dynamically based on department count
+  $placeholders = implode(',', array_fill(0, count($departments), '?'));
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param("ssss", $department, $evaluator_id, $default_year, $default_semester);
-$stmt->execute();
-$result = $stmt->get_result();
+  $query = "
+  SELECT
+      f.idnumber,
+      f.first_name,
+      f.mid_name,
+      f.last_name,
+      f.faculty_rank,
+      f.department
+  FROM
+      faculty f
+  JOIN adds a ON f.department = a.department_name
+  WHERE
+      a.department_name IN ($placeholders)
+      AND f.status = 'active'
+      AND NOT EXISTS (
+          SELECT 1
+          FROM admin_evaluation ae
+          WHERE
+              ae.evaluatee_id = f.idnumber
+              AND ae.evaluator_id = ?
+              AND ae.academic_year = ?
+              AND ae.semester = ?
+      )
+  ORDER BY
+      f.last_name, f.first_name
+";
 
-$faculty_list = [];
-while ($row = $result->fetch_assoc()) {
-  $faculty_list[] = $row;
+  // Merge all bind parameters: departments + evaluator info
+  $types = str_repeat('s', count($departments) + 3);
+  $params = array_merge($departments, [$evaluator_id, $default_year, $default_semester]);
+
+  $stmt = $conn->prepare($query);
+  $stmt->bind_param($types, ...$params);
+  $stmt->execute();
+  $result = $stmt->get_result();
+} else {
+  // No departments assigned → empty list
+  $result = false;
 }
-$stmt->close();
+
+// ✅ Remove duplicated execute() — keep result as is
+$faculty_list = [];
+if ($result) {
+  while ($row = $result->fetch_assoc()) {
+    $faculty_list[] = $row;
+  }
+}
+if (isset($stmt)) {
+  $stmt->close();
+}
 
 
 // Display message if set
@@ -540,9 +590,11 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
           cancelButtonText: 'Print Later'
         }).then((result) => {
           if (result.isConfirmed) {
-            // Assuming you pass the evaluatee_id to print page
-            // You might need to adjust this based on how you handle printing
-            window.location.href = "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>";
+            // ✅ Open print page in a new tab
+            window.open(
+              "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>",
+              "_blank"
+            );
           } else {
             Swal.fire({
               title: 'Saved!',

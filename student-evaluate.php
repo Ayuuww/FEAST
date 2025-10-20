@@ -59,7 +59,7 @@ $query = "SELECT
               COALESCE(f.mid_name, a.mid_name) AS mid_name,
               COALESCE(f.last_name, a.last_name) AS last_name,
               COALESCE(f.status, a.status) AS status,
-              COALESCE(f.department, a.department, s.department) AS department,
+              COALESCE(f.department, ad.department_name, s.department) AS department,
               CASE
                   WHEN f.idnumber IS NOT NULL THEN 'faculty'
                   WHEN a.idnumber IS NOT NULL THEN 'admin'
@@ -72,6 +72,8 @@ $query = "SELECT
             ON ss.faculty_id = f.idnumber AND f.status = 'active'
           LEFT JOIN admin a 
             ON ss.admin_id = a.idnumber AND a.status = 'active'
+          LEFT JOIN admin_departments ad 
+            ON ad.admin_idnumber = a.idnumber
           WHERE ss.student_id = ?
             AND ss.academic_year = ?
             AND ss.semester = ?
@@ -116,11 +118,11 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
 <html lang="en">
 
 <head>
-      
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 
   <style>
     @media print {

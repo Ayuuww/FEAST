@@ -81,12 +81,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // Fetch current profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, position, department FROM admin WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, position FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
+
+// 🔹 FIX 2: Add a new query to get all assigned departments
+$stmt_depts = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_depts->bind_param("s", $idnumber);
+$stmt_depts->execute();
+$result_depts = $stmt_depts->get_result();
+$departments_array = [];
+while ($row = $result_depts->fetch_assoc()) {
+    $departments_array[] = $row['department_name'];
+}
+$stmt_depts->close();
+
+// Create a comma-separated string for display
+$department_display = !empty($departments_array) ? implode(', ', $departments_array) : 'Not Assigned';
 ?>
 
 
@@ -149,7 +163,7 @@ $stmt->close();
                     </div>
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Department/College</label>
-                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>"></div>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($department_display) ?>"></div>
                     </div>
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label">Designation</label>

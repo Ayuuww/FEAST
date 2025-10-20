@@ -11,15 +11,29 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 $admin_id = $_SESSION['idnumber'];
 
 // ✅ Get the admin's department + position
-$admin_info_stmt = $conn->prepare("SELECT department, position FROM admin WHERE idnumber = ? LIMIT 1");
+// ✅ Get admin's position from admin table
+$admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $admin_info_stmt->bind_param("s", $admin_id);
 $admin_info_stmt->execute();
 $admin_result = $admin_info_stmt->get_result();
 $admin_data = $admin_result->fetch_assoc();
+$admin_position = $admin_data['position'] ?? '';
 $admin_info_stmt->close();
 
-$admin_dept = $admin_data['department'] ?? '';
-$admin_position = $admin_data['position'] ?? '';
+// ✅ Get all departments assigned to this admin
+$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$dept_stmt->bind_param("s", $admin_id);
+$dept_stmt->execute();
+$dept_result = $dept_stmt->get_result();
+
+$departments = [];
+while ($row = $dept_result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+$dept_stmt->close();
+
+// Use first department for compatibility
+$admin_dept = !empty($departments) ? $departments[0] : '';
 
 // ✅ Restrict allowed positions
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
@@ -30,14 +44,29 @@ if (!in_array($admin_position, $allowed_positions)) {
 }
 
 // Get real faculty in same department
-$faculty_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
-                                       FROM faculty 
-                                       WHERE status = 'active' AND department = '$admin_dept'");
+if (!empty($departments)) {
+  $placeholders = implode(',', array_fill(0, count($departments), '?'));
+  $types = str_repeat('s', count($departments));
 
-// Get admin-as-faculty in same department (optional, if needed)
-$admin_result = mysqli_query($conn, "SELECT idnumber, first_name, mid_name, last_name 
-                                     FROM admin 
-                                     WHERE department = '$admin_dept'");
+  // Faculty in assigned departments
+  $faculty_query = "SELECT idnumber, first_name, mid_name, last_name 
+                    FROM faculty 
+                    WHERE status = 'active' AND department IN ($placeholders)";
+  $faculty_stmt = $conn->prepare($faculty_query);
+  $faculty_stmt->bind_param($types, ...$departments);
+  $faculty_stmt->execute();
+  $faculty_result = $faculty_stmt->get_result();
+
+  // Admins in assigned departments (optional)
+  $admin_query = "SELECT a.idnumber, a.first_name, a.mid_name, a.last_name
+                  FROM admin a
+                  JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+                  WHERE ad.department_name IN ($placeholders)";
+  $admin_stmt = $conn->prepare($admin_query);
+  $admin_stmt->bind_param($types, ...$departments);
+  $admin_stmt->execute();
+  $admin_result = $admin_stmt->get_result();
+}
 
 $faculty_data = [];
 $faculty_ids = [];
@@ -93,7 +122,7 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
           icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
           title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
           text: '<?= $_SESSION['msg'] ?>',
-          confirmButtonColor: '#3085d6'
+          confirmButtonColor: '#198754'
         });
       </script>
       <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
@@ -113,7 +142,7 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                     icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
                     title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
                     text: '<?= $_SESSION['msg'] ?>',
-                    confirmButtonColor: '#3085d6'
+                    confirmButtonColor: '#198754'
                   });
                 </script>
                 <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>

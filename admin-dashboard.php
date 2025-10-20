@@ -31,108 +31,146 @@ if ($setting_result && $setting_result->num_rows > 0) {
 }
 
 
-// Get admin's department
-$dept_query = "SELECT department FROM admin WHERE idnumber = ?";
+// ✅ Get all departments for this admin (can be multiple)
+$dept_query = "SELECT department_name FROM admin_departments WHERE admin_idnumber = ?";
 $stmt = $conn->prepare($dept_query);
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$row = $result->fetch_assoc();
-$department = $row['department'] ?? '';
+
+$departments = [];
+while ($row = $result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+
+// Create a comma-separated string for display
+$department_list = implode(", ", $departments);
+
+// In case no department assigned
+if (empty($departments)) {
+  $departments = ['None'];
+}
 
 // Count faculty in same department
-$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department = ? AND status = 'active'";
+// Build placeholders (?, ?, ?) dynamically for each department
+$placeholders = implode(',', array_fill(0, count($departments), '?'));
+$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department IN ($placeholders) AND status = 'active'";
 $stmt = $conn->prepare($faculty_query);
-$stmt->bind_param("s", $department);
+$types = str_repeat('s', count($departments));
+$stmt->bind_param($types, ...$departments);
 $stmt->execute();
-$faculty_result = $stmt->get_result();
-$faculty_row = $faculty_result->fetch_assoc();
-$totalfaculty = $faculty_row['total'] ?? 0;
+$totalfaculty = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Count students in same department
-$student_query = "SELECT COUNT(*) AS total FROM student WHERE department = ?";
+$student_query = "SELECT COUNT(*) AS total FROM student WHERE department IN ($placeholders)";
 $stmt = $conn->prepare($student_query);
-$stmt->bind_param("s", $department);
+$types = str_repeat('s', count($departments));
+$stmt->bind_param($types, ...$departments);
 $stmt->execute();
-$student_result = $stmt->get_result();
-$student_row = $student_result->fetch_assoc();
-$totalstudent = $student_row['total'] ?? 0;
+$totalstudent = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Count total evaluations from students
+$placeholders = implode(',', array_fill(0, count($departments), '?'));
 $student_eval_query = "
   SELECT COUNT(*) AS total FROM evaluation e
   JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department = ?
+  WHERE f.department IN ($placeholders)
   AND e.academic_year = ?
-  AND e.semester = ?";
+  AND e.semester = ?
+";
 $stmt = $conn->prepare($student_eval_query);
-$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
+$types = str_repeat('s', count($departments)) . 'ss';
+$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
-$result = $stmt->get_result();
-$student_eval_count = $result->fetch_assoc()['total'] ?? 0;
+$student_eval_count = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Count total evaluations from admins
 $admin_eval_query = "
   SELECT COUNT(*) AS total FROM admin_evaluation ae
   JOIN faculty f ON ae.evaluatee_id = f.idnumber
-  WHERE f.department = ?
+  WHERE f.department IN ($placeholders)
   AND ae.academic_year = ?
-  AND ae.semester = ?";
+  AND ae.semester = ?
+";
 $stmt = $conn->prepare($admin_eval_query);
-$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
+$types = str_repeat('s', count($departments)) . 'ss';
+$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
-$result = $stmt->get_result();
-$admin_eval_count = $result->fetch_assoc()['total'] ?? 0;
+$admin_eval_count = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Combine both
 $total_evaluations = $student_eval_count + $admin_eval_count;
 
 /// Student evaluations trend (uses created_at)
+// 1. Get all student evaluation timestamps
 $eval_trend_query = "
-  SELECT e.created_at AS eval_time
-  FROM evaluation e
-  JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department = ?
-  AND e.academic_year = ?
-  AND e.semester = ?
-  ORDER BY e.created_at ASC
+    SELECT e.created_at AS eval_time, 'student' AS type
+    FROM evaluation e
+    JOIN faculty f ON e.faculty_id = f.idnumber
+    WHERE f.department IN ($placeholders)
+    AND e.academic_year = ?
+    AND e.semester = ?
 ";
 $stmt = $conn->prepare($eval_trend_query);
-$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
+$types = str_repeat('s', count($departments)) . 'ss';
+$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
-$result = $stmt->get_result();
+$result_student = $stmt->get_result();
 
-$months = [];
-$eval_counts = [];
-$count = 0;
-while ($row = $result->fetch_assoc()) {
-  $count++;
-  $months[] = $row['eval_time'];   // exact timestamp
-  $eval_counts[] = $count;         // cumulative count
+$all_evals = [];
+while ($row = $result_student->fetch_assoc()) {
+    $all_evals[] = $row;
 }
+$result_student->close();
 
-// Admin evaluations trend (uses evaluation_date instead of created_at!)
+// 2. Get all admin evaluation timestamps
 $admin_eval_trend_query = "
-  SELECT ae.evaluation_date AS eval_time
-  FROM admin_evaluation ae
-  JOIN faculty f ON ae.evaluatee_id = f.idnumber
-  WHERE f.department = ?
-  AND ae.academic_year = ?
-  AND ae.semester = ?
-  ORDER BY ae.evaluation_date ASC
+    SELECT ae.evaluation_date AS eval_time, 'admin' AS type
+    FROM admin_evaluation ae
+    JOIN faculty f ON ae.evaluatee_id = f.idnumber
+    WHERE f.department IN ($placeholders)
+    AND ae.academic_year = ?
+    AND ae.semester = ?
 ";
 $stmt = $conn->prepare($admin_eval_trend_query);
-$stmt->bind_param("sss", $department, $current_acad_year, $current_semester);
+// Params and types are the same as the student query
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
-$result = $stmt->get_result();
+$result_admin = $stmt->get_result();
 
-$admin_months = [];
-$admin_eval_counts = [];
-$admin_count = 0;
-while ($row = $result->fetch_assoc()) {
-  $admin_count++;
-  $admin_months[] = $row['eval_time'];  // exact timestamp
-  $admin_eval_counts[] = $admin_count;  // cumulative count
+while ($row = $result_admin->fetch_assoc()) {
+    $all_evals[] = $row;
+}
+$stmt->close(); // Close statement here
+
+// 3. Sort all evaluations by timestamp
+usort($all_evals, function($a, $b) {
+    return strtotime($a['eval_time']) <=> strtotime($b['eval_time']);
+});
+
+// 4. Build the cumulative chart data
+$months = [];             // This will be the categories (X-axis)
+$eval_counts = [];        // Student cumulative data
+$admin_eval_counts = [];  // Admin cumulative data
+$s_count = 0;
+$a_count = 0;
+
+foreach ($all_evals as $eval) {
+    if ($eval['type'] === 'student') {
+        $s_count++;
+    } else {
+        $a_count++;
+    }
+    
+    // Add the timestamp to the X-axis
+    $months[] = $eval['eval_time']; 
+    
+    // Add the *current* cumulative count for *both* series
+    $eval_counts[] = $s_count;
+    $admin_eval_counts[] = $a_count;
 }
 ?>
 
@@ -251,10 +289,21 @@ while ($row = $result->fetch_assoc()) {
                 <li class="dropdown-header">Academic Year</li>
                 <li><a class="dropdown-item progress-year-filter active" href="#" data-year="All">All</a></li>
                 <?php
-                $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
-                while ($row = mysqli_fetch_assoc($year_result)): ?>
-                  <li><a class="dropdown-item progress-year-filter" href="#" data-year="<?= $row['academic_year'] ?>"><?= $row['academic_year'] ?></a></li>
-                <?php endwhile; ?>
+                // ✅ FIX: Query is now scoped to the admin's departments and uses prepared statements
+                $year_sql = "SELECT DISTINCT e.academic_year 
+                            FROM evaluation e
+                            JOIN faculty f ON e.faculty_id = f.idnumber
+                            WHERE f.department IN (" . implode(',', array_fill(0, count($departments), '?')) . ")
+                            ORDER BY e.academic_year DESC";
+                $year_stmt = $conn->prepare($year_sql);
+                $year_stmt->bind_param(str_repeat('s', count($departments)), ...$departments);
+                $year_stmt->execute();
+                $year_result = $year_stmt->get_result();
+                while ($row = $year_result->fetch_assoc()): ?>
+                  <li><a class="dropdown-item progress-year-filter" href="#" data-year="<?= htmlspecialchars($row['academic_year']) ?>"><?= htmlspecialchars($row['academic_year']) ?></a></li>
+                <?php endwhile;
+                $year_stmt->close();
+                ?>
 
                 <li>
                   <hr class="dropdown-divider">
@@ -264,10 +313,25 @@ while ($row = $result->fetch_assoc()) {
                 <li class="dropdown-header">Semester</li>
                 <li><a class="dropdown-item progress-semester-filter active" href="#" data-semester="All">All</a></li>
                 <?php
-                $sem_result = mysqli_query($conn, "SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
-                while ($row = mysqli_fetch_assoc($sem_result)): ?>
-                  <li><a class="dropdown-item progress-semester-filter" href="#" data-semester="<?= $row['semester'] ?>"><?= $row['semester'] ?></a></li>
-                <?php endwhile; ?>
+                // ✅ FIX: Query is now scoped to the admin's departments and uses prepared statements
+                $sem_sql = "SELECT DISTINCT e.semester 
+                            FROM evaluation e
+                            JOIN faculty f ON e.faculty_id = f.idnumber
+                            WHERE f.department IN (" . implode(',', array_fill(0, count($departments), '?')) . ")
+                            ORDER BY e.semester ASC";
+                $sem_stmt = $conn->prepare($sem_sql);
+                $sem_stmt->bind_param(str_repeat('s', count($departments)), ...$departments);
+                $sem_stmt->execute();
+                $sem_result = $sem_stmt->get_result();
+                while ($row = $sem_result->fetch_assoc()):
+                  // Prevent empty semesters from showing up
+                  if (!empty(trim($row['semester']))): ?>
+                    <li><a class="dropdown-item progress-semester-filter" href="#" data-semester="<?= htmlspecialchars($row['semester']) ?>"><?= htmlspecialchars($row['semester']) ?></a></li>
+                <?php
+                  endif;
+                endwhile;
+                $sem_stmt->close();
+                ?>
               </ul>
             </div>
 
@@ -388,20 +452,24 @@ while ($row = $result->fetch_assoc()) {
         $faculty_id_for_filters = $_SESSION['idnumber'];
 
         // Get DISTINCT academic years this faculty has taught
-        $year_query = $conn->query("
-    SELECT DISTINCT academic_year FROM student_subject
-    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY academic_year DESC
-");
+        // ✅ FIX: Converted to a secure prepared statement
+        $year_query_stmt = $conn->prepare("SELECT DISTINCT academic_year FROM student_subject
+                                                  WHERE faculty_id = ? ORDER BY academic_year DESC");
+        $year_query_stmt->bind_param("s", $faculty_id_for_filters);
+        $year_query_stmt->execute();
+        $year_query = $year_query_stmt->get_result(); // Keep your variable name for the loop
         $admin_years = [];
         while ($row = $year_query->fetch_assoc()) {
           $admin_years[] = $row['academic_year'];
         }
 
         // Get DISTINCT semesters this faculty has taught
-        $sem_query = $conn->query("
-    SELECT DISTINCT semester FROM student_subject
-    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY semester ASC
-");
+        // ✅ FIX: Converted to a secure prepared statement
+        $sem_query_stmt = $conn->prepare(" SELECT DISTINCT semester FROM student_subject
+                                                  WHERE faculty_id = ? ORDER BY semester ASC");
+        $sem_query_stmt->bind_param("s", $faculty_id_for_filters);
+        $sem_query_stmt->execute();
+        $sem_query = $sem_query_stmt->get_result(); // Keep your variable name for the loop
         $admin_semesters = [];
         while ($row = $sem_query->fetch_assoc()) {
           $admin_semesters[] = $row['semester'];

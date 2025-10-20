@@ -2,13 +2,13 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if evaluator is logged in
+// ✅ Check if evaluator is logged in
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Function to log activity
+// ✅ Function to log activity
 function logActivity($conn, $user_id, $role, $action)
 {
   $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
@@ -24,9 +24,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $semester           = $_POST['semester'] ?? '';
   $comments           = $_POST['comments'] ?? '';
   $evaluator_position = $_POST['evaluator_position'] ?? '';
-  $department         = $_POST['department'] ?? '';
 
-  // Collect scores for all 15 questions
+  // ✅ Get the faculty's actual department (fix)
+  $faculty_department = 'Unknown';
+  $dept_stmt = $conn->prepare("SELECT department FROM faculty WHERE idnumber = ?");
+  $dept_stmt->bind_param("s", $evaluatee_id);
+  $dept_stmt->execute();
+  $dept_result = $dept_stmt->get_result();
+  if ($dept_row = $dept_result->fetch_assoc()) {
+    $faculty_department = $dept_row['department'];
+  }
+  $dept_stmt->close();
+
+  // ✅ Collect scores for all 15 questions
   $total_score = 0;
   $num_questions = 0;
   $questions_data = [];
@@ -52,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   $computed_rating = round(($total_score / ($num_questions * 5)) * 100, 2);
 
-  // Check for duplicates before inserting into admin_evaluation
+  // ✅ Prevent duplicate evaluation
   $check_query = "SELECT 1 FROM admin_evaluation
                     WHERE evaluator_id = ? AND evaluatee_id = ? AND academic_year = ? AND semester = ?";
   $stmt_check = $conn->prepare($check_query);
@@ -67,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
   $stmt_check->close();
 
-  // Insert into admin_evaluation table
+  // ✅ Insert into admin_evaluation
   $insert_query = "INSERT INTO admin_evaluation
         (evaluator_id, evaluatee_id, evaluator_position, academic_year, semester, total_score, computed_rating, comments, department)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -82,12 +92,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $total_score,
     $computed_rating,
     $comments,
-    $department
+    $faculty_department // ✅ fixed: use the faculty's actual department
   );
 
   if ($stmt_insert->execute()) {
     $form_data_json = json_encode($questions_data);
 
+    // ✅ Also save detailed evaluation data
     $insert_submissions_query = "INSERT INTO admin_evaluation_submissions
             (evaluator_id, evaluatee_id, semester, academic_year, total_score, rating_percent, comment, form_data)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -103,51 +114,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $comments,
       $form_data_json
     );
-
-    if ($stmt_submissions->execute()) {
-      $faculty_name_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, faculty_rank, department FROM faculty WHERE idnumber = ?");
-      $faculty_name_stmt->bind_param("s", $evaluatee_id);
-      $faculty_name_stmt->execute();
-      $faculty_name_result = $faculty_name_stmt->get_result();
-      $faculty_name_row = $faculty_name_result->fetch_assoc();
-      $faculty_full_name = $faculty_name_row
-        ? trim($faculty_name_row['first_name'] . ' ' . (!empty($faculty_name_row['mid_name']) ? substr($faculty_name_row['mid_name'], 0, 1) . '. ' : '') . $faculty_name_row['last_name'])
-        : $evaluatee_id;
-
-      $activity_message = "Evaluated Faculty: " . $faculty_full_name . " for " . $academic_year . " " . $semester;
-      logActivity($conn, $evaluator_id, $_SESSION['role'], $activity_message);
-
-      // Set session for SweetAlert success
-      $_SESSION['admin_eval_success'] = true;
-      $_SESSION['last_evaluated_faculty_id'] = $evaluatee_id;
-
-      // --- IMPORTANT: Set the admin_print_data session variable here ---
-      $_SESSION['admin_print_data'] = [
-        'evaluator_id'      => $evaluator_id,
-        'evaluatee_id'      => $evaluatee_id,
-        'academic_year'     => $academic_year,
-        'semester'          => $semester,
-        'comment'           => $comments, // Use 'comment' as per admin-evaluation-print.php
-        'evaluator_position' => $evaluator_position,
-        'department'        => $department,
-        'faculty_rank'      => $faculty_name_row['faculty_rank'] ?? 'N/A', // Fetch rank from faculty table
-        'answers'           => $questions_data,
-        'total_score'       => $total_score,
-        'computed_rating'   => $computed_rating
-      ];
-      // -----------------------------------------------------------------
-
-    } else {
-      $_SESSION['msg'] = "Error submitting detailed evaluation data: " . $stmt_submissions->error;
-    }
+    $stmt_submissions->execute();
     $stmt_submissions->close();
+
+    // ✅ Log activity
+    $faculty_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, faculty_rank FROM faculty WHERE idnumber = ?");
+    $faculty_stmt->bind_param("s", $evaluatee_id);
+    $faculty_stmt->execute();
+    $faculty_res = $faculty_stmt->get_result();
+    $faculty_row = $faculty_res->fetch_assoc();
+    $faculty_stmt->close();
+
+    $faculty_full_name = $faculty_row
+      ? trim($faculty_row['first_name'] . ' ' . (!empty($faculty_row['mid_name']) ? substr($faculty_row['mid_name'], 0, 1) . '. ' : '') . $faculty_row['last_name'])
+      : $evaluatee_id;
+
+    $activity_message = "Evaluated Faculty: $faculty_full_name for $academic_year $semester";
+    logActivity($conn, $evaluator_id, $_SESSION['role'], $activity_message);
+
+    // ✅ Prepare success sessions
+    $_SESSION['admin_eval_success'] = true;
+    $_SESSION['last_evaluated_faculty_id'] = $evaluatee_id;
+    $_SESSION['admin_print_data'] = [
+      'evaluator_id'      => $evaluator_id,
+      'evaluatee_id'      => $evaluatee_id,
+      'academic_year'     => $academic_year,
+      'semester'          => $semester,
+      'comment'           => $comments,
+      'evaluator_position' => $evaluator_position,
+      'department'        => $faculty_department,
+      'faculty_rank'      => $faculty_row['faculty_rank'] ?? 'N/A',
+      'answers'           => $questions_data,
+      'total_score'       => $total_score,
+      'computed_rating'   => $computed_rating
+    ];
   } else {
     $_SESSION['msg'] = "Error submitting evaluation: " . $stmt_insert->error;
   }
+
   $stmt_insert->close();
 } else {
   $_SESSION['msg'] = "Invalid request method.";
 }
 
-header("Location: admin-evaluate.php"); // Still redirecting to admin-evaluate.php
+header("Location: admin-evaluate.php");
 exit();
+?>

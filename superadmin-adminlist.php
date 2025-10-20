@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
@@ -9,64 +8,65 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-// Fetching admin data
-$query = "SELECT * FROM admin";
+// ✅ FIX: Modified query to LEFT JOIN admin_departments and GROUP_CONCAT the department names
+$query = "
+    SELECT 
+        a.idnumber, 
+        a.first_name, 
+        a.mid_name, 
+        a.last_name, 
+        a.faculty_rank, 
+        a.position, 
+        a.status,
+        GROUP_CONCAT(ad.department_name SEPARATOR ', ') AS departments
+    FROM 
+        admin a
+    LEFT JOIN 
+        admin_departments ad ON a.idnumber = ad.admin_idnumber
+    GROUP BY
+        a.idnumber
+    ORDER BY
+        a.last_name ASC
+";
 $result = mysqli_query($conn, $query);
-
-
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-      
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-   
 </head>
 
 <body>
-
   <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
-
     <div class="pagetitle">
-      <h1>Admin</h1>
+      <h1>Admin List</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
-          <li class="breadcrumb-item ">Admin</li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Admin</li>
           <li class="breadcrumb-item active">List</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
-
-    <!-- List of Admins -->
+    </div>
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
-
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
-
-              <!-- Table with stripped rows -->
+              <h5 class="card-title">List of Admins</h5>
               <table class="table datatable">
                 <thead>
                   <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
+                    <th><b>ID Number</b></th>
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
-                    <th>Department</th>
+                    <th>Department(s)</th>
                     <th>Academic Rank</th>
                     <th>Position</th>
                     <th>Status</th>
@@ -74,59 +74,38 @@ $result = mysqli_query($conn, $query);
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <?php
-                    while ($row = mysqli_fetch_assoc($result)) {
-                    ?>
-                      <td class="text-capitalize"><?php echo $row['idnumber']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
-                      <td class="text-uppercase"><?php echo $row['department']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['position']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['status']; ?></td>
+                  <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($row['idnumber']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['first_name']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['mid_name']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['last_name']); ?></td>
+
+                      <td class="text-uppercase"><?= htmlspecialchars($row['departments'] ?? 'N/A'); ?></td>
+
+                      <td class="text-capitalize"><?= htmlspecialchars($row['faculty_rank'] ?? 'N/A'); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['position']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['status']); ?></td>
                       <td>
-                        <a href="superadmin-editadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                  </tr>
-                <?php
-                    }
-                ?>
-                </tr>
+                        <a href="superadmin-editadmin.php?id=<?= htmlspecialchars($row['idnumber']); ?>" class="btn btn-warning btn-sm">Edit</a>
+                      </td>
+                    </tr>
+                  <?php endwhile; ?>
                 </tbody>
               </table>
-              <!-- End Table with stripped rows -->
-
             </div>
           </div>
-
         </div>
       </div>
-    </section><!-- End List of Admins -->
+    </section>
+  </main>
 
-  </main><!-- End #main -->
+  <?php include 'footer.php' ?>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
-  <!-- End Footer -->
-
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Vendor JS Files -->
-  <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-
 </body>
 
 </html>

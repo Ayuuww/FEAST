@@ -1,67 +1,105 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
+session_start();
 include 'conn/conn.php';
 
-$year     = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['year']) : null;
-$semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null;
-$dept     = isset($_GET['dept']) && $_GET['dept'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['dept']) : null;
-
-// ✅ Always filter faculty by department (ground truth)
-$faculty_sql = "SELECT idnumber, CONCAT(first_name, ' ', last_name) AS faculty_name, department 
-                FROM faculty 
-                WHERE status='active'";
-if ($dept) {
-  $faculty_sql .= " AND department = '{$dept}'";
-}
-$faculty_res = mysqli_query($conn, $faculty_sql);
-
-$labels    = [];
-$completed = [];
-$pending   = [];
-
-while ($fac = mysqli_fetch_assoc($faculty_res)) {
-  $faculty_id   = $fac['idnumber'];
-  $faculty_name = $fac['faculty_name'];
-
-  // Expected = 1 supervisor evaluation per faculty
-  $expected = 1;
-
-  // ✅ Count evaluations ONLY by faculty_id, year, sem (not evaluation.department)
-  $eval_sql = "SELECT COUNT(*) AS cnt
-             FROM admin_evaluation
-             WHERE evaluator_position IN ('Dean', 'Chair Person', 'Program Chair')
-               AND evaluatee_id = '{$faculty_id}'";
-
-  if ($year) {
-    $eval_sql .= " AND academic_year = '{$year}'";
-  }
-  if ($semester) {
-    $eval_sql .= " AND semester = '{$semester}'";
-  }
-
-  $eval_res = mysqli_query($conn, $eval_sql);
-  $completed_cnt = (int) (mysqli_fetch_assoc($eval_res)['cnt'] ?? 0);
-
-  // Calculate %
-  $progress = $expected > 0 ? round(($completed_cnt / $expected) * 100, 2) : 0;
-
-  $labels[]    = $faculty_name;
-  $completed[] = $progress;
-  $pending[]   = round(100 - $progress, 2);
+// Check for superadmin role
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+    header('HTTP/1.1 401 Unauthorized');
+    echo json_encode(['error' => 'Unauthorized']);
+    exit();
 }
 
-echo json_encode([
-  "labels"   => $labels,
-  "datasets" => [
-    [
-      "label" => "Completed",
-      "data"  => $completed,
-      "backgroundColor" => "rgba(75, 192, 192, 0.85)"
-    ],
-    [
-      "label" => "Pending",
-      "data"  => $pending,
-      "backgroundColor" => "rgba(255, 99, 132, 0.7)"
+// Get filters from the URL
+$year = $_GET['year'] ?? 'All';
+$semester = $_GET['semester'] ?? 'All';
+$dept = $_GET['dept'] ?? 'All';
+
+// --- Build Query with Prepared Statements ---
+$params = [];
+$types = '';
+$conditions = [];
+
+// Base query: All faculty who are NOT admins (since admins evaluate them)
+$sql = "
+    SELECT f.department, COUNT(DISTINCT f.idnumber) as total_faculty,
+           COUNT(DISTINCT ae.evaluatee_id) as completed_evaluations
+    FROM faculty f
+    LEFT JOIN admin_evaluation ae ON f.idnumber = ae.evaluatee_id
+";
+
+// Apply filters securely
+if ($year !== 'All') {
+    $conditions[] = "ae.academic_year = ?";
+    $params[] = $year;
+    $types .= 's';
+}
+if ($semester !== 'All') {
+    $conditions[] = "ae.semester = ?";
+    $params[] = $semester;
+    $types .= 's';
+}
+if ($dept !== 'All') {
+    // This condition applies to the faculty table
+    $sql .= " WHERE f.department = ?";
+    $params[] = $dept;
+    $types .= 's';
+}
+
+if (!empty($conditions)) {
+    // If a department filter is active, use AND, otherwise use WHERE
+    $sql .= ($dept !== 'All' ? ' AND ' : ' WHERE ') . implode(' AND ', $conditions);
+}
+
+$sql .= " GROUP BY f.department ORDER BY f.department ASC";
+
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    if (!empty($types)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+} else {
+    // Handle SQL error
+    echo json_encode(['error' => 'Query preparation failed.']);
+    exit;
+}
+
+$labels = [];
+$completedData = [];
+$pendingData = [];
+
+while ($row = $result->fetch_assoc()) {
+    $total = (int)$row['total_faculty'];
+    $completed = (int)$row['completed_evaluations'];
+    $pending = $total - $completed;
+    
+    // Calculate percentages
+    $completedPercent = ($total > 0) ? round(($completed / $total) * 100, 2) : 0;
+    $pendingPercent = ($total > 0) ? round(($pending / $total) * 100, 2) : 0;
+
+    $labels[] = $row['department'];
+    $completedData[] = $completedPercent;
+    $pendingData[] = $pendingPercent;
+}
+
+// --- Return chart data as JSON ---
+$data = [
+    "labels" => $labels,
+    "datasets" => [
+        [
+            "label" => "Completed",
+            "data" => $completedData,
+            "backgroundColor" => "#4CAF50", // Green
+        ],
+        [
+            "label" => "Pending",
+            "data" => $pendingData,
+            "backgroundColor" => "#F44336", // Red
+        ]
     ]
-  ]
-]);
+];
+
+header('Content-Type: application/json');
+echo json_encode($data);
+?>

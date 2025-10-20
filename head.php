@@ -33,6 +33,7 @@
 <script src="jquery/jquery-3.6.0.min.js"></script>
 
 <link rel="stylesheet" href="assets/css/select2.min.css" />
+<link rel="stylesheet" href="assets/css/choices.min.css" />
 <!-- <script src="https://cdn.mobiscroll.com/5.30.1/js/mobiscroll.jquery.min.js"></script> -->
 <!-- =======================================================
   * Template Name: NiceAdmin

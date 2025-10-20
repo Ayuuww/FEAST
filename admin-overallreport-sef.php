@@ -8,12 +8,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 }
 
 $admin_id = $_SESSION['idnumber'];
-$stmt = $conn->prepare("SELECT department FROM admin WHERE idnumber = ?");
+
+// 🔹 Fix: Fetch departments from the correct table
+$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$stmt->bind_result($admin_department);
-$stmt->fetch();
+$result = $stmt->get_result();
+
+$departments = []; // This will hold all assigned departments
+while ($row = $result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
 $stmt->close();
+
+// This new variable is just for the HTML title
+$admin_department_display = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
 
 // 🔹 Get filters
 $semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
@@ -36,16 +45,27 @@ while ($row = $res->fetch_assoc()) {
 $res->close();
 
 // Fetch faculty
-$query = $conn->prepare("
-  SELECT idnumber, last_name, first_name, mid_name
-  FROM faculty
-  WHERE department = ?
-  ORDER BY last_name ASC
-");
-$query->bind_param("s", $admin_department);
-$query->execute();
-$faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-$query->close();
+// 🔹 Fix: Fetch faculty using the $departments array and an IN clause
+$faculties = [];
+if (!empty($departments)) {
+  // Create placeholders like (?, ?, ?)
+  $placeholders = implode(',', array_fill(0, count($departments), '?'));
+  // Create types string like "sss"
+  $types = str_repeat('s', count($departments));
+
+  $sql = "
+        SELECT idnumber, last_name, first_name, mid_name
+        FROM faculty
+        WHERE department IN ($placeholders)
+        ORDER BY last_name ASC
+    ";
+
+  $query = $conn->prepare($sql);
+  $query->bind_param($types, ...$departments); // Bind all departments
+  $query->execute();
+  $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+  $query->close();
+}
 
 $rows = '';
 foreach ($faculties as $fac) {
@@ -81,7 +101,10 @@ foreach ($faculties as $fac) {
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg} %</td></tr>";
+  $rows .= "<tr>
+              <td>{$name}</td>
+              <td>{$avg}</td>
+            </tr>";
 }
 ?>
 
@@ -111,7 +134,7 @@ foreach ($faculties as $fac) {
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Reports</li>
-          <li class="breadcrumb-item active">Overall SEF Report</li>
+          <li class="breadcrumb-item active">Overall Report SEF</li>
         </ol>
       </nav>
     </div>
@@ -123,7 +146,7 @@ foreach ($faculties as $fac) {
             <div class="card">
               <div class="card-body">
                 <h4 class="card-title text-center my-3">
-                  Overall SEF Report – <?= htmlspecialchars($admin_department) ?>
+                  Overall SEF Report – <?= htmlspecialchars($admin_department_display) ?>
                 </h4>
 
                 <form method="GET" class="mb-3">
@@ -165,7 +188,6 @@ foreach ($faculties as $fac) {
                     <thead class="table-light">
                       <tr>
                         <th>Faculty Name</th>
-                        <th>No. of Supervisor Evaluations</th>
                         <th>Average SEF Rating</th>
                       </tr>
                     </thead>
