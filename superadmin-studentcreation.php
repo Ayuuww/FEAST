@@ -43,7 +43,7 @@ $query = "SELECT * FROM superadmin";
       <h1>Student</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item ">Student</li>
           <li class="breadcrumb-item active">Add New Student</li>
         </ol>

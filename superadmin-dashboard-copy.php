@@ -431,3 +431,246 @@ echo "<script>var evaluationProgressData = " . json_encode($data) . ";</script>"
 </body>
 
 </html>
+
+<!-- Top 10 rated faculty (student evaluation) -->
+<?php
+// Fetch distinct academic years
+$year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+$academic_years = [];
+while ($row = mysqli_fetch_assoc($year_result)) {
+  $academic_years[] = $row['academic_year'];
+}
+?>
+
+<div class="">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title"><strong>Top 10 Highest Rated Faculty </strong>(Student Evaluation)</h5>
+      <!-- Filter -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <div class="form-floating">
+            <select id="topRatedYear" class="form-select">
+              <option value="All">All</option>
+              <?php foreach ($academic_years as $year): ?>
+                <option value="<?= $year ?>"><?= $year ?></option>
+              <?php endforeach; ?>
+            </select>
+            <label>Academic Year</label>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="form-floating">
+            <select id="topRatedSemester" class="form-select">
+              <option value="All">All</option>
+              <option value="1st Semester">1st Semester</option>
+              <option value="2nd Semester">2nd Semester</option>
+              <option value="Summer">Summer</option>
+            </select>
+            <label>Semester</label>
+          </div>
+        </div>
+      </div>
+
+      <div id="verticalBarChart" style="min-height: 400px;" class="echart"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function loadTopRatedChart(year = 'All', semester = 'All') {
+    fetch(`fetch-top-rated.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
+      .then(res => res.json())
+      .then(data => {
+        const chart = echarts.init(document.querySelector("#verticalBarChart"));
+        chart.setOption({
+          title: {
+            text: 'Top 10 Highest Rated Faculty',
+            left: 'center'
+          },
+          tooltip: {
+            trigger: 'item',
+            formatter: function(params) {
+              const d = params.data;
+              return `<strong>${d.name}</strong><br>Department: ${d.department}<br>Average Rating: ${d.value}%`;
+            }
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          xAxis: {
+            type: 'value',
+            name: 'Average Rating (%)',
+            min: 0,
+            max: 100
+          },
+          yAxis: {
+            type: 'category',
+            data: data.names
+          },
+          series: [{
+            name: 'Rating',
+            type: 'bar',
+            data: data.ratings,
+            itemStyle: {
+              color: '#4CAF50'
+            }
+          }],
+          animationDuration: 1000,
+          animationEasing: 'cubicOut'
+        });
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const yearSelect = document.getElementById("topRatedYear");
+    const semSelect = document.getElementById("topRatedSemester");
+
+    function reloadChart() {
+      loadTopRatedChart(yearSelect.value, semSelect.value);
+    }
+
+    yearSelect.addEventListener("change", reloadChart);
+    semSelect.addEventListener("change", reloadChart);
+
+    loadTopRatedChart(); // Load default
+  });
+</script>
+<!-- End of Bar chart -->
+
+<!-- Right side columns -->
+<div class="col-lg-4">
+
+  <!-- Recent Activity -->
+  <div class="card">
+    <div class="filter">
+      <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+        <li class="dropdown-header text-start">
+          <h6>Date Filter</h6>
+        </li>
+        <li><a class="dropdown-item activity-filter" href="#" data-filter="today">Today</a></li>
+        <li><a class="dropdown-item activity-filter" href="#" data-filter="month">This Month</a></li>
+        <li><a class="dropdown-item activity-filter" href="#" data-filter="year">This Year</a></li>
+        <li><a class="dropdown-item activity-filter" href="#" data-filter="all">All</a></li>
+        <li>
+          <hr class="dropdown-divider">
+        </li>
+        <li class="dropdown-header text-start">
+          <h6>Role Filter</h6>
+        </li>
+        <li><a class="dropdown-item activity-role-filter" href="#" data-role="student">Student</a></li>
+        <li><a class="dropdown-item activity-role-filter" href="#" data-role="faculty">Faculty</a></li>
+        <li><a class="dropdown-item activity-role-filter" href="#" data-role="admin">Admin</a></li>
+        <li><a class="dropdown-item activity-role-filter" href="#" data-role="superadmin">Superadmin</a></li>
+        <li><a class="dropdown-item activity-role-filter" href="#" data-role="all">All Roles</a></li>
+      </ul>
+    </div>
+
+
+    <div class="card-body" style="max-height: 400px; overflow-y: auto;" id="activityContainer">
+      <h5 class="card-title">Recent Activity <span id="filter-label">| All</span></h5>
+      <div class="activity" id="activity-list">
+        <div class="activity" id="activity-list"></div>
+      </div>
+
+      <div class="activity" id="activity-list"></div>
+      <div id="loadingIndicator" class="text-center my-2" style="display: none;">
+        <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;"></div>
+      </div>
+
+      <script>
+        let offset = 0;
+        const limit = 10;
+        let loading = false;
+        let filter = 'all';
+        let role = 'all';
+
+        const activityList = document.getElementById("activity-list");
+        const loadingIndicator = document.getElementById("loadingIndicator");
+
+        function getTimeAgo(datetime) {
+          const timestamp = new Date(datetime).getTime();
+          const now = Date.now();
+          const diff = Math.floor((now - timestamp) / 1000);
+          if (diff < 0) return "Just now";
+          if (diff < 60) return `${diff} sec`;
+          if (diff < 3600) return `${Math.floor(diff / 60)} min`;
+          if (diff < 86400) return `${Math.floor(diff / 3600)} hrs`;
+          if (diff < 604800) return `${Math.floor(diff / 86400)} days`;
+          const d = new Date(timestamp);
+          return `${d.toLocaleString('default', { month: 'short' })} ${d.getDate()}, ${d.getFullYear()}`;
+        }
+
+        function loadLogs(reset = false) {
+          if (loading) return;
+          loading = true;
+          loadingIndicator.style.display = 'block';
+
+          if (reset) offset = 0;
+
+          fetch(`activity-fetch.php?limit=${limit}&offset=${offset}&filter=${filter}&role=${role}`)
+            .then(res => res.json())
+            .then(data => {
+              if (reset) activityList.innerHTML = '';
+
+              data.forEach(log => {
+                const timeAgo = getTimeAgo(log.timestamp);
+                const item = `
+                          <div class="activity-item d-flex">
+                            <div class="activite-label">${timeAgo}</div>
+                            <i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
+                            <div class="activity-content">
+                              <span class="fw-bold">${log.user_id}:</span> ${log.activity}
+                            </div>
+                          </div>`;
+                activityList.insertAdjacentHTML("beforeend", item);
+              });
+
+              if (data.length > 0) offset += data.length;
+              loading = false;
+              loadingIndicator.style.display = 'none';
+            })
+            .catch(err => {
+              console.error("Fetch error:", err);
+              loading = false;
+              loadingIndicator.style.display = 'none';
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          loadLogs();
+
+          activityContainer.addEventListener("scroll", () => {
+            if (activityContainer.scrollTop + activityContainer.clientHeight >= activityContainer.scrollHeight - 5 && !loading) {
+              loadLogs();
+            }
+          });
+
+          document.querySelectorAll(".activity-filter").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+              filter = btn.dataset.filter;
+              document.getElementById("filter-label").textContent = `| ${btn.textContent}`;
+              loadLogs(true);
+            });
+          });
+
+          document.querySelectorAll(".activity-role-filter").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+              role = btn.dataset.role;
+              document.getElementById("filter-label").textContent = `| ${btn.textContent}`;
+              loadLogs(true);
+            });
+          });
+        });
+      </script>
+
+    </div>
+  </div>
+  <!-- End Recent Activity -->

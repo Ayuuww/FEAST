@@ -39,7 +39,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
       <h1>Super Admin Creation</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Super Admin</li>
           <li class="breadcrumb-item active">Add New Super Admin</li>
         </ol>

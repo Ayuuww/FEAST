@@ -41,7 +41,7 @@ $result = mysqli_query($conn, $query);
       <h1>Super Admin List</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">List</li>
           <li class="breadcrumb-item active">Super Admin List</li>
         </ol>

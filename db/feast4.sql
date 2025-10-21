@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 21, 2025 at 05:21 PM
+-- Generation Time: Oct 20, 2025 at 05:43 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -144,26 +144,7 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (386, '221-0387-1', 'superadmin', 'Logged in', '2025-10-20 22:51:34'),
 (387, '00001', 'admin', 'Logged in', '2025-10-20 23:05:23'),
 (388, '100-0000-0', 'admin', 'Logged in', '2025-10-20 23:10:47'),
-(389, '221-0387-1', 'superadmin', 'Logged in', '2025-10-20 23:13:08'),
-(390, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 16:32:32'),
-(391, '00001', 'admin', 'Logged in', '2025-10-21 17:47:31'),
-(392, '100-0000-0', 'admin', 'Logged in', '2025-10-21 17:47:45'),
-(393, '00031', 'faculty', 'Logged in', '2025-10-21 17:48:09'),
-(394, '00011', 'faculty', 'Logged in', '2025-10-21 17:48:33'),
-(395, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 17:49:02'),
-(396, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 20:59:23'),
-(397, '241-0208-1', 'student', 'Logged in', '2025-10-21 21:57:50'),
-(398, '241-0208-1', 'student', 'Rated 80% for ISPC104  handled by Clark Joshua V Rojas', '2025-10-21 21:58:04'),
-(399, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 21:58:28'),
-(400, '000-0000-1', 'student', 'Logged in', '2025-10-21 22:28:34'),
-(401, '00012', 'faculty', 'Logged in', '2025-10-21 22:32:25'),
-(402, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:32:52'),
-(403, '00012', 'faculty', 'Logged in', '2025-10-21 22:33:09'),
-(404, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:37:56'),
-(405, '00001', 'admin', 'Logged in', '2025-10-21 22:38:23'),
-(406, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:46:18'),
-(407, '00001', 'admin', 'Logged in', '2025-10-21 22:47:07'),
-(408, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:51:59');
+(389, '221-0387-1', 'superadmin', 'Logged in', '2025-10-20 23:13:08');
 
 -- --------------------------------------------------------
 
@@ -249,8 +230,7 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (108, NULL, NULL, '3-D', NULL),
 (109, NULL, NULL, '4-C', NULL),
 (110, NULL, NULL, '4-D', NULL),
-(111, NULL, 'Director', NULL, NULL),
-(112, NULL, NULL, NULL, 'CAS-General Education');
+(111, NULL, 'Director', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -276,7 +256,7 @@ CREATE TABLE `admin` (
 --
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`, `is_faculty`) VALUES
-('00001', 'Desiry Mitch', 'R', 'Ocampo', '$2y$10$Xl9prTbmhrh0b./63kuREeG4N8CydFLL5bbP72TZ0gXxIDaU4KuSe', 'Program Chair', 'admin', 'active', 'Professor III', 'yes'),
+('00001', 'Sample', 'Admin', 'Yes', '$2y$10$Xl9prTbmhrh0b./63kuREeG4N8CydFLL5bbP72TZ0gXxIDaU4KuSe', 'Program Chair', 'admin', 'active', 'Professor III', 'yes'),
 ('100-0000-0', 'Edelita', 'C', 'Ebuenga', '$2y$10$OftwVTuPCCkL0W5C1sI5ee12pvEkAmn859sa6TkSGH0ySDPMGso2u', 'Dean', 'admin', 'active', 'Professor II', 'yes');
 
 -- --------------------------------------------------------
@@ -383,8 +363,7 @@ CREATE TABLE `evaluation` (
 
 INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`) VALUES
 (132, '241-0047-1', 'BECEd', 'GECC105', 'Theory of Probability', '2025-2026', '00011', 64.00, 85.33, '', '2025-10-20 10:19:46', '1st Semester', '2-D'),
-(133, '241-0047-1', 'BECEd', 'GEMC101a', 'Life and Works of Rizal', '2025-2026', '00012', 64.00, 85.33, '', '2025-10-20 10:27:08', '1st Semester', '2-D'),
-(134, '241-0208-1', 'CIS', 'ISPC104 ', ' IT Audit and Control', '2025-2026', '221-0387-1', 60.00, 80.00, '', '2025-10-21 13:58:04', '1st Semester', '3-D');
+(133, '241-0047-1', 'BECEd', 'GEMC101a', 'Life and Works of Rizal', '2025-2026', '00012', 64.00, 85.33, '', '2025-10-20 10:27:08', '1st Semester', '2-D');
 
 -- --------------------------------------------------------
 
@@ -449,7 +428,7 @@ CREATE TABLE `faculty` (
 
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `faculty_rank`, `role`, `status`) VALUES
 ('00000', 'Jose', 'P', 'Rizal', '$2y$10$qI2V9jn5MTnLvlUhmhsgR.6AKyUqA7vJzVY5sC8TPRCmsGHjo/4V.', 'ABM-Cooperative', 'Associate Professor III', 'faculty', 'active'),
-('00001', 'Desiry Mitch', 'R', 'Ocampo', NULL, 'BPEd', 'Professor III', 'faculty', 'active'),
+('00001', 'Sample', 'Admin', 'Yes', NULL, 'BPEd', 'Professor III', 'faculty', 'active'),
 ('00002', 'Maria', 'C', 'Aquino', '$2y$10$I5RDv36rqpStqTFK.Z/MyejcTX.DzCElESyDiIkcinVAh9//kLove', 'ABM-Cooperative', 'Associate Professor I', 'faculty', 'active'),
 ('00003', 'Andres', 'B', 'Bonifacio', '$2y$10$wUfU3GX5U5IZyIGnpFBWTupCi/atc92YEvGAUOf/vjF.5JU70LyRS', 'ABM-Cooperative', 'Assistant Professor II', 'faculty', 'active'),
 ('00004', 'Gabriela', 'S', 'Silang', '$2y$10$ylepv15qmGmxRf0Outo3pew892moWf69ihBGd79Z6XhA0tRSd.Xu2', 'ABM-Cooperative', 'Professor III', 'faculty', 'active'),
@@ -571,7 +550,7 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('00119', 'Vice', 'G', 'Ganda', '$2y$10$5BdOKeddJWB03y2N23LL6erXhRko8YtclBKxkn89HDxr8IorWWbN.', 'IES', 'Professor VI', 'faculty', 'active'),
 ('00120', 'Billy', 'J', 'Crawford', '$2y$10$M2FP0s1E91fJD9Wv3uJMo.FspjgQ4DVaXBdnpgEdtBh2AK7Ey9lMC', 'IES', 'Associate Professor III', 'faculty', 'active'),
 ('100-0000-0', 'Edelita', 'C', 'Ebuenga', '$2y$10$8PARyuQRwico6m27obo2CudnzYV20ZcxfNjNcnocITSWU8eGZkiXy', 'CIS', 'Professor II', 'faculty', 'active'),
-('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$0MVzJneKo66YW/H.pvOIROKSb.42/xD4OR2lytbaCGkNdKBNUkYxK', 'CIS', 'Professor IV', 'faculty', 'active');
+('221-0387-1', 'Clark Joshua', 'V', 'Rojas', '$2y$10$IvxdZcoKZLZT.dOiWEQKbuvtD.zDDlwL767u/gMFe6ni71LOgDQzO', 'CIS', 'Professor IV', 'faculty', 'active');
 
 -- --------------------------------------------------------
 
@@ -595,7 +574,7 @@ CREATE TABLE `student` (
 --
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `section`, `role`) VALUES
-('000-0000-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$bXnX3ipyivDYwhcIV9tlieAfxDWFTRBt2a3/gA6yxVHpIbvaDpvza', 'CIS', '4-B', 'student'),
+('000-0000-1', 'Clark Joshua', 'V', 'Rojas', '$2y$10$bXnX3ipyivDYwhcIV9tlieAfxDWFTRBt2a3/gA6yxVHpIbvaDpvza', 'CIS', '4-B', 'student'),
 ('221-0388-1', 'Charls Adonis', 'V', 'Rojas', '$2y$10$IFvW9FUT7w/YOEmTMQoE4ud3zMMi/Vqf9uMMR0GQS56yJvGE1BhBy', 'CIS', '4-B', 'student'),
 ('241-0001-1', 'Aaron', 'M', 'Santos', '$2y$10$rAYtzBiKBAreScrd4geBi.x5SRcf378WS2KHUYGb.PZfCICYZEdqO', 'ABM-Cooperative', '3-D', 'student'),
 ('241-0002-1', 'Abigail', 'R', 'Reyes', '$2y$10$ojvVrZua19aIS.61WcPI7u59yHEpe355Zaf73HE3l6ZH023HB7DcC', 'ABM-Cooperative', '3-C', 'student'),
@@ -865,8 +844,7 @@ CREATE TABLE `student_evaluation_submissions` (
 
 INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`) VALUES
 (58, '241-0047-1', 'GECC105', '00011', 'BECEd', '2025-2026', '1st Semester', '2025-10-20 18:19:46', '{\"q0\":5,\"q1\":4,\"q2\":4,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":3,\"q9\":3,\"q10\":4,\"q11\":5,\"q12\":5,\"q13\":4,\"q14\":5}', 64, 85.33, ''),
-(59, '241-0047-1', 'GEMC101a', '00012', 'BECEd', '2025-2026', '1st Semester', '2025-10-20 18:27:08', '{\"q0\":5,\"q1\":4,\"q2\":4,\"q3\":4,\"q4\":5,\"q5\":4,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":4}', 64, 85.33, ''),
-(60, '241-0208-1', 'ISPC104 ', '221-0387-1', 'CIS', '2025-2026', '1st Semester', '2025-10-21 21:58:04', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":3,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":3,\"q12\":4,\"q13\":4,\"q14\":4}', 60, 80.00, '');
+(59, '241-0047-1', 'GEMC101a', '00012', 'BECEd', '2025-2026', '1st Semester', '2025-10-20 18:27:08', '{\"q0\":5,\"q1\":4,\"q2\":4,\"q3\":4,\"q4\":5,\"q5\":4,\"q6\":3,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":4}', 64, 85.33, '');
 
 -- --------------------------------------------------------
 
@@ -1014,7 +992,7 @@ CREATE TABLE `superadmin` (
 --
 
 INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `department`, `faculty_rank`, `position`, `status`, `faculty`) VALUES
-('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$0MVzJneKo66YW/H.pvOIROKSb.42/xD4OR2lytbaCGkNdKBNUkYxK', 'superadmin', 'CIS', 'Professor IV', 'Head Instruction', 'active', 'Yes');
+('221-0387-1', 'Clark Joshua', 'V', 'Rojas', '$2y$10$1FOgHV03TPaAAAEBg4KJC.zugYdXSBSqEjQ1zxdOAwntFbViKpfpy', 'superadmin', 'CIS', 'Professor IV', 'Head Instruction', 'active', 'Yes');
 
 --
 -- Indexes for dumped tables
@@ -1152,13 +1130,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=409;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=390;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -1176,7 +1154,7 @@ ALTER TABLE `admin_evaluation_submissions`
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=135;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=134;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -1194,7 +1172,7 @@ ALTER TABLE `evaluation_switch`
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
 --
 ALTER TABLE `student_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
 -- AUTO_INCREMENT for table `student_subject`

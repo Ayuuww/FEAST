@@ -8,11 +8,10 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-
 // Get total approved faculty
 $faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE role = 'faculty' and status = 'active'";
-$faulty_result = mysqli_query($conn, $faculty_query);
-$data = mysqli_fetch_assoc($faulty_result);
+$faculty_result = mysqli_query($conn, $faculty_query);
+$data = mysqli_fetch_assoc($faculty_result);
 $totalfaculty = $data['total_faculty'];
 
 // Get total approved students
@@ -353,14 +352,16 @@ $dept = $_GET['dept'] ?? 'All';
                                   tooltip: {
                                     callbacks: {
                                       label: function(context) {
-                                        // only show dataset label like "Completed" or "Pending"
                                         return context.dataset.label;
                                       }
                                     }
                                   },
                                   legend: {
                                     labels: {
-                                      usePointStyle: true
+                                      usePointStyle: false, // 👈 rectangles instead of circles
+                                      boxWidth: 40,
+                                      boxHeight: 12,
+                                      borderRadius: 2
                                     }
                                   }
                                 },
@@ -623,217 +624,6 @@ $dept = $_GET['dept'] ?? 'All';
             </div>
             <!-- End Evaluation Progress Evaluation Chart -->
 
-            <!-- Superadmin as Faculty Progress Chart -->
-            <?php
-            // Use a temporary variable to avoid conflicts if $_SESSION['idnumber'] is used elsewhere
-            $faculty_id_for_filters = $_SESSION['idnumber'];
-
-            // Get DISTINCT academic years this faculty has taught
-            $year_query = $conn->query("
-    SELECT DISTINCT academic_year FROM student_subject
-    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY academic_year DESC
-");
-            $sa_years = [];
-            while ($row = $year_query->fetch_assoc()) {
-              $sa_years[] = $row['academic_year'];
-            }
-
-            // Get DISTINCT semesters this faculty has taught
-            $sem_query = $conn->query("
-    SELECT DISTINCT semester FROM student_subject
-    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY semester ASC
-");
-            $sa_semesters = [];
-            while ($row = $sem_query->fetch_assoc()) {
-              $sa_semesters[] = $row['semester'];
-            }
-            ?>
-
-            <div class="col-12">
-              <div class="card shadow">
-
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height: 400px; overflow-y: auto;">
-
-                    <li class="dropdown-header">Academic Year</li>
-                    <li><a class="dropdown-item sa-year-filter active" href="#" data-year="All">All</a></li>
-                    <?php foreach ($sa_years as $year): ?>
-                      <li><a class="dropdown-item sa-year-filter" href="#" data-year="<?= $year ?>"><?= $year ?></a></li>
-                    <?php endforeach; ?>
-
-                    <li>
-                      <hr class="dropdown-divider">
-                    </li>
-
-                    <li class="dropdown-header">Semester</li>
-                    <li><a class="dropdown-item sa-sem-filter active" href="#" data-sem="All">All</a></li>
-                    <?php foreach ($sa_semesters as $sem): ?>
-                      <li><a class="dropdown-item sa-sem-filter" href="#" data-sem="<?= $sem ?>"><?= $sem ?></a></li>
-                    <?php endforeach; ?>
-
-                  </ul>
-                </div>
-                <div class="card-body">
-                  <h5 class="card-title">
-                    Your Evaluation Progress
-                    <span id="saFacultyTermLabel" class="text-muted small"></span>
-                  </h5>
-
-                  <div id="saFacultyChartContainer">
-                    <canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>
-                  </div>
-
-                  <script>
-                    // Set defaults to 'All'
-                    let selectedSaYear = 'All';
-                    let selectedSaSem = 'All';
-                    let superadminFacultyChart = null; // Hold the chart instance
-
-                    // 1. Re-usable function to fetch and render the chart
-                    function fetchSuperadminFacultyData(year, semester) {
-
-                      // Update the title label
-                      document.getElementById("saFacultyTermLabel").textContent =
-                        `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester}`;
-
-                      fetch(`fetch-superadmin-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
-                        .then(response => {
-                          if (!response.ok) {
-                            // Handle server errors (like 500)
-                            throw new Error(`HTTP error! Status: ${response.status}`);
-                          }
-                          return response.json();
-                        })
-                        .then(chartData => {
-                          // Check for PHP-level errors returned as JSON
-                          if (chartData.error) {
-                            console.error("Backend Error:", chartData.error, chartData.sql || '');
-                            throw new Error(chartData.error);
-                          }
-
-                          const chartContainer = document.getElementById("saFacultyChartContainer");
-
-                          // Check for no data
-                          if (chartData.labels.length === 0) {
-                            if (superadminFacultyChart) {
-                              superadminFacultyChart.destroy();
-                              superadminFacultyChart = null;
-                            }
-                            // Reset canvas container and show "no data" message
-                            chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
-                            document.getElementById("superadminFacultyProgressChart").replaceWith("⚠️ No evaluation data found for the selected filters.");
-                            return;
-                          }
-
-                          // If we had a "no data" message, clear it and restore canvas
-                          if (!document.getElementById("superadminFacultyProgressChart")) {
-                            chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
-                          }
-
-                          // 2. Use the robust update/create pattern
-                          if (superadminFacultyChart) {
-                            // Update existing chart
-                            superadminFacultyChart.data.labels = chartData.labels;
-                            superadminFacultyChart.data.datasets = chartData.datasets;
-                            superadminFacultyChart.data.meta = chartData.meta;
-                            superadminFacultyChart.update();
-                          } else {
-                            // Create new chart
-                            const ctx = document.getElementById("superadminFacultyProgressChart").getContext("2d");
-                            superadminFacultyChart = new Chart(ctx, {
-                              type: "bar",
-                              data: {
-                                labels: chartData.labels,
-                                datasets: chartData.datasets,
-                                meta: chartData.meta // Store meta data
-                              },
-                              options: {
-                                responsive: true,
-                                plugins: {
-                                  legend: {
-                                    position: "top"
-                                  },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function(context) {
-                                        let datasetLabel = context.dataset.label;
-                                        let value = context.raw;
-                                        let idx = context.dataIndex;
-                                        let done = context.chart.data.meta.done[idx];
-                                        let total = context.chart.data.meta.total[idx];
-
-                                        if (datasetLabel.includes("Completed")) {
-                                          return `${datasetLabel}: ${value}% (${done}/${total} students)`;
-                                        } else {
-                                          let pendingCount = total - done;
-                                          return `${datasetLabel}: ${value}% (${pendingCount}/${total} students)`;
-                                        }
-                                      }
-                                    }
-                                  }
-                                },
-                                scales: {
-                                  x: {
-                                    stacked: true
-                                  },
-                                  y: {
-                                    stacked: true,
-                                    beginAtZero: true,
-                                    max: 100,
-                                    title: {
-                                      display: true,
-                                      text: "Evaluation Progress (%)"
-                                    }
-                                  }
-                                }
-                              }
-                            });
-                          }
-                        })
-                        .catch(err => {
-                          // This catch block shows the error message
-                          console.error("Fetch Error:", err);
-                          document.getElementById("saFacultyChartContainer").innerHTML = "Error loading chart data. Check console (F12) for details.";
-                        });
-                    }
-
-                    // 3. Add Event Listeners
-                    document.addEventListener("DOMContentLoaded", () => {
-                      // Initial fetch on page load with defaults ("All", "All")
-                      fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
-
-                      // Add listener for all year filter links
-                      document.querySelectorAll(".sa-year-filter").forEach(item => {
-                        item.addEventListener("click", (e) => {
-                          e.preventDefault();
-                          selectedSaYear = item.getAttribute("data-year");
-                          fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
-                          // Update active class
-                          document.querySelectorAll(".sa-year-filter").forEach(i => i.classList.remove("active"));
-                          item.classList.add("active");
-                        });
-                      });
-
-                      // Add listener for all semester filter links
-                      document.querySelectorAll(".sa-sem-filter").forEach(item => {
-                        item.addEventListener("click", (e) => {
-                          e.preventDefault();
-                          selectedSaSem = item.getAttribute("data-sem");
-                          fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
-                          // Update active class
-                          document.querySelectorAll(".sa-sem-filter").forEach(i => i.classList.remove("active"));
-                          item.classList.add("active");
-                        });
-                      });
-                    });
-                  </script>
-
-                </div>
-              </div>
-            </div>
-            <!-- End Superadmin as Faculty Progress Chart -->
-
           </div>
         </div><!-- End Left side columns -->
 
@@ -970,115 +760,216 @@ $dept = $_GET['dept'] ?? 'All';
           </div>
           <!-- End Recent Activity -->
 
-          <!-- Top 10 rated faculty (student evaluation) -->
+          <!-- Superadmin as Faculty Progress Chart -->
           <?php
-          // Fetch distinct academic years
-          $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
-          $academic_years = [];
-          while ($row = mysqli_fetch_assoc($year_result)) {
-            $academic_years[] = $row['academic_year'];
+          // Use a temporary variable to avoid conflicts if $_SESSION['idnumber'] is used elsewhere
+          $faculty_id_for_filters = $_SESSION['idnumber'];
+
+          // Get DISTINCT academic years this faculty has taught
+          $year_query = $conn->query("
+    SELECT DISTINCT academic_year FROM student_subject
+    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY academic_year DESC
+");
+          $sa_years = [];
+          while ($row = $year_query->fetch_assoc()) {
+            $sa_years[] = $row['academic_year'];
+          }
+
+          // Get DISTINCT semesters this faculty has taught
+          $sem_query = $conn->query("
+    SELECT DISTINCT semester FROM student_subject
+    WHERE faculty_id = '{$faculty_id_for_filters}' ORDER BY semester ASC
+");
+          $sa_semesters = [];
+          while ($row = $sem_query->fetch_assoc()) {
+            $sa_semesters[] = $row['semester'];
           }
           ?>
 
-          <div class="">
-            <div class="card">
-              <div class="card-body">
-                <h5 class="card-title"><strong>Top 10 Highest Rated Faculty </strong>(Student Evaluation)</h5>
-                <!-- Filter -->
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <select id="topRatedYear" class="form-select">
-                        <option value="All">All</option>
-                        <?php foreach ($academic_years as $year): ?>
-                          <option value="<?= $year ?>"><?= $year ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                      <label>Academic Year</label>
-                    </div>
-                  </div>
+          <div class="col-12">
+            <div class="card shadow">
 
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <select id="topRatedSemester" class="form-select">
-                        <option value="All">All</option>
-                        <option value="1st Semester">1st Semester</option>
-                        <option value="2nd Semester">2nd Semester</option>
-                        <option value="Summer">Summer</option>
-                      </select>
-                      <label>Semester</label>
-                    </div>
-                  </div>
+              <div class="filter">
+                <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height: 400px; overflow-y: auto;">
+
+                  <li class="dropdown-header">Academic Year</li>
+                  <li><a class="dropdown-item sa-year-filter active" href="#" data-year="All">All</a></li>
+                  <?php foreach ($sa_years as $year): ?>
+                    <li><a class="dropdown-item sa-year-filter" href="#" data-year="<?= $year ?>"><?= $year ?></a></li>
+                  <?php endforeach; ?>
+
+                  <li>
+                    <hr class="dropdown-divider">
+                  </li>
+
+                  <li class="dropdown-header">Semester</li>
+                  <li><a class="dropdown-item sa-sem-filter active" href="#" data-sem="All">All</a></li>
+                  <?php foreach ($sa_semesters as $sem): ?>
+                    <li><a class="dropdown-item sa-sem-filter" href="#" data-sem="<?= $sem ?>"><?= $sem ?></a></li>
+                  <?php endforeach; ?>
+
+                </ul>
+              </div>
+              <div class="card-body">
+                <h5 class="card-title">
+                  Your Evaluation Progress
+                  <span id="saFacultyTermLabel" class="text-muted small"></span>
+                </h5>
+
+                <div id="saFacultyChartContainer">
+                  <canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>
                 </div>
 
-                <div id="verticalBarChart" style="min-height: 400px;" class="echart"></div>
+                <script>
+                  // Set defaults to 'All'
+                  let selectedSaYear = 'All';
+                  let selectedSaSem = 'All';
+                  let superadminFacultyChart = null; // Hold the chart instance
+
+                  // 1. Re-usable function to fetch and render the chart
+                  function fetchSuperadminFacultyData(year, semester) {
+
+                    // Update the title label
+                    document.getElementById("saFacultyTermLabel").textContent =
+                      `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester}`;
+
+                    fetch(`fetch-superadmin-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
+                      .then(response => {
+                        if (!response.ok) {
+                          // Handle server errors (like 500)
+                          throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                        return response.json();
+                      })
+                      .then(chartData => {
+                        // Check for PHP-level errors returned as JSON
+                        if (chartData.error) {
+                          console.error("Backend Error:", chartData.error, chartData.sql || '');
+                          throw new Error(chartData.error);
+                        }
+
+                        const chartContainer = document.getElementById("saFacultyChartContainer");
+
+                        // Check for no data
+                        if (chartData.labels.length === 0) {
+                          if (superadminFacultyChart) {
+                            superadminFacultyChart.destroy();
+                            superadminFacultyChart = null;
+                          }
+                          // Reset canvas container and show "no data" message
+                          chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
+                          document.getElementById("superadminFacultyProgressChart").replaceWith("⚠️ No evaluation data found for the selected filters.");
+                          return;
+                        }
+
+                        // If we had a "no data" message, clear it and restore canvas
+                        if (!document.getElementById("superadminFacultyProgressChart")) {
+                          chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
+                        }
+
+                        // 2. Use the robust update/create pattern
+                        if (superadminFacultyChart) {
+                          // Update existing chart
+                          superadminFacultyChart.data.labels = chartData.labels;
+                          superadminFacultyChart.data.datasets = chartData.datasets;
+                          superadminFacultyChart.data.meta = chartData.meta;
+                          superadminFacultyChart.update();
+                        } else {
+                          // Create new chart
+                          const ctx = document.getElementById("superadminFacultyProgressChart").getContext("2d");
+                          superadminFacultyChart = new Chart(ctx, {
+                            type: "bar",
+                            data: {
+                              labels: chartData.labels,
+                              datasets: chartData.datasets,
+                              meta: chartData.meta // Store meta data
+                            },
+                            options: {
+                              responsive: true,
+                              plugins: {
+                                legend: {
+                                  position: "top"
+                                },
+                                tooltip: {
+                                  callbacks: {
+                                    label: function(context) {
+                                      let datasetLabel = context.dataset.label;
+                                      let value = context.raw;
+                                      let idx = context.dataIndex;
+                                      let done = context.chart.data.meta.done[idx];
+                                      let total = context.chart.data.meta.total[idx];
+
+                                      if (datasetLabel.includes("Completed")) {
+                                        return `${datasetLabel}: ${value}% (${done}/${total} students)`;
+                                      } else {
+                                        let pendingCount = total - done;
+                                        return `${datasetLabel}: ${value}% (${pendingCount}/${total} students)`;
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              scales: {
+                                x: {
+                                  stacked: true
+                                },
+                                y: {
+                                  stacked: true,
+                                  beginAtZero: true,
+                                  max: 100,
+                                  title: {
+                                    display: true,
+                                    text: "Evaluation Progress (%)"
+                                  }
+                                }
+                              }
+                            }
+                          });
+                        }
+                      })
+                      .catch(err => {
+                        // This catch block shows the error message
+                        console.error("Fetch Error:", err);
+                        document.getElementById("saFacultyChartContainer").innerHTML = "Error loading chart data. Check console (F12) for details.";
+                      });
+                  }
+
+                  // 3. Add Event Listeners
+                  document.addEventListener("DOMContentLoaded", () => {
+                    // Initial fetch on page load with defaults ("All", "All")
+                    fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
+
+                    // Add listener for all year filter links
+                    document.querySelectorAll(".sa-year-filter").forEach(item => {
+                      item.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        selectedSaYear = item.getAttribute("data-year");
+                        fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
+                        // Update active class
+                        document.querySelectorAll(".sa-year-filter").forEach(i => i.classList.remove("active"));
+                        item.classList.add("active");
+                      });
+                    });
+
+                    // Add listener for all semester filter links
+                    document.querySelectorAll(".sa-sem-filter").forEach(item => {
+                      item.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        selectedSaSem = item.getAttribute("data-sem");
+                        fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
+                        // Update active class
+                        document.querySelectorAll(".sa-sem-filter").forEach(i => i.classList.remove("active"));
+                        item.classList.add("active");
+                      });
+                    });
+                  });
+                </script>
+
               </div>
             </div>
           </div>
-
-          <script>
-            function loadTopRatedChart(year = 'All', semester = 'All') {
-              fetch(`fetch-top-rated.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
-                .then(res => res.json())
-                .then(data => {
-                  const chart = echarts.init(document.querySelector("#verticalBarChart"));
-                  chart.setOption({
-                    title: {
-                      text: 'Top 10 Highest Rated Faculty',
-                      left: 'center'
-                    },
-                    tooltip: {
-                      trigger: 'item',
-                      formatter: function(params) {
-                        const d = params.data;
-                        return `<strong>${d.name}</strong><br>Department: ${d.department}<br>Average Rating: ${d.value}%`;
-                      }
-                    },
-                    grid: {
-                      left: '3%',
-                      right: '4%',
-                      bottom: '3%',
-                      containLabel: true
-                    },
-                    xAxis: {
-                      type: 'value',
-                      name: 'Average Rating (%)',
-                      min: 0,
-                      max: 100
-                    },
-                    yAxis: {
-                      type: 'category',
-                      data: data.names
-                    },
-                    series: [{
-                      name: 'Rating',
-                      type: 'bar',
-                      data: data.ratings,
-                      itemStyle: {
-                        color: '#4CAF50'
-                      }
-                    }],
-                    animationDuration: 1000,
-                    animationEasing: 'cubicOut'
-                  });
-                });
-            }
-
-            document.addEventListener("DOMContentLoaded", () => {
-              const yearSelect = document.getElementById("topRatedYear");
-              const semSelect = document.getElementById("topRatedSemester");
-
-              function reloadChart() {
-                loadTopRatedChart(yearSelect.value, semSelect.value);
-              }
-
-              yearSelect.addEventListener("change", reloadChart);
-              semSelect.addEventListener("change", reloadChart);
-
-              loadTopRatedChart(); // Load default
-            });
-          </script>
-          <!-- End of Bar chart -->
+          <!-- End Superadmin as Faculty Progress Chart -->
 
         </div><!-- End Right side columns -->
 

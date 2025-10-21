@@ -98,7 +98,8 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
                   </div>
                 </div>
 
-                <div class="col-6" id="department_div" style="display:none;">
+                <div class="col-12" id="department_div" style="display:none;">
+                  <p>Note: For multiple department hadle, Please select first the main department of the Program Chair because this account is also stored in Faculty List</p>
                   <label for="department" class="form-label fw-bold">Assign Department(s)</label>
                   <select name="departments[]" id="department" multiple>
                     <?php while ($row = $departments_result->fetch_assoc()): ?>
@@ -107,7 +108,7 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
                   </select>
                 </div>
 
-                <div class="col-6" id="faculty_rank_div" style="display:none;">
+                <div class="col-12" id="faculty_rank_div" style="display:none;">
                   <label for="faculty_rank" class="form-label fw-bold">Faculty Rank</label>
                   <select class="form-select" name="faculty_rank" id="faculty_rank">
                     <option value="" disabled selected>-- Select Faculty Rank --</option>
@@ -133,14 +134,12 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-
   <script src="assets/js/choices.min.js"></script>
-
   <script src="assets/js/main.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Initialize Choices.js for the department dropdown
+      // Initialize Choices.js for department dropdown
       const departmentElement = document.getElementById('department');
       const choices = new Choices(departmentElement, {
         removeItemButton: true,
@@ -149,7 +148,7 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
         searchPlaceholderValue: 'Search departments...',
       });
 
-      // Logic to show/hide faculty-specific fields
+      // Faculty-specific fields toggle
       const facultySelect = document.getElementById('is_faculty');
       const departmentDiv = document.getElementById('department_div');
       const facultyRankDiv = document.getElementById('faculty_rank_div');
@@ -167,7 +166,58 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
         }
       });
 
-      // SweetAlert for messages
+      // ✅ Confirmation before submission
+      const form = document.querySelector('form');
+      form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop immediate submission
+
+        // Collect form data
+        const idnumber = document.getElementById('idnumber').value.trim();
+        const firstName = document.getElementById('first_name').value.trim();
+        const midName = document.getElementById('mid_name').value.trim();
+        const lastName = document.getElementById('last_name').value.trim();
+        const position = document.getElementById('position').value;
+        const isFaculty = document.getElementById('is_faculty').value;
+        const facultyRank = document.getElementById('faculty_rank')?.value || '';
+        const selectedDepartments = Array.from(departmentElement.selectedOptions).map(opt => opt.value);
+
+        // Format details for preview
+        let summary = `
+        <b>ID Number:</b> ${idnumber}<br>
+        <b>Full Name:</b> ${firstName} ${midName} ${lastName}<br>
+        <b>Position:</b> ${position}<br>
+        <b>Also a Faculty?:</b> ${isFaculty}<br>
+      `;
+
+        if (isFaculty === 'Yes') {
+          summary += `
+          <b>Faculty Rank:</b> ${facultyRank || 'N/A'}<br>
+          <b>Assigned Department(s):</b> ${selectedDepartments.join(', ') || 'N/A'}<br>
+        `;
+        }
+
+        // SweetAlert confirmation
+        Swal.fire({
+          title: 'Confirm Account Creation',
+          html: `
+          <p>Please review the details before creating this account:</p>
+          <div class="text-start px-4">${summary}</div>
+        `,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Create Account',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#dc3545',
+          reverseButtons: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit(); // ✅ Proceed with actual submission
+          }
+        });
+      });
+
+      // SweetAlert for feedback message after redirect
       <?php if (isset($_SESSION['msg'])): ?>
         Swal.fire({
           icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
@@ -180,6 +230,7 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
       <?php endif; ?>
     });
   </script>
+
 </body>
 
 </html>

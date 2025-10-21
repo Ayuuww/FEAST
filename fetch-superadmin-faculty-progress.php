@@ -109,14 +109,14 @@ $data = [
             "label" => "Completed (%)",
             "data" => $completed,
             "backgroundColor" => "rgba(75, 192, 192, 0.7)",
-            "borderColor" => "rgba(75, 192, 192, 1)",
+            "borderColor" => "#4bc0c0ff",
             "borderWidth" => 1
         ],
         [
             "label" => "Pending (%)",
             "data" => $pending,
             "backgroundColor" => "rgba(255, 99, 132, 0.7)",
-            "borderColor" => "rgba(255, 99, 132, 1)",
+            "borderColor" => "#ff6384ff",
             "borderWidth" => 1
         ]
     ],

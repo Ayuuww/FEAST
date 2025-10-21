@@ -9,25 +9,24 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     exit();
 }
 
-// Get filters from the URL
+// Get filters
 $year = $_GET['year'] ?? 'All';
 $semester = $_GET['semester'] ?? 'All';
 $dept = $_GET['dept'] ?? 'All';
 
-// --- Build Query with Prepared Statements ---
 $params = [];
 $types = '';
 $conditions = [];
 
-// Base query: All faculty who are NOT admins (since admins evaluate them)
+// Base query
 $sql = "
-    SELECT f.department, COUNT(DISTINCT f.idnumber) as total_faculty,
-           COUNT(DISTINCT ae.evaluatee_id) as completed_evaluations
+    SELECT f.department, COUNT(DISTINCT f.idnumber) AS total_faculty,
+           COUNT(DISTINCT ae.evaluatee_id) AS completed_evaluations
     FROM faculty f
     LEFT JOIN admin_evaluation ae ON f.idnumber = ae.evaluatee_id
 ";
 
-// Apply filters securely
+// Apply filters
 if ($year !== 'All') {
     $conditions[] = "ae.academic_year = ?";
     $params[] = $year;
@@ -39,14 +38,12 @@ if ($semester !== 'All') {
     $types .= 's';
 }
 if ($dept !== 'All') {
-    // This condition applies to the faculty table
     $sql .= " WHERE f.department = ?";
     $params[] = $dept;
     $types .= 's';
 }
 
 if (!empty($conditions)) {
-    // If a department filter is active, use AND, otherwise use WHERE
     $sql .= ($dept !== 'All' ? ' AND ' : ' WHERE ') . implode(' AND ', $conditions);
 }
 
@@ -60,7 +57,6 @@ if ($stmt) {
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    // Handle SQL error
     echo json_encode(['error' => 'Query preparation failed.']);
     exit;
 }
@@ -68,34 +64,35 @@ if ($stmt) {
 $labels = [];
 $completedData = [];
 $pendingData = [];
+$counts = [];
 
 while ($row = $result->fetch_assoc()) {
     $total = (int)$row['total_faculty'];
     $completed = (int)$row['completed_evaluations'];
     $pending = $total - $completed;
-    
-    // Calculate percentages
+
     $completedPercent = ($total > 0) ? round(($completed / $total) * 100, 2) : 0;
     $pendingPercent = ($total > 0) ? round(($pending / $total) * 100, 2) : 0;
 
-    $labels[] = $row['department'];
+    // 👇 Add department name with count text
+    $labels[] = $row['department'] . " ({$completed}/{$total})";
+
     $completedData[] = $completedPercent;
     $pendingData[] = $pendingPercent;
 }
 
-// --- Return chart data as JSON ---
 $data = [
     "labels" => $labels,
     "datasets" => [
         [
             "label" => "Completed",
             "data" => $completedData,
-            "backgroundColor" => "#4CAF50", // Green
+            "backgroundColor" => "#4bc0c0ff"
         ],
         [
             "label" => "Pending",
             "data" => $pendingData,
-            "backgroundColor" => "#F44336", // Red
+            "backgroundColor" => "#ff6384ff"
         ]
     ]
 ];

@@ -192,18 +192,29 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
 
         // Supervisor Name (FIXED QUERY)
         $evaluator_name = 'N/A';
-        $stmt_supervisor = $conn->prepare("
-                    SELECT a.first_name, a.mid_name, a.last_name FROM admin a
-                    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%')
-                    ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
-        $stmt_supervisor->bind_param("s", $college_name_for_lookup);
+        // ✅ Corrected Supervisor Query (linked via admin_departments)
+        $evaluator_name = 'N/A';
+        $stmt_supervisor = $conn->prepare("SELECT a.first_name, a.mid_name, a.last_name
+                                                  FROM admin a
+                                                  INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+                                                  WHERE ad.department_name = ?
+                                                    AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
+                                                  ORDER BY
+                                                    CASE
+                                                      WHEN a.position LIKE 'Dean%' THEN 1
+                                                      WHEN a.position LIKE 'Chair%' THEN 2
+                                                      WHEN a.position LIKE 'Program Chair%' THEN 3
+                                                      ELSE 4
+                                                    END
+                                                  LIMIT 1");
+        $stmt_supervisor->bind_param("s", $dept); // use faculty's department
         $stmt_supervisor->execute();
         $stmt_supervisor->bind_result($sfn, $smn, $sln);
         if ($stmt_supervisor->fetch()) {
           $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
         }
         $stmt_supervisor->close();
+
         // ✅ --- END OF FIX ---
       ?>
 

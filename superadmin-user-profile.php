@@ -14,13 +14,17 @@ $swal = ""; // For SweetAlert2 messages
 // Handle profile update
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if (isset($_POST['update_profile'])) {
-    $first_name = $_POST['first_name'];
-    $mid_name   = $_POST['mid_name'];
-    $last_name  = $_POST['last_name'];
+    $first_name    = $_POST['first_name'];
+    $mid_name      = $_POST['mid_name'];
+    $last_name     = $_POST['last_name'];
+    $faculty_rank  = $_POST['faculty_rank'];
+    $position      = $_POST['position'];
 
     // Always update superadmin
-    $stmt = $conn->prepare("UPDATE superadmin SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
-    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+    $stmt = $conn->prepare("UPDATE superadmin 
+                    SET first_name=?, mid_name=?, last_name=?, faculty_rank=? 
+                    WHERE idnumber=?");
+    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $faculty_rank, $idnumber);
     $superadmin_updated = $stmt->execute();
     $stmt->close();
 
@@ -32,8 +36,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($check->num_rows > 0) {
       // Update faculty too
-      $stmt = $conn->prepare("UPDATE faculty SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
-      $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+      $stmt = $conn->prepare("UPDATE faculty 
+                        SET first_name=?, mid_name=?, last_name=?, faculty_rank=?
+                        WHERE idnumber=?");
+      $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $faculty_rank, $idnumber);
       $stmt->execute();
       $stmt->close();
     }
@@ -109,15 +115,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // Fetch profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role FROM superadmin WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, position FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -127,6 +131,85 @@ $stmt->close();
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
+
+  <style>
+    /* 🌿 Modern Profile Page Design */
+    body {
+      background: #f8fafc;
+    }
+
+    .profile .card {
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .profile .card-body {
+      padding: 2rem 2.5rem;
+      background: #fff;
+    }
+
+    .profile .nav-tabs {
+      border-bottom: none;
+      background: #f1f5f9;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .profile .nav-link {
+      color: #6c757d;
+      font-weight: 600;
+      border: none;
+      transition: 0.3s;
+    }
+
+    .profile .nav-link.active {
+      background-color: #198754;
+      color: #fff;
+      border-radius: 8px;
+    }
+
+    .profile .form-control {
+      border-radius: 12px;
+      padding: 10px 14px;
+      transition: all 0.2s ease;
+    }
+
+    .profile .form-control:focus {
+      border-color: #198754;
+      box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.25);
+    }
+
+    /* 💡 Readonly field design */
+    .profile input[readonly] {
+      background-color: #f3f4f6;
+      border: 1px solid #dee2e6;
+      color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .profile input[readonly]:hover {
+      background-color: #e9ecef;
+    }
+
+    .btn-success {
+      border-radius: 12px;
+      padding: 10px 25px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .btn-success:hover {
+      background-color: #157347;
+      transform: translateY(-2px);
+    }
+
+    .profile .form-label i {
+      color: #198754;
+      margin-right: 6px;
+    }
+  </style>
 
 </head>
 
@@ -143,7 +226,7 @@ $stmt->close();
       <h1>Profile</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Profile</li>
         </ol>
       </nav>
@@ -154,33 +237,54 @@ $stmt->close();
         <div class="col-xl-6">
           <div class="card">
             <div class="card-body pt-3">
-              <ul class="nav nav-tabs nav-tabs-bordered">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">Edit Profile</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">Change Password</button></li>
+              <ul class="nav nav-tabs nav-tabs-bordered mb-4">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit"><i class="bi bi-pencil-square"></i> Edit Profile</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password"><i class="bi bi-shield-lock"></i> Change Password</button></li>
               </ul>
 
               <div class="tab-content pt-2">
                 <!-- Profile Edit Tab -->
                 <div class="tab-pane fade show active pt-3" id="profile-edit">
                   <form method="POST">
+
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Last Name</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person-badge"></i> Last Name</label>
                       <div class="col-md-8 col-lg-9"><input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">First Name</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person"></i> First Name</label>
                       <div class="col-md-8 col-lg-9"><input name="first_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['first_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Middle Name</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person-lines-fill"></i> Middle Name</label>
                       <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
                     </div>
+
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Role</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-award"></i> Faculty Rank</label>
+                      <div class="col-md-8 col-lg-9 position-relative">
+                        <input name="faculty_rank" type="text" class="form-control text-capitalize"
+                          value="<?= htmlspecialchars($data['faculty_rank']) ?>" readonly title="This field is managed by the system.">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-briefcase"></i> Designation</label>
+                      <div class="col-md-8 col-lg-9 position-relative">
+                        <input name="position" type="text" class="form-control text-capitalize"
+                          value="<?= htmlspecialchars($data['position']) ?>" readonly title="This field is managed by the system.">
+                      </div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person-gear"></i> Role</label>
                       <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['role']) ?>"></div>
                     </div>
-                    <div class="text-center">
-                      <button type="submit" name="update_profile" class="btn btn-success">Save Changes</button>
+
+                    <div class="text-center mt-4">
+                      <button type="submit" name="update_profile" class="btn btn-success"><i class="bi bi-check-circle me-1"></i> Save Changes</button>
                     </div>
                   </form>
                 </div>
@@ -189,19 +293,19 @@ $stmt->close();
                 <div class="tab-pane fade pt-3" id="profile-change-password">
                   <form method="POST">
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-lock"></i> Current Password</label>
                       <div class="col-md-8 col-lg-9"><input name="current_password" type="password" class="form-control" required></div>
                     </div>
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-shield-check"></i> New Password</label>
                       <div class="col-md-8 col-lg-9"><input name="new_password" type="password" class="form-control" required></div>
                     </div>
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-repeat"></i> Re-enter New Password</label>
                       <div class="col-md-8 col-lg-9"><input name="renew_password" type="password" class="form-control" required></div>
                     </div>
-                    <div class="text-center">
-                      <button type="submit" name="change_password" class="btn btn-success">Change Password</button>
+                    <div class="text-center mt-4">
+                      <button type="submit" name="change_password" class="btn btn-success"><i class="bi bi-arrow-repeat me-1"></i> Change Password</button>
                     </div>
                   </form>
                 </div>
@@ -236,7 +340,7 @@ $stmt->close();
   <script src="assets/js/main.js"></script>
 
   <!-- SweetAlert2 -->
-  <script src=""></script>
+  <script src="sweetalert2\sweetalert2@11.js"></script>
 
   <?php if (!empty($swal)): ?>
     <script>

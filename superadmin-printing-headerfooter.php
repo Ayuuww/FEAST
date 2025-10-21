@@ -126,6 +126,12 @@ class PDF_EXTENDED extends FPDF
         'phone'   => '+63923-4567890',
         'email'   => 'cas.nluc@dmmmsu.edu.ph'
       ],
+      'CAS-General Education' => [
+        'college' => 'COLLEGE OF ARTS AND SCIENCE',
+        'website' => 'www.dmmmsu.edu.ph',
+        'phone'   => '+63923-4567890',
+        'email'   => 'cas.nluc@dmmmsu.edu.ph'
+      ],
       'CAS-Science in Biology' => [
         'college' => 'COLLEGE OF ARTS AND SCIENCE',
         'website' => 'www.dmmmsu.edu.ph',

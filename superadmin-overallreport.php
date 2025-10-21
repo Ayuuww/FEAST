@@ -101,7 +101,11 @@ if (!empty($selected_department)) {
     $overall_avg = ($set_count && $sef_count)
       ? number_format(($set_avg_val + $sef_avg_val) / 2, 2)
       : ($set_count ? $set_avg : ($sef_count ? $sef_avg : '0.00'));
-    $overall_rows .= "<tr><td>{$name}</td><td class='text-center'>{$set_avg} %</td><td class='text-center'>{$sef_avg} %</td><td class='text-center'>{$overall_avg} %</td></tr>";
+    $overall_rows .= "<tr>
+                        <td>{$name}</td>
+                        <td class='text-center'>{$set_avg}</td>
+                        <td class='text-center'>{$sef_avg}</td>
+                      </tr>";
   }
 }
 ?>
@@ -182,12 +186,7 @@ if (!empty($selected_department)) {
                 </form>
 
                 <?php if (!empty($selected_department)) { ?>
-                  <h4 class="text-center my-3">
-                    <?= htmlspecialchars($selected_department) ?>
-                    <?= !empty($selected_semester) ? " | Semester: " . htmlspecialchars($selected_semester) : "" ?>
-                    <?= !empty($selected_academic_year) ? " | AY: " . htmlspecialchars($selected_academic_year) : "" ?>
-                  </h4>
-
+                  
                   <!-- Overall Table -->
                   <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
                   <div class="table-responsive mb-4">
@@ -195,9 +194,8 @@ if (!empty($selected_department)) {
                       <thead class="table-light text-center">
                         <tr>
                           <th>Faculty Name</th>
-                          <th>SET Avg (%)</th>
-                          <th>SEF Avg (%)</th>
-                          <th>Overall Average (%)</th>
+                          <th>SET Avg</th>
+                          <th>SEF Avg</th>
                         </tr>
                       </thead>
                       <tbody><?= $overall_rows ?></tbody>

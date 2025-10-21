@@ -14,7 +14,11 @@ $faculty_id = $_GET['faculty_id'];
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
-// Get faculty info
+// =======================================================
+// 1. FETCH DATA
+// =======================================================
+
+// Faculty Info
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
@@ -22,121 +26,159 @@ $stmt->bind_result($fname, $mname, $lname, $dept, $faculty_rank);
 $stmt->fetch();
 $stmt->close();
 
-$faculty_name = strtoupper("$fname $mname $lname");
+$full_name = strtoupper(trim("$fname $mname $lname"));
 $dept_display = strtoupper($dept);
 $rank_display = ucwords($faculty_rank);
 
-// Get semester/year
-$sem = "N/A";
-$sy = "N/A";
-$q = mysqli_query($conn, "SELECT semester, academic_year FROM admin_evaluation WHERE evaluatee_id = '$faculty_id' ORDER BY evaluation_date DESC LIMIT 1");
-if ($q && mysqli_num_rows($q) > 0) {
-    $row = mysqli_fetch_assoc($q);
-    $sem = $row['semester'];
-    $sy = $row['academic_year'];
+// Semester/Academic Year
+$sem = $selected_semester ?: 'All Semesters';
+$sy = $selected_academic_year ?: 'All Academic Years';
+
+// SET Average
+$set_avg = '0.00';
+$stmt_set = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM evaluation WHERE faculty_id = ?");
+$stmt_set->bind_param("s", $faculty_id);
+$stmt_set->execute();
+$stmt_set->bind_result($avg);
+if ($stmt_set->fetch() && $avg !== null) $set_avg = number_format($avg, 2);
+$stmt_set->close();
+
+// SEF Average
+$sef_avg = '0.00';
+$stmt_sef = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM admin_evaluation WHERE evaluatee_id = ?");
+$stmt_sef->bind_param("s", $faculty_id);
+$stmt_sef->execute();
+$stmt_sef->bind_result($avg);
+if ($stmt_sef->fetch() && $avg !== null) $sef_avg = number_format($avg, 2);
+$stmt_sef->close();
+
+// Supervisor Name (Dean/Chair/Program Chair)
+$evaluator_name = 'N/A';
+$stmt_supervisor = $conn->prepare("
+    SELECT a.first_name, a.mid_name, a.last_name 
+    FROM admin a
+    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.department_name = ?
+      AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
+    ORDER BY 
+      CASE 
+        WHEN a.position LIKE 'Dean%' THEN 1 
+        WHEN a.position LIKE 'Chair%' THEN 2 
+        ELSE 3 
+      END
+    LIMIT 1
+");
+$stmt_supervisor->bind_param("s", $dept);
+$stmt_supervisor->execute();
+$stmt_supervisor->bind_result($sfn, $smn, $sln);
+if ($stmt_supervisor->fetch()) {
+    $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
 }
+$stmt_supervisor->close();
 
-// SET Rating
-$set_avg = "0.00";
-$set_q = mysqli_query($conn, "SELECT AVG(computed_rating) as avg FROM evaluation WHERE faculty_id = '$faculty_id'");
-if ($set_q && ($row = mysqli_fetch_assoc($set_q))) {
-    $set_avg = number_format($row['avg'], 2);
-}
+// =======================================================
+// 2. GENERATE PDF
+// =======================================================
 
-// SEF Rating
-$sef_avg = "0.00";
-$sef_q = mysqli_query($conn, "SELECT AVG(computed_rating) as avg FROM admin_evaluation WHERE evaluatee_id = '$faculty_id'");
-if ($sef_q && ($row = mysqli_fetch_assoc($sef_q))) {
-    $sef_avg = number_format($row['avg'], 2);
-}
-
-// Supervisor Name
-$evaluator_name = '';
-$eval_result = mysqli_query($conn, "SELECT evaluator_id FROM admin_evaluation WHERE evaluatee_id = '$faculty_id' ORDER BY evaluation_date DESC LIMIT 1");
-if ($eval_result && mysqli_num_rows($eval_result) > 0) {
-    $admin_row = mysqli_fetch_assoc($eval_result);
-    $admin_id = $admin_row['evaluator_id'];
-
-    $admin_info = mysqli_query($conn, "SELECT first_name, mid_name, last_name FROM admin WHERE idnumber = '$admin_id'");
-    if ($admin_info && mysqli_num_rows($admin_info) > 0) {
-        $admin = mysqli_fetch_assoc($admin_info);
-        $evaluator_name = strtoupper($admin['first_name'] . ' ' . $admin['mid_name'] . ' ' . $admin['last_name']);
-    }
-}
-
-// Custom PDF class (with header/footer if you want to use one)
 require 'superadmin-printing-headerfooter.php';
-
-// Start PDF
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->department = $dept;
 $pdf->AddPage();
 
-$pdf->Ln(10);
+// --- Title ---
 $pdf->SetFont('Arial', 'B', 12);
-$pdf->Cell(0, 2, "$dept FACULTY EVALUATION ACKNOWLEDGEMENT FORM", 0, 1, 'C');
-$pdf->Ln(6);
+$pdf->Cell(0, 8, 'FACULTY EVALUATION ACKNOWLEDGEMENT FORM', 0, 1, 'C');
+$pdf->Ln(8);
 
-// Faculty Info
+// --- Section: Faculty Info ---
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'FACULTY MEMBER INFORMATION', 0, 1);
+$pdf->SetFont('Arial', '', 10);
 
+$pdf->Cell(65, 7, 'Name of Faculty', 1, 0);
+$pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(60, 8, 'Name of Faculty:', 1);
-$pdf->Cell(130, 8, $faculty_name, 1, 1);
-
-$pdf->Cell(60, 8, 'Department/College:', 1);
-$pdf->Cell(130, 8, $dept_display, 1, 1);
-
-$pdf->Cell(60, 8, 'Current Faculty Rank:', 1);
-$pdf->Cell(130, 8, $rank_display, 1, 1);
-
-$pdf->Cell(60, 8, 'Semester/Term & Academic Year:', 1);
-$pdf->Cell(130, 8, "$sem / $sy", 1, 1);
-
-// Evaluation Summary
-$pdf->Ln(6);
-$pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'FACULTY EVALUATION SUMMARY', 0, 1);
-
-$pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(95, 8, 'Student Evaluation of Teachers (SET)', 1, 0, 'C');
-$pdf->Cell(95, 8, 'Supervisor\'s Evaluation of Faculty (SEF)', 1, 1, 'C');
+$pdf->Cell(0, 7, $full_name, 1, 1);
 
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(95, 8, $set_avg, 1, 0, 'C');
-$pdf->Cell(95, 8, $sef_avg, 1, 1, 'C');
+$pdf->Cell(65, 7, 'Department/College', 1, 0);
+$pdf->Cell(5, 7, ':', 1, 0, 'C');
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 7, $dept_display, 1, 1);
 
-// Acknowledgement paragraph
-$pdf->Ln(6);
-$pdf->MultiCell(0, 6, "I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above. I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor.");
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(65, 7, 'Current Faculty Rank', 1, 0);
+$pdf->Cell(5, 7, ':', 1, 0, 'C');
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 7, $rank_display, 1, 1);
 
-// Supervisor Section
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(65, 7, 'Semester/Term & Academic Year', 1, 0);
+$pdf->Cell(5, 7, ':', 1, 0, 'C');
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 7, "$sem / $sy", 1, 1);
+
+// --- Section: Summary ---
 $pdf->Ln(8);
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'SUPERVISOR', 0, 1);
-
+$pdf->Cell(0, 8, 'FACULTY EVALUATION SUMMARY', 0, 1);
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 8, 'Signature:', 1);
-$pdf->Cell(50, 8, '', 1);
-$pdf->Cell(15, 8, 'Name:', 1);
-$pdf->Cell(65, 8, $evaluator_name, 1);
-$pdf->Cell(10, 8, 'Date:', 1);
-$pdf->Cell(30, 8, '', 1, 1); // blank date field
-
-// Faculty Section
-$pdf->Ln(6);
+$pdf->Cell(0, 7, 'Overall Rating', 1, 1, 'C');
+$pdf->Cell(100, 7, 'Student Evaluation of Teachers (SET)', 1, 0, 'C');
+$pdf->Cell(90, 7, "Supervisor's Evaluation of Faculty (SEF)", 1, 1, 'C');
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'FACULTY', 0, 1);
+$pdf->Cell(100, 8, $set_avg, 1, 0, 'C');
+$pdf->Cell(90, 8, $sef_avg, 1, 1, 'C');
 
+// --- Acknowledgement ---
+$pdf->Ln(5);
+$pdf->SetFont('Arial', '', 10);
+$pdf->MultiCell(0, 5,
+    "I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above. I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor."
+);
+
+// --- Section: Supervisor ---
+$pdf->Ln(8);
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(20, 8, 'Signature:', 1);
-$pdf->Cell(50, 8, '', 1);
-$pdf->Cell(15, 8, 'Name:', 1);
-$pdf->Cell(65, 8, $faculty_name, 1);
-$pdf->Cell(10, 8, 'Date:', 1);
-$pdf->Cell(30, 8, '', 1, 1); // blank date field
+$pdf->SetFillColor(45, 45, 45);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->Cell(0, 8, 'SUPERVISOR', 1, 1, 'C', true);
 
-$pdf->Output();
+$pdf->SetTextColor(0, 0, 0);
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(35, 10, 'Signature', 'L', 0);
+$pdf->Cell(5, 10, ':', 0, 0, 'C');
+$pdf->Cell(0, 10, '', 'R', 1);
+
+$pdf->Cell(35, 7, 'Name', 'L', 0);
+$pdf->Cell(5, 7, ':', 0, 0, 'C');
+$pdf->Cell(0, 7, $evaluator_name, 'R', 1);
+
+$pdf->Cell(35, 7, 'Date Signed', 'LB', 0);
+$pdf->Cell(5, 7, ':', 'B', 0, 'C');
+$pdf->Cell(0, 7, '', 'RB', 1);
+
+// --- Section: Faculty ---
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->SetFillColor(45, 45, 45);
+$pdf->SetTextColor(255, 255, 255);
+$pdf->Cell(0, 8, 'FACULTY', 1, 1, 'C', true);
+
+$pdf->SetTextColor(0, 0, 0);
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(35, 10, 'Signature', 'L', 0);
+$pdf->Cell(5, 10, ':', 0, 0, 'C');
+$pdf->Cell(0, 10, '', 'R', 1);
+
+$pdf->Cell(35, 7, 'Name', 'L', 0);
+$pdf->Cell(5, 7, ':', 0, 0, 'C');
+$pdf->Cell(0, 7, $full_name, 'R', 1);
+
+$pdf->Cell(35, 7, 'Date Signed', 'LB', 0);
+$pdf->Cell(5, 7, ':', 'B', 0, 'C');
+$pdf->Cell(0, 7, '', 'RB', 1);
+
+// --- Output ---
+$pdf->Output('I', 'Acknowledgement-Form.pdf');
 exit;
 ?>

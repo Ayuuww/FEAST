@@ -21,14 +21,18 @@ if (empty($selected_department)) {
 // 🔑 Set department into session so header/footer can access it
 $_SESSION['department'] = $selected_department;
 
-// Fetch supervisor(s) from admin table for this department
+// Fetch supervisor(s) from admin + admin_departments for this department
 $supervisors = [];
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
-                        FROM admin 
-                        WHERE department = ?");
+$stmt = $conn->prepare("
+    SELECT a.first_name, a.mid_name, a.last_name, a.position 
+    FROM admin a
+    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.department_name = ?
+");
 $stmt->bind_param("s", $selected_department);
 $stmt->execute();
 $result = $stmt->get_result();
+
 while ($row = $result->fetch_assoc()) {
   $fullname = strtoupper($row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name']);
   $supervisors[] = [
@@ -37,6 +41,7 @@ while ($row = $result->fetch_assoc()) {
   ];
 }
 $stmt->close();
+
 
 // Custom PDF class
 require 'printing-headerfooter.php';
@@ -51,16 +56,16 @@ $title = $selected_department . ' COLLEGE SET REPORT';
 
 // Handle Semester display
 if ($selected_semester) {
-    $sem_display = "Semester: $selected_semester";
+  $sem_display = "Semester: $selected_semester";
 } else {
-    $sem_display = "Semester: 1st / 2nd Semester";
+  $sem_display = "Semester: 1st / 2nd Semester";
 }
 
 // Handle Academic Year display
 if ($selected_academic_year) {
-    $ay_display = "Academic Year: $selected_academic_year";
+  $ay_display = "Academic Year: $selected_academic_year";
 } else {
-    $ay_display = "Academic Year: All Academic Years";
+  $ay_display = "Academic Year: All Academic Years";
 }
 
 $pdf->Cell(0, 10, $title, 0, 1, 'C');
@@ -95,22 +100,22 @@ $pdf->SetFont('Arial', '', 10);
 foreach ($faculties as $fac) {
   $fid = $fac['idnumber'];
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
-  
-  $where = "faculty_id = '$fid'";
-if (!empty($selected_semester)) {
-  $where .= " AND semester = '" . $conn->real_escape_string($selected_semester) . "'";
-}
-if (!empty($selected_academic_year)) {
-  $where .= " AND academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
-}
 
-$r = $conn->query("
+  $where = "faculty_id = '$fid'";
+  if (!empty($selected_semester)) {
+    $where .= " AND semester = '" . $conn->real_escape_string($selected_semester) . "'";
+  }
+  if (!empty($selected_academic_year)) {
+    $where .= " AND academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
+  }
+
+  $r = $conn->query("
     SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
     FROM evaluation
     WHERE $where
 ")->fetch_assoc();
 
-  
+
   $count = (int)$r['students'];
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
 
@@ -151,4 +156,3 @@ $pdf->Cell(0, 6, $position, 0, 1, 'L');
 $pdf->Cell(140, 0, '_________________________', 0, 0, 'L');
 
 $pdf->Output('I', 'College-SET-Report.pdf');
-?>

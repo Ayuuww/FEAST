@@ -149,7 +149,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Student Subject</li>
           <li class="breadcrumb-item active">Assign Subject</li>
         </ol>
       </nav>
