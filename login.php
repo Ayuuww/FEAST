@@ -17,6 +17,13 @@ function tryLogin($conn, $table, $id, $password)
         // Verify hashed or plain password
         if (password_verify($password, $row['password']) || $password === $row['password']) {
 
+            // ✅ Handle Remember My ID
+            if (isset($_POST['remember'])) {
+                setcookie('remember_idnumber', $id, time() + (86400 * 30), "/"); // 30 days
+            } else {
+                setcookie('remember_idnumber', '', time() - 3600, "/"); // delete if unchecked
+            }
+
             // Check status only if column exists
             if (array_key_exists('status', $row) && $row['status'] !== 'active') {
                 $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
