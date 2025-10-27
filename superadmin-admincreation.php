@@ -98,8 +98,8 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
                   </div>
                 </div>
 
-                <div class="col-12" id="department_div" style="display:none;">
-                  <p>Note: For multiple department hadle, Please select first the main department of the Program Chair because this account is also stored in Faculty List</p>
+                <div class="col-12" id="department_div">
+                  <p>Note: For multiple department hadle, Please select first the main department of the Program Chair</p>
                   <label for="department" class="form-label fw-bold">Assign Department(s)</label>
                   <select name="departments[]" id="department" multiple>
                     <?php while ($row = $departments_result->fetch_assoc()): ?>
@@ -156,15 +156,14 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
 
       facultySelect.addEventListener('change', function() {
         if (this.value === 'Yes') {
-          departmentDiv.style.display = 'block';
           facultyRankDiv.style.display = 'block';
           facultyRankSelect.setAttribute('required', 'required');
         } else {
-          departmentDiv.style.display = 'none';
           facultyRankDiv.style.display = 'none';
           facultyRankSelect.removeAttribute('required');
         }
       });
+
 
       // ✅ Confirmation before submission
       const form = document.querySelector('form');

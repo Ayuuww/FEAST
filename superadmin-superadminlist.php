@@ -58,7 +58,7 @@ $result = mysqli_query($conn, $query);
               <h5 class="card-title">Datatables</h5>
 
               <!-- Table with stripped rows -->
-              <table class="table datatable">
+              <table class="table datatable table-hover">
                 <thead>
                   <tr>
                     <th>

@@ -16,7 +16,7 @@ $pos_stmt->execute();
 $admin_position = $pos_stmt->get_result()->fetch_assoc()['position'] ?? '';
 $pos_stmt->close();
 
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director'];
 if (!in_array($admin_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to assign student subjects.";
   header("Location: admin-dashboard.php");
@@ -246,8 +246,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
                     <?php foreach ($subjects_by_faculty as $faculty => $subjects): ?>
                       <optgroup label="<?= htmlspecialchars($faculty) ?>">
                         <?php foreach ($subjects as $sub): ?>
-                          <option value="<?= $sub['code'] ?>">
-                            <?= htmlspecialchars($sub['code'] . ": " . $sub['title']) ?>
+                          <?php
+                          $displayText = $sub['code'] . ': ' . $sub['title'] . ' — (' . $faculty . ')';
+                          ?>
+                          <option
+                            value="<?= htmlspecialchars($sub['code']) ?>"
+                            data-faculty="<?= htmlspecialchars($faculty) ?>">
+                            <?= htmlspecialchars($displayText) ?>
                           </option>
                         <?php endforeach; ?>
                       </optgroup>
@@ -294,11 +299,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
         placeholderValue: 'Click to select students...',
         searchPlaceholderValue: 'Search for a student...'
       });
-      const subjectChoices = new Choices('#subject_code', {
+      const subjectSelect = document.getElementById('subject_code');
+      const subjectChoices = new Choices(subjectSelect, {
         removeItemButton: true,
         placeholder: true,
         placeholderValue: 'Click to select subjects...',
-        searchPlaceholderValue: 'Search for a subject or instructor...'
+        searchPlaceholderValue: 'Search for a subject or instructor...',
+        searchResultLimit: 100,
+        shouldSort: false,
+        fuseOptions: {
+          includeScore: true,
+          threshold: 0.4,
+          keys: ['label', 'customProperties.faculty']
+        }
       });
 
       // --- Filter Elements ---

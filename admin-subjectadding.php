@@ -36,7 +36,7 @@ $dept_stmt->close();
 $admin_dept = !empty($departments) ? $departments[0] : '';
 
 // ✅ Restrict allowed positions
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
 if (!in_array($admin_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to add subjects.";
   header("Location: admin-dashboard.php");

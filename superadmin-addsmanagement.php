@@ -124,8 +124,6 @@ $result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
       <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
     <?php endif; ?>
 
-
-
     <section class="section">
       <div class="row justify-content-center">
         <div class="card col-lg-6">

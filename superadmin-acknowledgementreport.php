@@ -198,13 +198,14 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
                                                   FROM admin a
                                                   INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
                                                   WHERE ad.department_name = ?
-                                                    AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
+                                                    AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
                                                   ORDER BY
                                                     CASE
                                                       WHEN a.position LIKE 'Dean%' THEN 1
                                                       WHEN a.position LIKE 'Chair%' THEN 2
                                                       WHEN a.position LIKE 'Program Chair%' THEN 3
-                                                      ELSE 4
+                                                      WHEN a.position LIKE 'Director%' THEN 4
+                                                      ELSE 5
                                                     END
                                                   LIMIT 1");
         $stmt_supervisor->bind_param("s", $dept); // use faculty's department

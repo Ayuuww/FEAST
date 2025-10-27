@@ -44,10 +44,9 @@ $stmt->close();
 
 
 // Custom PDF class
-require 'printing-headerfooter.php';
-
-// Start PDF
-$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
+require 'superadmin-printing-headerfooter.php';
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
+$pdf->department = $selected_department;
 $pdf->AddPage();
 
 // Title (use department code directly)

@@ -17,7 +17,7 @@ if (!isset($_GET['id'])) {
 
 $admin_id = $_GET['id'];
 
-// Fetch admin info
+// ✅ Fetch admin info from `admin` table first
 $stmt = $conn->prepare("SELECT * FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
@@ -28,6 +28,14 @@ if (!$admin) {
   echo "Admin not found.";
   exit();
 }
+
+// ✅ Fetch admin department (since it's now in a separate table)
+$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$dept_stmt->bind_param("s", $admin_id);
+$dept_stmt->execute();
+$dept_result = $dept_stmt->get_result();
+$dept_row = $dept_result->fetch_assoc();
+$admin_department = $dept_row['department_name'] ?? 'Not Assigned'; // fallback if none
 
 // Fetch admin positions from 'adds' table
 $positions = [];
@@ -46,15 +54,61 @@ while ($row = $rank_result->fetch_assoc()) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $new_status   = $_POST['status'];
   $new_position = $_POST['position'];
-  $new_rank     = $_POST['faculty_rank'];
   $is_faculty   = $_POST['is_faculty'];
+  $new_rank     = isset($_POST['faculty_rank']) && $_POST['faculty_rank'] !== '' ? $_POST['faculty_rank'] : null;
 
-  // ✅ Update admin table
-  $stmt = $conn->prepare("UPDATE admin 
-                          SET status = ?, position = ?, faculty_rank = ?, is_faculty = ? 
-                          WHERE idnumber = ?");
-  $stmt->bind_param("sssss", $new_status, $new_position, $new_rank, $is_faculty, $admin_id);
+  // Force rank = NULL if not faculty
+  if ($is_faculty === 'no') {
+    $new_rank = null;
+  }
+
+  // ✅ Update admin record (faculty_rank will be NULL if not faculty)
+  $stmt = $conn->prepare("
+      UPDATE admin 
+      SET status = ?, position = ?, faculty_rank = ?, is_faculty = ?
+      WHERE idnumber = ?
+  ");
+
+  // Convert PHP null → SQL NULL properly
+  if ($new_rank === null) {
+    $stmt->bind_param("sssss", $new_status, $new_position, $new_rank, $is_faculty, $admin_id);
+    // MySQLi will automatically treat null as NULL in SQL
+  } else {
+    $stmt->bind_param("sssss", $new_status, $new_position, $new_rank, $is_faculty, $admin_id);
+  }
+
   $stmt->execute();
+
+
+
+  if ($is_faculty === 'yes') {
+    // ✅ Validate department exists in adds
+    $checkDept = $conn->prepare("SELECT department_name FROM adds WHERE department_name = ?");
+    $checkDept->bind_param("s", $admin_department);
+    $checkDept->execute();
+    $deptCheck = $checkDept->get_result();
+
+    if ($deptCheck->num_rows === 0) {
+      // If department doesn't exist, set a fallback that definitely exists or create one
+      $fallback_department = 'General Department';
+
+      // Check if fallback exists
+      $fallbackCheck = $conn->prepare("SELECT department_name FROM adds WHERE department_name = ?");
+      $fallbackCheck->bind_param("s", $fallback_department);
+      $fallbackCheck->execute();
+      $fallbackResult = $fallbackCheck->get_result();
+
+      if ($fallbackResult->num_rows === 0) {
+        // Insert fallback department if missing
+        $insertFallback = $conn->prepare("INSERT INTO adds (department_name) VALUES (?)");
+        $insertFallback->bind_param("s", $fallback_department);
+        $insertFallback->execute();
+      }
+
+      // Assign fallback safely
+      $admin_department = $fallback_department;
+    }
+  }
 
   if ($is_faculty === 'yes') {
     // ✅ Ensure this admin also exists in faculty table
@@ -66,9 +120,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($facultyResult->num_rows > 0) {
       // 🔄 Update faculty info
       $updateFaculty = $conn->prepare("UPDATE faculty 
-                                       SET status = ?, faculty_rank = ?, department = ? 
-                                       WHERE idnumber = ?");
-      $updateFaculty->bind_param("ssss", $new_status, $new_rank, $admin['department'], $admin_id);
+                                 SET status = ?, faculty_rank = ?, department = ? 
+                                 WHERE idnumber = ?");
+      $updateFaculty->bind_param("ssss", $new_status, $new_rank, $admin_department, $admin_id);
       $updateFaculty->execute();
     } else {
       // ➕ Insert into faculty if not exists
@@ -81,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $admin['first_name'],
         $admin['mid_name'],
         $admin['last_name'],
-        $admin['department'],
+        $admin_department,
         $new_status,
         $new_rank
       );
@@ -164,7 +218,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <input type="text" class="form-control" value="<?php echo $admin['department']; ?>" disabled>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($admin_department); ?>" disabled>
                         <label class="form-label">Department</label>
                       </div>
                     </div>
@@ -224,8 +278,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- Faculty Rank -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <select name="faculty_rank" class="form-select" required>
-                          <option value="" disabled>-- Select Rank --</option>
+                        <select name="faculty_rank" class="form-select" <?= empty($admin['faculty_rank']) && $admin['is_faculty'] === 'yes' ? 'required' : '' ?>>
+                          <option value="" <?= empty($admin['faculty_rank']) ? 'selected' : '' ?>>-- Select Rank --</option>
                           <?php foreach ($ranks as $rank): ?>
                             <option value="<?= htmlspecialchars($rank) ?>" <?= $admin['faculty_rank'] === $rank ? 'selected' : '' ?>>
                               <?= htmlspecialchars($rank) ?>

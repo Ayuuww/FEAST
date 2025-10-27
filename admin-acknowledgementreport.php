@@ -185,7 +185,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
         $stmt_supervisor = $conn->prepare("
                     SELECT a.first_name, a.mid_name, a.last_name FROM admin a
                     INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
+                    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
                     ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
         $stmt_supervisor->bind_param("s", $dept);
         $stmt_supervisor->execute();

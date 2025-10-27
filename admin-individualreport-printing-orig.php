@@ -282,7 +282,7 @@ $rev_stmt = $conn->prepare("
     FROM admin a
     INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
     WHERE ad.department_name = ?
-      AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
+      AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' )
     ORDER BY 
       CASE 
         WHEN a.position LIKE 'Dean%' THEN 1

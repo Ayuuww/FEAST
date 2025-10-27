@@ -59,7 +59,7 @@ $result = mysqli_query($conn, $query);
           <div class="card">
             <div class="card-body table-responsive">
               <h5 class="card-title">List of Admins</h5>
-              <table class="table datatable">
+              <table class="table datatable table-hover">
                 <thead>
                   <tr>
                     <th><b>ID Number</b></th>

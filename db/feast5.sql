@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 27, 2025 at 02:32 PM
+-- Generation Time: Oct 21, 2025 at 05:21 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -163,29 +163,7 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (405, '00001', 'admin', 'Logged in', '2025-10-21 22:38:23'),
 (406, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:46:18'),
 (407, '00001', 'admin', 'Logged in', '2025-10-21 22:47:07'),
-(408, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:51:59'),
-(409, '221-0387-1', 'superadmin', 'Logged in', '2025-10-22 23:29:21'),
-(410, '221-0387-1', 'superadmin', 'Logged in', '2025-10-26 13:50:05'),
-(411, '00012', 'faculty', 'Logged in', '2025-10-26 13:51:01'),
-(412, '00001', 'admin', 'Logged in', '2025-10-27 17:58:20'),
-(413, '221-0387-1', 'superadmin', 'Logged in', '2025-10-27 17:58:49'),
-(414, '10001', 'admin', 'Logged in', '2025-10-27 18:15:18'),
-(415, '221-0387-1', 'superadmin', 'Logged in', '2025-10-27 18:16:18'),
-(416, '123', 'admin', 'Logged in', '2025-10-27 18:17:26'),
-(417, '221-0387-1', 'superadmin', 'Logged in', '2025-10-27 18:22:58'),
-(418, '10001', 'admin', 'Logged in', '2025-10-27 18:24:51'),
-(419, '221-0387-1', 'superadmin', 'Logged in', '2025-10-27 18:28:45'),
-(420, '100-0000-0', 'admin', 'Logged in', '2025-10-27 18:29:03'),
-(421, '001-0000-0', 'faculty', 'Logged in', '2025-10-27 18:30:33'),
-(422, '000-0000-1', 'student', 'Logged in', '2025-10-27 18:31:35'),
-(423, '10001', 'admin', 'Logged in', '2025-10-27 18:32:41'),
-(424, '100-0000-0', 'admin', 'Logged in', '2025-10-27 19:52:30'),
-(425, '100-0000-0', 'admin', 'Evaluated Faculty: Rufo A. Baro for 2025-2026 1st Semester', '2025-10-27 19:53:40'),
-(426, '00001', 'admin', 'Logged in', '2025-10-27 20:00:08'),
-(427, '00121', 'admin', 'Logged in', '2025-10-27 20:03:11'),
-(428, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2025-2026\' to \'2nd Semester - 2025-2026\'', '2025-10-27 20:59:02'),
-(429, '221-0387-1', 'superadmin', 'Updated evaluation settings from \'2nd Semester - 2025-2026\' to \'1st Semester - 2025-2026\'', '2025-10-27 20:59:09'),
-(430, '12345', 'admin', 'Logged in', '2025-10-27 21:04:36');
+(408, '221-0387-1', 'superadmin', 'Logged in', '2025-10-21 22:51:59');
 
 -- --------------------------------------------------------
 
@@ -272,8 +250,7 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (109, NULL, NULL, '4-C', NULL),
 (110, NULL, NULL, '4-D', NULL),
 (111, NULL, 'Director', NULL, NULL),
-(112, NULL, NULL, NULL, 'CAS-General Education'),
-(113, NULL, NULL, NULL, 'General Department');
+(112, NULL, NULL, NULL, 'CAS-General Education');
 
 -- --------------------------------------------------------
 
@@ -300,10 +277,7 @@ CREATE TABLE `admin` (
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`, `is_faculty`) VALUES
 ('00001', 'Desiry Mitch', 'R', 'Ocampo', '$2y$10$Xl9prTbmhrh0b./63kuREeG4N8CydFLL5bbP72TZ0gXxIDaU4KuSe', 'Program Chair', 'admin', 'active', 'Professor III', 'yes'),
-('00121', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$vJxkk0qlmwzX9JJ8KvdCDeZ4fY3UrKzKV9IvrVIteSdBuaa8EH8y2', 'Dean', 'admin', 'active', 'Associate Professor V', 'yes'),
-('100-0000-0', 'Edelita', 'C', 'Ebuenga', '$2y$10$OftwVTuPCCkL0W5C1sI5ee12pvEkAmn859sa6TkSGH0ySDPMGso2u', 'Dean', 'admin', 'active', 'Professor II', 'yes'),
-('10001', 'Sample', 'Non', 'Teaching', '$2y$10$o/Bb7osEwxNrwCzKRL6.meGaR1HJrblc3g9Y28DDhUXHmTHAmB/Z.', 'Research Facilitator', 'admin', 'active', NULL, 'no'),
-('12345', 'Peter', 'S', 'Parker', '$2y$10$X6GrnuBVDtEXMlTmAdIw5eVxRAMtxLecjq5htee/wbcJ1wAalyB22', 'Director', 'admin', 'active', 'Associate Professor IV', 'yes');
+('100-0000-0', 'Edelita', 'C', 'Ebuenga', '$2y$10$OftwVTuPCCkL0W5C1sI5ee12pvEkAmn859sa6TkSGH0ySDPMGso2u', 'Dean', 'admin', 'active', 'Professor II', 'yes');
 
 -- --------------------------------------------------------
 
@@ -324,10 +298,7 @@ INSERT INTO `admin_departments` (`admin_idnumber`, `department_name`) VALUES
 ('00001', 'BECEd'),
 ('00001', 'BEEd'),
 ('00001', 'BPEd'),
-('00121', 'CVM'),
-('100-0000-0', 'CIS'),
-('10001', 'CIS'),
-('12345', 'IES');
+('100-0000-0', 'CIS');
 
 -- --------------------------------------------------------
 
@@ -354,7 +325,8 @@ CREATE TABLE `admin_evaluation` (
 --
 
 INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
-(75, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '1st Semester', 65, 86.67, '', 'CIS', '2025-10-27 19:53:40');
+(64, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '2nd Semester', 64, 85.33, '', 'CIS', '2025-10-19 14:34:13'),
+(74, '100-0000-0', '001-0000-0', 'Dean', '2025-2026', '1st Semester', 46, 61.33, '', 'CIS', '2025-10-20 20:05:32');
 
 -- --------------------------------------------------------
 
@@ -381,33 +353,7 @@ CREATE TABLE `admin_evaluation_submissions` (
 
 INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`, `semester`, `academic_year`, `total_score`, `rating_percent`, `comment`, `submission_date`, `form_data`) VALUES
 (40, '100-0000-0', '001-0000-0', '2nd Semester', '2025-2026', 64, 85.33, '', '2025-10-19 14:34:13', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":4,\"q6\":3,\"q7\":4,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":4}'),
-(50, '100-0000-0', '001-0000-0', '1st Semester', '2025-2026', 46, 61.33, '', '2025-10-20 20:05:32', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":3,\"q5\":2,\"q6\":2,\"q7\":3,\"q8\":2,\"q9\":2,\"q10\":3,\"q11\":2,\"q12\":3,\"q13\":3,\"q14\":3}'),
-(51, '100-0000-0', '001-0000-0', '1st Semester', '2025-2026', 65, 86.67, '', '2025-10-27 19:53:40', '{\"q0\":5,\"q1\":4,\"q2\":4,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":5,\"q9\":3,\"q10\":4,\"q11\":5,\"q12\":4,\"q13\":4,\"q14\":5}');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `department_info`
---
-
-CREATE TABLE `department_info` (
-  `id` int(11) NOT NULL,
-  `department_name` varchar(255) NOT NULL,
-  `college_name` varchar(255) NOT NULL,
-  `website` varchar(255) DEFAULT 'www.dmmmsu.edu.ph',
-  `phone` varchar(50) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `department_info`
---
-
-INSERT INTO `department_info` (`id`, `department_name`, `college_name`, `website`, `phone`, `email`) VALUES
-(1, 'CIS', 'College of Information Systems', 'www.dmmmsu.edu.ph', '+63960-8182660', 'cis.nluc@dmmmsu.edu.ph'),
-(2, 'CVM', 'College of Veterinary Medicine', 'www.dmmmsu.edu.ph', '+63923-4567890', 'cvm.nluc@dmmmsu.edu.ph'),
-(3, 'BECEd', 'College of Education', 'www.dmmmsu.edu.ph', '+63902-321345', 'ce.nluc@dmmmsu.edu.ph'),
-(4, 'IES', 'Institute of Environmental Science', 'www.dmmmsu.edu.ph\'', '', 'ies.nluc@dmmmsu.edu.ph');
+(50, '100-0000-0', '001-0000-0', '1st Semester', '2025-2026', 46, 61.33, '', '2025-10-20 20:05:32', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":3,\"q5\":2,\"q6\":2,\"q7\":3,\"q8\":2,\"q9\":2,\"q10\":3,\"q11\":2,\"q12\":3,\"q13\":3,\"q14\":3}');
 
 -- --------------------------------------------------------
 
@@ -458,7 +404,7 @@ CREATE TABLE `evaluation_settings` (
 --
 
 INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_at`) VALUES
-(1, '1st Semester', '2025-2026', '2025-10-27 12:59:09');
+(1, '1st Semester', '2025-2026', '2025-10-19 08:06:12');
 
 -- --------------------------------------------------------
 
@@ -514,7 +460,7 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('00009', 'Apolinario', 'M', 'Mabini', '$2y$10$OXhJBHvQQ/HiqsmGGLOdguEmd57e06EWujoJ43ErWH9QtbB6sMJcu', 'ABM-Entreprenuership', 'Associate Professor V', 'faculty', 'active'),
 ('00010', 'Gregorio', 'D', 'Del Pilar', '$2y$10$j7PTMyw6seVG1uYiUrlGr.laIoOOwyzKxMfDDA8krunRKJAH5mfs6', 'ABM-Entreprenuership', 'Professor I', 'faculty', 'active'),
 ('00011', 'Claro', 'M', 'Recto', '$2y$10$Ha1ZNX1OJ64RnaVJH6Xx4uSlVxqlZ4pjA0DsVbI2hE33wR/Rm366O', 'BECEd', 'Assistant Professor I', 'faculty', 'active'),
-('00012', 'Leo', 'R', 'Rivera', '$2y$10$AMLYvDq9XR.DmPrF/6KzP.vPZxv5TqQGLPtskEcBZdbGP3hXmhdNa', 'BECEd', 'Assistant Professor IV', 'faculty', 'active'),
+('00012', 'Leonor', 'R', 'Rivera', '$2y$10$AMLYvDq9XR.DmPrF/6KzP.vPZxv5TqQGLPtskEcBZdbGP3hXmhdNa', 'BECEd', 'Assistant Professor IV', 'faculty', 'active'),
 ('00013', 'Manuel', 'L', 'Quezon', '$2y$10$tgbasNS5kJj0EfsxrwDhae.CN72tym6U0h00MJxsLjJQvDz8VFfri', 'BECEd', 'Professor V', 'faculty', 'active'),
 ('00014', 'Trinidad', 'T', 'Tecson', '$2y$10$Vm17A3DFNLrMxFkHU1UiV.tbemrF8aKouXmCX2o8aQGqsyKazTt6y', 'BECEd', 'Assistant Professor I', 'faculty', 'active'),
 ('00015', 'Sergio', 'O', 'Osmena', '$2y$10$XRv.P0lD2FCFAKx63jBZgurBwQIbPSHW1mKBHqIA51N2qkS.5tQOG', 'BECEd', 'Associate Professor III', 'faculty', 'active'),
@@ -624,10 +570,7 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('00118', 'Anne', 'C', 'Smith', '$2y$10$A.iPuxmxdzSLYFXrQwFlGuBdSzwXauFLpj8wshjMvG2pbuZ9j49WS', 'IES', 'Associate Professor V', 'faculty', 'active'),
 ('00119', 'Vice', 'G', 'Ganda', '$2y$10$5BdOKeddJWB03y2N23LL6erXhRko8YtclBKxkn89HDxr8IorWWbN.', 'IES', 'Professor VI', 'faculty', 'active'),
 ('00120', 'Billy', 'J', 'Crawford', '$2y$10$M2FP0s1E91fJD9Wv3uJMo.FspjgQ4DVaXBdnpgEdtBh2AK7Ey9lMC', 'IES', 'Associate Professor III', 'faculty', 'active'),
-('00121', 'Clark Joshua', 'Velasco', 'Rojas', NULL, 'CVM', 'Associate Professor V', 'faculty', 'active'),
 ('100-0000-0', 'Edelita', 'C', 'Ebuenga', '$2y$10$8PARyuQRwico6m27obo2CudnzYV20ZcxfNjNcnocITSWU8eGZkiXy', 'CIS', 'Professor II', 'faculty', 'active'),
-('10001', 'Sample', 'Non', 'Teaching', NULL, 'CIS', 'Professor IV', 'faculty', 'inactive'),
-('12345', 'Peter', 'S', 'Parker', NULL, 'IES', 'Associate Professor IV', 'faculty', 'active'),
 ('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$0MVzJneKo66YW/H.pvOIROKSb.42/xD4OR2lytbaCGkNdKBNUkYxK', 'CIS', 'Professor IV', 'faculty', 'active');
 
 -- --------------------------------------------------------
@@ -1125,12 +1068,6 @@ ALTER TABLE `admin_evaluation_submissions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `department_info`
---
-ALTER TABLE `department_info`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `evaluation`
 --
 ALTER TABLE `evaluation`
@@ -1215,31 +1152,25 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=431;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=409;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=113;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation_submissions`
 --
 ALTER TABLE `admin_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=52;
-
---
--- AUTO_INCREMENT for table `department_info`
---
-ALTER TABLE `department_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `evaluation`

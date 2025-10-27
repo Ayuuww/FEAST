@@ -1,7 +1,7 @@
 <?php
 require('fpdf/fpdf.php');
 include 'conn/conn.php';
-include 'printing-headerfooter.php';
+include 'superadmin-printing-headerfooter.php';
 session_start();
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {

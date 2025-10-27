@@ -73,7 +73,7 @@ $reviewer_query_str = "
     FROM admin 
     WHERE idnumber IN (
         SELECT admin_idnumber FROM admin_departments WHERE department_name IN ('$placeholders')
-    ) AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
+    ) AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%' OR position LIKE 'Director%')
     LIMIT 1";
 
 $reviewer_result = $conn->query($reviewer_query_str);

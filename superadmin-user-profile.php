@@ -115,7 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // Fetch profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, position FROM superadmin WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, position, department FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -277,6 +277,16 @@ $stmt->close();
                           value="<?= htmlspecialchars($data['position']) ?>" readonly title="This field is managed by the system.">
                       </div>
                     </div>
+
+                    <div class="row mb-3">
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Department</label>
+                      <div class="col-md-8 col-lg-9 position-relative">
+                        <input name="department" type="text" class="form-control text-capitalize"
+                          value="<?= htmlspecialchars($data['department']) ?>"
+                          readonly title="This field is managed by the system.">
+                      </div>
+                    </div>
+
 
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person-gear"></i> Role</label>

@@ -17,7 +17,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
     <!-- Reports -->
     <li class="nav-item">
-      <?php $reportsPages = ['superadmin-individualreport.php', 'superadmin-acknowledgementreport.php','superadmin-overallreport-set.php','superadmin-overallreport-sef.php','superadmin-overallreport.php', 'superadmin-pastrecords.php']; ?>
+      <?php $reportsPages = ['superadmin-individualreport.php', 'superadmin-acknowledgementreport.php', 'superadmin-overallreport-set.php', 'superadmin-overallreport-sef.php', 'superadmin-overallreport.php', 'superadmin-pastrecords.php']; ?>
       <a class="nav-link <?= in_array($currentPage, $reportsPages) ? '' : 'collapsed' ?>"
         data-bs-target="#reports" data-bs-toggle="collapse" href="#">
         <i class="bi bi-journal-text"></i><span>Reports</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -93,7 +93,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
     </li>
 
-    <li class="nav-heading">Account Management</li>
+    <li class="nav-heading">Management</li>
 
     <!-- Manage -->
     <li class="nav-item">
@@ -101,6 +101,15 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         href="superadmin-addsmanagement.php">
         <i class="ri-settings-line"></i>
         <span>Manage</span>
+      </a>
+    </li>
+
+    <!-- Department Information -->
+    <li class="nav-item">
+      <a class="nav-link <?= $currentPage == 'superadmin-department-info.php' ? 'active' : 'collapsed' ?>"
+        href="superadmin-department-info.php">
+        <i class="bi bi-building"></i>
+        <span>Department Information</span>
       </a>
     </li>
 

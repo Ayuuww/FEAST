@@ -1,5 +1,4 @@
 <?php
-
 class PDF_EXTENDED extends FPDF
 {
   function Header()
@@ -8,167 +7,15 @@ class PDF_EXTENDED extends FPDF
     $logo_left  = 'pics/bagong_pilipinas.jpg';
     $logo_right = 'pics/DMMMSUlogo_header.png';
 
-    // Department info
-    $dept_info = [
-      'ABM-Cooperative' => [
-        'college' => 'INSTITUTE OF AGRIBUSINESS MANAGEMENT',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'abm.nluc@dmmmsu.edu.ph'
-      ],
-      'ABM-Entreprenuership' => [
-        'college' => 'INSTITUTE OF AGRIBUSINESS MANAGEMENT',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'abm.nluc@dmmmsu.edu.ph'
-      ],
-      'BECEd' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BEEd' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BPEd' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BSEd-English' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BSEd-Filipino' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BSEd-Mathematics' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BSEd-Science' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'BTLEd' => [
-        'college' => 'COLLEGE OF EDUCATION',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63912-3456789',
-        'email'   => 'ce.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Animal Science' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Apiculture' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Crop Protection' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Crop Science (Agronomy)' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Crop Science (Horticulture)' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CA-Soil Science' => [
-        'college' => 'COLLEGE OF AGRICULTURE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ca.nluc@dmmmsu.edu.ph'
-      ],
-      'CAFF-Agroforestry' => [
-        'college' => 'COLLEGE OF AGROFORESTRY AND FORESTRY',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'caff.nluc@dmmmsu.edu.ph'
-      ],
-      'CAFF-Forestry' => [
-        'college' => 'COLLEGE OF AGROFORESTRY AND FORESTRY',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'caff.nluc@dmmmsu.edu.ph'
-      ],
-      'CAS-Arts in English Language' => [
-        'college' => 'COLLEGE OF ARTS AND SCIENCE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'cas.nluc@dmmmsu.edu.ph'
-      ],
-      'CAS-Science in Biology' => [
-        'college' => 'COLLEGE OF ARTS AND SCIENCE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'cas.nluc@dmmmsu.edu.ph'
-      ],
-      'CIS' => [
-        'college' => 'COLLEGE OF INFORMATION SYSTEMS',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63960-8182660',
-        'email'   => 'cis.nluc@dmmmsu.edu.ph'
-      ],
-      'CVM' => [
-        'college' => 'COLLEGE OF VETERINARY MEDICINE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '+63923-4567890',
-        'email'   => 'cvm.nluc@dmmmsu.edu.ph'
-      ],
-      'IABE' => [
-        'college' => 'INSTITUTE OF AGRICULTURAL & BIOSYSTEMS ENGINEERING',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'iabe.nluc@dmmmsu.edu.ph'
-      ],
-      'IES' => [
-        'college' => 'INSTITUTE OF ENVIRONMENTAL SCIENCE',
-        'website' => 'www.dmmmsu.edu.ph',
-        'phone'   => '',
-        'email'   => 'ies.nluc@dmmmsu.edu.ph'
-      ],
-    ];
-
+    // --- Get Department Name ---
     $department = $_SESSION['department'] ?? null;
 
-    // If department not found, try fetching from database (for admins with multiple departments)
+    // If not found in session, get it from admin_departments
     if (!$department && isset($_SESSION['idnumber'])) {
-      // Bring global connection into scope
       global $conn;
-
-      // If $conn is not set yet, include connection file
-      if (!isset($conn)) {
-        include 'conn/conn.php';
-      }
-
+      if (!isset($conn)) include 'conn/conn.php';
       $admin_id = $_SESSION['idnumber'];
+
       $stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ? LIMIT 1");
       $stmt->bind_param("s", $admin_id);
       $stmt->execute();
@@ -179,28 +26,42 @@ class PDF_EXTENDED extends FPDF
       $stmt->close();
     }
 
-    $college_name    = $dept_info[$department]['college'] ?? 'COLLEGE';
-    $college_website = $dept_info[$department]['website'] ?? 'www.dmmmsu.edu.ph';
-    $college_phone   = $dept_info[$department]['phone'] ?? '';
-    $college_email   = $dept_info[$department]['email'] ?? '';
+    // --- Fetch department info dynamically ---
+    $college_name = 'COLLEGE';
+    $website = 'www.dmmmsu.edu.ph';
+    $phone = '';
+    $email = '';
 
-    // Insert logos
+    if ($department) {
+      global $conn;
+      if (!isset($conn)) include 'conn/conn.php';
+      $stmt = $conn->prepare("SELECT college_name, website, phone, email FROM department_info WHERE department_name = ? LIMIT 1");
+      $stmt->bind_param("s", $department);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      if ($row = $result->fetch_assoc()) {
+        $college_name = $row['college_name'];
+        $website = $row['website'] ?: $website;
+        $phone = $row['phone'] ?: '';
+        $email = $row['email'] ?: '';
+      }
+      $stmt->close();
+    }
+
+    // --- Header Layout ---
     $this->Image($logo_left, 9, 10, 32);
     $this->Image($logo_right, 35, 10, 20);
 
-    // University header text
     $this->SetFont('Arial', 'B', 10);
     $this->Cell(190, 7, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
     $this->Cell(195, 2, 'NORTH LA UNION CAMPUS Bacnotan, La Union, Philippines', 0, 1, 'C');
 
-    // College name
     $this->SetFont('Arial', 'B', 12);
     $this->Cell(220, 7, strtoupper($college_name), 0, 1, 'C');
 
-    // Website | Phone | Email
     $this->SetFont('Arial', '', 9);
     $this->SetTextColor(0, 0, 255);
-    $this->Cell(195, 5, $college_website . ' | ' . $college_phone . ' | ' . $college_email, 0, 1, 'C');
+    $this->Cell(195, 5, $website . ' | ' . $phone . ' | ' . $email, 0, 1, 'C');
     $this->SetTextColor(0, 0, 0);
 
     $this->Ln(8);
@@ -214,62 +75,10 @@ class PDF_EXTENDED extends FPDF
     if (file_exists($logo)) {
       $page_width = $this->GetPageWidth();
       $margin = 13;
-
-      // Max allowed width (works well for both Portrait & Landscape)
-      $max_width = 190; // you can tweak this number
-
-      // Calculate width: either fit to page minus margins OR limit to max_width
+      $max_width = 190;
       $img_width = min($page_width - ($margin * 2), $max_width);
-
-      // Center horizontally
       $x = ($page_width - $img_width) / 2;
-
       $this->Image($logo, $x, $this->GetY() + 3, $img_width);
     }
-  }
-
-  // Helper function for table cell height
-  function GetMultiCellHeight($w, $h, $txt)
-  {
-    $cw = &$this->CurrentFont['cw'];
-    if ($w == 0)
-      $w = $this->w - $this->rMargin - $this->x;
-    $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
-    $s = str_replace("\r", '', $txt);
-    $nb = strlen($s);
-    if ($nb > 0 && $s[$nb - 1] == "\n")
-      $nb--;
-    $sep = -1;
-    $i = 0;
-    $j = 0;
-    $l = 0;
-    $nl = 1;
-    while ($i < $nb) {
-      $c = $s[$i];
-      if ($c == "\n") {
-        $i++;
-        $sep = -1;
-        $j = $i;
-        $l = 0;
-        $nl++;
-        continue;
-      }
-      if ($c == ' ')
-        $sep = $i;
-      $l += $cw[$c];
-      if ($l > $wmax) {
-        if ($sep == -1) {
-          if ($i == $j)
-            $i++;
-        } else
-          $i = $sep + 1;
-        $sep = -1;
-        $j = $i;
-        $l = 0;
-        $nl++;
-      } else
-        $i++;
-    }
-    return $nl * $h;
   }
 }

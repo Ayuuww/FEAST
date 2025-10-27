@@ -41,11 +41,9 @@ if (!empty($selected_department)) {
 }
 
 // 🔹 Custom PDF class (with header/footer)
-require 'printing-headerfooter.php';
-$_SESSION['department'] = $selected_department;
-
-// Start PDF
-$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
+require 'superadmin-printing-headerfooter.php';
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
+$pdf->department = $selected_department;
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
@@ -147,4 +145,3 @@ $pdf->Cell(140, 6, $s_position, 0, 0, 'L');
 $pdf->Cell(0, 6, '', 0, 1, 'L');
 
 $pdf->Output('I', 'Overall-Evaluation-Report.pdf');
-?>

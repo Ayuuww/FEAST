@@ -64,7 +64,7 @@ if (!empty($departments)) {
 
 
 // ✅ Restrict allowed positions
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair']; // adjust spelling to match DB values
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
 if (!in_array($evaluator_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($evaluator_position) is not allowed to perform faculty evaluations.";
 }

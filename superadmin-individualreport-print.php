@@ -119,7 +119,7 @@ $rev_stmt = $conn->prepare("
     FROM admin a
     INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
     WHERE ad.department_name = ?
-      AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%')
+      AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%' OR a.position LIKE '%Director%')
     ORDER BY CASE WHEN a.position LIKE '%Dean%' THEN 1 ELSE 2 END
     LIMIT 1
 ");
@@ -136,7 +136,7 @@ $rev_stmt->close();
 // =======================================================
 
 require 'superadmin-printing-headerfooter.php';
-$pdf = new PDF_EXTENDED('P', 'mm', 'A4');
+$pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn); // <-- pass $conn here
 $pdf->department = $dept;
 $pdf->AddPage();
 

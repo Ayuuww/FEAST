@@ -39,7 +39,7 @@ if (empty($departments)) {
 
 
 // ✅ Restrict allowed positions (only allow Dean/Chair/Program Chair)
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair'];
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
 if (!in_array($admin_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to view the subject list.";
   header("Location: admin-dashboard.php");
