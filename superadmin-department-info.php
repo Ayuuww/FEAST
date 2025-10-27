@@ -10,32 +10,64 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 // Handle Add/Update/Delete
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $dept = $_POST['department_name'];
-  $college = $_POST['college_name'];
-  $website = $_POST['website'];
-  $phone = $_POST['phone'];
-  $email = $_POST['email'];
+  $dept = trim($_POST['department_name']);
+  $college = trim($_POST['college_name']);
+  $website = trim($_POST['website']);
+  $phone = trim($_POST['phone']);
+  $email = trim($_POST['email']);
 
+  // Add Department
   if (isset($_POST['add'])) {
-    $stmt = $conn->prepare("INSERT INTO department_info (department_name, college_name, website, phone, email) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $dept, $college, $website, $phone, $email);
-    $stmt->execute();
+    // ✅ Check if department already exists
+    $check = $conn->prepare("SELECT COUNT(*) FROM department_info WHERE department_name = ?");
+    $check->bind_param("s", $dept);
+    $check->execute();
+    $check->bind_result($count);
+    $check->fetch();
+    $check->close();
+
+    if ($count > 0) {
+      // ⚠️ Duplicate found
+      $_SESSION['alert'] = [
+        'type' => 'error',
+        'title' => 'Duplicate Entry',
+        'text' => 'This department already exists.'
+      ];
+    } else {
+      // ✅ Safe to insert
+      $stmt = $conn->prepare("INSERT INTO department_info (department_name, college_name, website, phone, email) VALUES (?, ?, ?, ?, ?)");
+      $stmt->bind_param("sssss", $dept, $college, $website, $phone, $email);
+      $stmt->execute();
+
+      $_SESSION['alert'] = [
+        'type' => 'success',
+        'title' => 'Added Successfully',
+        'text' => 'New department has been added.'
+      ];
+    }
+
+    header("Location: superadmin-department-info.php");
+    exit();
   }
 
+  // Update Department
   if (isset($_POST['update'])) {
     $id = $_POST['id'];
     $stmt = $conn->prepare("UPDATE department_info SET department_name=?, college_name=?, website=?, phone=?, email=? WHERE id=?");
     $stmt->bind_param("sssssi", $dept, $college, $website, $phone, $email, $id);
     $stmt->execute();
+
+    $_SESSION['alert'] = [
+      'type' => 'success',
+      'title' => 'Updated Successfully',
+      'text' => 'Department information has been updated.'
+    ];
+
+    header("Location: superadmin-department-info.php");
+    exit();
   }
 }
 
-if (isset($_GET['delete'])) {
-  $id = $_GET['delete'];
-  $conn->query("DELETE FROM department_info WHERE id = '$id'");
-  header("Location: superadmin-department-info.php?deleted=1");
-  exit();
-}
 
 // Fetch all departments
 $result = $conn->query("SELECT * FROM department_info ORDER BY department_name ASC");
@@ -203,6 +235,17 @@ $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE dep
         showConfirmButton: false,
         timer: 1500
       });
+    <?php endif; ?>
+
+    // General session alert (for add/update errors)
+    <?php if (isset($_SESSION['alert'])): ?>
+      Swal.fire({
+        icon: '<?= $_SESSION['alert']['type'] ?>',
+        title: '<?= $_SESSION['alert']['title'] ?>',
+        text: '<?= $_SESSION['alert']['text'] ?>',
+        showConfirmButton: true,
+      });
+      <?php unset($_SESSION['alert']); ?>
     <?php endif; ?>
   </script>
 
