@@ -46,22 +46,46 @@ $res->close();
 
 // Fetch faculty
 // 🔹 Fix: Fetch faculty using the $departments array and an IN clause
+// Fetch all faculty in the admin's assigned departments AND programs
 $faculties = [];
-if (!empty($departments)) {
-  // Create placeholders like (?, ?, ?)
-  $placeholders = implode(',', array_fill(0, count($departments), '?'));
-  // Create types string like "sss"
-  $types = str_repeat('s', count($departments));
 
+// ✅ FIRST, get the admin's assignments as pairs
+$admin_assignments = [];
+// We need to re-fetch the department/program pairs, not just departments
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept->bind_param("s", $admin_id);
+$stmt_admin_dept->execute();
+$result = $stmt_admin_dept->get_result();
+while ($row = $result->fetch_assoc()) {
+  $admin_assignments[] = $row;
+}
+$stmt_admin_dept->close();
+
+
+if (!empty($admin_assignments)) {
+  // ✅ Build the query to check for (dept = ? AND prog = ?) OR (dept = ? AND prog = ?)
+  $faculty_query_parts = [];
+  $params = [];
+  $types = "";
+
+  foreach ($admin_assignments as $assignment) {
+    $faculty_query_parts[] = "(department = ? AND program = ?)";
+    $params[] = $assignment['department_name'];
+    $params[] = $assignment['program_name'];
+    $types .= "ss";
+  }
+  $faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+  // ✅ This query now finds faculty whose home dept/prog matches the admin's assignments
   $sql = "
         SELECT idnumber, last_name, first_name, mid_name
         FROM faculty
-        WHERE department IN ($placeholders)
+        WHERE ($faculty_where_sql)
         ORDER BY last_name ASC
     ";
 
   $query = $conn->prepare($sql);
-  $query->bind_param($types, ...$departments); // Bind all departments
+  $query->bind_param($types, ...$params);
   $query->execute();
   $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
   $query->close();

@@ -3,7 +3,6 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-
 // Check if superadmin is logged in
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
@@ -30,12 +29,44 @@ if (!$faculty && $_SERVER["REQUEST_METHOD"] != "POST") {
   exit();
 }
 
+// --- Fetch all data for dropdowns ---
+$positions_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != '' ORDER BY position_name ASC");
+
+$rankQuery = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != '' ORDER BY rank_name ASC");
+$facultyRanks = [];
+while ($row = $rankQuery->fetch_assoc()) {
+  $facultyRanks[] = $row['rank_name'];
+}
+
+// Fetch departments and programs for dynamic dropdowns
+$adds_data_result = $conn->query("
+    SELECT DISTINCT department_name, program_name 
+    FROM adds 
+    WHERE department_name IS NOT NULL AND department_name != '' 
+    ORDER BY department_name, program_name ASC
+");
+$departmentPrograms = [];
+while ($row = $adds_data_result->fetch_assoc()) {
+  $department = $row['department_name'];
+  $program = $row['program_name'];
+  if (!isset($departmentPrograms[$department])) {
+    $departmentPrograms[$department] = [];
+  }
+  if ($program && !in_array($program, $departmentPrograms[$department])) {
+    $departmentPrograms[$department][] = $program;
+  }
+}
+// --- End Data Fetching ---
+
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $faculty_id = $_GET['id'];
+  $new_status = $_POST['status'];
+  $new_role_trigger = $_POST['role']; // This is just the trigger
+  $new_faculty_rank = $_POST['faculty_rank'] ?? null;
 
-  // Re-fetch faculty data in case it's not loaded yet
+  // Re-fetch faculty data
   $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
   $stmt->bind_param("s", $faculty_id);
   $stmt->execute();
@@ -47,10 +78,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     exit();
   }
 
-  $new_status = $_POST['status'];
-  $new_role   = $_POST['role'];
+  // --- ✅ REBUILT 'Promote to Admin' Logic ---
+  if ($new_role_trigger === 'admin') {
 
-  if ($new_role === 'admin') {
     // Check if already an admin
     $checkAdmin = $conn->prepare("SELECT idnumber FROM admin WHERE idnumber = ?");
     $checkAdmin->bind_param("s", $faculty_id);
@@ -58,58 +88,108 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $adminResult = $checkAdmin->get_result();
 
     if ($adminResult->num_rows > 0) {
-      $_SESSION['msg'] = "This faculty is already an Admin.";
-      header("Location: superadmin-editfaculty.php?id=$faculty_id");
-      exit();
+      $_SESSION['msg'] = "This faculty is already an Admin. Their details have been updated instead.";
+      // Fall through to the 'else' logic to perform an update
+    } else {
+      // Not an admin, so let's create them
+      $position = $_POST['position'] ?? NULL;
+
+      // ✅ Get Main Dept/Program
+      $main_department = $_POST['main_department'] ?? NULL;
+      $main_program = $_POST['main_program'] ?? ''; // Default to ''
+
+      // ✅ Get *Additional* (optional) assignments
+      $departments = $_POST['departments'] ?? [];
+      $programs_by_dept = $_POST['programs'] ?? [];
+
+      // ✅ Use an array to track added entries and prevent duplicates
+      $added_assignments = [];
+
+      $conn->begin_transaction();
+      try {
+        // 1. Insert into 'admin' table
+        // 9 columns, 9 VALUES (8 '?' + 1 'admin')
+        $insertAdmin = $conn->prepare("
+                    INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, position, faculty_rank, role, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', ?)
+                ");
+        // 8 variables bind to 8 's'
+        $insertAdmin->bind_param(
+          "ssssssss",
+          $faculty['idnumber'],
+          $faculty['first_name'],
+          $faculty['mid_name'],
+          $faculty['last_name'],
+          $faculty['password'],
+          $position,
+          $new_faculty_rank,
+          $new_status
+        );
+        $insertAdmin->execute();
+
+        // 2. UPDATE the existing faculty record with new main dept/program
+        $updateFaculty = $conn->prepare("UPDATE faculty SET status = ?, faculty_rank = ?, department = ?, program = ? WHERE idnumber = ?");
+        $updateFaculty->bind_param("sssss", $new_status, $new_faculty_rank, $main_department, $main_program, $faculty_id);
+        $updateFaculty->execute();
+
+
+        // 3. Prepare statement for 'admin_departments'
+        $stmt_dept = $conn->prepare("INSERT INTO admin_departments (admin_idnumber, department_name, program_name) VALUES (?, ?, ?)");
+
+        // 4. Insert the MAIN department/program assignment first
+        $stmt_dept->bind_param("sss", $faculty_id, $main_department, $main_program);
+        $stmt_dept->execute();
+        $added_assignments[$main_department . "::" . $main_program] = true; // Track it
+
+        // 5. Loop and insert *ADDITIONAL* assignments
+        foreach ($departments as $dept_name) {
+          if (isset($programs_by_dept[$dept_name]) && !empty($programs_by_dept[$dept_name])) {
+            // Case 1: Dept has programs
+            foreach ($programs_by_dept[$dept_name] as $prog_name) {
+              $key = $dept_name . "::" . $prog_name;
+              if (isset($added_assignments[$key])) continue; // Skip duplicate
+
+              $stmt_dept->bind_param("sss", $faculty_id, $dept_name, $prog_name);
+              $stmt_dept->execute();
+              $added_assignments[$key] = true;
+            }
+          } else {
+            // Case 2: Dept selected, but no programs
+            $prog_name_empty = '';
+            $key = $dept_name . "::" . $prog_name_empty;
+            if (isset($added_assignments[$key])) continue; // Skip duplicate
+
+            $stmt_dept->bind_param("sss", $faculty_id, $dept_name, $prog_name_empty);
+            $stmt_dept->execute();
+            $added_assignments[$key] = true;
+          }
+        }
+
+        // All good, commit the changes
+        $conn->commit();
+        $_SESSION['success_message'] = "Faculty successfully promoted to Admin!";
+        header("Location: superadmin-adminlist.php"); // Redirect to admin list
+        exit();
+      } catch (mysqli_sql_exception $e) {
+        $conn->rollback();
+        if ($e->getCode() == 1062) {
+          $_SESSION['msg'] = "Error: A user with this ID already exists in the admin table.";
+        } else {
+          $_SESSION['msg'] = "Database Error: " . $e->getMessage();
+        }
+        header("Location: superadmin-editfaculty.php?id=$faculty_id");
+        exit();
+      }
     }
+  }
 
-    // Proceed to insert to admin if not yet
-    $position = $_POST['position'] ?? '';
-    $is_faculty = $_POST['is_faculty'] ?? 'no';
-
-    $role = 'admin';
-    $insertAdmin = $conn->prepare("INSERT INTO admin 
-    (idnumber, first_name, mid_name, last_name, password, role, status, department, position, faculty_rank, is_faculty) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $insertAdmin->bind_param(
-      "sssssssssss",
-      $faculty['idnumber'],
-      $faculty['first_name'],
-      $faculty['mid_name'],
-      $faculty['last_name'],
-      $faculty['password'],
-      $role,
-      $new_status,
-      $faculty['department'],
-      $position,
-      $faculty['faculty_rank'], // from faculty table
-      $is_faculty
-    );
-
-    try {
-      $insertAdmin->execute();
-
-      // Optional: Clear from faculty table
-      $clearFaculty = $conn->prepare("UPDATE faculty SET password = '' WHERE idnumber = ?");
-      $clearFaculty->bind_param("s", $faculty_id);
-      $clearFaculty->execute();
-
-      $_SESSION['msg'] = "Faculty successfully converted to Admin.";
-      header("Location: superadmin-adminlist.php");
-      exit();
-    } catch (mysqli_sql_exception $e) {
-      $_SESSION['msg'] = "Database Error: " . $e->getMessage();
-      header("Location: superadmin-editfaculty.php?id=$faculty_id");
-      exit();
-    }
-  } else {
-    $faculty_rank = $_POST['faculty_rank'] ?? null;
-
-    $stmt = $conn->prepare("UPDATE faculty SET status = ?, role = ?, faculty_rank = ? WHERE idnumber = ?");
-    $stmt->bind_param("ssss", $new_status, $new_role, $faculty_rank, $faculty_id);
+  // This 'else' block runs if $new_role_trigger is 'faculty' OR if they were already an admin
+  try {
+    $stmt = $conn->prepare("UPDATE faculty SET status = ?, faculty_rank = ? WHERE idnumber = ?");
+    $stmt->bind_param("sss", $new_status, $new_faculty_rank, $faculty_id);
     $stmt->execute();
 
-    // ✅ Also sync to admin table if this faculty is also an admin
+    // Also sync to admin table if this faculty is also an admin
     $checkAdmin = $conn->prepare("SELECT idnumber FROM admin WHERE idnumber = ?");
     $checkAdmin->bind_param("s", $faculty_id);
     $checkAdmin->execute();
@@ -117,12 +197,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($adminResult->num_rows > 0) {
       $updateAdmin = $conn->prepare("UPDATE admin SET status = ?, faculty_rank = ? WHERE idnumber = ?");
-      $updateAdmin->bind_param("sss", $new_status, $faculty_rank, $faculty_id);
+      $updateAdmin->bind_param("sss", $new_status, $new_faculty_rank, $faculty_id);
       $updateAdmin->execute();
     }
 
     $success = "Faculty updated successfully!";
-
 
     // Re-fetch updated faculty data
     $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
@@ -130,43 +209,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->execute();
     $result = $stmt->get_result();
     $faculty = $result->fetch_assoc();
+  } catch (mysqli_sql_exception $e) {
+    $_SESSION['msg'] = "Database Error: " . $e->getMessage();
+    header("Location: superadmin-editfaculty.php?id=$faculty_id");
+    exit();
   }
 }
-
-// Fetch admin position form the 'adds' table
-$positions = [];
-$position_result = $conn->query("SELECT position_name FROM adds WHERE position_name IS NOT NULL");
-while ($row = $position_result->fetch_assoc()) {
-  $positions[] = $row['position_name'];
-}
-
-// Fetch faculty ranks from the 'adds' table
-$rankQuery = $conn->query("SELECT rank_name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
-$facultyRanks = [];
-while ($row = $rankQuery->fetch_assoc()) {
-  $facultyRanks[] = $row['rank_name'];
-}
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="assets/js/choices.min.css" />
 </head>
 
 <body>
 
   <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
     <div class="pagetitle">
@@ -199,120 +262,140 @@ while ($row = $rankQuery->fetch_assoc()) {
                   });
                 </script>
               <?php endif; ?>
-
+              <?php if (isset($_SESSION['msg'])): ?>
+                <script>
+                  Swal.fire({
+                    icon: 'info',
+                    title: 'Notice',
+                    text: <?= json_encode($_SESSION['msg']) ?>,
+                    confirmButtonColor: '#3085d6'
+                  });
+                </script>
+                <?php unset($_SESSION['msg']); ?>
+              <?php endif; ?>
               <?php if ($faculty): ?>
-                <form method="POST">
-
-                  <div class="col-md-12 mb-3">
+                <form method="POST" class="row g-3">
+                  <div class="col-md-6">
                     <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo $faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']; ?>" disabled>
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']); ?>" disabled>
                       <label class="form-label">Full Name</label>
                     </div>
                   </div>
 
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" value="<?php echo $faculty['idnumber']; ?>" disabled>
-                        <label class="form-label">ID Number</label>
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" value="<?php echo $faculty['department']; ?>" disabled>
-                        <label class="form-label">Department</label>
-                      </div>
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['idnumber']); ?>" disabled>
+                      <label class="form-label">ID Number</label>
                     </div>
                   </div>
 
-                  <div class="row">
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <select name="role" class="form-select" required>
-                          <option value="faculty" <?php if ($faculty['role'] == 'faculty') echo 'selected'; ?>>Faculty</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                        <label class="form-label">Role</label>
-                      </div>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <div class=" form-floating">
-                        <select name="status" class="form-select" required>
-                          <option value="active" <?php if ($faculty['status'] == 'active') echo 'selected'; ?>>Active</option>
-                          <option value="inactive" <?php if ($faculty['status'] == 'inactive') echo 'selected'; ?>>Inactive</option>
-                        </select>
-                        <label class="form-label">Current Status</label>
-                      </div>
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['department']); ?>" disabled>
+                      <label class="form-label">Current Main Department</label>
                     </div>
                   </div>
 
-                  <div id="admin-options" style="display: none;">
-                    <div class="mb-3 form-floating">
-                      <select class="form-select" name="position" required>
-                        <option value="" disabled selected>-- Select Position --</option>
-                        <?php foreach ($positions as $position): ?>
-                          <option value="<?= htmlspecialchars($position) ?>"><?= htmlspecialchars($position) ?></option>
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['program']); ?>" disabled>
+                      <label class="form-label">Current Main Program</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select name="role" class="form-select" required>
+                        <option value="faculty" <?php if ($faculty['role'] == 'faculty') echo 'selected'; ?>>Faculty</option>
+                        <option value="admin">Promote to Admin</option>
+                      </select>
+                      <label class="form-label">Role</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class=" form-floating">
+                      <select name="status" class="form-select" required>
+                        <option value="active" <?php if ($faculty['status'] == 'active') echo 'selected'; ?>>Active</option>
+                        <option value="inactive" <?php if ($faculty['status'] == 'inactive') echo 'selected'; ?>>Inactive</option>
+                      </select>
+                      <label class="form-label">Current Status</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['faculty_rank'] ?? 'Not Set'); ?>" disabled>
+                      <label class="form-label">Current Faculty Rank</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <select class="form-select" name="faculty_rank">
+                        <option value="" <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>-- Select Rank --</option>
+                        <?php foreach ($facultyRanks as $rank): ?>
+                          <option value="<?= htmlspecialchars($rank) ?>" <?= ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($rank) ?>
+                          </option>
                         <?php endforeach; ?>
                       </select>
-                      <label class="form-label">Position</label>
-                    </div>
-
-
-                    <div class="mb-3 form-floating">
-                      <select class="form-select" name="is_faculty">
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                      </select>
-                      <label class="form-label">Still a Faculty?</label>
+                      <label>Update Faculty Rank</label>
                     </div>
                   </div>
 
-                  <div class="row">
-                    <!-- Current Rank -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" value="<?php echo $faculty['faculty_rank'] ?? 'Not Set'; ?>" disabled>
-                        <label class="form-label">Current Faculty Rank</label>
-                      </div>
-                    </div>
+                  <div id="admin-options" style="display: none;" class="row g-3">
+                    <hr>
+                    <h6 class="text-primary fw-bold">Admin Promotion Details</h6>
 
-                    <!-- Promoting section -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12">
                       <div class="form-floating">
-                        <select class="form-select" name="faculty_rank">
-                          <option value="" disabled <?php if (empty($faculty['faculty_rank'])) echo 'selected'; ?>>Select Rank</option>
-                          <?php foreach ($facultyRanks as $rank): ?>
-                            <option value="<?= htmlspecialchars($rank) ?>" <?= ($faculty['faculty_rank'] ?? '') === $rank ? 'selected' : '' ?>>
-                              <?= htmlspecialchars($rank) ?>
-                            </option>
-                          <?php endforeach; ?>
+                        <select class="form-select" name="position" id="position">
+                          <option value="" disabled selected>-- Select Position --</option>
+                          <?php $positions_result->data_seek(0); // Reset result pointer 
+                          ?>
+                          <?php while ($row = $positions_result->fetch_assoc()): ?>
+                            <option value="<?= htmlspecialchars($row['position_name']) ?>"><?= htmlspecialchars($row['position_name']) ?></option>
+                          <?php endwhile; ?>
                         </select>
-                        <label>Faculty Rank Promotion</label>
+                        <label for="position">Position</label>
                       </div>
                     </div>
+
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <select class="form-select" name="main_department" id="main_department">
+                          <option value="" disabled selected>-- Select Main Department --</option>
+                        </select>
+                        <label>New Main Department</label>
+                      </div>
+                    </div>
+
+                    <div class="col-md-6">
+                      <div class="form-floating">
+                        <select class="form-select" name="main_program" id="main_program">
+                          <option value="" selected>-- Select Main Program (if any) --</option>
+                        </select>
+                        <label>New Main Program</label>
+                      </div>
+                    </div>
+
+                    <div class="col-12" id="department_div">
+                      <label for="department" class="form-label fw-bold">Assign *Additional* Department(s) (Optional)</label>
+                      <select name="departments[]" id="department" multiple></select>
+                    </div>
+
+                    <div class="col-12 mt-3" id="program_container"></div>
+                    <hr>
                   </div>
-
-                  <button type="submit" class="btn btn-success">Update Status</button>
-                  <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
-
-                  <?php if (isset($_SESSION['msg'])): ?>
-                    <script>
-                      Swal.fire({
-                        icon: 'info',
-                        title: 'Notice',
-                        text: <?= json_encode($_SESSION['msg']) ?>,
-                        confirmButtonColor: '#3085d6'
-                      });
-                    </script>
-                    <?php unset($_SESSION['msg']); ?>
-                  <?php endif; ?>
-
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-success">Update Faculty</button>
+                    <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
+                  </div>
 
                 </form>
               <?php else: ?>
-                <div class="alert alert-info">This faculty member has been moved to the admin list.</div>
+                <div class="alert alert-info">Faculty not found or may have been moved.</div>
               <?php endif; ?>
 
             </div>
@@ -322,51 +405,114 @@ while ($row = $rankQuery->fetch_assoc()) {
     </section>
   </main>
 
-  <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>
-  <!-- End Footer -->
-
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
+  <script src="assets/js/choices.min.js"></script>
   <script src="assets/js/main.js"></script>
 
   <script>
-    document.querySelector('select[name="role"]').addEventListener('change', function() {
-      const adminOptions = document.getElementById('admin-options');
-      const selects = adminOptions.querySelectorAll('select');
+    // Pass PHP array to JavaScript
+    const departmentPrograms = <?= json_encode($departmentPrograms) ?>;
+    const allDepartments = Object.keys(departmentPrograms);
 
-      if (this.value === 'admin') {
-        adminOptions.style.display = 'block';
-        selects.forEach(s => s.setAttribute('required', 'required'));
-      } else {
-        adminOptions.style.display = 'none';
-        selects.forEach(s => s.removeAttribute('required'));
-      }
-    });
-
-    window.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
       const roleSelect = document.querySelector('select[name="role"]');
       const adminOptions = document.getElementById('admin-options');
-      const selects = adminOptions.querySelectorAll('select');
 
-      if (roleSelect.value === 'admin') {
-        adminOptions.style.display = 'block';
-        selects.forEach(s => s.setAttribute('required', 'required'));
-      } else {
-        adminOptions.style.display = 'none';
-        selects.forEach(s => s.removeAttribute('required'));
+      // --- Elements for Admin Options ---
+      const adminPosition = document.getElementById('position');
+      const mainDeptSelect = document.getElementById('main_department');
+      const mainProgramSelect = document.getElementById('main_program');
+      const departmentElement = document.getElementById('department');
+      const programContainer = document.getElementById('program_container');
+
+      // --- Populate Main Department Dropdown ---
+      allDepartments.forEach(dept => {
+        const opt = new Option(dept, dept);
+        mainDeptSelect.appendChild(opt.cloneNode(true));
+      });
+
+      // --- When main department changes, load its programs ---
+      mainDeptSelect.addEventListener('change', function() {
+        const dept = this.value;
+        const programs = departmentPrograms[dept] || [];
+        mainProgramSelect.innerHTML = `<option value="" selected>-- Select Main Program (if any) --</option>`;
+        programs.forEach(p => {
+          const opt = new Option(p, p);
+          mainProgramSelect.appendChild(opt);
+        });
+      });
+
+      // --- Initialize Choices.js for *additional* departments ---
+      const departmentChoices = new Choices(departmentElement, {
+        removeItemButton: true,
+        placeholderValue: 'Select additional department(s)...',
+        searchPlaceholderValue: 'Search departments...',
+      });
+
+      // Populate *additional* department choices
+      departmentChoices.setChoices(
+        allDepartments.map(d => ({
+          value: d,
+          label: d
+        })),
+        'value', 'label', true
+      );
+
+      // Handle *Additional* Department selection to show programs
+      departmentElement.addEventListener('change', function() {
+        const selectedDepartments = Array.from(departmentElement.selectedOptions).map(opt => opt.value);
+        programContainer.innerHTML = ''; // clear previous
+
+        selectedDepartments.forEach(dep => {
+          const programs = departmentPrograms[dep] || [];
+          if (programs.length > 0) {
+            const div = document.createElement('div');
+            div.classList.add('mt-3', 'p-3', 'border', 'rounded');
+            div.innerHTML = `
+                            <label class="form-label fw-bold text-primary">Programs under ${dep}</label>
+                            <select name="programs[${dep}][]" id="program_${dep.replace(/\s+/g, '_')}" multiple></select>
+                        `;
+            programContainer.appendChild(div);
+
+            const programSelect = div.querySelector('select');
+            const programChoices = new Choices(programSelect, {
+              removeItemButton: true,
+              placeholderValue: `Select program(s) for ${dep}...`,
+            });
+
+            programChoices.setChoices(
+              programs.map(p => ({
+                value: p,
+                label: p
+              })),
+              'value', 'label', true
+            );
+          }
+        });
+      });
+
+      // --- Function to toggle Admin Options ---
+      function toggleAdminOptions() {
+        if (roleSelect.value === 'admin') {
+          adminOptions.style.display = 'block';
+          adminPosition.setAttribute('required', 'required');
+          mainDeptSelect.setAttribute('required', 'required');
+          // mainProgramSelect is optional
+          // departmentElement (additional) is optional
+        } else {
+          adminOptions.style.display = 'none';
+          adminPosition.removeAttribute('required');
+          mainDeptSelect.removeAttribute('required');
+        }
       }
+
+      // --- Event Listeners ---
+      roleSelect.addEventListener('change', toggleAdminOptions);
+      // Run on page load
+      toggleAdminOptions();
     });
   </script>
 

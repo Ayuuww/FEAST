@@ -7,8 +7,6 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-$message = '';
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $type = $_POST['type'] ?? '';
   $value = trim($_POST['value'] ?? '');
@@ -27,315 +25,291 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       case 'Department':
         $column = 'department_name';
         break;
+      case 'Program':
+        $column = 'program_name';
+        break;
       default:
         $column = '';
     }
 
     if ($column) {
-      $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER($column) = LOWER(?)");
-      $check->bind_param("s", $value);
-      $check->execute();
-      $check->bind_result($count);
-      $check->fetch();
-      $check->close();
+      if ($type === 'Program') {
+        $department_name = trim($_POST['department_name'] ?? '');
+        if (empty($department_name)) {
+          $_SESSION['msg'] = "Please select a department for the program.";
+          $_SESSION['msg_type'] = "warning";
+          header("Location: superadmin-addsmanagement.php");
+          exit();
+        }
 
-      if ($count > 0) {
-        $_SESSION['msg'] = "$type already exists.";
-        $_SESSION['msg_type'] = "warning";
+        $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER(program_name)=LOWER(?) AND LOWER(department_name)=LOWER(?)");
+        $check->bind_param("ss", $value, $department_name);
+        $check->execute();
+        $check->bind_result($count);
+        $check->fetch();
+        $check->close();
+
+        if ($count > 0) {
+          $_SESSION['msg'] = "Program already exists in this department.";
+          $_SESSION['msg_type'] = "warning";
+        } else {
+          $stmt = $conn->prepare("INSERT INTO adds (department_name, program_name) VALUES (?, ?)");
+          $stmt->bind_param("ss", $department_name, $value);
+          $stmt->execute();
+          $_SESSION['msg'] = "Program added successfully!";
+          $_SESSION['msg_type'] = "success";
+          $stmt->close();
+        }
       } else {
-        $stmt = $conn->prepare("INSERT INTO adds ($column) VALUES (?)");
-        $stmt->bind_param("s", $value);
-        if ($stmt->execute()) {
+        $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER($column)=LOWER(?)");
+        $check->bind_param("s", $value);
+        $check->execute();
+        $check->bind_result($count);
+        $check->fetch();
+        $check->close();
+
+        if ($count > 0) {
+          $_SESSION['msg'] = "$type already exists.";
+          $_SESSION['msg_type'] = "warning";
+        } else {
+          $stmt = $conn->prepare("INSERT INTO adds ($column) VALUES (?)");
+          $stmt->bind_param("s", $value);
+          $stmt->execute();
           $_SESSION['msg'] = "$type added successfully!";
           $_SESSION['msg_type'] = "success";
-        } else {
-          $_SESSION['msg'] = "Failed to add $type.";
-          $_SESSION['msg_type'] = "danger";
+          $stmt->close();
         }
-        $stmt->close();
       }
       header("Location: superadmin-addsmanagement.php");
       exit();
     }
   }
 }
-
-// Fetch latest adds
-$result = mysqli_query($conn, "SELECT * FROM adds ORDER BY id DESC");
-
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-      
-  <!-- Head -->
-  <?php include 'head.php' ?>
-  <!-- End Head -->
-   
-
+  <?php include 'head.php'; ?>
   <style>
-    .table+.card-title {
-      margin-top: 2rem;
+    .college-card {
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      background: #f8f9fa;
+      padding: 1rem;
     }
 
-    .table th,
-    .table td {
-      vertical-align: middle;
+    .college-title {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #0d6efd;
+    }
+
+    .program-list {
+      list-style-type: none;
+      margin: 0.5rem 0 0 1rem;
+      padding: 0;
+    }
+
+    .program-list li {
+      padding: 3px 0;
+    }
+
+    .program-list li::before {
+      content: "• ";
+      color: #198754;
+    }
+
+    .box-card {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
     }
   </style>
-
 </head>
 
 <body>
-
-  <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
+  <?php include 'superadmin-header.php'; ?>
+  <?php include 'superadmin-sidebar.php'; ?>
 
   <main id="main" class="main">
-
     <div class="pagetitle">
-      <h1>Manage Ranks, Positions, Sections, Departments</h1>
+      <h1>Manage Colleges, Programs, Ranks, Positions, Sections</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Manage</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
     <?php if (isset($_SESSION['msg'])): ?>
       <script>
-        window.addEventListener('DOMContentLoaded', function() {
-          Swal.fire({
-            icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : ($_SESSION['msg_type'] === 'warning' ? 'warning' : 'error') ?>',
-            title: "<?= $_SESSION['msg_type'] === 'success' ? 'Successfully Added!' : 'Notice' ?>",
-            text: "<?= htmlspecialchars($_SESSION['msg']) ?>",
-            confirmButtonColor: "#198754"
-          });
+        Swal.fire({
+          icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : ($_SESSION['msg_type'] === 'warning' ? 'warning' : 'error') ?>',
+          title: "<?= $_SESSION['msg_type'] === 'success' ? 'Success!' : 'Notice' ?>",
+          text: "<?= htmlspecialchars($_SESSION['msg']) ?>",
+          confirmButtonColor: "#198754"
         });
       </script>
       <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
     <?php endif; ?>
 
     <section class="section">
-      <div class="row justify-content-center">
-        <div class="card col-lg-6">
-          <div class="card-body">
-            <h5 class="card-title">Add New</h5>
-
-
-            <form method="POST" class="row g-3">
-              <div class="col-md-4">
-                <label for="type" class="form-label">Type</label>
-                <select class="form-select" name="type" required>
-                  <option value="">-- Select --</option>
-                  <option value="Rank">Rank</option>
-                  <option value="Position">Position</option>
-                  <option value="Section">Section</option>
-                  <option value="Department">Department</option>
-                </select>
-              </div>
-              <div class="col-md-6">
-                <label for="value" class="form-label">Name</label>
-                <input type="text" class="form-control" name="value" required>
-              </div>
-              <div class="col-md-2 align-self-end">
-                <button type="button" id="confirmAdd" class="btn btn-success w-100">Add</button>
-              </div>
-            </form>
+      <div class="card p-4 mb-4">
+        <h5 class="card-title">Add New Entry</h5>
+        <form method="POST" class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type" id="type" onchange="toggleDepartmentDropdown()" required>
+              <option value="">-- Select Type --</option>
+              <option value="Rank">Rank</option>
+              <option value="Position">Position</option>
+              <option value="Section">Section</option>
+              <option value="Department">Department / College</option>
+              <option value="Program">Program</option>
+            </select>
           </div>
-        </div>
+          <div class="col-md-4">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="value" required>
+          </div>
+          <div class="col-md-4 d-none" id="departmentField">
+            <label class="form-label">Select Department / College</label>
+            <select class="form-select" name="department_name">
+              <option value="">-- Choose Department --</option>
+              <?php
+              $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
+              while ($row = $departments->fetch_assoc()):
+              ?>
+                <option value="<?= htmlspecialchars($row['department_name']) ?>"><?= htmlspecialchars($row['department_name']) ?></option>
+              <?php endwhile; ?>
+            </select>
+          </div>
+          <div class="col-12 text-end mt-3">
+            <button type="button" id="confirmAdd" class="btn btn-success"><i class="bi bi-plus-circle"></i> Add Entry</button>
+          </div>
+        </form>
+      </div>
 
-        <?php
-        // Fetch entries by type
-        $ranks = mysqli_query($conn, "SELECT id, rank_name AS name FROM adds WHERE rank_name IS NOT NULL ORDER BY rank_name ASC");
-        $positions = mysqli_query($conn, "SELECT id, position_name AS name FROM adds WHERE position_name IS NOT NULL ORDER BY position_name ASC");
-        $sections = mysqli_query($conn, "SELECT id, section_name AS name FROM adds WHERE section_name IS NOT NULL ORDER BY section_name ASC");
-        $departments = mysqli_query($conn, "SELECT id, department_name AS name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
-        ?>
-
-        <div class="row justify-content-center">
-          <div class="card col-lg-12">
-            <div class="card-body">
-              <div class="row">
-                <!-- Ranks -->
-                <div class="col-md-3">
-                  <h5 class="card-title">Existing Ranks</h5>
-                  <table class="table table-bordered align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Rank</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php while ($row = mysqli_fetch_assoc($ranks)): ?>
-                        <tr>
-                          <td><?= htmlspecialchars($row['name']) ?></td>
-                          <td class="text-center">
-                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Rank" class="btn btn-warning btn-sm">Edit</a>
-                          </td>
-                        </tr>
-                      <?php endwhile; ?>
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Positions -->
-                <div class="col-md-3">
-                  <h5 class="card-title">Existing Positions</h5>
-                  <table class="table table-bordered align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Position</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php while ($row = mysqli_fetch_assoc($positions)): ?>
-                        <tr>
-                          <td><?= htmlspecialchars($row['name']) ?></td>
-                          <td class="text-center">
-                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Position" class="btn btn-warning btn-sm">Edit</a>
-                          </td>
-                        </tr>
-                      <?php endwhile; ?>
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Sections -->
-                <div class="col-md-3">
-                  <h5 class="card-title">Existing Sections</h5>
-                  <table class="table table-bordered align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Section</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php while ($row = mysqli_fetch_assoc($sections)): ?>
-                        <tr>
-                          <td><?= htmlspecialchars($row['name']) ?></td>
-                          <td class="text-center">
-                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Section" class="btn btn-warning btn-sm">Edit</a>
-                          </td>
-                        </tr>
-                      <?php endwhile; ?>
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Departments -->
-                <div class="col-md-3">
-                  <h5 class="card-title">Existing Departments</h5>
-                  <table class="table table-bordered align-middle">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Department</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <?php while ($row = mysqli_fetch_assoc($departments)): ?>
-                        <tr>
-                          <td><?= htmlspecialchars($row['name']) ?></td>
-                          <td class="text-center">
-                            <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=Department" class="btn btn-warning btn-sm">Edit</a>
-                          </td>
-                        </tr>
-                      <?php endwhile; ?>
-                    </tbody>
-                  </table>
-                </div>
-              </div> <!-- End .row -->
+      <div class="row">
+        <!-- LEFT SIDE -->
+        <div class="col-lg-6">
+          <h5 class="mb-3"><i class="bi bi-building"></i> Colleges & Programs</h5>
+          <?php
+          $colleges = $conn->query("
+  SELECT MIN(id) AS id, department_name 
+  FROM adds 
+  WHERE department_name IS NOT NULL AND department_name != '' 
+  GROUP BY department_name 
+  ORDER BY department_name ASC
+");
+          while ($col = $colleges->fetch_assoc()):
+            $dept = $col['department_name'];
+            $programs = $conn->query("SELECT id, program_name FROM adds WHERE department_name='$dept' AND program_name IS NOT NULL ORDER BY program_name ASC");
+          ?>
+            <div class="college-card">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="college-title text-success"><?= htmlspecialchars($dept) ?></div>
+                <a href="superadmin-addsedit.php?id=<?= $col['id'] ?>&type=Department" class="btn btn-sm btn-warning">Edit</a>
+              </div>
+              <?php if ($programs->num_rows > 0): ?>
+                <ul class="program-list">
+                  <?php while ($p = $programs->fetch_assoc()): ?>
+                    <li><?= htmlspecialchars($p['program_name']) ?>
+                      <a href="superadmin-addsedit.php?id=<?= $p['id'] ?>&type=Program" class="text-warning small ms-2">(Edit)</a>
+                    </li>
+                  <?php endwhile; ?>
+                </ul>
+              <?php else: ?>
+                <p class="text-muted mt-1 ms-3 mb-0">No programs listed.</p>
+              <?php endif; ?>
             </div>
-          </div>
+          <?php endwhile; ?>
         </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="col-lg-6">
+          <h5 class="mb-3"><i class="bi bi-list-check"></i> Ranks, Positions & Sections</h5>
+
+          <?php
+          $categories = [
+            "Ranks" => ["column" => "rank_name", "type" => "Rank"],
+            "Positions" => ["column" => "position_name", "type" => "Position"],
+            "Sections" => ["column" => "section_name", "type" => "Section"]
+          ];
+
+          foreach ($categories as $title => $info):
+            $query = $conn->query("SELECT id, {$info['column']} AS name FROM adds WHERE {$info['column']} IS NOT NULL ORDER BY name ASC");
+          ?>
+            <div class="college-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="college-title text-success"><?= htmlspecialchars($title) ?></div>
+              </div>
+
+              <?php if ($query->num_rows > 0): ?>
+                <ul class="program-list">
+                  <?php while ($row = $query->fetch_assoc()): ?>
+                    <li class="d-flex justify-content-between align-items-center">
+                      <span><?= htmlspecialchars($row['name']) ?></span>
+                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=<?= urlencode($info['type']) ?>" class="btn btn-sm btn-warning ms-2">
+                        Edit
+                      </a>
+                    </li>
+                  <?php endwhile; ?>
+                </ul>
+              <?php else: ?>
+                <p class="text-muted mt-1 ms-3 mb-0">No <?= strtolower($title) ?> added.</p>
+              <?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+
       </div>
     </section>
-  </main><!-- End #main -->
+  </main>
 
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php' ?>
-  <!-- End Footer -->
+  <?php include 'footer.php'; ?>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-
-  <!-- <script>
-    setTimeout(() => {
-      const alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500); // optional DOM cleanup
-      }
-    }, 5000); // Hide after 5 seconds
-  </script> -->
 
   <script>
     document.getElementById("confirmAdd").addEventListener("click", function(e) {
-      const typeSelect = document.querySelector("select[name='type']");
-      const nameInput = document.querySelector("input[name='value']");
-      const type = typeSelect.value;
-      const value = nameInput.value.trim();
-
-      if (!type || !value) {
+      const type = document.getElementById("type").value;
+      const name = document.querySelector("input[name='value']").value.trim();
+      if (!type || !name) {
         Swal.fire({
           icon: "warning",
           title: "Missing Fields",
-          text: "Please select a type and enter a name.",
+          text: "Please complete all fields."
         });
         return;
       }
-
-      const swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-          confirmButton: "btn btn-success mx-2",
-          cancelButton: "btn btn-danger mx-2"
-        },
-        buttonsStyling: false
-      });
-
-      swalWithBootstrapButtons.fire({
-        title: `Add "${value}" as ${type}?`,
-        text: "Please double-check if this is correct before saving.",
+      Swal.fire({
+        title: `Add "${name}" as ${type}?`,
         icon: "question",
         showCancelButton: true,
-        confirmButtonText: "Yes, add it!",
+        confirmButtonText: "Yes, add it",
         cancelButtonText: "Cancel",
-        reverseButtons: false // Change this to false
+        confirmButtonColor: "#198754",
+        cancelButtonColor: "#dc3545"
       }).then((result) => {
-        if (result.isConfirmed) {
-          // Submit the form manually if confirmed
-          e.target.closest("form").submit();
-        }
+        if (result.isConfirmed) e.target.closest("form").submit();
       });
     });
-  </script>
 
+    function toggleDepartmentDropdown() {
+      const type = document.getElementById("type").value;
+      const field = document.getElementById("departmentField");
+      field.classList.toggle("d-none", type !== "Program");
+    }
+  </script>
 </body>
 
 </html>

@@ -3,7 +3,7 @@ session_start();
 require('fpdf/fpdf.php');
 include 'conn/conn.php';
 
-// Check student login
+// ✅ Check student login
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
   header("Location: pages-login.php");
   exit();
@@ -20,8 +20,12 @@ if (!$faculty_id || !$subject_code || !$academic_year) {
   exit();
 }
 
-// Fetch evaluation data
-$stmt = $conn->prepare("SELECT * FROM student_evaluation_submissions WHERE student_id = ? AND faculty_id = ? AND subject_code = ? AND academic_year = ?");
+// ✅ Fetch the most recent evaluation record
+$stmt = $conn->prepare("
+  SELECT * FROM student_evaluation_submissions 
+  WHERE student_id = ? AND faculty_id = ? AND subject_code = ? AND academic_year = ?
+  ORDER BY id DESC LIMIT 1
+");
 $stmt->bind_param("ssss", $student_id, $faculty_id, $subject_code, $academic_year);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -34,7 +38,7 @@ if ($result->num_rows === 0) {
 $data = $result->fetch_assoc();
 $answers = json_decode($data['answers'], true);
 
-// Helper: Get full name
+// ✅ Helper: Get full name
 function getName($conn, $table, $id)
 {
   $stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM $table WHERE idnumber = ?");
@@ -43,7 +47,7 @@ function getName($conn, $table, $id)
   $res = $stmt->get_result();
   if ($res->num_rows > 0) {
     $r = $res->fetch_assoc();
-    return $r['first_name'] . ' ' . $r['mid_name'] . ' ' . $r['last_name'];
+    return trim($r['first_name'] . ' ' . $r['mid_name'] . ' ' . $r['last_name']);
   }
   return 'Unknown';
 }
@@ -51,7 +55,14 @@ function getName($conn, $table, $id)
 $faculty_name = getName($conn, 'faculty', $faculty_id);
 $student_name = getName($conn, 'student', $student_id);
 
-// Get subject title
+// ✅ Hide student info if anonymous
+$is_anonymous = strtolower($data['is_anonymous'] ?? 'no');
+if ($is_anonymous === 'yes') {
+  $student_name = '';
+  $student_id = '';
+}
+
+// ✅ Get subject title
 $subject_title = '';
 $sub_stmt = $conn->prepare("SELECT title FROM subject WHERE code = ?");
 $sub_stmt->bind_param("s", $subject_code);
@@ -61,7 +72,7 @@ $sub_stmt->fetch();
 $sub_stmt->close();
 $data['subject_title'] = $subject_title;
 
-// Benchmark Questions
+// ✅ Benchmark Questions
 $questions = [
   "Comes to class on time regularly.",
   "Explains learning outcomes, expectations, grading system, and various requirements of the subject/course.",
@@ -80,10 +91,10 @@ $questions = [
   "Provides transparent and clear criteria in rating student's performance."
 ];
 
-// Custom PDF class
+// ✅ Custom PDF class
 require 'printing-headerfooter.php';
 
-// Start PDF
+// ✅ Start PDF
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
@@ -114,16 +125,30 @@ foreach ($questions as $i => $q) {
   $question = ($i + 1) . ". " . $q;
   $rating = $answers["q$i"] ?? '-';
 
-  // Handle multi-line cell alignment
-  $lines = ceil($pdf->GetStringWidth($question) / 145);
-  $rowHeight = max($lineHeight, $lines * $lineHeight);
+  // Get the height of the question cell
+  $cellWidth = 150;
+  $ratingWidth = 30;
+  $lineHeight = 6;
+
+  // Save current position
   $x = $pdf->GetX();
   $y = $pdf->GetY();
 
-  $pdf->MultiCell(150, $lineHeight, $question, 1, 'L');
-  $pdf->SetXY($x + 150, $y);
-  $pdf->Cell(30, $rowHeight, $rating, 1, 1, 'C');
+  // Calculate how many lines the question will take
+  $nb = $pdf->NbLines($cellWidth, $question);
+  $cellHeight = $nb * $lineHeight;
+
+  // Draw the question cell
+  $pdf->MultiCell($cellWidth, $lineHeight, $question, 1, 'L');
+
+  // Move to the right of the question cell and align vertically
+  $pdf->SetXY($x + $cellWidth, $y);
+  $pdf->Cell($ratingWidth, $cellHeight, $rating, 1, 0, 'C');
+
+  // Move to the next line
+  $pdf->Ln($cellHeight);
 }
+
 
 // Scores
 $pdf->Ln(3);
@@ -140,12 +165,12 @@ if (!empty($data['comment'])) {
   $pdf->Ln(2);
 }
 
-// Signature
+// ✅ Signature Section
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Signature of Evaluator: ____________________________", 0, 1);
 $pdf->Cell(0, 6, "Name of Evaluator/ID Number: " . $student_name . " / " . $student_id, 0, 1);
 $pdf->Cell(0, 6, "Date of Evaluation: " . date('F j, Y'), 0, 1);
 
-// Output
+// ✅ Output
 $pdf->Output('I', 'Student_Evaluation_Reprint.pdf');
-?>
+exit;

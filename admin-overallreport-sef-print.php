@@ -4,8 +4,8 @@ session_start();
 include 'conn/conn.php';
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-  header("Location: pages-login.php");
-  exit();
+    header("Location: pages-login.php");
+    exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
@@ -20,7 +20,12 @@ $stmt->bind_result($fname, $mname, $lname, $position);
 $stmt->fetch();
 $stmt->close();
 
-$admin_name = $lname . ', ' . $fname . ' ' . $mname;
+$middle_initial = '';
+if (!empty($mname)) {
+    $middle_initial = ' ' . substr($mname, 0, 1) . '.'; // Add space, initial, and period
+}
+
+$admin_name = strtoupper($fname . ' ' . $middle_initial  . ' ' . $lname);
 
 // 🔹 FIX 2: Get all assigned departments from the correct table
 $stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
@@ -51,7 +56,7 @@ $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
 // 🔹 FIX 3: Use the new display variable for the title
-$pdf->Cell(0, 10, strtoupper($admin_department_display) . ' OVERALL SEF REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, strtoupper($admin_department_display) . ' SEF REPORT', 0, 1, 'C');
 
 // ... (Your filter display logic is fine, but I'll update it to be more robust like the SET report) ...
 
@@ -94,32 +99,55 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(150, 10, strtoupper($admin_department_display) . " OVERALL EVALUATION SET", 0, 1, 'C', true);
+$pdf->Cell(150, 10, strtoupper($admin_department_display) . " SET REPORT", 0, 1, 'C', true);
 $pdf->Ln(2);
 
 // Table Headers
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(100, 10, 'Faculty Name', 1);
-$pdf->Cell(50, 10, 'Average SEF Rating', 1,0,'C');
+$pdf->Cell(50, 10, 'Average SEF Rating', 1, 0, 'C');
 $pdf->Ln();
 
-// 🔹 FIX 4: Fetch faculty using the $departments array and an IN clause
+// 🔹 CHANGE 3: Fix Faculty Query (use Dept/Prog pairs)
 $faculties = [];
-if (!empty($departments)) {
-    // Create placeholders like (?, ?, ?)
-    $placeholders = implode(',', array_fill(0, count($departments), '?'));
-    // Create types string like "sss"
-    $types = str_repeat('s', count($departments));
 
+// ✅ FIRST, get the admin's assignments as pairs
+$admin_assignments = [];
+// We need to re-fetch the department/program pairs
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept->bind_param("s", $admin_id);
+$stmt_admin_dept->execute();
+$result = $stmt_admin_dept->get_result();
+while ($row = $result->fetch_assoc()) {
+    $admin_assignments[] = $row;
+}
+$stmt_admin_dept->close();
+
+
+if (!empty($admin_assignments)) {
+    // ✅ Build the query to check for (dept = ? AND prog = ?) OR (dept = ? AND prog = ?)
+    $faculty_query_parts = [];
+    $params = [];
+    $types = "";
+
+    foreach ($admin_assignments as $assignment) {
+        $faculty_query_parts[] = "(department = ? AND program = ?)";
+        $params[] = $assignment['department_name'];
+        $params[] = $assignment['program_name'];
+        $types .= "ss";
+    }
+    $faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+    // ✅ This query now finds faculty whose home dept/prog matches the admin's assignments
     $sql = "
         SELECT idnumber, last_name, first_name, mid_name
         FROM faculty
-        WHERE department IN ($placeholders)
+        WHERE ($faculty_where_sql)
         ORDER BY last_name ASC
     ";
 
     $query = $conn->prepare($sql);
-    $query->bind_param($types, ...$departments); // Bind all departments
+    $query->bind_param($types, ...$params);
     $query->execute();
     $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
     $query->close();
@@ -174,5 +202,13 @@ $pdf->Cell(0, 6, $admin_name, 0, 1);
 $pdf->SetFont('Arial', '', 11);
 $pdf->Cell(0, 6, $position, 0, 1);
 
+$pdf->Ln(12);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 6, 'Reviewed by:', 0, 1);
+$pdf->Ln(12);
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(0, 6, $admin_name, 0, 1);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 6, $position, 0, 1);
+
 $pdf->Output('I', 'Overall-SEF-Report.pdf');
-?>

@@ -2,103 +2,133 @@
 session_start();
 include 'conn/conn.php';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['submit'])) {
-    // Sanitize inputs
-    $id = trim($_POST['idnumber']);
-    $first_name = trim($_POST['first_name']);
-    $mid_name = trim($_POST['mid_name']);
-    $last_name = trim($_POST['last_name']);
-    $password = trim($_POST['password']);
-    $position = trim($_POST['position']);
-    $is_faculty = $_POST['is_faculty'] ?? "No";
-    $departments = $_POST['departments'] ?? [];
-    $faculty_rank = $_POST['faculty_rank'] ?? null;
-
-    // ✅ --- START: SERVER-SIDE VALIDATION ---
-    $errors = [];
-    if (empty($id)) { $errors[] = "ID Number is required."; }
-    if (empty($first_name)) { $errors[] = "First Name is required."; }
-    if (empty($last_name)) { $errors[] = "Last Name is required."; }
-    if (empty($position)) { $errors[] = "Position is required."; }
-    if (empty($is_faculty)) { $errors[] = "Faculty status is required."; }
-
-    if ($is_faculty === "Yes") {
-        if (empty($departments)) { $errors[] = "At least one Department is required for a faculty member."; }
-        if (empty($faculty_rank)) { $errors[] = "Faculty Rank is required."; }
-    }
-
-    if (!empty($errors)) {
-        $_SESSION['msg'] = implode('<br>', $errors);
-        $_SESSION['msg_type'] = 'danger'; // Use 'danger' for errors
-        header("Location: superadmin-admincreation.php");
-        exit();
-    }
-    // ✅ --- END: SERVER-SIDE VALIDATION ---
-
-    // Hash password
-    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-    // Check if admin with same ID already exists
-    $stmt = $conn->prepare("SELECT idnumber FROM admin WHERE idnumber = ?");
-    $stmt->bind_param("s", $id);
-    $stmt->execute();
-    $stmt->store_result();
-
-    if ($stmt->num_rows > 0) {
-        $_SESSION['msg'] = 'Admin with this ID already exists!';
-        $_SESSION['msg_type'] = 'warning';
-        header("Location: superadmin-admincreation.php");
-        exit();
-    }
-    $stmt->close();
-
-    // Insert into admin table
-    $stmt = $conn->prepare("INSERT INTO admin (idnumber, first_name, mid_name, last_name, password, position, faculty_rank, is_faculty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $id, $first_name, $mid_name, $last_name, $hashed_password, $position, $faculty_rank, $is_faculty);
-
-    if ($stmt->execute()) {
-        // Insert assigned departments into admin_departments
-        if (!empty($departments)) {
-            $dept_stmt = $conn->prepare("INSERT INTO admin_departments (admin_idnumber, department_name) VALUES (?, ?)");
-            foreach ($departments as $dept) {
-                $dept_stmt->bind_param("ss", $id, $dept);
-                $dept_stmt->execute();
-            }
-            $dept_stmt->close();
-        }
-
-        // If 'Yes', also create/update a record in the faculty table
-        if ($is_faculty === "Yes") {
-            // Use the FIRST selected department as the primary for the faculty table
-            $primary_department = $departments[0]; 
-
-            $faculty_check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
-            $faculty_check->bind_param("s", $id);
-            $faculty_check->execute();
-            $faculty_check->store_result();
-
-            if ($faculty_check->num_rows == 0) {
-                $faculty_insert = $conn->prepare("INSERT INTO faculty (idnumber, first_name, mid_name, last_name, department, faculty_rank) VALUES (?, ?, ?, ?, ?, ?)");
-                $faculty_insert->bind_param("ssssss", $id, $first_name, $mid_name, $last_name, $primary_department, $faculty_rank);
-                $faculty_insert->execute();
-                $faculty_insert->close();
-            }
-            $faculty_check->close();
-        }
-
-        $_SESSION['msg'] = 'Admin created successfully!';
-        $_SESSION['msg_type'] = 'success';
-    } else {
-        $_SESSION['msg'] = 'Failed to create admin: ' . $stmt->error;
-        $_SESSION['msg_type'] = 'danger';
-    }
-
-    $stmt->close();
-    header("Location: superadmin-admincreation.php");
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+    header("Location: pages-login.php");
     exit();
+}
 
+if (isset($_POST['submit'])) {
+    $idnumber   = $_POST['idnumber'];
+    $first_name = $_POST['first_name'];
+    $mid_name   = $_POST['mid_name'];
+    $last_name  = $_POST['last_name'];
+    $password   = $_POST['password'];
+    $position   = $_POST['position'];
+    $faculty_rank = $_POST['faculty_rank'] ?? NULL;
+
+    // ✅ Main assignment (required)
+    $main_department = $_POST['main_department'];
+    // Use empty string '' if NULL, to match database (NOT NULL)
+    $main_program = $_POST['main_program'] ?? '';
+
+    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
+    // ✅ Optional additional assignments
+    $departments = $_POST['departments'] ?? [];
+    $programs_by_dept = $_POST['programs'] ?? [];
+
+    // ✅ Use an array to track added entries and prevent duplicates
+    $added_assignments = [];
+
+    $conn->begin_transaction();
+
+    try {
+        // ✅ 1. Insert into admin table
+        $stmt_admin = $conn->prepare("
+            INSERT INTO admin 
+            (idnumber, first_name, mid_name, last_name, password, position, faculty_rank, role, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'admin', 'active')
+        ");
+        $stmt_admin->bind_param(
+            "sssssss",
+            $idnumber,
+            $first_name,
+            $mid_name,
+            $last_name,
+            $hashed_password,
+            $position,
+            $faculty_rank
+        );
+        $stmt_admin->execute();
+
+        // ✅ 2. Insert into faculty (mirror record)
+        $stmt_faculty = $conn->prepare("
+            INSERT INTO faculty 
+            (idnumber, first_name, mid_name, last_name, password, role, status, department, program, faculty_rank)
+            VALUES (?, ?, ?, ?, ?, 'faculty', 'active', ?, ?, ?)
+        ");
+        $stmt_faculty->bind_param(
+            "ssssssss",
+            $idnumber,
+            $first_name,
+            $mid_name,
+            $last_name,
+            $hashed_password,
+            $main_department,
+            $main_program,
+            $faculty_rank
+        );
+        $stmt_faculty->execute();
+
+        // ✅ 3. Prepare statement for admin_departments
+        $stmt_dept = $conn->prepare("
+            INSERT INTO admin_departments (admin_idnumber, department_name, program_name)
+            VALUES (?, ?, ?)
+        ");
+
+        // ✅ 4. Insert the MAIN department/program assignment
+        // This is the primary admin role
+        $stmt_dept->bind_param("sss", $idnumber, $main_department, $main_program);
+        $stmt_dept->execute();
+        // Track it to avoid duplicates
+        $added_assignments[$main_department . "::" . $main_program] = true;
+
+
+        // ✅ 5. Loop and insert *ADDITIONAL* assignments (from multi-select)
+        foreach ($departments as $dept_name) {
+            if (isset($programs_by_dept[$dept_name]) && !empty($programs_by_dept[$dept_name])) {
+                // Admin is assigned to specific programs in this dept
+                foreach ($programs_by_dept[$dept_name] as $prog_name) {
+                    $key = $dept_name . "::" . $prog_name;
+                    // Skip if this was already added as the "Main" assignment
+                    if (isset($added_assignments[$key])) {
+                        continue;
+                    }
+
+                    $stmt_dept->bind_param("sss", $idnumber, $dept_name, $prog_name);
+                    $stmt_dept->execute();
+                    $added_assignments[$key] = true; // Track it
+                }
+            } else {
+                // Admin is assigned to the whole department (program_name = '')
+                $prog_name = '';
+                $key = $dept_name . "::" . $prog_name;
+                // Skip if this was already added as the "Main" assignment
+                if (isset($added_assignments[$key])) {
+                    continue;
+                }
+
+                $stmt_dept->bind_param("sss", $idnumber, $dept_name, $prog_name);
+                $stmt_dept->execute();
+                $added_assignments[$key] = true; // Track it
+            }
+        }
+
+        $conn->commit();
+        $_SESSION['success_message'] = "Admin + Faculty account created successfully for $first_name $last_name!";
+        header("Location: superadmin-admincreation.php");
+        exit();
+    } catch (mysqli_sql_exception $e) {
+        $conn->rollback();
+        if ($e->getCode() == 1062) { // Duplicate entry
+            $_SESSION['error_message'] = "Error: An account with ID Number '$idnumber' already exists.";
+        } else {
+            $_SESSION['error_message'] = "Database Error: " . $e->getMessage();
+        }
+        header("Location: superadmin-admincreation.php");
+        exit();
+    }
 } else {
-    // Redirect if accessed directly
     header("Location: superadmin-admincreation.php");
     exit();
 }

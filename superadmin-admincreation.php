@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php';
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
@@ -8,17 +8,37 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-// --- Fetch all data for form dropdowns once ---
-$positions_result = $conn->query("SELECT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != '' ORDER BY position_name ASC");
-$departments_result = $conn->query("SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
+// ✅ Fetch dropdown data
+$positions_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != '' ORDER BY position_name ASC");
 $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != '' ORDER BY rank_name ASC");
+
+// ✅ Fetch departments and programs properly (FIXED SPACES)
+$adds_data_result = $conn->query("
+    SELECT DISTINCT department_name, program_name 
+    FROM adds 
+    WHERE department_name IS NOT NULL AND department_name != '' 
+    ORDER BY department_name, program_name ASC
+");
+
+$departmentPrograms = [];
+while ($row = $adds_data_result->fetch_assoc()) {
+  $department = $row['department_name'];
+  $program = $row['program_name'];
+  if (!isset($departmentPrograms[$department])) {
+    $departmentPrograms[$department] = [];
+  }
+  if ($program && !in_array($program, $departmentPrograms[$department])) {
+    $departmentPrograms[$department][] = $program;
+  }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
   <?php include 'head.php' ?>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -27,7 +47,7 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Admin</h1>
+      <h1>Admin Creation</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
@@ -36,40 +56,65 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
         </ol>
       </nav>
     </div>
+
     <section class="section">
       <div class="row justify-content-center">
         <div class="col-lg-6">
           <div class="card">
             <div class="card-body">
+
+              <?php if (isset($_SESSION['success_message'])): ?>
+                <script>
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: '<?= htmlspecialchars($_SESSION['success_message']) ?>',
+                    confirmButtonColor: '#28a745'
+                  });
+                </script>
+                <?php unset($_SESSION['success_message']); ?>
+              <?php endif; ?>
+
+              <?php if (isset($_SESSION['error_message'])): ?>
+                <script>
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: '<?= htmlspecialchars($_SESSION['error_message']) ?>',
+                    confirmButtonColor: '#dc3545'
+                  });
+                </script>
+                <?php unset($_SESSION['error_message']); ?>
+              <?php endif; ?>
+
               <h5 class="card-title text-center">Create New Admin</h5>
-              <form class="row g-3 needs-validation" method="post" action="admincreation.php">
+              <form class="row g-3" method="post" action="admincreation.php">
 
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
-                    <label for="idnumber" class="form-label">ID Number</label>
-                    <div class="invalid-feedback">Please enter a valid ID number (numbers and hyphens only).</div>
+                    <label for="idnumber">ID Number</label>
                   </div>
                 </div>
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="text" name="first_name" class="form-control" id="first_name" placeholder="First Name" required>
-                    <label for="first_name" class="form-label">First Name</label>
+                    <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
+                    <label>First Name</label>
                   </div>
                 </div>
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="text" name="mid_name" class="form-control" id="mid_name" placeholder="Middle Name" required>
-                    <label for="mid_name" class="form-label">Middle Name</label>
+                    <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
+                    <label>Middle Name</label>
                   </div>
                 </div>
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="text" name="last_name" class="form-control" id="last_name" placeholder="Last Name" required>
-                    <label for="last_name" class="form-label">Last Name</label>
+                    <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
+                    <label>Last Name</label>
                   </div>
                 </div>
 
@@ -77,51 +122,57 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="position" id="position" required>
+                    <select class="form-select" name="position" required>
                       <option value="" disabled selected>-- Select Position --</option>
                       <?php while ($row = $positions_result->fetch_assoc()): ?>
                         <option value="<?= htmlspecialchars($row['position_name']) ?>"><?= htmlspecialchars($row['position_name']) ?></option>
                       <?php endwhile; ?>
                     </select>
-                    <label for="position">Position</label>
+                    <label>Position</label>
                   </div>
                 </div>
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="is_faculty" id="is_faculty" required>
-                      <option value="" disabled selected>Is this admin also a faculty?</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
+                    <select class="form-select" name="faculty_rank" required>
+                      <option value="" disabled selected>-- Select Faculty Rank --</option>
+                      <?php while ($rank = $ranks_result->fetch_assoc()): ?>
+                        <option value="<?= htmlspecialchars($rank['rank_name']) ?>"><?= htmlspecialchars($rank['rank_name']) ?></option>
+                      <?php endwhile; ?>
                     </select>
-                    <label for="is_faculty">Also a Faculty?</label>
+                    <label>Faculty Rank</label>
                   </div>
                 </div>
 
-                <div class="col-12" id="department_div">
-                  <p>Note: For multiple department hadle, Please select first the main department of the Program Chair</p>
-                  <label for="department" class="form-label fw-bold">Assign Department(s)</label>
-                  <select name="departments[]" id="department" multiple>
-                    <?php while ($row = $departments_result->fetch_assoc()): ?>
-                      <option value="<?= htmlspecialchars($row['department_name']) ?>"><?= htmlspecialchars($row['department_name']) ?></option>
-                    <?php endwhile; ?>
-                  </select>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" name="main_department" id="main_department" required>
+                      <option value="" disabled selected>-- Select Main Department --</option>
+                    </select>
+                    <label>Main Department</label>
+                  </div>
                 </div>
 
-                <div class="col-12" id="faculty_rank_div" style="display:none;">
-                  <label for="faculty_rank" class="form-label fw-bold">Faculty Rank</label>
-                  <select class="form-select" name="faculty_rank" id="faculty_rank">
-                    <option value="" disabled selected>-- Select Faculty Rank --</option>
-                    <?php while ($rank = $ranks_result->fetch_assoc()): ?>
-                      <option value="<?= htmlspecialchars($rank['rank_name']) ?>"><?= htmlspecialchars($rank['rank_name']) ?></option>
-                    <?php endwhile; ?>
-                  </select>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" name="main_program" id="main_program">
+                      <option value="" selected>-- Select Main Program (if any) --</option>
+                    </select>
+                    <label>Main Program</label>
+                  </div>
                 </div>
 
+                <div class="col-12">
+                  <label class="form-label fw-bold">Assign *Additional* Department(s) (Optional)</label>
+                  <select name="departments[]" id="department" multiple></select>
+                </div>
+
+                <div class="col-12 mt-3" id="program_container"></div>
 
                 <div class="col-4 offset-4 mt-4">
-                  <button class="btn btn-success w-100" name="submit" type="submit">Create Account</button>
+                  <button class="btn btn-success w-100" name="submit" type="submit">Create Admin Account</button>
                 </div>
+
               </form>
             </div>
           </div>
@@ -131,105 +182,90 @@ $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_nam
   </main>
 
   <?php include 'footer.php' ?>
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
-
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/choices.min.js"></script>
   <script src="assets/js/main.js"></script>
 
   <script>
+    const departmentPrograms = <?= json_encode($departmentPrograms) ?>;
+
     document.addEventListener('DOMContentLoaded', function() {
-      // Initialize Choices.js for department dropdown
-      const departmentElement = document.getElementById('department');
-      const choices = new Choices(departmentElement, {
+      const departmentSelect = document.getElementById('department');
+      const mainDeptSelect = document.getElementById('main_department');
+      const mainProgramSelect = document.getElementById('main_program');
+      const programContainer = document.getElementById('program_container');
+
+      // Populate all departments (for main + multi-select)
+      const allDepartments = Object.keys(departmentPrograms);
+      allDepartments.forEach(dept => {
+        const opt = new Option(dept, dept);
+        mainDeptSelect.appendChild(opt);
+      });
+
+      // ✅ When main department changes, load its programs
+      mainDeptSelect.addEventListener('change', function() {
+        const dept = this.value;
+        const programs = departmentPrograms[dept] || [];
+        // ✅ FIX: Updated placeholder
+        mainProgramSelect.innerHTML = `<option value="" selected>-- Select Main Program (if any) --</option>`;
+        programs.forEach(p => {
+          const opt = new Option(p, p);
+          mainProgramSelect.appendChild(opt);
+        });
+      });
+
+      // ✅ Choices.js for multiple department selection
+      const deptChoices = new Choices(departmentSelect, {
         removeItemButton: true,
-        placeholder: true,
-        placeholderValue: 'Click to select departments...',
-        searchPlaceholderValue: 'Search departments...',
+        placeholderValue: 'Select additional departments...'
       });
 
-      // Faculty-specific fields toggle
-      const facultySelect = document.getElementById('is_faculty');
-      const departmentDiv = document.getElementById('department_div');
-      const facultyRankDiv = document.getElementById('faculty_rank_div');
-      const facultyRankSelect = document.getElementById('faculty_rank');
+      deptChoices.setChoices(
+        allDepartments.map(d => ({
+          value: d,
+          label: d
+        })),
+        'value',
+        'label',
+        true
+      );
 
-      facultySelect.addEventListener('change', function() {
-        if (this.value === 'Yes') {
-          facultyRankDiv.style.display = 'block';
-          facultyRankSelect.setAttribute('required', 'required');
-        } else {
-          facultyRankDiv.style.display = 'none';
-          facultyRankSelect.removeAttribute('required');
-        }
-      });
+      // ✅ Dynamic programs under selected departments
+      departmentSelect.addEventListener('change', function() {
+        programContainer.innerHTML = '';
+        const selectedDepartments = Array.from(departmentSelect.selectedOptions).map(opt => opt.value);
 
+        selectedDepartments.forEach(dept => {
+          const programs = departmentPrograms[dept] || [];
+          if (programs.length > 0) {
+            const div = document.createElement('div');
+            div.classList.add('mt-3', 'p-3', 'border', 'rounded');
+            div.innerHTML = `
+                        <label class="form-label fw-bold text-primary">Programs under ${dept}</label>
+                        <select name="programs[${dept}][]" multiple></select>
+                    `;
+            programContainer.appendChild(div);
 
-      // ✅ Confirmation before submission
-      const form = document.querySelector('form');
-      form.addEventListener('submit', function(e) {
-        e.preventDefault(); // Stop immediate submission
+            const select = div.querySelector('select');
+            const programChoices = new Choices(select, {
+              removeItemButton: true,
+              placeholderValue: `Select program(s) for ${dept}...`
+            });
 
-        // Collect form data
-        const idnumber = document.getElementById('idnumber').value.trim();
-        const firstName = document.getElementById('first_name').value.trim();
-        const midName = document.getElementById('mid_name').value.trim();
-        const lastName = document.getElementById('last_name').value.trim();
-        const position = document.getElementById('position').value;
-        const isFaculty = document.getElementById('is_faculty').value;
-        const facultyRank = document.getElementById('faculty_rank')?.value || '';
-        const selectedDepartments = Array.from(departmentElement.selectedOptions).map(opt => opt.value);
-
-        // Format details for preview
-        let summary = `
-        <b>ID Number:</b> ${idnumber}<br>
-        <b>Full Name:</b> ${firstName} ${midName} ${lastName}<br>
-        <b>Position:</b> ${position}<br>
-        <b>Also a Faculty?:</b> ${isFaculty}<br>
-      `;
-
-        if (isFaculty === 'Yes') {
-          summary += `
-          <b>Faculty Rank:</b> ${facultyRank || 'N/A'}<br>
-          <b>Assigned Department(s):</b> ${selectedDepartments.join(', ') || 'N/A'}<br>
-        `;
-        }
-
-        // SweetAlert confirmation
-        Swal.fire({
-          title: 'Confirm Account Creation',
-          html: `
-          <p>Please review the details before creating this account:</p>
-          <div class="text-start px-4">${summary}</div>
-        `,
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonText: 'Create Account',
-          cancelButtonText: 'Cancel',
-          confirmButtonColor: '#28a745',
-          cancelButtonColor: '#dc3545',
-          reverseButtons: true
-        }).then((result) => {
-          if (result.isConfirmed) {
-            form.submit(); // ✅ Proceed with actual submission
+            programChoices.setChoices(
+              programs.map(p => ({
+                value: p,
+                label: p
+              })),
+              'value',
+              'label',
+              true
+            );
           }
         });
       });
-
-      // SweetAlert for feedback message after redirect
-      <?php if (isset($_SESSION['msg'])): ?>
-        Swal.fire({
-          icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
-          title: <?= json_encode($_SESSION['msg']) ?>,
-          showConfirmButton: false,
-          timer: 1500,
-          timerProgressBar: true
-        });
-        <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-      <?php endif; ?>
     });
   </script>
-
 </body>
 
 </html>

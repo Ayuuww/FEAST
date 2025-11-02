@@ -49,22 +49,45 @@ while ($row = $res->fetch_assoc()) {
 $res->close();
 
 // Fetch all faculty in the admin's assigned departments
+// Fetch all faculty in the admin's assigned departments AND programs
 $faculties = [];
-if (!empty($departments)) {
-  // Create placeholders for IN clause, e.g., "department IN (?, ?, ?)"
-  $placeholders = implode(',', array_fill(0, count($departments), '?'));
-  $types = str_repeat('s', count($departments)); // e.g., "sss"
 
+// ✅ FIRST, get the admin's assignments as pairs
+$admin_assignments = [];
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept->bind_param("s", $admin_id);
+$stmt_admin_dept->execute();
+$result = $stmt_admin_dept->get_result();
+while ($row = $result->fetch_assoc()) {
+  $admin_assignments[] = $row;
+}
+$stmt_admin_dept->close();
+
+
+if (!empty($admin_assignments)) {
+  // ✅ Build the query to check for (dept = ? AND prog = ?) OR (dept = ? AND prog = ?)
+  $faculty_query_parts = [];
+  $params = [];
+  $types = "";
+
+  foreach ($admin_assignments as $assignment) {
+    $faculty_query_parts[] = "(department = ? AND program = ?)";
+    $params[] = $assignment['department_name'];
+    $params[] = $assignment['program_name'];
+    $types .= "ss";
+  }
+  $faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+  // ✅ This query now finds faculty whose home dept/prog matches the admin's assignments
   $sql = "
         SELECT idnumber, last_name, first_name, mid_name
         FROM faculty
-        WHERE department IN ($placeholders)
+        WHERE ($faculty_where_sql)
         ORDER BY last_name ASC
     ";
 
   $query = $conn->prepare($sql);
-  // Unpack the departments array as arguments
-  $query->bind_param($types, ...$departments);
+  $query->bind_param($types, ...$params);
   $query->execute();
   $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
   $query->close();
@@ -72,6 +95,8 @@ if (!empty($departments)) {
 
 // Build table rows
 $rows = '';
+$total_avg_rating = 0;
+$faculty_count_with_evals = 0;
 foreach ($faculties as $fac) {
   $fid = $fac['idnumber'];
 
@@ -103,11 +128,26 @@ foreach ($faculties as $fac) {
   $stmtEval->close();
 
   $count = (int)$r['students'];
-  $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
+  $avg = $count ? (float)$r['avg_rating'] : 0.00;
+
+  // ✅ ADD THIS BLOCK
+  if ($count > 0) {
+    $total_avg_rating += $avg;
+    $faculty_count_with_evals++;
+  }
+  // --- END ADD ---
 
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
-  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg}</td></tr>";
+  // Format the average for display
+  $avg_display = number_format($avg, 2);
+  $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg_display}</td></tr>";
 }
+
+$department_average = 0;
+if ($faculty_count_with_evals > 0) {
+  $department_average = $total_avg_rating / $faculty_count_with_evals;
+}
+// --- END ADD ---
 ?>
 
 <!DOCTYPE html>
@@ -201,6 +241,12 @@ foreach ($faculties as $fac) {
                     <tbody>
                       <?= $rows ?>
                     </tbody>
+                    <tfoot>
+                      <tr class="table-light fw-bold">
+                        <td colspan="2" class="text-end">Department Average:</td>
+                        <td><?= number_format($department_average, 2) ?></td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
 

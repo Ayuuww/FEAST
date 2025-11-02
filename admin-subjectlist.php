@@ -29,15 +29,6 @@ while ($row = $dept_res->fetch_assoc()) {
 }
 $dept_stmt->close();
 
-// If admin has no department, block access
-if (empty($departments)) {
-  $_SESSION['msg'] = "No departments assigned to your account.";
-  $_SESSION['msg_type'] = "error";
-  header("Location: admin-dashboard.php");
-  exit();
-}
-
-
 // ✅ Restrict allowed positions (only allow Dean/Chair/Program Chair)
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
 if (!in_array($admin_position, $allowed_positions)) {
@@ -46,34 +37,60 @@ if (!in_array($admin_position, $allowed_positions)) {
   exit();
 }
 
-// Fetching subjects and faculty/admin names safely with prepared statement
-// Prepare dynamic placeholders based on number of departments
-$placeholders = implode(',', array_fill(0, count($departments), '?'));
+
+// --- ✅ NEW DYNAMIC QUERY ---
+
+$params = []; // Array to hold all parameters
+$types = "";  // String for all types
 
 $sub_q = "
-  SELECT subject.*,
-         COALESCE(f.first_name, a.first_name) AS first_name,
-         COALESCE(f.mid_name, a.mid_name) AS mid_name,
-         COALESCE(f.last_name, a.last_name) AS last_name,
-         CASE
-             WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
-             WHEN subject.admin_id IS NOT NULL THEN 'Admin'
-             ELSE 'Unknown'
-         END AS handler_role
-  FROM subject
-  LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
-  LEFT JOIN admin a ON subject.admin_id = a.idnumber
-  WHERE subject.department IN ($placeholders)
-  ORDER BY subject.code ASC
+    SELECT subject.*,
+           COALESCE(f.first_name, a.first_name) AS first_name,
+           COALESCE(f.mid_name, a.mid_name) AS mid_name,
+           COALESCE(f.last_name, a.last_name) AS last_name,
+           CASE
+               WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
+               WHEN subject.admin_id IS NOT NULL THEN 'Admin'
+               ELSE 'Unknown'
+           END AS handler_role
+    FROM subject
+    LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
+    LEFT JOIN admin a ON subject.admin_id = a.idnumber
 ";
 
+$where_clauses = [];
+
+// 1. Add department clause ONLY if departments exist
+if (!empty($departments)) {
+  $placeholders = implode(',', array_fill(0, count($departments), '?'));
+  $where_clauses[] = "subject.department IN ($placeholders)";
+  $params = array_merge($params, $departments); // Add all departments to params
+  $types .= str_repeat('s', count($departments)); // Add 's' for each dept
+}
+
+// 2. Add the "created by me" clause
+$where_clauses[] = "subject.admin_id = ?";
+$params[] = $admin_id; // Add admin_id to params
+$types .= 's'; // Add 's' for admin_id
+
+// 3. Combine the WHERE clauses with OR
+if (!empty($where_clauses)) {
+  $sub_q .= " WHERE " . implode(' OR ', $where_clauses);
+}
+
+$sub_q .= " ORDER BY subject.code ASC";
+
+// 4. Prepare and execute the statement
 $sub_stmt = $conn->prepare($sub_q);
 
-// Bind all department names dynamically
-$types = str_repeat('s', count($departments));
-$sub_stmt->bind_param($types, ...$departments);
+if (!empty($params)) {
+  $sub_stmt->bind_param($types, ...$params);
+}
+
 $sub_stmt->execute();
 $result = $sub_stmt->get_result();
+
+// --- END NEW DYNAMIC QUERY ---
 ?>
 
 <!DOCTYPE html>
@@ -137,6 +154,8 @@ $result = $sub_stmt->get_result();
                     <th><b>Subject Code</b></th>
                     <th>Descriptive Title</th>
                     <th>Faculty Name</th>
+                    <th>Department</th>
+                    <th>Program</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -148,6 +167,9 @@ $result = $sub_stmt->get_result();
                       <td class="text-capitalize">
                         <?php echo htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])); ?>
                       </td>
+
+                      <td class="text-uppercase"><?php echo htmlspecialchars($row['department']); ?></td>
+                      <td class="text-capitalize"><?php echo htmlspecialchars($row['program']); ?></td>
                       <td>
                         <form method="post" class="delete-form" action="deletesubject.php">
                           <input type="hidden" name="code" value="<?php echo htmlspecialchars($row['code']); ?>">
@@ -195,7 +217,7 @@ $result = $sub_stmt->get_result();
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            cancelButtonColor: '#697077ff',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
           }).then((result) => {

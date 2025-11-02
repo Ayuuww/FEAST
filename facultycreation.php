@@ -7,14 +7,14 @@ $idnumber   = mysqli_real_escape_string($conn, $_POST['idnumber']);
 $first_name = mysqli_real_escape_string($conn, $_POST['first_name']);
 $mid_name   = mysqli_real_escape_string($conn, $_POST['mid_name']);
 $last_name  = mysqli_real_escape_string($conn, $_POST['last_name']);
-$password   = trim($_POST['password']); // don’t escape before hashing
+$password   = trim($_POST['password']);
 $rank       = mysqli_real_escape_string($conn, $_POST['faculty_rank']);
 $department = mysqli_real_escape_string($conn, $_POST['department']);
+$program    = mysqli_real_escape_string($conn, $_POST['program']);
 
-// ✅ Hash password before saving
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-// Check if ID number already exists
+// Check duplicate
 $check = $conn->prepare("SELECT COUNT(*) FROM faculty WHERE idnumber = ?");
 $check->bind_param("s", $idnumber);
 $check->execute();
@@ -29,9 +29,13 @@ if ($exists > 0) {
     exit();
 }
 
-// Insert if not duplicate (store hashed password)
-$stmt = $conn->prepare("INSERT INTO faculty (idnumber, first_name, mid_name, last_name, password, faculty_rank, department) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed_password, $rank, $department);
+// Insert
+$stmt = $conn->prepare("
+  INSERT INTO faculty 
+  (idnumber, first_name, mid_name, last_name, password, faculty_rank, department, program)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+");
+$stmt->bind_param("ssssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed_password, $rank, $department, $program);
 
 if ($stmt->execute()) {
     $_SESSION['msg'] = "Faculty account has been created successfully.";
@@ -40,7 +44,7 @@ if ($stmt->execute()) {
     $_SESSION['msg'] = "Failed to create faculty account.";
     $_SESSION['msg_type'] = "danger";
 }
-$stmt->close();
 
+$stmt->close();
 header("Location: superadmin-facultycreation.php");
 exit();

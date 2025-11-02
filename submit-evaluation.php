@@ -9,7 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
   exit();
 }
 
-// Get current semester and year from settings for consistency
+// Get current semester and year from settings
 $setting_stmt = $conn->prepare("SELECT semester, academic_year FROM evaluation_settings WHERE id = 1 LIMIT 1");
 $setting_stmt->execute();
 $setting_result = $setting_stmt->get_result();
@@ -20,13 +20,15 @@ $setting_stmt->close();
 
 
 // Sanitize inputs
-$student_id     = $_SESSION['idnumber']; // Already from session, no need to escape again
-$academic_year  = $_POST['academic_year'] ?? $current_year; // Use posted or default
-$semester       = $_POST['semester'] ?? $current_semester; // Use posted or default
-$department     = $_POST['department'] ?? ''; // Added default empty string
+$student_id     = $_SESSION['idnumber'];
+$academic_year  = $_POST['academic_year'] ?? $current_year;
+$semester       = $_POST['semester'] ?? $current_semester;
+$department     = $_POST['department'] ?? '';
 $comment        = $_POST['comment'] ?? '';
+// ✅ NEW: Get the anonymous value
+$is_anonymous   = $_POST['is_anonymous'] ?? 'no'; // Default to 'no'
 
-// Split subject and faculty from dropdown
+// Split subject and faculty
 $subject_parts = explode('|', $_POST['subject_code'] ?? '');
 if (count($subject_parts) < 2) {
   $_SESSION['error_message'] = "Invalid subject selection. Please try again.";
@@ -54,10 +56,9 @@ $sec_stmt->bind_result($student_section);
 $sec_stmt->fetch();
 $sec_stmt->close();
 
-// Collect answers and calculate score
+// Collect answers
 $answers = [];
 $total_score = 0;
-// Assuming there are 15 questions (q0 to q14)
 for ($i = 0; $i < 15; $i++) {
   $qkey = "q" . $i;
   if (!isset($_POST[$qkey])) {
@@ -70,7 +71,6 @@ for ($i = 0; $i < 15; $i++) {
   $total_score += $val;
 }
 
-// Check if all 15 questions were actually received (important for robustness)
 if (count($answers) !== 15) {
   $_SESSION['error_message'] = "Evaluation failed: All 15 questions must be answered.";
   header("Location: student-evaluate.php");
@@ -86,11 +86,11 @@ function logActivity($conn, $user_id, $role, $action)
   $stmt = $conn->prepare("INSERT INTO activity_logs (user_id, role, activity) VALUES (?, ?, ?)");
   $stmt->bind_param("sss", $user_id, $role, $action);
   $stmt->execute();
-  $stmt->close(); // Close the statement after execution
+  $stmt->close();
 }
 
 try {
-  // Check for duplicate evaluation before inserting
+  // Check for duplicate
   $check_query = "SELECT 1 FROM evaluation
                     WHERE student_id = ? AND faculty_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?";
   $stmt_check = $conn->prepare($check_query);
@@ -105,15 +105,15 @@ try {
   }
   $stmt_check->close();
 
-  // Insert into main evaluation table
+  // ✅ FIX: Insert into main evaluation table (added is_anonymous)
   $stmt = $conn->prepare("INSERT INTO evaluation (
-        student_id, faculty_id, subject_code, subject_title,
-        department, academic_year, semester,
-        total_score, computed_rating, comment, student_section
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            student_id, faculty_id, subject_code, subject_title,
+            department, academic_year, semester,
+            total_score, computed_rating, comment, student_section, is_anonymous
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
 
   $stmt->bind_param(
-    "sssssssddss",
+    "sssssssddsss", // Added 1 's'
     $student_id,
     $faculty_id,
     $subject_code,
@@ -124,10 +124,11 @@ try {
     $total_score,
     $computed_rating,
     $comment,
-    $student_section
+    $student_section,
+    $is_anonymous // Added new variable
   );
   $stmt->execute();
-  $stmt->close(); // Close statement after execution
+  $stmt->close();
 
   // Fetch faculty name for logging
   $faculty_name = '';
@@ -144,46 +145,46 @@ try {
   $rounded_rating = round($computed_rating, 2);
   logActivity($conn, $student_id, 'student', "Rated {$rounded_rating}% for {$subject_code} handled by {$faculty_name}");
 
-  // Insert full answer data into archive table (student_evaluation_submissions)
+  // ✅ FIX: Insert into archive table (added is_anonymous)
   $archive_stmt = $conn->prepare("INSERT INTO student_evaluation_submissions (
-        student_id, subject_code, faculty_id, department,
-        academic_year, semester, answers,
-        total_score, computed_rating, comment
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            student_id, subject_code, faculty_id, department,
+            academic_year, semester, answers,
+            total_score, computed_rating, comment, is_anonymous
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
 
   $archive_stmt->bind_param(
-    "sssssssids",
+    "sssssssidss",
     $student_id,
     $subject_code,
     $faculty_id,
     $department,
     $academic_year,
     $semester,
-    $answers_json, // Storing the JSON string of answers
+    $answers_json,
     $total_score,
     $computed_rating,
-    $comment
+    $comment,
+    $is_anonymous
   );
   $archive_stmt->execute();
-  $archive_stmt->close(); // Close statement after execution
+  $archive_stmt->close();
 
-  // Set session variables for SweetAlert and printing
+  // ✅ FIX: Set session variables for SweetAlert and printing
+  // After successfully inserting evaluation
   $_SESSION['evaluation_success'] = true;
+
+  // Save all evaluation info for printing
   $_SESSION['print_data'] = [
-    'student_id'      => $student_id,
-    'subject_code'    => $subject_code,
-    'subject_title'   => $subject_title,
-    'faculty_id'      => $faculty_id,
-    'faculty_name'    => $faculty_name,
-    'faculty_rank'    => $rank ?? 'N/A', // Assuming you fetched rank from faculty table
-    'department'      => $department,
-    'academic_year'   => $academic_year,
-    'semester'        => $semester,
-    'total_score'     => $total_score,
+    'student_id' => $student_id,
+    'faculty_id' => $faculty_id,
+    'subject_code' => $subject_code,
+    'academic_year' => $academic_year,
+    'department' => $department,
+    'is_anonymous' => $is_anonymous,
+    'answers' => $answers,
+    'total_score' => $total_score,
     'computed_rating' => $computed_rating,
-    'comment'         => $comment,
-    'student_section' => $student_section,
-    'answers'         => $answers // Store the array for easy access in print page
+    'comment' => $comment,
   ];
 
   header("Location: student-evaluate.php");

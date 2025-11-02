@@ -1,10 +1,6 @@
 <?php
-
 session_start();
 include 'conn/conn.php'; // Connection to the database
-
-$departments = mysqli_query($conn, "SELECT id, department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
-$sections = mysqli_query($conn, "SELECT id, section_name FROM adds WHERE section_name IS NOT NULL AND section_name != ''");
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
@@ -12,30 +8,54 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-// Fetch super admin details
-$query = "SELECT * FROM superadmin";
+// --- ✅ FIX 1: This query is NOW ONLY for Departments and Programs ---
+$query_dept_prog = "SELECT DISTINCT department_name, program_name 
+                  FROM adds 
+                  WHERE department_name IS NOT NULL AND department_name != '' 
+                    AND program_name IS NOT NULL AND program_name != ''
+                  ORDER BY department_name, program_name";
 
+$result_dept_prog = $conn->query($query_dept_prog);
+if (!$result_dept_prog) {
+  die("Query Failed: " . $conn->error);
+}
 
+// This array is now simpler: $data['Department'] = ['Program 1', 'Program 2']
+$data = [];
+while ($row = $result_dept_prog->fetch_assoc()) {
+  $dept = $row['department_name'];
+  $prog = $row['program_name'];
+
+  if (!isset($data[$dept])) {
+    $data[$dept] = [];
+  }
+  if (!in_array($prog, $data[$dept])) {
+    $data[$dept][] = $prog;
+  }
+}
+
+// --- ✅ FIX 2: Add a NEW, SEPARATE query just for sections ---
+$sections_result = $conn->query("SELECT DISTINCT section_name 
+                                FROM adds 
+                                WHERE section_name IS NOT NULL AND section_name != '' 
+                                ORDER BY section_name ASC");
+if (!$sections_result) {
+  die("Query Failed: " . $conn->error);
+}
+// --- End data fetch ---
 
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-        
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-   
 </head>
 
 <body>
 
   <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
 
@@ -48,10 +68,7 @@ $query = "SELECT * FROM superadmin";
           <li class="breadcrumb-item active">Add New Student</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
-
-
-    <!-- Admin Creation Section -->
+    </div>
     <section class="section">
       <div class="row justify-content-center">
         <div class="col-lg-6">
@@ -60,16 +77,13 @@ $query = "SELECT * FROM superadmin";
               <h5 class="card-title text-center">Create New Student</h5>
               <form class="row g-3 needs-validation" novalidate method="post" action="studentcreation.php">
 
-                <!-- ID Number -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="idnumber" class="form-control" id="idnumber" placeholder="ID Number" pattern="^[0-9\-]+$" required>
                     <label for="idnumber" class="form-label">ID Number</label>
-                    <div class="invalid-feedback">Please, enter a valid ID number (only numbers and hyphens are allowed)!</div>
                   </div>
                 </div>
 
-                <!-- First Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="first_name" class="form-control" placeholder="First Name" required>
@@ -77,7 +91,6 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Middle Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="mid_name" class="form-control" placeholder="Middle Name" required>
@@ -85,7 +98,6 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Last Name -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="last_name" class="form-control" placeholder="Last Name" required>
@@ -93,44 +105,38 @@ $query = "SELECT * FROM superadmin";
                   </div>
                 </div>
 
-                <!-- Password -->
                 <input type="hidden" name="password" value="ILOVEDMMMSU">
 
-                <!-- Department -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select name="department" class="form-select" required>
-                      <option disabled selected>Select Department</option>
-                      <?php
-                      $result = mysqli_query($conn, "SELECT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
-                      }
-                      ?>
+                    <select name="department" id="department" class="form-select" required>
+                      <option value="" disabled selected>Select Department</option>
                     </select>
                     <label for="department">Department</label>
                   </div>
                 </div>
 
-
-                <!-- Section -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select name="section" class="form-select" required>
-                      <option disabled selected>Select Section</option>
-                      <?php
-                      $result = mysqli_query($conn, "SELECT section_name FROM adds WHERE section_name IS NOT NULL AND section_name != ''");
-                      while ($row = mysqli_fetch_assoc($result)) {
-                        echo '<option value="' . htmlspecialchars($row['section_name']) . '">' . htmlspecialchars($row['section_name']) . '</option>';
-                      }
-                      ?>
+                    <select name="program" id="program" class="form-select" required disabled>
+                      <option value="" disabled selected>Select Program</option>
+                    </select>
+                    <label for="program">Program</label>
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                  <div class="form-floating">
+                    <select name="section" id="section" class="form-select" required>
+                      <option value="" disabled selected>Select Section</option>
+                      <?php while ($row = $sections_result->fetch_assoc()): ?>
+                        <option value="<?= htmlspecialchars($row['section_name']) ?>"><?= htmlspecialchars($row['section_name']) ?></option>
+                      <?php endwhile; ?>
                     </select>
                     <label for="section">Section</label>
                   </div>
                 </div>
 
-
-                <!-- Submit -->
                 <div class="col-4 offset-4">
                   <button class="btn btn-success w-100" name="submit" id="create" type="submit">Create Account</button>
                 </div>
@@ -140,31 +146,58 @@ $query = "SELECT * FROM superadmin";
           </div>
         </div>
       </div>
-    </section><!-- End Admin Creation Section -->
+    </section>
 
-  </main><!-- End #main -->
+  </main>
 
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
-  <!-- End Footer -->
+  <?php include 'footer.php' ?>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Vendor JS Files -->
-  <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-  <!--  -->
+
+  <script>
+    const allData = <?php echo json_encode($data); ?>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const deptSelect = document.getElementById('department');
+      const progSelect = document.getElementById('program');
+      // const secSelect = document.getElementById('section'); // No longer needed
+
+      // 1. Populate Departments
+      const departments = Object.keys(allData);
+      departments.forEach(dept => {
+        const option = new Option(dept, dept);
+        deptSelect.add(option);
+      });
+
+      // 2. Department Change Event
+      deptSelect.addEventListener('change', function() {
+        // Clear and disable program dropdown
+        progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+        progSelect.disabled = true;
+
+        // --- We no longer touch the section dropdown ---
+
+        const selectedDept = this.value;
+        if (!selectedDept) return;
+
+        const programs = allData[selectedDept] || [];
+
+        if (programs.length > 0) {
+          programs.forEach(prog => {
+            const option = new Option(prog, prog);
+            progSelect.add(option);
+          });
+          progSelect.disabled = false;
+        }
+      });
+
+      // --- DELETED the 'progSelect.addEventListener' block ---
+
+    });
+  </script>
 
   <?php if (isset($_SESSION['msg'])): ?>
     <script>

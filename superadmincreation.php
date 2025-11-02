@@ -3,23 +3,22 @@ session_start();
 include 'conn/conn.php'; // Database connection
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     // Sanitize inputs
-    $id             = mysqli_real_escape_string($conn, trim($_POST['idnumber']));
-    $first_name     = mysqli_real_escape_string($conn, trim($_POST['first_name']));
-    $mid_name       = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
-    $last_name      = mysqli_real_escape_string($conn, trim($_POST['last_name']));
-    $password       = trim($_POST['password']); // don’t escape before hashing
-    $position       = mysqli_real_escape_string($conn, $_POST['position']);
-    $department     = mysqli_real_escape_string($conn, $_POST['department']);
-    $faculty        = mysqli_real_escape_string($conn, $_POST['faculty']);
-    $faculty_rank   = ($faculty === 'Yes' && isset($_POST['faculty_rank'])) 
-                        ? mysqli_real_escape_string($conn, $_POST['faculty_rank']) 
-                        : null;
+    $id           = mysqli_real_escape_string($conn, trim($_POST['idnumber']));
+    $first_name   = mysqli_real_escape_string($conn, trim($_POST['first_name']));
+    $mid_name     = mysqli_real_escape_string($conn, trim($_POST['mid_name']));
+    $last_name    = mysqli_real_escape_string($conn, trim($_POST['last_name']));
+    $password     = trim($_POST['password']); // plain text before hashing
+    $position     = mysqli_real_escape_string($conn, $_POST['position']);
+    $department   = isset($_POST['department']) ? mysqli_real_escape_string($conn, $_POST['department']) : null;
+    $program      = isset($_POST['program']) ? mysqli_real_escape_string($conn, $_POST['program']) : null;
+    $faculty_rank = isset($_POST['faculty_rank']) ? mysqli_real_escape_string($conn, $_POST['faculty_rank']) : null;
 
     // ✅ Hash password
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Check for duplicate ID
+    // Check if superadmin already exists
     $check_stmt = $conn->prepare("SELECT COUNT(*) FROM superadmin WHERE idnumber = ?");
     $check_stmt->bind_param("s", $id);
     $check_stmt->execute();
@@ -34,31 +33,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Insert into superadmin table (store hashed password!)
+    // ✅ Verify department exists (if provided)
+    if (!empty($department)) {
+        $dep_check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE department_name = ?");
+        $dep_check->bind_param("s", $department);
+        $dep_check->execute();
+        $dep_check->bind_result($dep_exists);
+        $dep_check->fetch();
+        $dep_check->close();
+
+        if ($dep_exists == 0) {
+            $_SESSION['msg'] = "The selected department ($department) does not exist in the system.";
+            $_SESSION['msg_type'] = 'error';
+            header("Location: superadmin-superadmincreation.php");
+            exit();
+        }
+    }
+
+    // ✅ Insert into superadmin
     $insert_stmt = $conn->prepare("
         INSERT INTO superadmin 
-        (idnumber, first_name, mid_name, last_name, password, role, position, department, faculty, faculty_rank, status) 
+        (idnumber, first_name, mid_name, last_name, password, role, department, program, faculty_rank, position, status)
         VALUES (?, ?, ?, ?, ?, 'superadmin', ?, ?, ?, ?, 'active')
     ");
-    $insert_stmt->bind_param("sssssssss", 
-        $id, $first_name, $mid_name, $last_name, 
-        $hashed_password, $position, $department, $faculty, $faculty_rank
+    $insert_stmt->bind_param(
+        "sssssssss",
+        $id,
+        $first_name,
+        $mid_name,
+        $last_name,
+        $hashed_password,
+        $department,
+        $program,
+        $faculty_rank,
+        $position
     );
 
     if ($insert_stmt->execute()) {
-        // If faculty = Yes -> also insert into faculty table
-        if ($faculty === "Yes" && !empty($faculty_rank)) {
-            $insert_fac = $conn->prepare("
-                INSERT INTO faculty 
-                (idnumber, first_name, mid_name, last_name, department, faculty_rank, status) 
-                VALUES (?, ?, ?, ?, ?, ?, 'active')
-            ");
-            $insert_fac->bind_param("ssssss", 
-                $id, $first_name, $mid_name, $last_name, $department, $faculty_rank
-            );
-            $insert_fac->execute();
-            $insert_fac->close();
-        }
+
+        // ✅ Automatically add to faculty table
+        $insert_fac = $conn->prepare("
+            INSERT INTO faculty 
+            (idnumber, first_name, mid_name, last_name, password, department, program, faculty_rank, role, status)
+            VALUES (?, ?, ?, ?, NULL, ?, ?, ?, 'faculty', 'active')
+        ");
+        $insert_fac->bind_param(
+            "sssssss",
+            $id,
+            $first_name,
+            $mid_name,
+            $last_name,
+            $department,
+            $program,
+            $faculty_rank
+        );
+        $insert_fac->execute();
+        $insert_fac->close();
 
         $_SESSION['msg'] = 'Super Admin account created successfully! ✨';
         $_SESSION['msg_type'] = 'success';

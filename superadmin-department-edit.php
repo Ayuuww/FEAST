@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'conn/conn.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
@@ -29,25 +30,36 @@ $updated = false;
 
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // ✅ FIX: Get the values from the readonly fields
   $department_name = $_POST['department_name'];
-  $college_name = $_POST['college_name'];
+  $program_name = $_POST['program_name'];
   $website = $_POST['website'];
   $phone = $_POST['phone'];
   $email = $_POST['email'];
 
-  $stmt = $conn->prepare("UPDATE department_info SET department_name=?, college_name=?, website=?, phone=?, email=? WHERE id=?");
-  $stmt->bind_param("sssssi", $department_name, $college_name, $website, $phone, $email, $id);
+  // ✅ FIX: Corrected query with program_name
+  $stmt = $conn->prepare("UPDATE department_info SET department_name=?, program_name=?, website=?, phone=?, email=? WHERE id=?");
+  $stmt->bind_param("sssssi", $department_name, $program_name, $website, $phone, $email, $id);
   $stmt->execute();
 
   $updated = true; // trigger sweetalert2
+
+  // Re-fetch the data to show the updated info
+  $stmt = $conn->prepare("SELECT * FROM department_info WHERE id = ?");
+  $stmt->bind_param("i", $id);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  $dept = $result->fetch_assoc();
 }
+
+// --- ✅ FIX: REMOVED all unnecessary dropdown queries ---
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <?php include 'head.php'; ?>
-  <script src="sweetalert2/sweetalert2@11.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -62,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Department Information</li>
+          <li class="breadcrumb-item"><a href="superadmin-department-info.php">Department Information</a></li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
       </nav>
@@ -79,12 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="row g-3">
                   <div class="col-md-4">
                     <label class="form-label fw-semibold">Department Name</label>
-                    <input type="text" name="department_name" value="<?= htmlspecialchars($dept['department_name']) ?>" class="form-control" disabled>
+                    <input type="text" name="department_name" value="<?= htmlspecialchars($dept['department_name']) ?>" class="form-control" readonly>
                   </div>
 
                   <div class="col-md-8">
-                    <label class="form-label fw-semibold">College Name</label>
-                    <input type="text" name="college_name" value="<?= htmlspecialchars($dept['college_name']) ?>" class="form-control" required>
+                    <label class="form-label fw-semibold">Program Name</label>
+                    <input type="text" name="program_name" value="<?= htmlspecialchars($dept['program_name']) ?>" class="form-control" readonly>
                   </div>
 
                   <div class="col-md-4">
@@ -120,28 +132,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </section>
   </main>
 
-  <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>
-  <!-- End Footer -->
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
-
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
-  <script src="chart/chart.js"></script>
 
-  <!-- SweetAlert2 Success Message -->
   <?php if ($updated): ?>
     <script>
       Swal.fire({
@@ -151,6 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         confirmButtonColor: '#198754',
         confirmButtonText: 'OK'
       }).then(() => {
+        // Redirect back to the main list
         window.location.href = 'superadmin-department-info.php';
       });
     </script>

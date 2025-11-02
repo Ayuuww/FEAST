@@ -10,8 +10,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// ✅ Get the admin's department + position
-// ✅ Get admin's position from admin table
+// Get the admin's position (for the access check)
 $admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $admin_info_stmt->bind_param("s", $admin_id);
 $admin_info_stmt->execute();
@@ -20,22 +19,7 @@ $admin_data = $admin_result->fetch_assoc();
 $admin_position = $admin_data['position'] ?? '';
 $admin_info_stmt->close();
 
-// ✅ Get all departments assigned to this admin
-$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
-$dept_stmt->bind_param("s", $admin_id);
-$dept_stmt->execute();
-$dept_result = $dept_stmt->get_result();
-
-$departments = [];
-while ($row = $dept_result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
-}
-$dept_stmt->close();
-
-// Use first department for compatibility
-$admin_dept = !empty($departments) ? $departments[0] : '';
-
-// ✅ Restrict allowed positions
+// Check if admin has the correct position to be on this page
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
 if (!in_array($admin_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($admin_position) is not allowed to add subjects.";
@@ -43,65 +27,84 @@ if (!in_array($admin_position, $allowed_positions)) {
   exit();
 }
 
-// Get real faculty in same department
+// --- ✅ 1. THIS IS THE MISSING BLOCK ---
+// Get all departments this admin is assigned to
+$dept_stmt = $conn->prepare("SELECT DISTINCT department_name FROM admin_departments WHERE admin_idnumber = ?");
+$dept_stmt->bind_param("s", $admin_id);
+$dept_stmt->execute();
+$dept_result = $dept_stmt->get_result();
+
+$departments = []; // This admin's departments
+while ($row = $dept_result->fetch_assoc()) {
+  $departments[] = $row['department_name'];
+}
+$dept_stmt->close();
+// --- END OF MISSING BLOCK ---
+
+
+// --- ✅ 2. Fetch ALL Department/Program relationships for the dropdowns ---
+$adds_query = "SELECT DISTINCT department_name, program_name 
+               FROM adds 
+               WHERE department_name IS NOT NULL AND department_name != '' 
+                 AND program_name IS NOT NULL AND program_name != ''
+               ORDER BY department_name, program_name";
+$adds_result = $conn->query($adds_query);
+
+// This array will hold ALL programs: $dept_programs['Department'] = ['Prog1', 'Prog2']
+$dept_programs = [];
+while ($row = $adds_result->fetch_assoc()) {
+  $dept = $row['department_name'];
+  $prog = $row['program_name'];
+  if (!isset($dept_programs[$dept])) {
+    $dept_programs[$dept] = [];
+  }
+  $dept_programs[$dept][] = $prog;
+}
+// --- End new query ---
+
+
+// --- ✅ 3. Fetch faculty ONLY from the admin's assigned departments ---
+$faculty_data = []; // Initialize the array
+
 if (!empty($departments)) {
+  // Create placeholders for the IN clause (e.g., ?, ?, ?)
   $placeholders = implode(',', array_fill(0, count($departments), '?'));
+
+  // Create the type string (e.g., "sss")
   $types = str_repeat('s', count($departments));
 
-  // Faculty in assigned departments
   $faculty_query = "SELECT idnumber, first_name, mid_name, last_name 
-                    FROM faculty 
-                    WHERE status = 'active' AND department IN ($placeholders)";
+                      FROM faculty 
+                      WHERE status = 'active' 
+                      AND department IN ($placeholders)
+                      ORDER BY last_name, first_name";
+
   $faculty_stmt = $conn->prepare($faculty_query);
+
+  // Bind all department names as parameters
   $faculty_stmt->bind_param($types, ...$departments);
+
   $faculty_stmt->execute();
   $faculty_result = $faculty_stmt->get_result();
 
-  // Admins in assigned departments (optional)
-  $admin_query = "SELECT a.idnumber, a.first_name, a.mid_name, a.last_name
-                  FROM admin a
-                  JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                  WHERE ad.department_name IN ($placeholders)";
-  $admin_stmt = $conn->prepare($admin_query);
-  $admin_stmt->bind_param($types, ...$departments);
-  $admin_stmt->execute();
-  $admin_result = $admin_stmt->get_result();
+  while ($row = mysqli_fetch_assoc($faculty_result)) {
+    $faculty_data[] = $row;
+  }
 }
-
-$faculty_data = [];
-$faculty_ids = [];
-
-while ($row = mysqli_fetch_assoc($faculty_result)) {
-  $faculty_data[] = $row;
-  $faculty_ids[] = $row['idnumber'];
-}
-
-$admin_data = [];
-while ($row = mysqli_fetch_assoc($admin_result)) {
-  $admin_data[] = $row;
-}
+// --- End faculty fetch ---
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
 </head>
 
 <body>
 
   <?php include 'admin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'admin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
 
@@ -109,26 +112,26 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
       <h1>Add Subject</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="admin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Subject</li>
           <li class="breadcrumb-item active">Add Subject</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
-
-    <?php if (isset($_SESSION['msg'])): ?>
+    </div><?php if (isset($_SESSION['msg'])): ?>
       <script>
-        Swal.fire({
-          icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
-          title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
-          text: '<?= $_SESSION['msg'] ?>',
-          confirmButtonColor: '#198754'
+        // SweetAlert for success/error messages
+        document.addEventListener("DOMContentLoaded", function() {
+          Swal.fire({
+            icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
+            title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
+            text: '<?= addslashes($_SESSION['msg']) ?>',
+            confirmButtonColor: '#198754'
+          });
         });
       </script>
       <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
     <?php endif; ?>
 
-    <!-- Super Admin Creation Section -->
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
@@ -136,22 +139,8 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
             <div class="card-body">
               <h5 class="card-title">Add New Subject</h5>
 
-              <?php if (isset($_SESSION['msg'])): ?>
-                <script>
-                  Swal.fire({
-                    icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>', // success, error, warning, info
-                    title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
-                    text: '<?= $_SESSION['msg'] ?>',
-                    confirmButtonColor: '#198754'
-                  });
-                </script>
-                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-              <?php endif; ?>
-
-
               <form class="row g-3 needs-validation " novalidate method="post" action="addsubject.php">
 
-                <!-- Subject Code -->
                 <div class="col-md-2">
                   <div class="form-floating">
                     <input type="text" name="code" class="form-control" id="idnumber" placeholder="Subject Code" required>
@@ -159,7 +148,6 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                   </div>
                 </div>
 
-                <!-- Subject title -->
                 <div class="col-md-6">
                   <div class="form-floating">
                     <input type="text" name="title" class="form-control" placeholder="Descriptive Title" required>
@@ -167,42 +155,39 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
                   </div>
                 </div>
 
-                <!-- Faculty Name Dropdown -->
                 <div class="col-md-4">
                   <div class="form-floating">
                     <select name="faculty_id" class="form-select" required>
                       <option value="">-- Select Faculty --</option>
-
                       <?php foreach ($faculty_data as $f): ?>
                         <option value="<?= $f['idnumber'] ?>"><?= $f['last_name'] ?>, <?= $f['first_name'] ?></option>
                       <?php endforeach; ?>
-
-                      <!-- <?php foreach ($admin_data as $a): ?>
-                        <?php if (in_array($a['idnumber'], $faculty_ids)) continue; ?>
-                        <option value="<?= $a['idnumber'] ?>"><?= $a['last_name'] ?>, <?= $a['first_name'] ?></option>
-                      <?php endforeach; ?> -->
-
                     </select>
                     <label for="faculty_id">Faculty</label>
                   </div>
                 </div>
 
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select name="department" id="department" class="form-select" required>
+                      <option value="" disabled selected>-- Select Department --</option>
+                      <?php foreach (array_keys($dept_programs) as $dept): ?>
+                        <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                    <label for="department">Department</label>
+                  </div>
+                </div>
 
-                <!-- Admin-as-Faculty Dropdown -->
-                <!-- <div class="col-md-2">
-                      <div class="form-floating">
-                        <select name="admin_id" class="form-select">
-                          <option value="">-- Select Admin as Faculty --</option>
-                          <?php while ($a = mysqli_fetch_assoc($admin_result)): ?>
-                            <option value="<?= $a['idnumber'] ?>"><?= $a['first_name'] ?> <?= $a['last_name'] ?></option>
-                          <?php endwhile; ?>
-                        </select>
-                        <label for="admin_id">Faculty as Admin</label>
-                      </div>
-                    </div> -->
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select name="program" id="program" class="form-select" required disabled>
+                      <option value="" disabled selected>-- Select Program --</option>
+                    </select>
+                    <label for="program">Program</label>
+                  </div>
+                </div>
 
-
-                <!-- Submit -->
                 <div class="col-4 offset-4">
                   <button class="btn btn-success w-100" name="addsubject" id="create" type="submit">Add Subject</button>
                 </div>
@@ -212,75 +197,51 @@ while ($row = mysqli_fetch_assoc($admin_result)) {
           </div>
         </div>
       </div>
-    </section><!-- End Super Admin Creation Section -->
+    </section>
 
-
-
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php' ?>>
-  <!-- End Footer -->
-
+  </main><?php include 'footer.php'; ?>
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <script>
-    const facultySelect = document.querySelector('select[name="faculty_id"]');
-    const adminSelect = document.querySelector('select[name="admin_id"]');
-
-    facultySelect.addEventListener('change', () => {
-      if (facultySelect.value) {
-        adminSelect.disabled = true;
-      } else {
-        adminSelect.disabled = false;
-      }
-    });
-
-    adminSelect.addEventListener('change', () => {
-      if (adminSelect.value) {
-        facultySelect.disabled = true;
-      } else {
-        facultySelect.disabled = false;
-      }
-    });
-  </script>
 
   <script>
-    setTimeout(() => {
-      const alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500); // Remove from DOM
-      }
-    }, 5000); // 5 seconds
-  </script>
+    // Pass the PHP array of ALL programs to JavaScript
+    const allData = <?php echo json_encode($dept_programs); ?>;
 
-  <?php if (isset($_SESSION['msg'])): ?>
-    <script>
-      Swal.fire({
-        icon: '<?= $_SESSION['msg_type'] ?? 'info' ?>',
-        title: '<?= $_SESSION['msg_type'] === "success" ? "Success!" : "Notice" ?>',
-        text: <?= json_encode($_SESSION['msg']) ?>,
-        confirmButtonColor: '#198754'
+    document.addEventListener('DOMContentLoaded', function() {
+      const deptSelect = document.getElementById('department');
+      const progSelect = document.getElementById('program');
+
+      deptSelect.addEventListener('change', function() {
+        // Clear and disable children
+        progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';
+        progSelect.disabled = true;
+
+        const selectedDept = this.value;
+
+        // Check if the selected department has any programs in our list
+        if (!selectedDept || !allData[selectedDept]) {
+          progSelect.innerHTML = '<option value="" disabled selected>No programs found</option>';
+          return;
+        }
+
+        const programs = allData[selectedDept];
+
+        if (programs.length > 0) {
+          programs.forEach(prog => {
+            const option = new Option(prog, prog);
+            progSelect.add(option);
+          });
+          progSelect.disabled = false;
+        } else {
+          progSelect.innerHTML = '<option value="" disabled selected>No programs found</option>';
+        }
       });
-    </script>
-    <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
-  <?php endif; ?>
-
+    });
+  </script>
 
 </body>
 

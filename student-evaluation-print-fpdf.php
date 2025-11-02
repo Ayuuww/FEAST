@@ -1,44 +1,57 @@
 <?php
 session_start();
-require('fpdf/fpdf.php'); // Make sure the path is correct
+require('fpdf/fpdf.php');
 include 'conn/conn.php';
 
+// Check student login
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
+    header("Location: pages-login.php");
+    exit();
+}
+
+// ✅ Use session data from submit-evaluation.php
 if (!isset($_SESSION['print_data'])) {
-    header("Location: student-evaluate.php");
+    echo "<script>alert('No evaluation data found to print.'); window.close();</script>";
     exit();
 }
 
 $data = $_SESSION['print_data'];
-unset($_SESSION['print_data']); // Prevent reprint on refresh
+$student_id = $data['student_id'];
+$faculty_id = $data['faculty_id'];
+$subject_code = $data['subject_code'];
+$academic_year = $data['academic_year'];
+$department = $data['department'];
+$is_anonymous = $data['is_anonymous'] ?? 'no';
+$answers = $data['answers'] ?? [];
 
-$student_name = 'Unknown Student';
-$student_id = $data['student_id'] ?? '';
-
-if ($student_id) {
-    $stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM student WHERE idnumber = ?");
-    $stmt->bind_param("s", $student_id);
+// Helper: Get full name
+function getName($conn, $table, $id)
+{
+    $stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM $table WHERE idnumber = ?");
+    $stmt->bind_param("s", $id);
     $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $s = $result->fetch_assoc();
-        $student_name = $s['first_name'] . ' ' . $s['mid_name'] . ' ' . $s['last_name'];
+    $res = $stmt->get_result();
+    if ($res->num_rows > 0) {
+        $r = $res->fetch_assoc();
+        return trim($r['first_name'] . ' ' . $r['mid_name'] . ' ' . $r['last_name']);
     }
+    return 'Unknown';
 }
 
-$faculty_name = 'Unknown Faculty';
-$faculty_id = $data['faculty_id'] ?? '';
+$faculty_name = getName($conn, 'faculty', $faculty_id);
+$student_name = getName($conn, 'student', $student_id);
 
-if ($faculty_id) {
-    $stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
-    $stmt->bind_param("s", $faculty_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
-        $f = $result->fetch_assoc();
-        $faculty_name = $f['first_name'] . ' ' . $f['mid_name'] . ' ' . $f['last_name'];
-    }
-}
+// Get subject title
+$subject_title = '';
+$sub_stmt = $conn->prepare("SELECT title FROM subject WHERE code = ?");
+$sub_stmt->bind_param("s", $subject_code);
+$sub_stmt->execute();
+$sub_stmt->bind_result($subject_title);
+$sub_stmt->fetch();
+$sub_stmt->close();
+$data['subject_title'] = $subject_title;
 
+// Benchmark Questions
 $questions = [
     "Comes to class on time regularly.",
     "Explains learning outcomes, expectations, grading system, and various requirements of the subject/course.",
@@ -50,7 +63,7 @@ $questions = [
     "Simplifies complex ideas in the lesson for ease of understanding.",
     "Relates the subject matter to contemporary issues and developments in the discipline and/or daily life activities.",
     "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
-    "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes",
+    "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes.",
     "Recognizes and values the unique diversity and individuality difference among students.",
     "Assist students with their learning challenges during consultation hours.",
     "Provide immediate feedback on student outputs and performance.",
@@ -59,8 +72,6 @@ $questions = [
 
 // Custom PDF class
 require 'printing-headerfooter.php';
-
-// Start PDF
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
 
@@ -69,52 +80,51 @@ $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, 'Faculty Evaluation Summary', 0, 1, 'C');
 $pdf->Ln(3);
 
-// Faculty Info
+// Info Section
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Name of Faculty being Evaluated: " . $faculty_name, 0, 1);
-$pdf->Cell(0, 6, "Department/College: " . $data['department'], 0, 1);
-$pdf->Cell(0, 6, "Subject Code/Title: " . $data['subject_code'] . " / " . $data['subject_title'], 0, 1);
-$pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
+$pdf->Cell(0, 6, "Department/College: " . $department, 0, 1);
+$pdf->Cell(0, 6, "Course Code/Title: " . $subject_code . " - " . $subject_title, 0, 1);
+$pdf->Cell(0, 6, "Rating Period (Academic Year): " . $academic_year, 0, 1);
 $pdf->Ln(4);
 
-// Table Headers
+// Table Header
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(150, 8, "Benchmark Statement", 1, 0, 'L', true);
 $pdf->Cell(30, 8, "Rating (1-5)", 1, 1, 'C', true);
 
-// Table Data
+// Table Body
 $pdf->SetFont('Arial', '', 10);
-$lineHeight = 6; // standard line height
+$lineHeight = 6;
 
 foreach ($questions as $i => $q) {
     $question = ($i + 1) . ". " . $q;
-    $rating = $data['answers']["q$i"] ?? '-';
+    $rating = $answers["q$i"] ?? '-';
 
-    // Get number of lines the question will take
-    $lines = $pdf->GetStringWidth($question) / 145;
-    $numLines = ceil($lines);
-    $rowHeight = max($lineHeight, $numLines * $lineHeight);
-
-    // Save current X and Y
+    // Save current X and Y position
     $x = $pdf->GetX();
     $y = $pdf->GetY();
 
-    // Draw the question cell
+    // Draw question (MultiCell for wrapping)
     $pdf->MultiCell(150, $lineHeight, $question, 1, 'L');
 
-    // Move back to the right of the first cell
+    // Calculate the height used by the question text
+    $questionHeight = $pdf->GetY() - $y;
+
+    // Draw the rating box beside it
     $pdf->SetXY($x + 150, $y);
-    $pdf->Cell(30, $rowHeight, $rating, 1, 1, 'C');
+    $pdf->Cell(30, $questionHeight, $rating, 1, 1, 'C');
 }
 
+
+// Scores
 $pdf->Ln(3);
-$pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / 75", 0, 1);
 $pdf->Cell(0, 6, "Computed Rating: " . number_format($data['computed_rating'] ?? 0, 2) . "%", 0, 1);
 $pdf->Ln(2);
 
-// Comment Section
+// Comment
 if (!empty($data['comment'])) {
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(0, 6, "Additional Comment:", 0, 1);
@@ -123,12 +133,17 @@ if (!empty($data['comment'])) {
     $pdf->Ln(2);
 }
 
-// Signature and Evaluator Info
+// ✅ Anonymous handling
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Signature of Evaluator: ____________________________", 0, 1);
-$pdf->Cell(0, 6, "Name of Evaluator/ID Number: " . $student_name . " / " . $student_id, 0, 1);
+
+if (strtolower($is_anonymous) === 'yes') {
+    $pdf->Cell(0, 6, "Name of Evaluator/ID Number: ", 0, 1);
+} else {
+    $pdf->Cell(0, 6, "Name of Evaluator/ID Number: " . $student_name . " / " . $student_id, 0, 1);
+}
+
 $pdf->Cell(0, 6, "Date of Evaluation: " . date('F j, Y'), 0, 1);
 
-// Output the PDF
-$pdf->Output('I', 'Evaluation_Summary.pdf');
-?>
+// Output
+$pdf->Output('I', 'Student_Evaluation_Reprint.pdf');

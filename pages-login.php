@@ -182,7 +182,7 @@ if (isset($_POST['login'])) {
       <!-- Left side: Logo and title -->
       <div class="login-left">
         <img src="pics/DMMMSUlogosignup.png" alt="Logo">
-        <h3 class="fw-bold">FEAST DMMMSU-NLUC</h3>
+        <h3 class="fw-bold">FEASTA DMMMSU-NLUC</h3>
         <p class="mt-2">Faculty Effectiveness and Assessment System with Tracking and Analytics</p>
       </div>
 

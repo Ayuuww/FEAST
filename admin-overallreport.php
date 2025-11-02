@@ -45,29 +45,57 @@ while ($row = $res->fetch_assoc()) {
 $res->close();
 
 // Get all faculty in this department
+// Fetch all faculty in the admin's assigned departments AND programs
 $faculties = [];
-if (!empty($departments)) {
-    // Create placeholders like (?, ?, ?)
-    $placeholders = implode(',', array_fill(0, count($departments), '?'));
-    // Create types string like "sss"
-    $types = str_repeat('s', count($departments));
 
-    $sql = "
+// ✅ FIRST, get the admin's assignments as pairs
+$admin_assignments = [];
+// We need to re-fetch the department/program pairs
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept->bind_param("s", $admin_id);
+$stmt_admin_dept->execute();
+$result = $stmt_admin_dept->get_result();
+while ($row = $result->fetch_assoc()) {
+  $admin_assignments[] = $row;
+}
+$stmt_admin_dept->close();
+
+
+if (!empty($admin_assignments)) {
+  // ✅ Build the query to check for (dept = ? AND prog = ?) OR (dept = ? AND prog = ?)
+  $faculty_query_parts = [];
+  $params = [];
+  $types = "";
+
+  foreach ($admin_assignments as $assignment) {
+    $faculty_query_parts[] = "(department = ? AND program = ?)";
+    $params[] = $assignment['department_name'];
+    $params[] = $assignment['program_name'];
+    $types .= "ss";
+  }
+  $faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+  // ✅ This query now finds faculty whose home dept/prog matches the admin's assignments
+  $sql = "
         SELECT idnumber, last_name, first_name, mid_name
         FROM faculty
-        WHERE department IN ($placeholders)
+        WHERE ($faculty_where_sql)
         ORDER BY last_name ASC
     ";
 
-    $query = $conn->prepare($sql);
-    $query->bind_param($types, ...$departments); // Bind all departments
-    $query->execute();
-    $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-    $query->close();
+  $query = $conn->prepare($sql);
+  $query->bind_param($types, ...$params);
+  $query->execute();
+  $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+  $query->close();
 }
 
 // Initialize rows
 $overall_rows = '';
+$total_set_avg = 0;
+$total_sef_avg = 0;
+$faculty_with_set = 0;
+$faculty_with_sef = 0;
 
 foreach ($faculties as $fac) {
   $fid = $fac['idnumber'];
@@ -75,7 +103,7 @@ foreach ($faculties as $fac) {
 
   // SET (student evaluations)
   $sql = "SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
-          FROM evaluation WHERE faculty_id = ?";
+            FROM evaluation WHERE faculty_id = ?";
   $types = "s";
   $params = [$fid];
 
@@ -97,11 +125,13 @@ foreach ($faculties as $fac) {
   $stmtEval->close();
 
   $set_count = (int)$set_result['students'];
-  $set_avg = $set_count ? number_format((float)$set_result['avg_rating'], 2) : '0.00';
+  // ✅ FIX 1: Get the raw float value for calculations
+  $set_avg_raw = $set_count ? (float)$set_result['avg_rating'] : 0.00;
+  $set_avg_display = number_format($set_avg_raw, 2); // Formatted string for display
 
   // SEF (supervisor evaluations)
   $sql = "SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating
-          FROM admin_evaluation WHERE evaluatee_id = ?";
+            FROM admin_evaluation WHERE evaluatee_id = ?";
   $types = "s";
   $params = [$fid];
 
@@ -123,24 +153,38 @@ foreach ($faculties as $fac) {
   $stmtEval->close();
 
   $sef_count = (int)$sef_result['admins'];
-  $sef_avg = $sef_count ? number_format((float)$sef_result['avg_rating'], 2) : '0.00';
+  // ✅ FIX 2: Get the raw float value for calculations
+  $sef_avg_raw = $sef_count ? (float)$sef_result['avg_rating'] : 0.00;
+  $sef_avg_display = number_format($sef_avg_raw, 2); // Formatted string for display
+
+  // ✅ FIX 3: Moved this block AFTER $sef_count is defined
+  if ($set_count > 0) {
+    $total_set_avg += $set_avg_raw; // Use the raw float
+    $faculty_with_set++;
+  }
+  if ($sef_count > 0) {
+    $total_sef_avg += $sef_avg_raw; // Use the raw float
+    $faculty_with_sef++;
+  }
 
   // Overall Average
   $overall_avg = ($set_count && $sef_count)
-    ? number_format(((float)$set_avg + (float)$sef_avg) / 2, 2)
-    : ($set_count ? $set_avg : ($sef_count ? $sef_avg : '0.00'));
+    ? number_format(($set_avg_raw + $sef_avg_raw) / 2, 2)
+    : ($set_count ? $set_avg_display : ($sef_count ? $sef_avg_display : '0.00'));
 
   $overall_rows .= "
-    <tr>
-      <td>{$name}</td>
-      <td class='text-center'>{$set_avg}</td>
-      <td class='text-center'>{$sef_avg}</td>
-    </tr>
-  ";
+      <tr>
+        <td>{$name}</td>
+        <td class='text-center'>{$set_avg_display}</td>
+        <td class='text-center'>{$sef_avg_display}</td>
+      </tr>
+    ";
 }
+
+// ✅ FIX 4: Calculations are now correct and outside the loop
+$final_set_average = ($faculty_with_set > 0) ? ($total_set_avg / $faculty_with_set) : 0;
+$final_sef_average = ($faculty_with_sef > 0) ? ($total_sef_avg / $faculty_with_sef) : 0;
 ?>
-
-
 
 <!DOCTYPE html>
 <html>
@@ -230,6 +274,13 @@ foreach ($faculties as $fac) {
                     <tbody>
                       <?= $overall_rows ?>
                     </tbody>
+                    <tfoot>
+                      <tr class="table-light fw-bold">
+                        <td class="text-end">Department Average:</td>
+                        <td class="text-center"><?= number_format($final_set_average, 2) ?></td>
+                        <td class="text-center"><?= number_format($final_sef_average, 2) ?></td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
 

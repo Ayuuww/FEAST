@@ -47,7 +47,13 @@ $stmt->execute();
 $stmt->bind_result($fname, $mname, $lname, $dept, $rank);
 $stmt->fetch();
 $stmt->close();
-$full_name = strtoupper(trim("$fname $mname $lname"));
+$middle_initial = '';
+if (!empty($mname)) {
+    $middle_initial = ' ' . substr($mname, 0, 1) . '.'; // Add space, initial, and period
+}
+
+$full_name = strtoupper(trim("$fname $middle_initial $lname"));
+
 $dept_display = strtoupper($dept);
 $rank_display = ucwords($rank);
 
@@ -88,7 +94,13 @@ $stmt_supervisor->bind_param("s", $dept);
 $stmt_supervisor->execute();
 $stmt_supervisor->bind_result($sfn, $smn, $sln);
 if ($stmt_supervisor->fetch()) {
-    $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
+
+    $middle_initial = '';
+    if (!empty($smn)) {
+        $middle_initial = ' ' . substr($smn, 0, 1) . '.'; // Add space, initial, and period
+    }
+
+    $evaluator_name = strtoupper(trim("$sfn $middle_initial $sln"));
 }
 $stmt_supervisor->close();
 
@@ -158,7 +170,7 @@ $pdf->SetTextColor(255, 255, 255); // White text
 $pdf->Cell(0, 8, 'SUPERVISOR', 1, 1, 'C', true);
 
 $pdf->SetTextColor(0, 0, 0); // Reset to black
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(35, 10, 'Signature', 'L', 0);
 $pdf->Cell(5, 10, ':', 0, 0, 'C');
 $pdf->Cell(0, 10, '', 'R', 1);
@@ -180,7 +192,7 @@ $pdf->SetTextColor(255, 255, 255);
 $pdf->Cell(0, 8, 'FACULTY', 1, 1, 'C', true);
 
 $pdf->SetTextColor(0, 0, 0);
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(35, 10, 'Signature', 'L', 0);
 $pdf->Cell(5, 10, ':', 0, 0, 'C');
 $pdf->Cell(0, 10, '', 'R', 1);
@@ -196,4 +208,3 @@ $pdf->Cell(0, 7, '', 'RB', 1);
 // --- Final Output ---
 $pdf->Output('I', 'Acknowledgement-Form.pdf');
 exit;
-?>

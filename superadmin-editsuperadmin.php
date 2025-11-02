@@ -3,13 +3,13 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Superadmin login check
+// ✅ Check login & role
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Get superadmin ID
+// ✅ Check superadmin ID in URL
 if (!isset($_GET['id'])) {
   echo "Superadmin ID is missing.";
   exit();
@@ -17,7 +17,7 @@ if (!isset($_GET['id'])) {
 
 $superadmin_id = $_GET['id'];
 
-// Fetch superadmin info
+// ✅ Fetch superadmin info
 $stmt = $conn->prepare("SELECT * FROM superadmin WHERE idnumber = ?");
 $stmt->bind_param("s", $superadmin_id);
 $stmt->execute();
@@ -29,7 +29,7 @@ if (!$superadmin) {
   exit();
 }
 
-// Fetch dropdowns from adds table
+// ✅ Fetch dropdowns from adds table
 $positions = [];
 $ranks = [];
 $departments = [];
@@ -49,18 +49,28 @@ while ($row = $dept_result->fetch_assoc()) {
   $departments[] = $row['department_name'];
 }
 
-// Handle update
+// ✅ Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $new_status = $_POST['status'];
-  $new_position = $_POST['position'];
-  $new_rank = $_POST['faculty_rank'];
-  $new_department = $_POST['department'];
-  $new_faculty = $_POST['faculty'];
+  $new_status = $_POST['status'] ?? 'active';
+  $new_position = $_POST['position'] ?? null;
+  $new_rank = $_POST['faculty_rank'] ?? null;
+  $new_department = $_POST['department'] ?? null;
+  $new_program = $_POST['program'] ?? null;
 
-  $stmt = $conn->prepare("UPDATE superadmin 
-                          SET status = ?, position = ?, faculty_rank = ?, department = ?, faculty = ? 
-                          WHERE idnumber = ?");
-  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_department, $new_faculty, $superadmin_id);
+  // Validation
+  if (empty($new_position)) {
+    $_SESSION['msg'] = "Position is required.";
+    $_SESSION['msg_type'] = "danger";
+    header("Location: superadmin-editsuperadmin.php?id=$superadmin_id");
+    exit();
+  }
+
+  $stmt = $conn->prepare("
+      UPDATE superadmin
+      SET status = ?, position = ?, faculty_rank = ?, department = ?, program = ?
+      WHERE idnumber = ?
+  ");
+  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_department, $new_program, $superadmin_id);
   $stmt->execute();
 
   header("Location: superadmin-editsuperadmin.php?id=$superadmin_id&update=success");
@@ -72,24 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 
 <head>
-
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
 </head>
 
 <body>
-
   <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Edit Superadmin Status</h1>
+      <h1>Edit Superadmin Information</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
@@ -109,28 +111,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <?php if ($superadmin): ?>
                 <form method="POST">
 
-                  <!-- Full Name -->
-                  <div class="mb-3">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" value="<?= $superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name'] ?>" disabled>
-                      <label>Full Name</label>
+                  <div class="row">
+                    <!-- Full Name -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control"
+                          value="<?= htmlspecialchars($superadmin['first_name'] . ' ' . $superadmin['mid_name'] . ' ' . $superadmin['last_name']) ?>" disabled>
+                        <label>Full Name</label>
+                      </div>
+                    </div>
+
+                    <!-- ID -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <input type="text" class="form-control" value="<?= htmlspecialchars($superadmin['idnumber']) ?>" disabled>
+                        <label>ID Number</label>
+                      </div>
                     </div>
                   </div>
 
                   <div class="row">
-                    <!-- ID Number -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control" value="<?= $superadmin['idnumber'] ?>" disabled>
-                        <label>ID Number</label>
-                      </div>
-                    </div>
-
                     <!-- Department -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <input type="text" class="form-control" value="<?php echo $superadmin['department']; ?>" disabled>
-                        <label class="form-label">Department</label>
+                        <select name="department" id="department" class="form-select" required>
+                          <option value="">-- Select Department --</option>
+                          <?php foreach ($departments as $dept): ?>
+                            <option value="<?= htmlspecialchars($dept) ?>" <?= $superadmin['department'] === $dept ? 'selected' : '' ?>>
+                              <?= htmlspecialchars($dept) ?>
+                            </option>
+                          <?php endforeach; ?>
+                        </select>
+                        <label>Department</label>
+                      </div>
+                    </div>
+
+                    <!-- Program -->
+                    <div class="col-md-6 mb-3">
+                      <div class="form-floating">
+                        <select name="program" id="program" class="form-select">
+                          <option value="">-- Select Program --</option>
+                          <?php
+                          if (!empty($superadmin['department'])) {
+                            $stmt_prog = $conn->prepare("SELECT DISTINCT program_name FROM adds WHERE department_name = ? AND program_name IS NOT NULL ORDER BY program_name ASC");
+                            $stmt_prog->bind_param("s", $superadmin['department']);
+                            $stmt_prog->execute();
+                            $res_prog = $stmt_prog->get_result();
+                            while ($prog = $res_prog->fetch_assoc()):
+                          ?>
+                              <option value="<?= htmlspecialchars($prog['program_name']) ?>" <?= $superadmin['program'] === $prog['program_name'] ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($prog['program_name']) ?>
+                              </option>
+                          <?php endwhile;
+                          } ?>
+                        </select>
+                        <label>Program</label>
                       </div>
                     </div>
                   </div>
@@ -139,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- Status -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <select name="status" class="form-select" required>
+                        <select name="status" class="form-select">
                           <option value="active" <?= $superadmin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
                           <option value="inactive" <?= $superadmin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
                         </select>
@@ -151,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
                         <select name="position" class="form-select" required>
-                          <option value="" disabled>-- Select Position --</option>
+                          <option value="">-- Select Position --</option>
                           <?php foreach ($positions as $pos): ?>
                             <option value="<?= htmlspecialchars($pos) ?>" <?= $superadmin['position'] === $pos ? 'selected' : '' ?>>
                               <?= htmlspecialchars($pos) ?>
@@ -161,67 +196,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label>Position</label>
                       </div>
                     </div>
-
-                    <!-- Current Rank -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <input type="text" class="form-control"
-                          value="<?php echo !empty($superadmin['faculty_rank']) ? $superadmin['faculty_rank'] : 'Not Set'; ?>"
-                          disabled>
-                        <label class="form-label">Current Faculty Rank</label>
-                      </div>
-                    </div>
-
-                    <!-- Faculty Rank -->
-                    <div class="col-md-6 mb-3">
-                      <div class="form-floating">
-                        <select name="faculty_rank" class="form-select" required>
-                          <option value="" disabled>-- Select Rank --</option>
-                          <?php foreach ($ranks as $rank): ?>
-                            <option value="<?= htmlspecialchars($rank) ?>" <?= $superadmin['faculty_rank'] === $rank ? 'selected' : '' ?>>
-                              <?= htmlspecialchars($rank) ?>
-                            </option>
-                          <?php endforeach; ?>
-                        </select>
-                        <label>Faculty Rank</label>
-                      </div>
-                    </div>
-
-                    
                   </div>
 
-                  <button type="submit" class="btn btn-success">Update  Status</button>
+                  <!-- Faculty Rank -->
+                  <div class="mb-3">
+                    <div class="form-floating">
+                      <select name="faculty_rank" class="form-select">
+                        <option value="">-- Select Faculty Rank --</option>
+                        <?php foreach ($ranks as $rank): ?>
+                          <option value="<?= htmlspecialchars($rank) ?>" <?= $superadmin['faculty_rank'] === $rank ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($rank) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </select>
+                      <label>Faculty Rank</label>
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-success">Update Information</button>
                   <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
                 </form>
               <?php else: ?>
                 <div class="alert alert-danger">Superadmin not found.</div>
               <?php endif; ?>
-
             </div>
           </div>
         </div>
       </div>
     </section>
   </main>
-  <!-- end main -->
 
-  <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>
-  <!-- End Footer -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
 
-  <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
   <?php if (isset($_GET['update']) && $_GET['update'] === 'success'): ?>
@@ -235,6 +246,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       });
     </script>
   <?php endif; ?>
+
+  <script>
+    document.getElementById('department').addEventListener('change', function() {
+      const dept = this.value;
+      const programSelect = document.getElementById('program');
+
+      // Clear current options
+      programSelect.innerHTML = '<option value="">-- Loading Programs... --</option>';
+
+      if (dept) {
+        fetch(`get_programs.php?department=${encodeURIComponent(dept)}`)
+          .then(response => response.json())
+          .then(programs => {
+            programSelect.innerHTML = '<option value="">-- Select Program --</option>';
+            programs.forEach(prog => {
+              const option = document.createElement('option');
+              option.value = prog;
+              option.textContent = prog;
+              programSelect.appendChild(option);
+            });
+          })
+          .catch(() => {
+            programSelect.innerHTML = '<option value="">-- Error Loading Programs --</option>';
+          });
+      } else {
+        programSelect.innerHTML = '<option value="">-- Select Department First --</option>';
+      }
+    });
+  </script>
 
 </body>
 

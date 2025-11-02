@@ -1,49 +1,39 @@
 <?php
 session_start();
 include 'conn/conn.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-  header("Location: pages-login.php");
-  exit();
+    header("Location: pages-login.php");
+    exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get all departments this admin is assigned to
-$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
-$dept_stmt->bind_param("s", $admin_id);
-$dept_stmt->execute();
-$dept_result = $dept_stmt->get_result();
-
-$admin_departments = [];
-while ($row = $dept_result->fetch_assoc()) {
-  $admin_departments[] = $row['department_name'];
+// --- ✅ START FIX: Get all department/program pairs assigned to this admin ---
+$admin_assignments = [];
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+if ($stmt_admin_dept) {
+    $stmt_admin_dept->bind_param("s", $admin_id);
+    $stmt_admin_dept->execute();
+    $result = $stmt_admin_dept->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
+    }
+    $stmt_admin_dept->close();
 }
-$dept_stmt->close();
+// --- END FIX ---
 
-if (empty($admin_departments)) {
-  $_SESSION['msg'] = "You are not assigned to any department. Please contact the Superadmin.";
-  $_SESSION['msg_type'] = "error";
-  header("Location: admin-dashboard.php");
-  exit();
+// Handle case where admin has no assigned departments
+if (empty($admin_assignments)) {
+    // Provide a more user-friendly error
+    $_SESSION['msg'] = "You are not assigned to any department or program. Please contact the Superadmin.";
+    $_SESSION['msg_type'] = "error";
+    header("Location: admin-dashboard.php");
+    exit();
 }
 
-// --- Get Form Selections ---
-$selected_faculty_id = $_GET['faculty_id'] ?? '';
-$selected_semester = $_GET['semester'] ?? '';
-$selected_academic_year = $_GET['academic_year'] ?? '';
-
-// --- Fetch Data for Dropdowns (BEFORE the form) ---
-$faculty_list_stmt = $conn->prepare("
-    SELECT idnumber, first_name, mid_name, last_name
-    FROM faculty
-    WHERE department IN (" . implode(',', array_fill(0, count($admin_departments), '?')) . ")
-    ORDER BY last_name ASC
-");
-$faculty_list_stmt->bind_param(str_repeat('s', count($admin_departments)), ...$admin_departments);
-$faculty_list_stmt->execute();
-$faculty_list_result = $faculty_list_stmt->get_result();
-
-
+// Get unique semesters and academic years for filters
 $semesters_query = mysqli_query($conn, "
     SELECT DISTINCT semester FROM evaluation WHERE semester IS NOT NULL AND semester != ''
     UNION
@@ -58,6 +48,37 @@ $academic_years_query = mysqli_query($conn, "
     ORDER BY academic_year DESC
 ");
 
+$selected_faculty_id = $_GET['faculty_id'] ?? '';
+$selected_semester = $_GET['semester'] ?? '';
+$selected_academic_year = $_GET['academic_year'] ?? '';
+
+
+// --- Fetch Data for Dropdowns (BEFORE the form) ---
+
+// --- ✅ START FIX: Build complex query to get faculty ---
+// This query finds faculty whose home dept/prog matches the admin's assignments
+$faculty_query_parts = [];
+$params = [];
+$types = "";
+foreach ($admin_assignments as $assignment) {
+    $faculty_query_parts[] = "(department = ? AND program = ?)";
+    $params[] = $assignment['department_name'];
+    $params[] = $assignment['program_name'];
+    $types .= "ss";
+}
+$faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+$faculty_query = "SELECT idnumber, first_name, mid_name, last_name FROM faculty 
+                  WHERE ($faculty_where_sql) 
+                  ORDER BY last_name ASC";
+
+$faculty_list_stmt = $conn->prepare($faculty_query);
+$faculty_list_stmt->bind_param($types, ...$params);
+$faculty_list_stmt->execute();
+$faculty_list_result = $faculty_list_stmt->get_result();
+// --- END FIX ---
+
+
 // --- Default values for display ---
 $reviewer_name = "N/A";
 $reviewer_position = "N/A";
@@ -65,21 +86,29 @@ $prepared_by_name = "N/A";
 $prepared_by_position = "N/A";
 
 // ✅ Get Reviewer Info (Dean/Chairperson)
-$placeholders = implode("','", array_map(function ($val) use ($conn) {
-  return $conn->real_escape_string($val);
-}, $admin_departments));
+// We need just the department names for this part
+$admin_departments_only = array_unique(array_column($admin_assignments, 'department_name'));
+$placeholders = implode("','", array_map([$conn, 'real_escape_string'], $admin_departments_only));
 $reviewer_query_str = "
     SELECT first_name, mid_name, last_name, position 
     FROM admin 
     WHERE idnumber IN (
         SELECT admin_idnumber FROM admin_departments WHERE department_name IN ('$placeholders')
     ) AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%' OR position LIKE 'Director%')
+    ORDER BY CASE 
+        WHEN position LIKE 'Dean%' THEN 1
+        WHEN position LIKE 'Chair%' THEN 2
+        WHEN position LIKE 'Program Chair%' THEN 3
+        WHEN position LIKE 'Director%' THEN 4
+        ELSE 5
+    END
     LIMIT 1";
 
 $reviewer_result = $conn->query($reviewer_query_str);
 if ($reviewer_result && $rev_row = $reviewer_result->fetch_assoc()) {
-  $reviewer_name = trim("{$rev_row['first_name']} {$rev_row['mid_name']} {$rev_row['last_name']}");
-  $reviewer_position = $rev_row['position'];
+    $middle_initial_rev = !empty($rev_row['mid_name']) ? ' ' . substr($rev_row['mid_name'], 0, 1) . '.' : '';
+    $reviewer_name = strtoupper(trim("{$rev_row['first_name']}{$middle_initial_rev} {$rev_row['last_name']}"));
+    $reviewer_position = $rev_row['position'];
 }
 
 // ✅ Get Logged-in Admin Info (for "Prepared by")
@@ -88,12 +117,14 @@ $admin_info_query->bind_param("s", $admin_id);
 $admin_info_query->execute();
 $admin_info_query->bind_result($a_fname, $a_mname, $a_lname, $a_position);
 if ($admin_info_query->fetch()) {
-  $prepared_by_name = trim("$a_fname $a_mname $a_lname");
-  $prepared_by_position = $a_position;
+    $middle_initial = !empty($a_mname) ? ' ' . substr($a_mname, 0, 1) . '.' : '';
+    $prepared_by_name = strtoupper(trim("$a_fname $middle_initial $a_lname"));
+    $prepared_by_position = $a_position;
 }
 $admin_info_query->close();
-
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -354,7 +385,7 @@ $admin_info_query->close();
       ?>
 
       <div class="report-container">
-        
+
         <div class="report-header">INDIVIDUAL FACULTY EVALUATION REPORT</div>
 
         <div class="section-title">A. Faculty Information</div>
@@ -526,7 +557,7 @@ $admin_info_query->close();
                 </tr>
                 <tr>
                   <td class="label">Name:</td>
-                  <td><?= htmlspecialchars($reviewer_name) ?></td>
+                  <td><?= htmlspecialchars($prepared_by_name) ?></td>
                 </tr>
                 <tr>
                   <td class="label">Date:</td>

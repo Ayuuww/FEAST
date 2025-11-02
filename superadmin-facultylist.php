@@ -1,6 +1,6 @@
 <?php
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php';
 
 // Check if the user is logged in and is a superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
@@ -8,32 +8,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-// Fetch student data for listing
-$query = "SELECT * FROM faculty  WHERE role = 'faculty'";
+// Fetch all faculty members
+$query = "SELECT * FROM faculty WHERE role = 'faculty'";
 $result = mysqli_query($conn, $query);
-
-
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-        
-  <!-- Head -->
-  <?php include 'head.php' ?>
-  <!-- End Head -->
-   
+  <?php include 'head.php'; ?>
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
+  <?php include 'superadmin-header.php'; ?>
+  <?php include 'superadmin-sidebar.php'; ?>
 
   <main id="main" class="main">
 
@@ -46,69 +35,83 @@ $result = mysqli_query($conn, $query);
           <li class="breadcrumb-item active">List</li>
         </ol>
       </nav>
-    </div><!-- End Page Title -->
+    </div>
 
-    <section class="section ">
+    <section class="section">
       <div class="row">
         <div class="col-lg-12">
 
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
+              <h5 class="card-title">Faculty Information</h5>
 
-              <!-- Table with stripped rows -->
-              <table class="table datatable table-hover">
-                <thead>
+              <?php if (isset($_SESSION['msg'])): ?>
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                      icon: '<?= $_SESSION['msg_type'] === 'success' ? 'success' : 'info' ?>',
+                      title: '<?= htmlspecialchars($_SESSION['msg']) ?>',
+                      showConfirmButton: false,
+                      timer: 1500,
+                      timerProgressBar: true
+                    });
+                  });
+                </script>
+                <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
+              <?php endif; ?>
+
+              <table class="table datatable table-hover align-middle">
+                <thead class="table-light text-center">
                   <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
+                    <th>ID Number</th>
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
                     <th>Academic Rank</th>
                     <th>Department</th>
+                    <th>Program</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th width="120px">Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <?php
-                    while ($row = mysqli_fetch_assoc($result)) {
-                    ?>
-                      <td class="text-capitalize"><?php echo $row['idnumber']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
-                      <td class="text-uppercase"><?php echo $row['department']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['status']; ?></td>
+                <tbody class="text-center">
+                  <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($row['idnumber']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['first_name']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['mid_name']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['last_name']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['faculty_rank']); ?></td>
+                      <td class="text-uppercase"><?= htmlspecialchars($row['department']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['program'] ?? '—'); ?></td>
                       <td>
-                        <a href="superadmin-editfaculty.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                  </tr>
-                <?php
-                    }
-                ?>
-                </tr>
+                        <span class="badge bg-<?= $row['status'] === 'active' ? 'success' : 'secondary'; ?>">
+                          <?= htmlspecialchars($row['status']); ?>
+                        </span>
+                      </td>
+                      <td>
+                        <a href="superadmin-editfaculty.php?id=<?= urlencode($row['idnumber']); ?>"
+                          class="btn btn-warning btn-sm">
+                          <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                      </td>
+                    </tr>
+                  <?php endwhile; ?>
                 </tbody>
               </table>
-              <!-- End Table with stripped rows -->
-
             </div>
           </div>
 
         </div>
       </div>
     </section>
+  </main>
 
-  </main><!-- End #main -->
+  <?php include 'footer.php'; ?>
 
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
-  <!-- End Footer -->
-
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
 
   <!-- Vendor JS Files -->
   <script src="vendors/apexcharts/apexcharts.min.js"></script>
@@ -122,6 +125,9 @@ $result = mysqli_query($conn, $query);
 
   <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- SweetAlert2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 

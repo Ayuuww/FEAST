@@ -26,35 +26,63 @@ class PDF_EXTENDED extends FPDF
 
     // Get department info dynamically
     if ($this->conn && !empty($this->department)) {
-      $dept = mysqli_real_escape_string($this->conn, $this->department);
-      $query = "SELECT * FROM department_info WHERE department_name = '$dept' LIMIT 1";
-      $result = $this->conn->query($query);
+      // Use prepared statement to prevent SQL injection
+      $stmt = $this->conn->prepare("SELECT * FROM department_info WHERE department_name = ? LIMIT 1");
+      $stmt->bind_param("s", $this->department);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
       if ($result && $row = $result->fetch_assoc()) {
-        $college_name = strtoupper($row['college_name']);
+        $college_name = strtoupper($row['department_name']); // Using department_name as requested
         $college_website = $row['website'] ?: $college_website;
         $college_phone = $row['phone'] ?: $college_phone;
         $college_email = $row['email'] ?: $college_email;
       }
+      $stmt->close();
     }
 
     // Insert logos
     $this->Image($logo_left, 9, 10, 32);
-    $this->Image($logo_right, 35, 10, 20);
+    $this->Image($logo_right, 35, 10, 20); // This logo ends at X=55
+
+
+    // --- ✅ START OF FIX ---
+
+    // Set a left margin for all text, to the right of the logos
+    $text_x_position = 58;
+    // Calculate remaining width: 210mm (A4) - 10mm (right margin) - 58mm (left start)
+    $text_width = 142;
 
     // University name
     $this->SetFont('Arial', 'B', 10);
-    $this->Cell(190, 7, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 1, 'C');
-    $this->Cell(195, 2, 'NORTH LA UNION CAMPUS Bacnotan, La Union, Philippines', 0, 1, 'C');
+    $this->SetX($text_x_position); // Set X position
+    // Use MultiCell to allow text to wrap if it's somehow too long
+    $this->MultiCell($text_width, 7, 'DON MARIANO MARCOS MEMORIAL STATE UNIVERSITY', 0, 'L');
+
+    // Campus name
+    $this->SetX($text_x_position); // Set X position
+    $this->MultiCell($text_width, 2, 'NORTH LA UNION CAMPUS Bacnotan, La Union, Philippines', 0, 'L');
 
     // College name
     $this->SetFont('Arial', 'B', 12);
-    $this->Cell(220, 7, strtoupper($college_name), 0, 1, 'C');
+    $this->SetX($text_x_position); // Set X position
+    // Use MultiCell. This will make long names wrap to the next line.
+    $this->MultiCell($text_width, 7, strtoupper($college_name), 0, 'L');
 
-    // Website, phone, email
+    // Contact info
+    $contact_parts = [];
+    if (!empty($college_website)) $contact_parts[] = $college_website;
+    if (!empty($college_phone))   $contact_parts[] = $college_phone;
+    if (!empty($college_email))   $contact_parts[] = $college_email;
+    $contact_string = implode(' | ', $contact_parts);
+
     $this->SetFont('Arial', '', 9);
     $this->SetTextColor(0, 0, 255);
-    $this->Cell(195, 5, $college_website . ' | ' . $college_phone . ' | ' . $college_email, 0, 1, 'C');
+    $this->SetX($text_x_position); // Set X position
+    $this->MultiCell($text_width, 5, $contact_string, 0, 'L');
     $this->SetTextColor(0, 0, 0);
+
+    // --- ✅ END OF FIX ---
 
     $this->Ln(8);
   }

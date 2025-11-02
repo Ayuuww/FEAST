@@ -16,7 +16,13 @@ $prep_stmt->bind_param("s", $superadmin_id);
 $prep_stmt->execute();
 $prep_stmt->bind_result($prep_fname, $prep_mname, $prep_lname);
 if ($prep_stmt->fetch()) {
-  $prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
+
+  $middle_initial = '';
+  if (!empty($prep_mname)) {
+    $middle_initial = ' ' . substr($prep_mname, 0, 1) . '.'; // Add space, initial, and period
+  }
+
+  $prepared_by_name = strtoupper("$prep_fname $middle_initial $prep_lname");
 }
 $prep_stmt->close();
 

@@ -108,7 +108,13 @@ $admin_info_query->bind_param("s", $admin_id);
 $admin_info_query->execute();
 $admin_info_query->bind_result($a_fname, $a_mname, $a_lname, $a_position);
 if ($admin_info_query->fetch()) {
-    $prepared_by_name = trim("$a_fname $a_mname $a_lname");
+
+    $middle_initial = '';
+    if (!empty($a_mname)) {
+        $middle_initial = ' ' . substr($a_mname, 0, 1) . '.'; // Add space, initial, and period
+    }
+
+    $prepared_by_name = strtoupper("$a_fname $middle_initial $a_lname");
     $prepared_by_position = $a_position;
 }
 $admin_info_query->close();
@@ -325,7 +331,7 @@ $pdf->Cell($value_width, 12, '', 'R', 1);
 $pdf->SetX($right_box_start);
 $pdf->Cell($label_width, 7, 'Name:', 'L', 0);
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell($value_width, 7, $reviewer_name, 'R', 1);
+$pdf->Cell($value_width, 7, $prepared_by_name, 'R', 1);
 
 $pdf->SetFont('Arial', '', 10);
 $pdf->SetX($right_box_start);

@@ -1,39 +1,42 @@
 <?php
-
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
+// ✅ Check if user is logged in and is superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Fetch super admin data for listing
-$query = "SELECT * FROM superadmin ";
+// ✅ Fetch all superadmins
+$query = "
+  SELECT 
+    idnumber,
+    first_name,
+    mid_name,
+    last_name,
+    faculty_rank,
+    department,
+    program,
+    position,
+    status
+  FROM superadmin
+  ORDER BY last_name ASC
+";
 $result = mysqli_query($conn, $query);
-
-
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-        
-  <!-- Head -->
-  <?php include 'head.php' ?>
-  <!-- End Head -->
-   
+  <?php include 'head.php'; ?>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-
-  <?php include 'superadmin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
+  <?php include 'superadmin-header.php'; ?>
+  <?php include 'superadmin-sidebar.php'; ?>
 
   <main id="main" class="main">
 
@@ -48,83 +51,105 @@ $result = mysqli_query($conn, $query);
       </nav>
     </div><!-- End Page Title -->
 
-    <!-- List of Super Admins -->
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
 
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
+              <h5 class="card-title">List of Super Admin Accounts</h5>
 
-              <!-- Table with stripped rows -->
-              <table class="table datatable table-hover">
-                <thead>
+              <table id="superadminTable" class="table table-hover align-middle datatable">
+                <thead class="table-light text-center">
                   <tr>
-                    <th>
-                      <b>ID Number</b>
-                    </th>
-                    <th>First Name</th>
-                    <th>Middle Name</th>
-                    <th>Last Name</th>
-                    <th>Academic Rank</th>
+                    <th>ID Number</th>
+                    <th>Full Name</th>
+                    <th>Faculty Rank</th>
                     <th>Department</th>
+                    <th>Program</th>
                     <th>Position</th>
                     <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <?php
-                    while ($row = mysqli_fetch_assoc($result)) {
-                    ?>
-                      <td class="text-capitalize"><?php echo $row['idnumber']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['first_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['mid_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['last_name']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['faculty_rank']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['department']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['position']; ?></td>
-                      <td class="text-capitalize"><?php echo $row['status']; ?></td>
+                  <?php while ($row = mysqli_fetch_assoc($result)): ?>
+                    <tr>
+                      <td><?= htmlspecialchars($row['idnumber']); ?></td>
+                      <td class="text-capitalize">
+                        <?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']); ?>
+                      </td>
+                      <td><?= htmlspecialchars($row['faculty_rank'] ?? '—'); ?></td>
+
+                      <!-- Department (College) -->
                       <td>
-                        <a href="superadmin-editsuperadmin.php?id=<?php echo $row['idnumber']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                  </tr>
-                <?php
-                    }
-                ?>
-                </tr>
+                        <?php if (!empty($row['department'])): ?>
+                          <?php foreach (explode(', ', $row['department']) as $dept): ?>
+                            <span class="badge bg-primary mb-1"><?= htmlspecialchars($dept); ?></span><br>
+                          <?php endforeach; ?>
+                        <?php else: ?>
+                          —
+                        <?php endif; ?>
+                      </td>
+
+                      <!-- Program -->
+                      <td>
+                        <?php if (!empty($row['program'])): ?>
+                          <?php foreach (explode(', ', $row['program']) as $prog): ?>
+                            <span class="badge bg-info text-dark mb-1"><?= htmlspecialchars($prog); ?></span><br>
+                          <?php endforeach; ?>
+                        <?php else: ?>
+                          —
+                        <?php endif; ?>
+                      </td>
+
+                      <td><?= htmlspecialchars($row['position'] ?? '—'); ?></td>
+
+                      <td>
+                        <?php if ($row['status'] === 'active'): ?>
+                          <span class="badge bg-success">Active</span>
+                        <?php else: ?>
+                          <span class="badge bg-secondary">Inactive</span>
+                        <?php endif; ?>
+                      </td>
+
+                      <td>
+                        <a href="superadmin-editsuperadmin.php?id=<?= urlencode($row['idnumber']); ?>"
+                          class="btn btn-warning btn-sm">
+                          <i class="bi bi-pencil-square"></i> Edit
+                        </a>
+                      </td>
+                    </tr>
+                  <?php endwhile; ?>
                 </tbody>
               </table>
-              <!-- End Table with stripped rows -->
 
             </div>
           </div>
 
         </div>
       </div>
-    </section><!-- End List of Super Admins -->
+    </section>
+  </main>
 
-  </main><!-- End #main -->
+  <?php include 'footer.php'; ?>
 
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php'?>
-  <!-- End Footer -->
-
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
 
   <!-- Vendor JS Files -->
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- ✅ Ensure DataTable initializes -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const table = document.querySelector('#superadminTable');
+      if (table) new simpleDatatables.DataTable(table);
+    });
+  </script>
 
 </body>
 

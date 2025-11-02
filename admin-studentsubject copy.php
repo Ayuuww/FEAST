@@ -1,7 +1,6 @@
 <?php
 session_start();
 include 'conn/conn.php';
-mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
@@ -31,170 +30,9 @@ $current_period = $current_period_result->fetch_assoc();
 $current_academic_year = $current_period['academic_year'] ?? null;
 $current_semester = $current_period['semester'] ?? null;
 
-$success = 0;
-$_SESSION['detailed_errors'] = [];
+// --- Fetch data for the form ---
 
-// --- Handle Manual Form Submission ---
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
-  if (!$current_academic_year || !$current_semester) {
-    $_SESSION['msg'] = "Cannot assign subjects because the current academic period is not set.";
-    $_SESSION['msg_type'] = 'danger';
-    header("Location: admin-studentsubject.php");
-    exit();
-  }
-
-  $student_ids = $_POST['student_id'] ?? [];
-  $subject_codes = $_POST['subject_code'] ?? [];
-
-  if (empty($student_ids) || empty($subject_codes)) {
-    $_SESSION['msg'] = "You must select at least one student and one subject.";
-    $_SESSION['msg_type'] = 'warning';
-    header("Location: admin-studentsubject.php");
-    exit();
-  }
-
-  foreach ($student_ids as $student_id) {
-    foreach ($subject_codes as $subject_code) {
-      // (Your existing, correct assignment logic is here)
-      // This is a reusable function now
-      assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
-    }
-  }
-
-  if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-    $_SESSION['msg'] = "Assigned **$success** subject(s) manually, but some had issues.";
-    $_SESSION['msg_type'] = 'warning';
-  } elseif ($success > 0) {
-    $_SESSION['msg'] = "**$success** subject(s) assigned successfully.";
-    $_SESSION['msg_type'] = 'success';
-  } else {
-    $_SESSION['msg'] = "No new subjects were assigned. They may have already been assigned.";
-    $_SESSION['msg_type'] = 'info';
-  }
-
-  header("Location: admin-studentsubject.php");
-  exit();
-}
-
-
-// --- ✅ NEW: Handle Bulk CSV Upload ---
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])) {
-  if (!$current_academic_year || !$current_semester) {
-    $_SESSION['msg'] = "Cannot assign subjects because the current academic period is not set.";
-    $_SESSION['msg_type'] = 'danger';
-    header("Location: admin-studentsubject.php");
-    exit();
-  }
-
-  if (isset($_FILES['bulk_file']) && $_FILES['bulk_file']['error'] == UPLOAD_ERR_OK) {
-    $file_tmp_path = $_FILES['bulk_file']['tmp_name'];
-    $file_name = $_FILES['bulk_file']['name'];
-    $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
-
-    if ($file_ext != 'csv') {
-      $_SESSION['msg'] = "Upload failed. Only .csv files are allowed.";
-      $_SESSION['msg_type'] = 'danger';
-      header("Location: admin-studentsubject.php");
-      exit();
-    }
-
-    if (($handle = fopen($file_tmp_path, "r")) !== FALSE) {
-      // Skip the header row (student_id, subject_code)
-      fgetcsv($handle);
-
-      $line = 1;
-      while (($row = fgetcsv($handle)) !== FALSE) {
-        $line++;
-        if (count($row) < 2) {
-          $_SESSION['detailed_errors'][] = "⚠️ Line $line: Skipping row, expected 2 columns but found " . count($row);
-          continue;
-        }
-
-        $student_id = trim($row[0]);
-        $subject_code = trim($row[1]);
-
-        if (empty($student_id) || empty($subject_code)) {
-          $_SESSION['detailed_errors'][] = "⚠️ Line $line: Skipping row, student_id or subject_code is empty.";
-          continue;
-        }
-
-        // Use the same assignment logic as the manual form
-        assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
-      }
-      fclose($handle);
-
-      // Set final session messages
-      if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-        $_SESSION['msg'] = "Uploaded file processed. Assigned **$success** subject(s), but some rows had issues.";
-        $_SESSION['msg_type'] = 'warning';
-      } elseif ($success > 0) {
-        $_SESSION['msg'] = "File upload successful. **$success** subject(s) assigned.";
-        $_SESSION['msg_type'] = 'success';
-      } else {
-        $_SESSION['msg'] = "No new subjects were assigned from the file. They may have already been assigned.";
-        $_SESSION['msg_type'] = 'info';
-      }
-    } else {
-      $_SESSION['msg'] = "Error reading the uploaded CSV file.";
-      $_SESSION['msg_type'] = 'danger';
-    }
-  } else {
-    $_SESSION['msg'] = "File upload failed. Error code: " . $_FILES['bulk_file']['error'];
-    $_SESSION['msg_type'] = 'danger';
-  }
-  header("Location: admin-studentsubject.php");
-  exit();
-}
-
-
-/**
- * ✅ NEW: Reusable function to assign a subject to a student.
- * This function is used by BOTH the manual and bulk assign logic.
- */
-function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter)
-{
-  // 1. Get subject/instructor details
-  $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ?");
-  $stmt_subj->bind_param("s", $subject_code);
-  $stmt_subj->execute();
-  $subject_data = $stmt_subj->get_result()->fetch_assoc();
-  $stmt_subj->close();
-
-  if ($subject_data) {
-    $faculty_id = $subject_data['faculty_id'] ?? null;
-    $admin_id = $subject_data['admin_id'] ?? null;
-    $instructor_id = $faculty_id ?: $admin_id;
-
-    if (!$instructor_id) {
-      $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** has no assigned instructor.";
-      return;
-    }
-
-    // 2. Check if it already exists
-    $check_stmt = $conn->prepare("SELECT 1 FROM student_subject WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?");
-    $check_stmt->bind_param("ssss", $student_id, $subject_code, $ay, $sem);
-    $check_stmt->execute();
-    if ($check_stmt->get_result()->num_rows === 0) {
-      // 3. Insert if it doesn't exist
-      $insert_stmt = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id, admin_id, academic_year, semester) VALUES (?, ?, ?, ?, ?, ?)");
-      $insert_stmt->bind_param("ssssss", $student_id, $subject_code, $faculty_id, $admin_id, $ay, $sem);
-      if ($insert_stmt->execute()) {
-        $success_counter++;
-      } else {
-        $_SESSION['detailed_errors'][] = "❌ DB Error assigning **$subject_code** to **$student_id**.";
-      }
-      $insert_stmt->close();
-    } else {
-      $_SESSION['detailed_errors'][] = "⚠️ Subject **$subject_code** already assigned to **$student_id** for this period.";
-    }
-    $check_stmt->close();
-  } else {
-    $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** (for student **$student_id**) does not exist in the database.";
-  }
-}
-
-
-// --- Fetch data for the form (existing code) ---
+// Fetch all students and group them by department
 $student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.department, s.section FROM student s WHERE s.role = 'student' ORDER BY s.department, s.last_name ASC";
 $student_result = $conn->query($student_query);
 $students_by_dept = [];
@@ -202,6 +40,7 @@ while ($row = $student_result->fetch_assoc()) {
   $students_by_dept[$row['department']][] = $row;
 }
 
+// Fetch all subjects and group them by instructor
 $subject_query = "
     SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
            COALESCE(f.first_name, a.first_name) AS first_name,
@@ -218,8 +57,81 @@ while ($subject = $subject_result->fetch_assoc()) {
   $subjects_by_faculty[$instructor][] = $subject;
 }
 ksort($subjects_by_faculty);
-?>
 
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
+  if (!$current_academic_year || !$current_semester) {
+    $_SESSION['msg'] = "Cannot assign subjects because the current academic period is not set.";
+    $_SESSION['msg_type'] = 'danger';
+    header("Location: admin-studentsubject.php");
+    exit();
+  }
+
+  $student_ids = $_POST['student_id'] ?? [];
+  $subject_codes = $_POST['subject_code'] ?? [];
+  $success = 0;
+  $_SESSION['detailed_errors'] = [];
+
+  if (empty($student_ids) || empty($subject_codes)) {
+    $_SESSION['msg'] = "You must select at least one student and one subject.";
+    $_SESSION['msg_type'] = 'warning';
+    header("Location: admin-studentsubject.php");
+    exit();
+  }
+
+  foreach ($student_ids as $student_id) {
+    foreach ($subject_codes as $subject_code) {
+      $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ?");
+      $stmt_subj->bind_param("s", $subject_code);
+      $stmt_subj->execute();
+      $subject_data = $stmt_subj->get_result()->fetch_assoc();
+      $stmt_subj->close();
+
+      if ($subject_data) {
+        $faculty_id = $subject_data['faculty_id'] ?? null;
+        $admin_id = $subject_data['admin_id'] ?? null;
+        $instructor_id = $faculty_id ?: $admin_id;
+
+        if (!$instructor_id) {
+          $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** has no assigned instructor.";
+          continue;
+        }
+
+        $check_stmt = $conn->prepare("SELECT 1 FROM student_subject WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?");
+        $check_stmt->bind_param("ssss", $student_id, $subject_code, $current_academic_year, $current_semester);
+        $check_stmt->execute();
+        if ($check_stmt->get_result()->num_rows === 0) {
+          $insert_stmt = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id, admin_id, academic_year, semester) VALUES (?, ?, ?, ?, ?, ?)");
+          $insert_stmt->bind_param("ssssss", $student_id, $subject_code, $faculty_id, $admin_id, $current_academic_year, $current_semester);
+          if ($insert_stmt->execute()) {
+            $success++;
+          } else {
+            $_SESSION['detailed_errors'][] = "❌ DB Error assigning **$subject_code** to **$student_id**.";
+          }
+          $insert_stmt->close();
+        } else {
+          $_SESSION['detailed_errors'][] = "⚠️ Subject **$subject_code** already assigned to **$student_id** for this period.";
+        }
+        $check_stmt->close();
+      }
+    }
+  }
+
+  if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
+    $_SESSION['msg'] = "Assigned **$success** subject(s) successfully, but some had issues.";
+    $_SESSION['msg_type'] = 'warning';
+  } elseif ($success > 0) {
+    $_SESSION['msg'] = "**$success** subject(s) assigned successfully.";
+    $_SESSION['msg_type'] = 'success';
+  } else {
+    $_SESSION['msg'] = "No new subjects were assigned. They may have already been assigned.";
+    $_SESSION['msg_type'] = 'info';
+  }
+
+  header("Location: admin-studentsubject.php");
+  exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -274,40 +186,17 @@ ksort($subjects_by_faculty);
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
-
-          <div class="card shadow-sm p-4 mb-4">
+          <div class="card shadow-sm p-4">
             <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via CSV Upload</h5>
-              <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
+              <h5 class="card-title mb-4">Assign Subjects for A.Y. <?= htmlspecialchars($current_academic_year ?? 'N/A') ?> / <?= htmlspecialchars($current_semester ?? 'N/A') ?></h5>
+
+              <form method="POST" action="" class="row g-4">
                 <?php if (!$current_academic_year || !$current_semester): ?>
                   <div class="col-12">
                     <div class="alert alert-danger"><b>Warning:</b> Current academic period is not set. Please contact the superadmin.</div>
                   </div>
                 <?php endif; ?>
-                <div class="col-md-9">
-                  <label for="bulk_file" class="form-label">Upload CSV File</label>
-                  <input type="file" name="bulk_file" class="form-control" id="bulk_file" accept=".csv" required <?= (!$current_academic_year || !$current_semester) ? 'disabled' : '' ?>>
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                  <button type="submit" name="upload_bulk_assign" class="btn btn-primary w-100" <?= (!$current_academic_year || !$current_semester) ? 'disabled' : '' ?>>
-                    <i class="bi bi-upload"></i> Upload and Assign
-                  </button>
-                </div>
-                <div class="col-12">
-                  <p class="small text-muted mb-0">
-                    File must be a .csv with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>.
-                    <a href="templates/student_subject_template.csv" download>Download Template</a>
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
 
-          <div class="card shadow-sm p-4">
-            <div class="card-body">
-              <h5 class="card-title mb-4">Manual Assignment for A.Y. <?= htmlspecialchars($current_academic_year ?? 'N/A') ?> / <?= htmlspecialchars($current_semester ?? 'N/A') ?></h5>
-
-              <form method="POST" action="" class="row g-4">
                 <div class="col-md-3">
                   <label for="departmentFilter" class="form-label">Filter Students by Department</label>
                   <select id="departmentFilter" class="form-select">

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'conn/conn.php'; // This connects to your database
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
@@ -9,22 +10,23 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get all departments assigned to the logged-in admin
-$admin_departments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// --- ✅ START FIX: Get all department/program pairs assigned to this admin ---
+$admin_assignments = [];
+$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
 if ($stmt_admin_dept) {
   $stmt_admin_dept->bind_param("s", $admin_id);
   $stmt_admin_dept->execute();
   $result = $stmt_admin_dept->get_result();
   while ($row = $result->fetch_assoc()) {
-    $admin_departments[] = $row['department_name'];
+    $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
   }
   $stmt_admin_dept->close();
 }
+// --- END FIX ---
 
 // Handle case where admin has no assigned departments
-if (empty($admin_departments)) {
-  die("You are not assigned to any department. Please contact the Superadmin.");
+if (empty($admin_assignments)) {
+  die("You are not assigned to any department or program. Please contact the Superadmin.");
 }
 
 // Get unique semesters and academic years for filters
@@ -75,9 +77,27 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             <select class="form-select" name="faculty_id" id="faculty_id" required>
               <option value="" disabled <?= empty($selected_faculty_id) ? 'selected' : '' ?>>-- Choose Faculty --</option>
               <?php
-              $placeholders = implode("','", array_map([$conn, 'real_escape_string'], $admin_departments));
-              $faculty_query = "SELECT idnumber, first_name, mid_name, last_name FROM faculty WHERE department IN ('$placeholders') ORDER BY last_name ASC";
-              $faculty_result = $conn->query($faculty_query);
+              // --- ✅ START FIX: Build complex query to get faculty ---
+              // This query finds faculty whose home dept/prog matches the admin's assignments
+              $faculty_query_parts = [];
+              $params = [];
+              $types = "";
+              foreach ($admin_assignments as $assignment) {
+                $faculty_query_parts[] = "(department = ? AND program = ?)";
+                $params[] = $assignment['department_name'];
+                $params[] = $assignment['program_name'];
+                $types .= "ss";
+              }
+              $faculty_where_sql = implode(' OR ', $faculty_query_parts);
+
+              $faculty_query = "SELECT idnumber, first_name, mid_name, last_name FROM faculty 
+                                              WHERE ($faculty_where_sql) 
+                                              ORDER BY last_name ASC";
+
+              $stmt_faculty = $conn->prepare($faculty_query);
+              $stmt_faculty->bind_param($types, ...$params);
+              $stmt_faculty->execute();
+              $faculty_result = $stmt_faculty->get_result();
               while ($row = $faculty_result->fetch_assoc()) {
                 $full_name = htmlspecialchars($row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name']);
                 $selected = ($selected_faculty_id == $row['idnumber']) ? "selected" : "";
@@ -144,14 +164,20 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
         $admin_eval_where_sql = implode(' AND ', $admin_eval_where_clauses);
 
         // --- Fetch all data needed for the report ---
-        $fname = $mname = $lname = $dept = $rank = '';
-        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+        $fname = $mname = $lname = $dept = $program = $rank = '';
+        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
         $stmt->bind_param("s", $faculty_id);
         $stmt->execute();
-        $stmt->bind_result($fname, $mname, $lname, $dept, $rank);
+        $stmt->bind_result($fname, $mname, $lname, $dept, $program, $rank);
         $stmt->fetch();
         $stmt->close();
-        $full_name = strtoupper(trim("$fname $mname $lname"));
+
+        $middle_initial = '';
+        if (!empty($mname)) {
+          $middle_initial = ' ' . substr($mname, 0, 1) . '.'; // Add space, initial, and period
+        }
+
+        $full_name = strtoupper(trim("$fname $middle_initial $lname"));
         $dept_display = strtoupper($dept);
         $rank_display = ucwords($rank);
 
@@ -191,7 +217,13 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
         $stmt_supervisor->execute();
         $stmt_supervisor->bind_result($sfn, $smn, $sln);
         if ($stmt_supervisor->fetch()) {
-          $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
+
+          $middle_initial = '';
+          if (!empty($smn)) {
+            $middle_initial = ' ' . substr($smn, 0, 1) . '.'; // Add space, initial, and period
+          }
+
+          $evaluator_name = strtoupper(trim("$sfn $middle_initial $sln"));
         }
         $stmt_supervisor->close();
       ?>

@@ -460,6 +460,8 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                       </div>
 
                       <input type="hidden" name="student_id" value="<?= $_SESSION['idnumber'] ?>">
+                      <input type="hidden" name="is_anonymous" id="is_anonymous" value="no">
+
 
                       <div class="row mb-3">
                         <div class="col-md-6">
@@ -586,29 +588,56 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
       document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
           title: 'Evaluation Submitted!',
-          text: "Would you like to print your evaluation now?",
+          text: "Thank you for your feedback.",
           icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Print Now',
-          cancelButtonText: 'Print Later',
-          reverseButtons: false
+          showCancelButton: false, // Removed cancel button
+          confirmButtonText: 'Print', // Changed button text
         }).then((result) => {
           if (result.isConfirmed) {
-            window.open('student-evaluation-print-fpdf.php', '_blank'); // Open in new tab
-          } else {
-            Swal.fire({
-              icon: 'success',
-              title: 'Saved!',
-              text: 'You can print your evaluation later. Check on Evaluated Subject',
-              confirmButtonText: 'OK'
-            });
+            // Open print page in a new tab
+            window.open('student-evaluation-print-fpdf.php', '_blank');
           }
+          // In either case (print or close), reload the page
+          window.location.reload();
         });
       });
     </script>
-    <?php unset($_SESSION['evaluation_success']); // Unset after SweetAlert is shown 
+    <?php
+    unset($_SESSION['evaluation_success']);
+    // unset($_SESSION['print_data']); // Clear the print data
     ?>
   <?php endif; ?>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('form[action="submit-evaluation.php"]');
+      const anonInput = document.getElementById('is_anonymous');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault(); // prevent immediate form submission
+
+        Swal.fire({
+          title: 'Submit Anonymously?',
+          text: 'If you choose Yes, your name and ID will be hidden in the evaluation printout.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Be Anonymous',
+          cancelButtonText: 'No, Show My Name',
+          reverseButtons: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            anonInput.value = 'yes';
+          } else {
+            anonInput.value = 'no';
+          }
+
+          // Now actually submit the form
+          form.submit();
+        });
+      });
+    });
+  </script>
+
 
 </body>
 

@@ -9,6 +9,7 @@ $mid_name   = mysqli_real_escape_string($conn, $_POST['mid_name']);
 $last_name  = mysqli_real_escape_string($conn, $_POST['last_name']);
 $password   = trim($_POST['password']); // don’t escape before hashing
 $department = mysqli_real_escape_string($conn, $_POST['department']);
+$program    = mysqli_real_escape_string($conn, $_POST['program']); // ✅ ADDED
 $section    = mysqli_real_escape_string($conn, $_POST['section']);
 
 // ✅ Hash password before saving
@@ -29,9 +30,12 @@ if ($exists > 0) {
     exit();
 }
 
-// Insert new student (store hashed password!)
-$stmt = $conn->prepare("INSERT INTO student (idnumber, first_name, mid_name, last_name, password, department, section) VALUES (?, ?, ?, ?, ?, ?, ?)");
-$stmt->bind_param("sssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed, $department, $section);
+// Insert new student
+// ✅ MODIFIED: Added `program` column and one `?`
+$stmt = $conn->prepare("INSERT INTO student (idnumber, first_name, mid_name, last_name, password, department, program, section) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+
+// ✅ MODIFIED: Added `$program` and changed type string to "ssssssss"
+$stmt->bind_param("ssssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed, $department, $program, $section);
 
 if ($stmt->execute()) {
     $_SESSION['msg'] = "Student account has been created successfully.";

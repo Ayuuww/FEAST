@@ -18,11 +18,11 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 <html lang="en">
 
 <head>
-        
+
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
-   
+
 </head>
 
 <body>
@@ -115,23 +115,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select class="form-select" name="faculty" id="faculty" required>
-                      <option value="" disabled selected>Is this a Faculty?</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                    <label for="faculty">Faculty?</label>
-                  </div>
-                </div>
 
-                <div class="col-md-6" id="department_div" style="display:none;">
+                <div class="col-md-6" id="department_div">
                   <div class="form-floating">
-                    <select class="form-select" name="department" id="department" required>
+                    <select class="form-select" name="department" id="department">
                       <option value="" disabled selected>Select Department</option>
                       <?php
-                      // Make sure you have the database connection active ($conn)
                       $departments = mysqli_query($conn, "SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
                       while ($row = mysqli_fetch_assoc($departments)) {
                         echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
@@ -142,7 +131,18 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <div class="col-md-6" id="faculty_rank_div" style="display:none;">
+
+                <div class="col-md-6" id="program_div">
+                  <div class="form-floating">
+                    <select class="form-select" name="program" id="program">
+                      <option value="" disabled selected>Select Program</option>
+                    </select>
+                    <label for="program">Program</label>
+                  </div>
+                </div>
+
+
+                <div class="col-md-6" id="faculty_rank_div">
                   <div class="form-floating">
                     <select class="form-select" name="faculty_rank" id="faculty_rank">
                       <option value="" disabled selected>-- Select Rank --</option>
@@ -206,35 +206,28 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
     <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
   <?php endif; ?>
 
+  <script src="jquery/jquery-3.6.0.min.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const facultySelect = document.getElementById('faculty');
-      const departmentDiv = document.getElementById('department_div');
-      const departmentSelect = document.getElementById('department');
-      const facultyRankDiv = document.getElementById('faculty_rank_div');
-      const facultyRankSelect = document.getElementById('faculty_rank');
-
-      facultySelect.addEventListener('change', function() {
-        if (this.value === 'Yes') {
-          // Show both department and faculty rank
-          departmentDiv.style.display = 'block';
-          departmentSelect.setAttribute('required', 'required');
-          facultyRankDiv.style.display = 'block';
-          facultyRankSelect.setAttribute('required', 'required');
+    $(document).ready(function() {
+      $('#department').on('change', function() {
+        var department = $(this).val();
+        if (department) {
+          $.ajax({
+            type: 'POST',
+            url: 'fetch_programs.php',
+            data: {
+              department: department
+            },
+            success: function(html) {
+              $('#program').html(html);
+            }
+          });
         } else {
-          // Hide both and reset their values
-          departmentDiv.style.display = 'none';
-          departmentSelect.removeAttribute('required');
-          departmentSelect.selectedIndex = 0; // Reset to default option
-
-          facultyRankDiv.style.display = 'none';
-          facultyRankSelect.removeAttribute('required');
-          facultyRankSelect.selectedIndex = 0; // Reset to default option
+          $('#program').html('<option value="" disabled selected>Select Program</option>');
         }
       });
     });
   </script>
-
 
 </body>
 

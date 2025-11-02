@@ -1,29 +1,30 @@
 <?php
 session_start();
 include 'conn/conn.php';
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Check evaluation switch status
 $evalRes = mysqli_query($conn, "SELECT status FROM evaluation_switch LIMIT 1");
 $evalStatus = mysqli_fetch_assoc($evalRes)['status'] ?? 'off';
 $evaluation_closed = $evalStatus === 'off';
 
-// Check if the user is logged in and is an admin
+// Check if the user is logged in
 if (!isset($_SESSION['idnumber'])) {
-  // User not logged in at all → go to login
   header("Location: pages-login.php");
   exit();
 }
 
 if ($_SESSION['role'] !== 'admin') {
   $_SESSION['access_denied'] = "Access denied. Only admins are allowed to access this page.";
-  header("Location: admin-dashboard.php");
+  // Redirect to the correct dashboard based on role
+  $redirect_page = ($_SESSION['role'] === 'student') ? 'student-dashboard.php' : 'faculty-dashboard.php';
+  header("Location: $redirect_page");
   exit();
 }
 
-
 $evaluator_id = $_SESSION['idnumber'];
 
-// ✅ Get current admin’s position
+// Get current admin’s position
 $admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $admin_info_stmt->bind_param("s", $evaluator_id);
 $admin_info_stmt->execute();
@@ -32,47 +33,38 @@ $admin_data = $admin_result->fetch_assoc();
 $evaluator_position = $admin_data['position'] ?? 'Not Set';
 $admin_info_stmt->close();
 
-// ✅ Get all departments assigned to this admin
-$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Restrict allowed positions
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling
+if (!in_array($evaluator_position, $allowed_positions)) {
+  $_SESSION['access_denied'] = "Access denied. Your position ($evaluator_position) is not allowed to perform faculty evaluations.";
+  header("Location: admin-dashboard.php");
+  exit();
+}
+
+// ✅ --- MODIFICATION 1: Get all department/program pairs assigned to this admin ---
+$dept_stmt = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $evaluator_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
 
-$departments = [];
+$assignments = []; // Array of [dept, prog] pairs
 while ($row = $dept_result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $assignments[] = $row;
 }
 $dept_stmt->close();
 
-// Use the first department for compatibility (or all)
-if (!empty($departments)) {
-  $department = $departments[0];
-} else {
-  // fallback: try to get faculty’s department or a default college name
-  $fallback_dept_query = $conn->prepare("
-      SELECT department_name 
-      FROM adds 
-      WHERE college IN (
-          SELECT college FROM adds LIMIT 1
-      ) LIMIT 1
-  ");
-  $fallback_dept_query->execute();
-  $result = $fallback_dept_query->get_result();
-  $department = ($row = $result->fetch_assoc()) ? $row['department_name'] : 'Unknown';
-  $fallback_dept_query->close();
+// If admin has no assignments, block access
+if (empty($assignments)) {
+  $_SESSION['msg'] = "No departments or programs assigned to your account. Cannot find faculty to evaluate.";
+  $_SESSION['msg_type'] = "error";
+  header("Location: admin-dashboard.php");
+  exit();
 }
+// --- End Modification 1 ---
 
 
-// ✅ Restrict allowed positions
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling to match DB values
-if (!in_array($evaluator_position, $allowed_positions)) {
-  $_SESSION['access_denied'] = "Access denied. Your position ($evaluator_position) is not allowed to perform faculty evaluations.";
-}
-
-
-
-// super admin set academic year and semester to default
-$setting_query = "SELECT semester, academic_year FROM evaluation_settings WHERE id = 1 LIMIT 1";
+// Get current academic year and semester
+$setting_query = "SELECT semester, academic_year FROM evaluation_settings ORDER BY id DESC LIMIT 1";
 $setting_result = $conn->query($setting_query);
 $default_semester = '';
 $default_year = '';
@@ -83,64 +75,103 @@ if ($setting_result && $setting_result->num_rows > 0) {
   $default_year = $setting_row['academic_year'];
 }
 
-// --- IMPORTANT MODIFICATION HERE ---
-// Fetching faculty members from the same department as the admin
-// AND who have NOT been evaluated by this specific admin for the current academic year and semester
-// ✅ Modified query: include all departments assigned to this admin
-if (!empty($departments)) {
-  // Create placeholders (?, ?, ?) dynamically based on department count
-  $placeholders = implode(',', array_fill(0, count($departments), '?'));
 
-  $query = "
-  SELECT
-      f.idnumber,
-      f.first_name,
-      f.mid_name,
-      f.last_name,
-      f.faculty_rank,
-      f.department
-  FROM
-      faculty f
-  JOIN adds a ON f.department = a.department_name
-  WHERE
-      a.department_name IN ($placeholders)
-      AND f.status = 'active'
-      AND NOT EXISTS (
-          SELECT 1
-          FROM admin_evaluation ae
-          WHERE
-              ae.evaluatee_id = f.idnumber
-              AND ae.evaluator_id = ?
-              AND ae.academic_year = ?
-              AND ae.semester = ?
-      )
-  ORDER BY
-      f.last_name, f.first_name
-";
+// --- ✅ MODIFICATION 2: Fetch faculty based on SUBJECT assignments OR HOME PROGRAM ---
+$faculty_list = [];
+$result = false;
 
-  // Merge all bind parameters: departments + evaluator info
-  $types = str_repeat('s', count($departments) + 3);
-  $params = array_merge($departments, [$evaluator_id, $default_year, $default_semester]);
+if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) {
 
-  $stmt = $conn->prepare($query);
+  $params = []; // To store all the values for binding
+  $types = "";  // To store all the types
+
+  // --- Build Query for Part 1: Faculty teaching subjects admin manages ---
+  $subject_where_clauses = [];
+  foreach ($assignments as $assign) {
+    $subject_where_clauses[] = "(s.department = ? AND s.program = ?)";
+    $params[] = $assign['department_name'];
+    $params[] = $assign['program_name'];
+    $types .= "ss"; // two strings
+  }
+  $subject_where_sql = implode(' OR ', $subject_where_clauses);
+
+  $query_part1 = "
+        SELECT f.idnumber
+        FROM faculty f
+        JOIN subject s ON f.idnumber = s.faculty_id
+        WHERE f.status = 'active' AND ($subject_where_sql)
+    ";
+
+  // --- Build Query for Part 2: Faculty whose home dept/prog admin manages ---
+  $home_where_clauses = [];
+  foreach ($assignments as $assign) {
+    $home_where_clauses[] = "(f.department = ? AND f.program = ?)";
+    $params[] = $assign['department_name'];
+    $params[] = $assign['program_name'];
+    $types .= "ss";
+  }
+  $home_where_sql = implode(' OR ', $home_where_clauses);
+
+  $query_part2 = "
+        SELECT f.idnumber
+        FROM faculty f
+        WHERE f.status = 'active' AND ($home_where_sql)
+    ";
+
+  // --- Combine Queries ---
+  // We use UNION to get a single list of unique faculty IDs
+  $combined_query = "
+    SELECT
+        f.idnumber,
+        f.first_name,
+        f.mid_name,
+        f.last_name,
+        f.faculty_rank,
+        f.department AS home_department
+    FROM
+        faculty f
+    WHERE
+        f.idnumber IN (
+            $query_part1
+            UNION
+            $query_part2
+        )
+        
+        -- AND The admin must not have evaluated this faculty for this period
+        AND NOT EXISTS (
+            SELECT 1
+            FROM admin_evaluation ae
+            WHERE
+                ae.evaluatee_id = f.idnumber
+                AND ae.evaluator_id = ?
+                AND ae.academic_year = ?
+                AND ae.semester = ?
+        )
+    ORDER BY
+        f.last_name, f.first_name
+    ";
+
+  // Add the final 3 parameters for the NOT EXISTS clause
+  $params[] = $evaluator_id;
+  $params[] = $default_year;
+  $params[] = $default_semester;
+  $types .= "sss";
+
+  $stmt = $conn->prepare($combined_query);
   $stmt->bind_param($types, ...$params);
   $stmt->execute();
   $result = $stmt->get_result();
-} else {
-  // No departments assigned → empty list
-  $result = false;
-}
 
-// ✅ Remove duplicated execute() — keep result as is
-$faculty_list = [];
-if ($result) {
-  while ($row = $result->fetch_assoc()) {
-    $faculty_list[] = $row;
+  if ($result) {
+    while ($row = $result->fetch_assoc()) {
+      $faculty_list[] = $row;
+    }
+  }
+  if (isset($stmt)) {
+    $stmt->close();
   }
 }
-if (isset($stmt)) {
-  $stmt->close();
-}
+// --- End Modification 2 ---
 
 
 // Display message if set
