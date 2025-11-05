@@ -3,8 +3,8 @@
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -27,10 +27,10 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
+  <?php include 'register-header.php' ?>
 
   <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-sidebar.php' ?>
   <!-- End Sidebar-->
 
   <main id="main" class="main">
@@ -39,7 +39,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
       <h1>Super Admin Creation</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Super Admin</li>
           <li class="breadcrumb-item active">Add New Super Admin</li>
         </ol>
@@ -69,7 +69,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
               <?php endif; ?>
 
               <h5 class="card-title text-center">Create New Super Admin</h5>
-              <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
+              <form class="row g-3 needs-validation" novalidate method="post" action="registercreation.php">
 
                 <div class="col-md-6">
                   <div class="form-floating">

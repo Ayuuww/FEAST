@@ -17,14 +17,14 @@ function tryLogin($conn, $table, $id, $password)
         // Verify hashed or plain password
         if (password_verify($password, $row['password']) || $password === $row['password']) {
 
-            // ✅ Handle Remember My ID
+            // ✅ Handle "Remember My ID"
             if (isset($_POST['remember'])) {
                 setcookie('remember_idnumber', $id, time() + (86400 * 30), "/"); // 30 days
             } else {
                 setcookie('remember_idnumber', '', time() - 3600, "/"); // delete if unchecked
             }
 
-            // Check status only if column exists
+            // ✅ Check account status if present
             if (array_key_exists('status', $row) && $row['status'] !== 'active') {
                 $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
                 $_SESSION['msg_type'] = 'warning';
@@ -32,13 +32,12 @@ function tryLogin($conn, $table, $id, $password)
                 exit();
             }
 
-            // Set session
+            // ✅ Set session
             $_SESSION['idnumber']   = $row['idnumber'];
             $_SESSION['first_name'] = $row['first_name'];
             $_SESSION['last_name']  = $row['last_name'];
             $_SESSION['role']       = $row['role'];
 
-            // Optional extra session fields
             if (isset($row['department']))   $_SESSION['department']   = $row['department'];
             if (isset($row['faculty_rank'])) $_SESSION['faculty_rank'] = $row['faculty_rank'];
             if (isset($row['position']))     $_SESSION['position']     = $row['position'];
@@ -50,13 +49,16 @@ function tryLogin($conn, $table, $id, $password)
             $stmtLog->bind_param("sss", $row['idnumber'], $row['role'], $activity);
             $stmtLog->execute();
 
-            // Redirect by role
-            switch ($_SESSION['role']) {
+            // ✅ Redirect by role
+            switch (strtolower($_SESSION['role'])) {
                 case 'superadmin':
                     header("Location: superadmin-dashboard.php");
                     break;
                 case 'admin':
                     header("Location: admin-dashboard.php");
+                    break;
+                case 'registrar':
+                    header("Location: register-dashboard.php");
                     break;
                 case 'faculty':
                     header("Location: faculty-dashboard.php");
@@ -64,8 +66,9 @@ function tryLogin($conn, $table, $id, $password)
                 case 'student':
                     header("Location: student-dashboard.php");
                     break;
+
                 default:
-                    $_SESSION['msg'] = "Unknown role.";
+                    $_SESSION['msg'] = "Unknown role detected.";
                     $_SESSION['msg_type'] = "error";
                     header("Location: pages-login.php");
             }
@@ -75,17 +78,15 @@ function tryLogin($conn, $table, $id, $password)
     return false;
 }
 
-// Try each role table
-if (tryLogin($conn, "superadmin", $id, $password)) {
-}
-if (tryLogin($conn, "admin", $id, $password)) {
-}
-if (tryLogin($conn, "faculty", $id, $password)) {
-}
-if (tryLogin($conn, "student", $id, $password)) {
-}
+// Try each user table
+if (tryLogin($conn, "superadmin", $id, $password)) exit();
+if (tryLogin($conn, "admin", $id, $password)) exit();
+if (tryLogin($conn, "registrar", $id, $password)) exit();
+if (tryLogin($conn, "faculty", $id, $password)) exit();
+if (tryLogin($conn, "student", $id, $password)) exit();
 
-// Invalid login
+
+// ❌ Invalid login
 $_SESSION['msg'] = "Invalid ID or Password.";
 $_SESSION['msg_type'] = "error";
 header("Location: pages-login.php");

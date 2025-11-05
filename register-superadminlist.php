@@ -2,31 +2,27 @@
 session_start();
 include 'conn/conn.php';
 
-// ✅ Check if user is logged in and is superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// ✅ Check if user is logged in and is registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
 
-// ✅ Fetch all admins and combine their departments/programs
+// ✅ Fetch all superadmins
 $query = "
   SELECT 
-    a.idnumber,
-    a.first_name,
-    a.mid_name,
-    a.last_name,
-    a.faculty_rank,
-    a.position,
-    a.status,
-    GROUP_CONCAT(DISTINCT ad.department_name ORDER BY ad.department_name SEPARATOR ', ') AS departments,
-    GROUP_CONCAT(DISTINCT ad.program_name ORDER BY ad.program_name SEPARATOR ', ') AS programs
-  FROM admin a
-  LEFT JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-  WHERE a.role = 'admin'
-  GROUP BY a.idnumber
-  ORDER BY a.last_name ASC
+    idnumber,
+    first_name,
+    mid_name,
+    last_name,
+    faculty_rank,
+    department,
+    program,
+    position,
+    status
+  FROM superadmin
+  ORDER BY last_name ASC
 ";
-
 $result = mysqli_query($conn, $query);
 ?>
 
@@ -35,31 +31,24 @@ $result = mysqli_query($conn, $query);
 
 <head>
   <?php include 'head.php'; ?>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="sweetalert2/sweetalert2@11.js"></script>
 </head>
 
 <body>
-  <?php include 'superadmin-header.php'; ?>
-  <?php include 'superadmin-sidebar.php'; ?>
+  <?php include 'register-header.php'; ?>
+  <?php include 'register-sidebar.php'; ?>
 
   <main id="main" class="main">
 
-    <div class="pagetitle d-flex justify-content-between align-items-center">
-      <div>
-        <h1>Admin List</h1>
-        <nav>
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-            <li class="breadcrumb-item">List</li>
-            <li class="breadcrumb-item active">Admin List</li>
-          </ol>
-        </nav>
-      </div>
-
-      <!-- ✅ Optional Add Button -->
-      <a href="superadmin-createadmin.php" class="btn btn-primary">
-        <i class="bi bi-person-plus"></i> Add Admin
-      </a>
+    <div class="pagetitle">
+      <h1>Super Admin List</h1>
+      <nav>
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">List</li>
+          <li class="breadcrumb-item active">Super Admin List</li>
+        </ol>
+      </nav>
     </div><!-- End Page Title -->
 
     <section class="section">
@@ -68,16 +57,16 @@ $result = mysqli_query($conn, $query);
 
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">List of Admin Accounts</h5>
+              <h5 class="card-title">List of Super Admin Accounts</h5>
 
-              <table id="adminTable" class="table table-hover align-middle datatable">
+              <table id="superadminTable" class="table table-hover align-middle datatable">
                 <thead class="table-light text-center">
                   <tr>
                     <th>ID Number</th>
                     <th>Full Name</th>
                     <th>Faculty Rank</th>
-                    <th>Departments</th>
-                    <th>Programs</th>
+                    <th>Department</th>
+                    <th>Program</th>
                     <th>Position</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -92,10 +81,10 @@ $result = mysqli_query($conn, $query);
                       </td>
                       <td><?= htmlspecialchars($row['faculty_rank'] ?? '—'); ?></td>
 
-                      <!-- Departments -->
+                      <!-- Department (College) -->
                       <td>
-                        <?php if (!empty($row['departments'])): ?>
-                          <?php foreach (explode(', ', $row['departments']) as $dept): ?>
+                        <?php if (!empty($row['department'])): ?>
+                          <?php foreach (explode(', ', $row['department']) as $dept): ?>
                             <span class="badge bg-primary mb-1"><?= htmlspecialchars($dept); ?></span><br>
                           <?php endforeach; ?>
                         <?php else: ?>
@@ -103,10 +92,10 @@ $result = mysqli_query($conn, $query);
                         <?php endif; ?>
                       </td>
 
-                      <!-- Programs -->
+                      <!-- Program -->
                       <td>
-                        <?php if (!empty($row['programs'])): ?>
-                          <?php foreach (explode(', ', $row['programs']) as $prog): ?>
+                        <?php if (!empty($row['program'])): ?>
+                          <?php foreach (explode(', ', $row['program']) as $prog): ?>
                             <span class="badge bg-info text-dark mb-1"><?= htmlspecialchars($prog); ?></span><br>
                           <?php endforeach; ?>
                         <?php else: ?>
@@ -125,7 +114,7 @@ $result = mysqli_query($conn, $query);
                       </td>
 
                       <td>
-                        <a href="superadmin-editadmin.php?id=<?= urlencode($row['idnumber']); ?>"
+                        <a href="register-editsuperadmin.php?id=<?= urlencode($row['idnumber']); ?>"
                           class="btn btn-warning btn-sm">
                           <i class="bi bi-pencil-square"></i> Edit
                         </a>
@@ -149,7 +138,7 @@ $result = mysqli_query($conn, $query);
     <i class="bi bi-arrow-up-short"></i>
   </a>
 
-  <!-- JS Files -->
+  <!-- Vendor JS Files -->
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
   <script src="assets/js/main.js"></script>
@@ -157,7 +146,7 @@ $result = mysqli_query($conn, $query);
   <!-- ✅ Ensure DataTable initializes -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const table = document.querySelector('#adminTable');
+      const table = document.querySelector('#superadminTable');
       if (table) new simpleDatatables.DataTable(table);
     });
   </script>

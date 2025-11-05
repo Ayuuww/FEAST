@@ -10,6 +10,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 // Get selected filters from URL
 $selected_department = isset($_GET['department']) ? $_GET['department'] : "";
+$selected_program = isset($_GET['program']) ? $_GET['program'] : ""; // ✅ ADD THIS
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
@@ -22,22 +23,39 @@ if (empty($selected_department)) {
 $_SESSION['department'] = $selected_department;
 
 // ✅ Fetch supervisors from admin + admin_departments (new schema)
+// ✅ Fetch supervisors from admin + admin_departments (new schema)
 $supervisors = [];
-$stmt = $conn->prepare("
-    SELECT a.first_name, a.mid_name, a.last_name, a.position
-    FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?
-");
-$stmt->bind_param("s", $selected_department);
+
+$sql = "SELECT a.first_name, a.mid_name, a.last_name, a.position
+        FROM admin a
+        INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+        WHERE ad.department_name = ?";
+$params = [$selected_department];
+$types = "s";
+
+// Add program filter if it was selected
+if (!empty($selected_program)) {
+  $sql .= " AND ad.program_name = ?";
+  $params[] = $selected_program;
+  $types .= "s";
+}
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
 
 while ($row = $result->fetch_assoc()) {
-  $fullname = strtoupper($row['last_name'] . ', ' . $row['first_name'] . ' ' . $row['mid_name']);
+
+  $middle_initial = '';
+  if (!empty($row['mid_name'])) {
+    $middle_initial = ' ' . substr($row['mid_name'], 0, 1) . '.'; // Add space, initial, and period
+  }
+
+  $fullname = strtoupper(trim($row['first_name'] . ' ' . $middle_initial . ' ' . $row['last_name']));
   $supervisors[] = [
     'name' => $fullname,
-    'position' => strtoupper($row['position'])
+    'position' => strtoupper(trim($row['position']))
   ];
 }
 $stmt->close();
@@ -49,47 +67,49 @@ $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
 $pdf->department = $selected_department;
 $pdf->AddPage();
 
-// Title (use department code directly)
+// Title (same layout)
 $pdf->SetFont('Arial', 'B', 14);
-$title = $selected_department . ' COLLEGE SET REPORT';
+$pdf->Cell(0, 10, ' COLLEGE SEF REPORT', 0, 1, 'C');
+$pdf->Ln(3);
 
-// Handle Semester display
-if ($selected_semester) {
-  $sem_display = "Semester: $selected_semester";
-} else {
-  $sem_display = "Semester: 1st / 2nd Semester";
-}
-
-// Handle Academic Year display
-if ($selected_academic_year) {
-  $ay_display = "Academic Year: $selected_academic_year";
-} else {
-  $ay_display = "Academic Year: All Academic Years";
-}
-$pdf->Cell(0, 10, $title, 0, 1, 'C');
-
-
+// 🔹 Show selected filters clearly
 $pdf->SetFont('Arial', '', 11);
-$pdf->Cell(0, 8, $sem_display, 0, 1);
-$pdf->Cell(0, 8, $ay_display, 0, 1);
-$pdf->Cell(0, 8, 'Date Generated: ' . date('F j, Y'), 0, 1);
+$pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Programs'), 0, 1); // ✅ ADD THIS
+$pdf->Cell(0, 8, 'Semester: ' . (!empty($selected_semester) ? $selected_semester : 'All Semesters'), 0, 1);
+$pdf->Cell(0, 8, 'Academic Year: ' . (!empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years'), 0, 1);
+$pdf->Cell(0, 8, 'Date: ' . date('F j, Y'), 0, 1);
 $pdf->Ln(5);
+
+// Section Header
+$pdf->SetFont('Arial', 'B', 12);
+$pdf->SetFillColor(240, 240, 240);
+$pdf->Cell(150, 10, "COLLEGE SEF REPORT", 0, 1, 'C', true);
+$pdf->Ln(2);
 
 // Table Headers
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(80, 10, 'Faculty Name', 1);
-$pdf->Cell(50, 10, 'Supervisor Evaluations', 1, 0, 'C');
+$pdf->Cell(100, 10, 'Faculty Name', 1);
 $pdf->Cell(50, 10, 'Average SEF Rating', 1, 0, 'C');
 $pdf->Ln();
 
 // Fetch faculty for this department
-$query = $conn->prepare("
-  SELECT idnumber, last_name, first_name, mid_name
-  FROM faculty
-  WHERE department = ?
-  ORDER BY last_name ASC
-");
-$query->bind_param("s", $selected_department);
+// Fetch faculty for this department (and program, if specified)
+$faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
+                FROM faculty
+                WHERE department = ?";
+$params = [$selected_department];
+$types = "s";
+
+// Add program filter if it was selected
+if (!empty($selected_program)) {
+  $faculty_sql .= " AND program = ?";
+  $params[] = $selected_program;
+  $types .= "s";
+}
+$faculty_sql .= " ORDER BY last_name ASC";
+
+$query = $conn->prepare($faculty_sql);
+$query->bind_param($types, ...$params);
 $query->execute();
 $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
 $query->close();
@@ -119,14 +139,14 @@ foreach ($faculties as $fac) {
   $count = (int)$r['evaluations'];
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
 
-  $pdf->Cell(80, 8, $name, 1);
-  $pdf->Cell(50, 8, $count, 1, 0, 'C');
-  $pdf->Cell(50, 8, "$avg%", 1, 0, 'C');
+  $pdf->Cell(100, 8, $name, 1);
+  $pdf->Cell(50, 8, "$avg", 1, 0, 'C');
   $pdf->Ln();
 }
 
 // Get logged-in superadmin info
 $prepared_by = "";
+$position = "";
 if (isset($_SESSION['idnumber'])) {
   $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
                           FROM superadmin 
@@ -137,20 +157,44 @@ if (isset($_SESSION['idnumber'])) {
   $stmt->close();
 
   if ($res) {
-    $fullname = trim($res['last_name'] . ', ' . $res['first_name'] . ' ' . $res['mid_name']);
+
+    $middle_initial = '';
+    if (!empty($res['mid_name'])) {
+      $middle_initial = ' ' . substr($res['mid_name'], 0, 1) . '.'; // Add space, initial, and period
+    }
+
+    $fullname = strtoupper($res['first_name'] . ' ' . $middle_initial  . ' ' . $res['last_name']);
     $position = trim($res['position']);
     $prepared_by = $fullname;
   }
 }
 
-// Prepared by & Date Signed
-$pdf->Ln(4);
+// Footer Section: Prepared By & Reviewed By
+$pdf->Ln(10);
 $pdf->SetFont('Arial', '', 11);
 $pdf->Cell(120, 6, "Prepared by:", 0, 0, 'L');
-$pdf->Cell(0, 6, "Date Signed: " . date("F d, Y"), 0, 1, 'L');
 $pdf->Ln(10);
-$pdf->Cell(140, 6, $prepared_by, 0, 1, 'L');
-$pdf->Cell(0, 6, $position, 0, 1, 'L');
-$pdf->Cell(140, 0, '_________________________', 0, 0, 'L');
+
+// Prepared By details
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(120, 6, $prepared_by, 0, 1, 'L');
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(120, 6, strtoupper($position), 0, 1, 'L');
+$pdf->Ln(8);
+
+// Reviewed By section (supervisors)
+if (!empty($supervisors)) {
+  $pdf->SetFont('Arial', '', 11);
+  $pdf->Cell(0, 6, 'Reviewed by:', 0, 1, 'L');
+  $pdf->Ln(5);
+
+  foreach ($supervisors as $sup) {
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->Cell(120, 6, $sup['name'], 0, 1, 'L');
+    $pdf->SetFont('Arial', '', 11);
+    $pdf->Cell(120, 6, strtoupper($sup['position']), 0, 1, 'L');
+    $pdf->Ln(6);
+  }
+}
 
 $pdf->Output('I', 'Overall-SEF-Report.pdf');

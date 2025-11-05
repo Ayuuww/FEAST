@@ -2,7 +2,7 @@
 session_start();
 include 'conn/conn.php';
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (empty($department_name)) {
           $_SESSION['msg'] = "Please select a department for the program.";
           $_SESSION['msg_type'] = "warning";
-          header("Location: superadmin-addsmanagement.php");
+          header("Location: register-addsmanagement.php");
           exit();
         }
 
@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           $stmt->close();
         }
       }
-      header("Location: superadmin-addsmanagement.php");
+      header("Location: register-addsmanagement.php");
       exit();
     }
   }
@@ -134,15 +134,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 
 <body>
-  <?php include 'superadmin-header.php'; ?>
-  <?php include 'superadmin-sidebar.php'; ?>
+  <?php include 'register-header.php'; ?>
+  <?php include 'register-sidebar.php'; ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Manage Colleges, Programs, Ranks, Positions, Sections</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Manage</li>
         </ol>
       </nav>
@@ -216,13 +216,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <div class="college-card">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="college-title text-success"><?= htmlspecialchars($dept) ?></div>
-                <a href="superadmin-addsedit.php?id=<?= $col['id'] ?>&type=Department" class="btn btn-sm btn-warning">Edit</a>
+                <a href="register-addsedit.php?id=<?= $col['id'] ?>&type=Department" class="btn btn-sm btn-warning">Edit</a>
               </div>
               <?php if ($programs->num_rows > 0): ?>
                 <ul class="program-list">
                   <?php while ($p = $programs->fetch_assoc()): ?>
                     <li><?= htmlspecialchars($p['program_name']) ?>
-                      <a href="superadmin-addsedit.php?id=<?= $p['id'] ?>&type=Program" class="text-warning small ms-2">(Edit)</a>
+                      <a href="register-addsedit.php?id=<?= $p['id'] ?>&type=Program" class="text-warning small ms-2">(Edit)</a>
                     </li>
                   <?php endwhile; ?>
                 </ul>
@@ -257,7 +257,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   <?php while ($row = $query->fetch_assoc()): ?>
                     <li class="d-flex justify-content-between align-items-center">
                       <span><?= htmlspecialchars($row['name']) ?></span>
-                      <a href="superadmin-addsedit.php?id=<?= $row['id'] ?>&type=<?= urlencode($info['type']) ?>" class="btn btn-sm btn-warning ms-2">
+                      <a href="register-addsedit.php?id=<?= $row['id'] ?>&type=<?= urlencode($info['type']) ?>" class="btn btn-sm btn-warning ms-2">
                         Edit
                       </a>
                     </li>

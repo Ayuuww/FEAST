@@ -4,7 +4,7 @@ include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // Restrict access
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -28,7 +28,7 @@ if (isset($_GET['delete'])) {
       'text' => 'Could not delete department. It might be in use.'
     ];
   }
-  header("Location: superadmin-department-info.php");
+  header("Location: register-department-info.php");
   exit();
 }
 
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       'title' => 'Updated Successfully',
       'text' => 'Department information has been updated.'
     ];
-    header("Location: superadmin-department-info.php");
+    header("Location: register-department-info.php");
     exit();
   }
 }
@@ -117,15 +117,15 @@ while ($row = $program_query->fetch_assoc()) {
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Department Information</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Department Information</li>
         </ol>
       </nav>
@@ -205,7 +205,7 @@ while ($row = $program_query->fetch_assoc()) {
                         <td><?= htmlspecialchars($row['phone']) ?></td>
                         <td><?= htmlspecialchars($row['email']) ?></td>
                         <td class="text-center">
-                          <a href="superadmin-department-edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm me-1">
+                          <a href="register-department-edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm me-1">
                             Edit
                           </a>
                           <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(<?= $row['id'] ?>)">

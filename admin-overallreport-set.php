@@ -243,7 +243,7 @@ if ($faculty_count_with_evals > 0) {
                     </tbody>
                     <tfoot>
                       <tr class="table-light fw-bold">
-                        <td colspan="2" class="text-end">Department Average:</td>
+                        <td colspan="2" class="text-end">College Average:</td>
                         <td><?= number_format($department_average, 2) ?></td>
                       </tr>
                     </tfoot>

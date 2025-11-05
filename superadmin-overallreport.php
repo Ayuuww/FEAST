@@ -9,6 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 // Default filters
 $selected_department = isset($_GET['department']) ? $_GET['department'] : "";
+$selected_program = isset($_GET['program']) ? $_GET['program'] : ""; // ✅ ADD THIS
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
@@ -21,6 +22,20 @@ while ($row = $dept_query->fetch_assoc()) {
   $dept_options .= "<option value='$dept' $selected>$dept</option>";
 }
 
+// --- Build program dropdown (depends on selected department) ---
+$prog_options = "<option value=''>-- All Programs --</option>";
+if (!empty($selected_department)) {
+  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE department = ? AND program != '' ORDER BY program ASC");
+  $prog_stmt->bind_param("s", $selected_department);
+  $prog_stmt->execute();
+  $prog_result = $prog_stmt->get_result();
+  while ($row = $prog_result->fetch_assoc()) {
+    $prog = $row['program'];
+    $selected = ($prog === $selected_program) ? "selected" : "";
+    $prog_options .= "<option value='$prog' $selected>$prog</option>";
+  }
+  $prog_stmt->close();
+}
 // Build semester dropdown (from evaluation/admin_evaluation)
 $sem_options = "";
 $sem_query = $conn->query("SELECT DISTINCT semester FROM evaluation UNION SELECT DISTINCT semester FROM admin_evaluation ORDER BY semester ASC");
@@ -46,13 +61,24 @@ $overall_rows = '';
 
 if (!empty($selected_department)) {
   // Get all faculty in department
-  $query = $conn->prepare("
-    SELECT idnumber, last_name, first_name, mid_name
-    FROM faculty
-    WHERE department = ?
-    ORDER BY last_name ASC
-  ");
-  $query->bind_param("s", $selected_department);
+  // Get all faculty in department (and program, if selected)
+  $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
+         FROM faculty
+         WHERE department = ?";
+  $params = [$selected_department];
+  $types = "s";
+
+  // Add program filter if it exists
+  if (!empty($selected_program)) {
+    $faculty_sql .= " AND program = ?";
+    $params[] = $selected_program;
+    $types .= "s";
+  }
+
+  $faculty_sql .= " ORDER BY last_name ASC";
+
+  $query = $conn->prepare($faculty_sql);
+  $query->bind_param($types, ...$params);
   $query->execute();
   $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
   $query->close();
@@ -157,22 +183,28 @@ if (!empty($selected_department)) {
 
                 <!-- Filters -->
                 <form method="GET" class="mb-3">
-                  <div class="row align-items-end">
+                  <div class="row align-items-end g-3">
                     <div class="col-md-3">
                       <label for="department" class="form-label">Select Department</label>
-                      <select name="department" id="department" class="form-select">
+                      <select name="department" id="department" class="form-select" onchange="this.form.submit()">
                         <option value="">-- Choose Department --</option>
                         <?= $dept_options ?>
                       </select>
                     </div>
                     <div class="col-md-3">
+                      <label for="program" class="form-label">Select Program</label>
+                      <select name="program" id="program" class="form-select" <?= empty($selected_department) ? 'disabled' : '' ?>>
+                        <?= $prog_options ?>
+                      </select>
+                    </div>
+                    <div class="col-md-2">
                       <label for="semester" class="form-label">Select Semester</label>
                       <select name="semester" id="semester" class="form-select">
                         <option value="">-- All Semesters --</option>
                         <?= $sem_options ?>
                       </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                       <label for="academic_year" class="form-label">Select Academic Year</label>
                       <select name="academic_year" id="academic_year" class="form-select">
                         <option value="">-- All Academic Years --</option>
@@ -186,7 +218,7 @@ if (!empty($selected_department)) {
                 </form>
 
                 <?php if (!empty($selected_department)) { ?>
-                  
+
                   <!-- Overall Table -->
                   <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
                   <div class="table-responsive mb-4">
@@ -203,7 +235,7 @@ if (!empty($selected_department)) {
                   </div>
 
                   <div class="text-end mb-3">
-                    <a href="superadmin-overallreport-print.php?department=<?= urlencode($selected_department) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
+                    <a href="superadmin-overallreport-print.php?department=<?= urlencode($selected_department) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
                       class="btn btn-secondary" target="_blank">
                       <i class="bi bi-printer"></i> Print Report
                     </a>

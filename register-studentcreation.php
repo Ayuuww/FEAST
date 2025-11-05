@@ -2,8 +2,8 @@
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -54,8 +54,8 @@ if (!$sections_result) {
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
 
@@ -63,7 +63,7 @@ if (!$sections_result) {
       <h1>Student</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item ">Student</li>
           <li class="breadcrumb-item active">Add New Student</li>
         </ol>

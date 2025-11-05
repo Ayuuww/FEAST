@@ -3,8 +3,8 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check if superadmin is logged in
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Check if registrar is logged in
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -168,7 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // All good, commit the changes
         $conn->commit();
         $_SESSION['success_message'] = "Faculty successfully promoted to Admin!";
-        header("Location: superadmin-adminlist.php"); // Redirect to admin list
+        header("Location: register-adminlist.php"); // Redirect to admin list
         exit();
       } catch (mysqli_sql_exception $e) {
         $conn->rollback();
@@ -177,7 +177,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
           $_SESSION['msg'] = "Database Error: " . $e->getMessage();
         }
-        header("Location: superadmin-editfaculty.php?id=$faculty_id");
+        header("Location: register-editfaculty.php?id=$faculty_id");
         exit();
       }
     }
@@ -211,7 +211,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $faculty = $result->fetch_assoc();
   } catch (mysqli_sql_exception $e) {
     $_SESSION['msg'] = "Database Error: " . $e->getMessage();
-    header("Location: superadmin-editfaculty.php?id=$faculty_id");
+    header("Location: register-editfaculty.php?id=$faculty_id");
     exit();
   }
 }
@@ -228,16 +228,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Edit Faculty Status</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-facultylist.php">Faculty</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-facultylist.php">Faculty</a></li>
           <li class="breadcrumb-item">List</li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
@@ -246,7 +246,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <section class="section">
       <div class="row justify-content-center">
-        <div class="col-lg-6">
+        <div class="col-lg-8">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Faculty Information</h5>
@@ -275,17 +275,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
               <?php endif; ?>
               <?php if ($faculty): ?>
                 <form method="POST" class="row g-3">
-                  <div class="col-md-6">
-                    <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']); ?>" disabled>
-                      <label class="form-label">Full Name</label>
-                    </div>
-                  </div>
 
                   <div class="col-md-6">
                     <div class="form-floating">
                       <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['idnumber']); ?>" disabled>
                       <label class="form-label">ID Number</label>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="form-floating">
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']); ?>" disabled>
+                      <label class="form-label">Full Name</label>
                     </div>
                   </div>
 
@@ -390,7 +391,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   </div>
                   <div class="col-12">
                     <button type="submit" class="btn btn-success">Update Faculty</button>
-                    <a href="superadmin-facultylist.php" class="btn btn-secondary">Back</a>
+                    <a href="register-facultylist.php" class="btn btn-secondary">Back</a>
                   </div>
 
                 </form>

@@ -2,8 +2,8 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// ✅ Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -11,56 +11,39 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 $idnumber = $_SESSION['idnumber'];
 $swal = ""; // For SweetAlert2 messages
 
-// Handle profile update
+// ✅ Handle profile update
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if (isset($_POST['update_profile'])) {
-    $first_name    = $_POST['first_name'];
-    $mid_name      = $_POST['mid_name'];
-    $last_name     = $_POST['last_name'];
-    $faculty_rank  = $_POST['faculty_rank'];
-    $position      = $_POST['position'];
+    $first_name = $_POST['first_name'];
+    $mid_name   = $_POST['mid_name'];
+    $last_name  = $_POST['last_name'];
 
-    // Always update superadmin
-    $stmt = $conn->prepare("UPDATE superadmin 
-                    SET first_name=?, mid_name=?, last_name=?, faculty_rank=? 
-                    WHERE idnumber=?");
-    $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $faculty_rank, $idnumber);
-    $superadmin_updated = $stmt->execute();
-    $stmt->close();
-
-    // Check if superadmin is also a faculty
-    $check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber=?");
-    $check->bind_param("s", $idnumber);
-    $check->execute();
-    $check->store_result();
-
-    if ($check->num_rows > 0) {
-      // Update faculty too
-      $stmt = $conn->prepare("UPDATE faculty 
-                        SET first_name=?, mid_name=?, last_name=?, faculty_rank=?
-                        WHERE idnumber=?");
-      $stmt->bind_param("sssss", $first_name, $mid_name, $last_name, $faculty_rank, $idnumber);
-      $stmt->execute();
-      $stmt->close();
+    $stmt = $conn->prepare("UPDATE registrar SET first_name=?, mid_name=?, last_name=? WHERE idnumber=?");
+    $stmt->bind_param("ssss", $first_name, $mid_name, $last_name, $idnumber);
+    if ($stmt->execute()) {
+      $swal = "Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated',
+        text: 'Your profile has been updated successfully!',
+        confirmButtonColor: '#198754'
+      });";
+    } else {
+      $swal = "Swal.fire({
+        icon: 'error',
+        title: 'Update Failed',
+        text: 'Failed to update profile. Please try again.',
+        confirmButtonColor: '#dc3545'
+      });";
     }
-    $check->close();
-
-    $swal = "Swal.fire({
-      icon: 'success',
-      title: 'Profile Updated',
-      text: 'Your profile has been updated successfully!',
-      confirmButtonColor: '#198754'
-    });";
   }
 
-
+  // ✅ Change password
   if (isset($_POST['change_password'])) {
     $current = $_POST['current_password'];
     $new     = $_POST['new_password'];
     $retype  = $_POST['renew_password'];
 
-    // Get password from superadmin
-    $query = $conn->prepare("SELECT password FROM superadmin WHERE idnumber=?");
+    $query = $conn->prepare("SELECT password FROM registrar WHERE idnumber = ?");
     $query->bind_param("s", $idnumber);
     $query->execute();
     $query->bind_result($db_password);
@@ -69,53 +52,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (!password_verify($current, $db_password)) {
       $swal = "Swal.fire({
-          icon: 'error',
-          title: 'Incorrect Password',
-          text: 'Your current password is incorrect.',
-          confirmButtonColor: '#dc3545'
-        });";
+        icon: 'error',
+        title: 'Incorrect Password',
+        text: 'Your current password is incorrect.',
+        confirmButtonColor: '#dc3545'
+      });";
     } elseif ($new !== $retype) {
       $swal = "Swal.fire({
-          icon: 'warning',
-          title: 'Password Mismatch',
-          text: 'New passwords do not match.',
-          confirmButtonColor: '#ffc107'
-        });";
+        icon: 'warning',
+        title: 'Password Mismatch',
+        text: 'New passwords do not match.',
+        confirmButtonColor: '#ffc107'
+      });";
     } else {
       $hashed_new = password_hash($new, PASSWORD_DEFAULT);
-
-      // Update superadmin
-      $update = $conn->prepare("UPDATE superadmin SET password=? WHERE idnumber=?");
+      $update = $conn->prepare("UPDATE registrar SET password=? WHERE idnumber=?");
       $update->bind_param("ss", $hashed_new, $idnumber);
-      $superadmin_updated = $update->execute();
-      $update->close();
 
-      // Check if also faculty
-      $check = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber=?");
-      $check->bind_param("s", $idnumber);
-      $check->execute();
-      $check->store_result();
-
-      if ($check->num_rows > 0) {
-        $update = $conn->prepare("UPDATE faculty SET password=? WHERE idnumber=?");
-        $update->bind_param("ss", $hashed_new, $idnumber);
-        $update->execute();
-        $update->close();
-      }
-      $check->close();
-
-      $swal = "Swal.fire({
+      if ($update->execute()) {
+        $swal = "Swal.fire({
           icon: 'success',
           title: 'Password Changed',
           text: 'Your password has been updated successfully!',
           confirmButtonColor: '#198754'
         });";
+      } else {
+        $swal = "Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: 'Failed to change password. Please try again.',
+          confirmButtonColor: '#dc3545'
+        });";
+      }
     }
   }
 }
 
-// Fetch profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, position, department,program FROM superadmin WHERE idnumber = ?");
+// ✅ Fetch current profile data
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, department, program FROM registrar WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -127,13 +101,12 @@ $stmt->close();
 <html lang="en">
 
 <head>
-
   <!-- Head -->
   <?php include 'head.php' ?>
   <!-- End Head -->
 
   <style>
-    /* 🌿 Modern Profile Page Design */
+    /* 🌿 Uniform Profile Page Design (same as Superadmin) */
     body {
       background: #f8fafc;
     }
@@ -189,10 +162,6 @@ $stmt->close();
       cursor: not-allowed;
     }
 
-    .profile input[readonly]:hover {
-      background-color: #e9ecef;
-    }
-
     .btn-success {
       border-radius: 12px;
       padding: 10px 25px;
@@ -210,15 +179,13 @@ $stmt->close();
       margin-right: 6px;
     }
   </style>
-
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-
+  <?php include 'register-header.php' ?>
   <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-sidebar.php' ?>
   <!-- End Sidebar-->
 
   <main id="main" class="main">
@@ -226,7 +193,7 @@ $stmt->close();
       <h1>Profile</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Profile</li>
         </ol>
       </nav>
@@ -237,16 +204,24 @@ $stmt->close();
         <div class="col-xl-6">
           <div class="card">
             <div class="card-body pt-3">
+
               <ul class="nav nav-tabs nav-tabs-bordered mb-4">
-                <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit"><i class="bi bi-pencil-square"></i> Edit Profile</button></li>
-                <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password"><i class="bi bi-shield-lock"></i> Change Password</button></li>
+                <li class="nav-item">
+                  <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profile-edit">
+                    <i class="bi bi-pencil-square"></i> Edit Profile
+                  </button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile-change-password">
+                    <i class="bi bi-shield-lock"></i> Change Password
+                  </button>
+                </li>
               </ul>
 
               <div class="tab-content pt-2">
-                <!-- Profile Edit Tab -->
-                <div class="tab-pane fade show active pt-3" id="profile-edit">
+                <!-- 🧾 Edit Profile Tab -->
+                <div class="tab-pane fade show active" id="profile-edit">
                   <form method="POST">
-
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-person-badge"></i> Last Name</label>
                       <div class="col-md-8 col-lg-9"><input name="last_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['last_name']) ?>"></div>
@@ -263,37 +238,18 @@ $stmt->close();
                     </div>
 
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-award"></i> Faculty Rank</label>
-                      <div class="col-md-8 col-lg-9 position-relative">
-                        <input name="faculty_rank" type="text" class="form-control text-capitalize"
-                          value="<?= htmlspecialchars($data['faculty_rank']) ?>" readonly title="This field is managed by the system.">
-                      </div>
-                    </div>
-
-                    <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-briefcase"></i> Designation</label>
-                      <div class="col-md-8 col-lg-9 position-relative">
-                        <input name="position" type="text" class="form-control text-capitalize"
-                          value="<?= htmlspecialchars($data['position']) ?>" readonly title="This field is managed by the system.">
-                      </div>
-                    </div>
-
-                    <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Department</label>
-                      <div class="col-md-8 col-lg-9 position-relative">
-                        <input name="department" type="text" class="form-control text-capitalize"
-                          value="<?= htmlspecialchars($data['department']) ?>"
-                          readonly title="This field is managed by the system.">
-                      </div>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>"></div>
                     </div>
 
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Program</label>
-                      <div class="col-md-8 col-lg-9 position-relative">
-                        <input name="department" type="text" class="form-control text-capitalize"
-                          value="<?= htmlspecialchars($data['program']) ?>"
-                          readonly title="This field is managed by the system.">
-                      </div>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['program']) ?>"></div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-award"></i> Faculty Rank</label>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['faculty_rank']) ?>"></div>
                     </div>
 
                     <div class="row mb-3">
@@ -302,32 +258,38 @@ $stmt->close();
                     </div>
 
                     <div class="text-center mt-4">
-                      <button type="submit" name="update_profile" class="btn btn-success"><i class="bi bi-check-circle me-1"></i> Save Changes</button>
+                      <button type="submit" name="update_profile" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i> Save Changes
+                      </button>
                     </div>
                   </form>
                 </div>
 
-                <!-- Change Password Tab -->
-                <div class="tab-pane fade pt-3" id="profile-change-password">
+                <!-- 🔐 Change Password Tab -->
+                <div class="tab-pane fade" id="profile-change-password">
                   <form method="POST">
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-lock"></i> Current Password</label>
                       <div class="col-md-8 col-lg-9"><input name="current_password" type="password" class="form-control" required></div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-shield-check"></i> New Password</label>
                       <div class="col-md-8 col-lg-9"><input name="new_password" type="password" class="form-control" required></div>
                     </div>
+
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-repeat"></i> Re-enter New Password</label>
                       <div class="col-md-8 col-lg-9"><input name="renew_password" type="password" class="form-control" required></div>
                     </div>
+
                     <div class="text-center mt-4">
-                      <button type="submit" name="change_password" class="btn btn-success"><i class="bi bi-arrow-repeat me-1"></i> Change Password</button>
+                      <button type="submit" name="change_password" class="btn btn-success">
+                        <i class="bi bi-arrow-repeat me-1"></i> Change Password
+                      </button>
                     </div>
                   </form>
                 </div>
-
               </div><!-- End tab-content -->
             </div>
           </div>
@@ -340,32 +302,24 @@ $stmt->close();
   <?php include 'footer.php' ?>
   <!-- End Footer -->
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
 
   <!-- Vendor JS Files -->
   <script data-cfasync="false" src="assets/js/email-decode.min.js"></script>
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
   <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
 
   <!-- SweetAlert2 -->
-  <script src="sweetalert2\sweetalert2@11.js"></script>
+  <script src="sweetalert2/sweetalert2@11.js"></script>
 
   <?php if (!empty($swal)): ?>
     <script>
       <?= $swal ?>
     </script>
   <?php endif; ?>
-
 </body>
 
 </html>

@@ -4,7 +4,7 @@ include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 // ✅ Check login & role
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($new_position)) {
     $_SESSION['msg'] = "Position is required.";
     $_SESSION['msg_type'] = "danger";
-    header("Location: superadmin-editsuperadmin.php?id=$superadmin_id");
+    header("Location: register-editsuperadmin.php?id=$superadmin_id");
     exit();
   }
 
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_department, $new_program, $superadmin_id);
   $stmt->execute();
 
-  header("Location: superadmin-editsuperadmin.php?id=$superadmin_id&update=success");
+  header("Location: register-editsuperadmin.php?id=$superadmin_id&update=success");
   exit();
 }
 ?>
@@ -86,16 +86,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Edit Superadmin Information</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-superadminlist.php">Superadmin</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-superadminlist.php">Superadmin</a></li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
       </nav>
@@ -214,7 +214,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
 
                   <button type="submit" class="btn btn-success">Update Information</button>
-                  <a href="superadmin-superadminlist.php" class="btn btn-secondary">Back</a>
+                  <a href="register-superadminlist.php" class="btn btn-secondary">Back</a>
                 </form>
               <?php else: ?>
                 <div class="alert alert-danger">Superadmin not found.</div>

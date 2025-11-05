@@ -1,11 +1,13 @@
 <?php
 session_start();
-include 'conn/conn.php'; // Connection to the database
+include 'conn/conn.php';
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Restrict to Registrar only
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,17 +17,17 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 </head>
 
 <body>
-  <?php include 'superadmin-header.php'; ?>
-  <?php include 'superadmin-sidebar.php'; ?>
+  <?php include 'register-header.php'; ?>
+  <?php include 'register-sidebar.php'; ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Faculty</h1>
+      <h1>Account Management</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Faculty</li>
-          <li class="breadcrumb-item active">Add New Faculty</li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Registrar</li>
+          <li class="breadcrumb-item active">Add New Registrar</li>
         </ol>
       </nav>
     </div>
@@ -50,9 +52,9 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                 <?php unset($_SESSION['msg'], $_SESSION['msg_type']); ?>
               <?php endif; ?>
 
-              <h5 class="card-title text-center">Create New Faculty</h5>
+              <h5 class="card-title text-center">Create New Account</h5>
 
-              <form class="row g-3 needs-validation" novalidate method="post" action="facultycreation.php">
+              <form class="row g-3 needs-validation" novalidate method="post" action="registrarcreation.php">
 
                 <!-- ID Number -->
                 <div class="col-md-6">
@@ -87,32 +89,42 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- Hidden Default Password -->
-                <input type="hidden" name="password" value="ILOVEDMMMSU">
-
-                <!-- Academic Rank -->
+                <!-- Employment Role -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="faculty_rank" required>
-                      <option value="" disabled selected>Select Rank</option>
+                    <select class="form-select" name="employment_role" id="employment_role" required>
+                      <option value="" disabled selected>Select Employment Role</option>
+                      <option value="Teaching">Teaching</option>
+                      <option value="Non-Teaching">Non-Teaching</option>
+                    </select>
+                    <label>Employment Role</label>
+                  </div>
+                </div>
+
+                <!-- Faculty Rank (only for Teaching) -->
+                <div class="col-md-6 teaching-only" id="facultyRankDiv">
+                  <div class="form-floating">
+                    <select class="form-select" name="faculty_rank" id="faculty_rank" required>
+                      <option value="" selected disabled>-- Select Faculty Rank --</option>
                       <?php
-                      $rankQuery = $conn->query("SELECT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != ''");
+                      $rankQuery = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != '' ORDER BY rank_name ASC");
                       while ($row = $rankQuery->fetch_assoc()) {
                         echo '<option value="' . htmlspecialchars($row['rank_name']) . '">' . htmlspecialchars($row['rank_name']) . '</option>';
                       }
                       ?>
                     </select>
-                    <label>Academic Rank</label>
+                    <label>Faculty Rank</label>
                   </div>
                 </div>
 
-                <!-- Department -->
-                <div class="col-md-6">
+
+                <!-- Department (only for Teaching) -->
+                <div class="col-md-6 teaching-only" id="departmentDiv">
                   <div class="form-floating">
                     <select class="form-select" name="department" id="department" required>
-                      <option value="" disabled selected>Select Department</option>
+                      <option value="" selected disabled>-- Select Department --</option>
                       <?php
-                      $deptQuery = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+                      $deptQuery = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
                       while ($row = $deptQuery->fetch_assoc()) {
                         echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
                       }
@@ -122,21 +134,26 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
                   </div>
                 </div>
 
-                <!-- Program (changes based on department) -->
-                <div class="col-md-12">
+                <!-- Program (only for Teaching) -->
+                <div class="col-md-6 teaching-only" id="programDiv">
                   <div class="form-floating">
                     <select class="form-select" name="program" id="program" required>
-                      <option value="" disabled selected>Select Program</option>
+                      <option value="" selected disabled>-- Select Program --</option>
                     </select>
                     <label>Program</label>
                   </div>
                 </div>
+
+                <!-- Hidden defaults -->
+                <input type="hidden" name="password" value="ILOVEDMMMSU">
+                <input type="hidden" name="status" value="active">
 
                 <!-- Submit -->
                 <div class="col-4 offset-4">
                   <button class="btn btn-success w-100" type="submit">Create Account</button>
                 </div>
               </form>
+
             </div>
           </div>
         </div>
@@ -146,15 +163,14 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
   <?php include 'footer.php'; ?>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
-    <i class="bi bi-arrow-up-short"></i>
-  </a>
-
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="vendors/simple-datatables/simple-datatables.js"></script>
+  <script src="assets/js/main.js"></script>
+
+  <script src="sweetalert2/sweetalert2@11.js"></script>
 
   <script>
-    // 🟢 Dynamic Program Loading based on Department
+    // Dynamic Program loading
     document.getElementById('department').addEventListener('change', function() {
       let dept = this.value;
       let programSelect = document.getElementById('program');
@@ -163,7 +179,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
       fetch('get_programs.php?department=' + encodeURIComponent(dept))
         .then(res => res.json())
         .then(data => {
-          programSelect.innerHTML = '<option disabled selected>Select Program</option>';
+          programSelect.innerHTML = '<option value="">-- Select Program --</option>';
           data.forEach(p => {
             let opt = document.createElement('option');
             opt.value = p;
@@ -174,6 +190,38 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
         .catch(() => {
           programSelect.innerHTML = '<option disabled selected>Error loading programs</option>';
         });
+    });
+
+    // Show/hide teaching-only fields
+    document.getElementById('employment_role').addEventListener('change', function() {
+      let teachingFields = document.querySelectorAll('.teaching-only');
+      if (this.value === 'Teaching') {
+        teachingFields.forEach(el => el.style.display = 'block');
+      } else {
+        teachingFields.forEach(el => {
+          el.style.display = 'none';
+          el.querySelectorAll('input, select').forEach(i => i.value = '');
+        });
+      }
+    });
+
+    // Initialize state (hide by default)
+    document.querySelectorAll('.teaching-only').forEach(el => el.style.display = 'none');
+
+    document.getElementById('employment_role').addEventListener('change', function() {
+      let teachingFields = document.querySelectorAll('.teaching-only');
+      let rankSelect = document.getElementById('faculty_rank');
+
+      if (this.value === 'Teaching') {
+        teachingFields.forEach(el => el.style.display = 'block');
+        rankSelect.required = true;
+      } else {
+        teachingFields.forEach(el => {
+          el.style.display = 'none';
+          el.querySelectorAll('input, select').forEach(i => i.value = '');
+        });
+        rankSelect.required = false;
+      }
     });
   </script>
 </body>

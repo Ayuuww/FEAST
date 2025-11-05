@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($exists > 0) {
         $_SESSION['msg'] = 'Super Admin with this ID already exists!';
         $_SESSION['msg_type'] = 'warning';
-        header("Location: superadmin-superadmincreation.php");
+        header("Location: register-superadmincreation.php");
         exit();
     }
 
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($dep_exists == 0) {
             $_SESSION['msg'] = "The selected department ($department) does not exist in the system.";
             $_SESSION['msg_type'] = 'error';
-            header("Location: superadmin-superadmincreation.php");
+            header("Location: register-superadmincreation.php");
             exit();
         }
     }
@@ -98,11 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $insert_stmt->close();
-    header("Location: superadmin-superadmincreation.php");
+    header("Location: register-superadmincreation.php");
     exit();
 } else {
     $_SESSION['msg'] = 'Invalid access method.';
     $_SESSION['msg_type'] = 'error';
-    header("Location: superadmin-superadmincreation.php");
+    header("Location: register-superadmincreation.php");
     exit();
 }

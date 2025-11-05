@@ -58,7 +58,7 @@ $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
 // Use the new display variable
-$pdf->Cell(0, 10, strtoupper($admin_department_display) . ' OVERALL SET REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, 'COLLEGE SET REPORT', 0, 1, 'C');
 
 // ... (rest of your semester/year filter logic is fine) ...
 
@@ -104,7 +104,7 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(180, 10, strtoupper($admin_department_display) . " OVERALL EVALUATION SET", 0, 1, 'C', true);
+$pdf->Cell(180, 10, strtoupper($admin_department_display) . " SET REPORT", 0, 1, 'C', true);
 $pdf->Ln(2);
 
 // Table Headers

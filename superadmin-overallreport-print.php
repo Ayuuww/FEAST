@@ -18,27 +18,90 @@ $stmt->bind_result($s_fname, $s_mname, $s_lname, $s_position);
 $stmt->fetch();
 $stmt->close();
 
-$prepared_by = trim("$s_fname $s_mname $s_lname");
+// Fix for middle initial
+$prep_middle_initial = '';
+if (!empty($s_mname)) {
+    $prep_middle_initial = ' ' . substr($s_mname, 0, 1) . '.';
+}
+$prepared_by = strtoupper(trim("$s_fname$prep_middle_initial $s_lname"));
+$s_position = strtoupper($s_position);
 
 // 🔹 Get filters from request
 $selected_department = $_GET['department'] ?? '';
+$selected_program = $_GET['program'] ?? '';
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
 // 🔹 Get all faculty in the selected department
+// 🔹 Get all faculty in the selected department (and program, if selected)
 $faculties = [];
 if (!empty($selected_department)) {
-    $query = $conn->prepare("
-        SELECT idnumber, last_name, first_name, mid_name
-        FROM faculty
-        WHERE department = ?
-        ORDER BY last_name ASC
-    ");
-    $query->bind_param("s", $selected_department);
+    $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
+          FROM faculty
+          WHERE department = ?";
+    $params = [$selected_department];
+    $types = "s";
+
+    // Add program filter if it exists
+    if (!empty($selected_program)) {
+        $faculty_sql .= " AND program = ?";
+        $params[] = $selected_program;
+        $types .= "s";
+    }
+
+    $faculty_sql .= " ORDER BY last_name ASC";
+
+    $query = $conn->prepare($faculty_sql);
+    $query->bind_param($types, ...$params);
     $query->execute();
     $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
+    // 🔹 Get all faculty...
     $query->close();
 }
+
+// ✅ START: NEW BLOCK TO FETCH SUPERVISORS
+$reviewers = [];
+$sql = "SELECT a.first_name, a.mid_name, a.last_name, a.position
+    FROM admin a
+    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.department_name = ?";
+$params_rev = [$selected_department];
+$types_rev = "s";
+
+// Add program filter if it was selected
+if (!empty($selected_program)) {
+    $sql .= " AND ad.program_name = ?";
+    $params_rev[] = $selected_program;
+    $types_rev .= "s";
+}
+
+// Order by position (e.g., Dean, then Chair)
+$sql .= " ORDER BY CASE 
+      WHEN a.position LIKE 'Dean%' THEN 1
+      WHEN a.position LIKE 'Chair%' THEN 2
+      WHEN a.position LIKE 'Program Chair%' THEN 3
+      ELSE 4 
+     END";
+
+$stmt_rev = $conn->prepare($sql);
+$stmt_rev->bind_param($types_rev, ...$params_rev);
+$stmt_rev->execute();
+$result_rev = $stmt_rev->get_result();
+
+while ($row = $result_rev->fetch_assoc()) {
+    // Format the name with middle initial
+    $middle_initial = '';
+    if (!empty($row['mid_name'])) {
+        $middle_initial = ' ' . substr($row['mid_name'], 0, 1) . '.';
+    }
+    $full_name = strtoupper(trim("{$row['first_name']}$middle_initial {$row['last_name']}"));
+    $reviewers[] = [
+        'name' => $full_name,
+        'position' => strtoupper($row['position'])
+    ];
+}
+$stmt_rev->close();
+// ✅ END: NEW BLOCK
 
 // 🔹 Custom PDF class (with header/footer)
 require 'superadmin-printing-headerfooter.php';
@@ -53,12 +116,14 @@ $pdf->Ln(3);
 
 // --- Filters Information ---
 $pdf->SetFont('Arial', '', 11);
+$program_text = !empty($selected_program) ? $selected_program : 'All Programs'; // ✅ ADD THIS
 $semester_text = !empty($selected_semester) ? $selected_semester : 'All Semesters';
 $academic_text = !empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years';
 
+$pdf->Cell(0, 8, "Program: $program_text", 0, 1, 'L'); // ✅ ADD THIS
 $pdf->Cell(0, 8, "Semester: $semester_text", 0, 1, 'L');
 $pdf->Cell(0, 8, "Academic Year: $academic_text", 0, 1, 'L');
-$pdf->Cell(0, 8, "Date Generated: " . date('F j, Y'), 0, 1, 'L');
+$pdf->Cell(0, 8, "Date: " . date('F j, Y'), 0, 1, 'L');
 $pdf->Ln(5);
 
 // --- Table Header ---
@@ -133,15 +198,30 @@ $pdf->Ln(15);
 // --- Prepared By Section ---
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(140, 6, "Prepared by:", 0, 0, 'L');
-$pdf->Cell(0, 6, "Date Signed:", 0, 1, 'L');
+$pdf->Cell(0, 6, "Date Signed: " . date("F d, Y"), 0, 1, 'L');
 $pdf->Ln(10);
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(140, 6, $prepared_by, 0, 0, 'L');
-$pdf->Cell(0, 6, '', 0, 1, 'L');
+$pdf->Cell(140, 6, $prepared_by, 0, 1, 'L');
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(140, 0, '_________________________', 0, 0, 'L');
-$pdf->Cell(0, 0, '_________________________', 0, 1, 'L');
-$pdf->Cell(140, 6, $s_position, 0, 0, 'L');
-$pdf->Cell(0, 6, '', 0, 1, 'L');
+$pdf->Cell(140, 6, $s_position, 0, 1, 'L');
+
+
+// --- ✅ START: NEW REVIEWED BY SECTION ---
+if (!empty($reviewers)) {
+    $pdf->Ln(15); // Space between sections
+    $pdf->SetFont('Arial', '', 10);
+    $pdf->Cell(140, 6, "Reviewed by:", 0, 1, 'L');
+    $pdf->Ln(10); // Space before the first signature
+
+    foreach ($reviewers as $reviewer) {
+        $pdf->SetFont('Arial', 'B', 10);
+        $pdf->Cell(140, 6, $reviewer['name'], 0, 1, 'L');
+        $pdf->SetFont('Arial', '', 10);
+        $pdf->Cell(140, 6, $reviewer['position'], 0, 1, 'L');
+        $pdf->Ln(8); // Space for the next reviewer
+    }
+}
+// --- ✅ END: NEW REVIEWED BY SECTION ---
+
 
 $pdf->Output('I', 'Overall-Evaluation-Report.pdf');

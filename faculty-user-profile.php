@@ -89,7 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // ✅ Fetch current profile data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, department FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, faculty_rank, department, program FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -240,6 +240,11 @@ $stmt->close();
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Department</label>
                       <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>"></div>
+                    </div>
+
+                    <div class="row mb-3">
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Program</label>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['program']) ?>"></div>
                     </div>
 
                     <div class="row mb-3">

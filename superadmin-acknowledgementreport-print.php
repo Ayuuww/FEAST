@@ -4,10 +4,10 @@ require('fpdf/fpdf.php');
 include 'conn/conn.php';
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
-    die("Unauthorized.");
+  die("Unauthorized.");
 }
 if (!isset($_GET['faculty_id'])) {
-    die("Missing faculty ID.");
+  die("Missing faculty ID.");
 }
 
 $faculty_id = $_GET['faculty_id'];
@@ -19,14 +19,19 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 // =======================================================
 
 // Faculty Info
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($fname, $mname, $lname, $dept, $faculty_rank);
+$stmt->bind_result($fname, $mname, $lname, $dept, $faculty_program, $faculty_rank); // Added $faculty_program
 $stmt->fetch();
 $stmt->close();
 
-$full_name = strtoupper(trim("$fname $mname $lname"));
+$middle_initial = '';
+if (!empty($mname)) {
+  $middle_initial = ' ' . substr($mname, 0, 1) . '.'; // Add space, initial, and period
+}
+
+$full_name = strtoupper(trim("$fname $middle_initial $lname"));
 $dept_display = strtoupper($dept);
 $rank_display = ucwords($faculty_rank);
 
@@ -34,10 +39,31 @@ $rank_display = ucwords($faculty_rank);
 $sem = $selected_semester ?: 'All Semesters';
 $sy = $selected_academic_year ?: 'All Academic Years';
 
+// --- Build WHERE clauses and parameters ---
+$params_types = "s";
+$params_values = [$faculty_id];
+$eval_where_clauses = ["faculty_id = ?"];
+$admin_eval_where_clauses = ["evaluatee_id = ?"];
+
+if (!empty($selected_semester)) {
+  $eval_where_clauses[] = "semester = ?";
+  $admin_eval_where_clauses[] = "semester = ?";
+  $params_types .= "s";
+  $params_values[] = $selected_semester;
+}
+if (!empty($selected_academic_year)) {
+  $eval_where_clauses[] = "academic_year = ?";
+  $admin_eval_where_clauses[] = "academic_year = ?";
+  $params_types .= "s";
+  $params_values[] = $selected_academic_year;
+}
+$eval_where_sql = implode(' AND ', $eval_where_clauses);
+$admin_eval_where_sql = implode(' AND ', $admin_eval_where_clauses);
+
 // SET Average
 $set_avg = '0.00';
-$stmt_set = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM evaluation WHERE faculty_id = ?");
-$stmt_set->bind_param("s", $faculty_id);
+$stmt_set = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM evaluation WHERE {$eval_where_sql}");
+$stmt_set->bind_param($params_types, ...$params_values);
 $stmt_set->execute();
 $stmt_set->bind_result($avg);
 if ($stmt_set->fetch() && $avg !== null) $set_avg = number_format($avg, 2);
@@ -45,34 +71,47 @@ $stmt_set->close();
 
 // SEF Average
 $sef_avg = '0.00';
-$stmt_sef = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM admin_evaluation WHERE evaluatee_id = ?");
-$stmt_sef->bind_param("s", $faculty_id);
+$stmt_sef = $conn->prepare("SELECT AVG(computed_rating) AS avg FROM admin_evaluation WHERE {$admin_eval_where_sql}");
+$stmt_sef->bind_param($params_types, ...$params_values);
 $stmt_sef->execute();
 $stmt_sef->bind_result($avg);
 if ($stmt_sef->fetch() && $avg !== null) $sef_avg = number_format($avg, 2);
 $stmt_sef->close();
 
 // Supervisor Name (Dean/Chair/Program Chair)
+// Supervisor Name (Dean/Chair/Program Chair)
 $evaluator_name = 'N/A';
 $stmt_supervisor = $conn->prepare("
-    SELECT a.first_name, a.mid_name, a.last_name 
-    FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?
-      AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
-    ORDER BY 
-      CASE 
-        WHEN a.position LIKE 'Dean%' THEN 1 
-        WHEN a.position LIKE 'Chair%' THEN 2 
-        ELSE 3 
-      END
-    LIMIT 1
+SELECT a.first_name, a.mid_name, a.last_name 
+FROM admin a
+INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+WHERE ad.department_name = ?
+ AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+ORDER BY 
+ -- Priority 1: Admin matches the faculty's specific program
+ CASE WHEN ad.program_name = ? THEN 1 ELSE 2 END ASC,
+ -- Priority 2: Fallback to position (Dean > Chair > etc.)
+ CASE 
+WHEN a.position LIKE 'Dean%' THEN 1 
+WHEN a.position LIKE 'Chair%' THEN 2 
+WHEN a.position LIKE 'Program Chair%' THEN 3
+WHEN a.position LIKE 'Director%' THEN 4
+ELSE 5 
+ END
+LIMIT 1
 ");
-$stmt_supervisor->bind_param("s", $dept);
+// Bind both department AND program
+$stmt_supervisor->bind_param("ss", $dept, $faculty_program);
 $stmt_supervisor->execute();
 $stmt_supervisor->bind_result($sfn, $smn, $sln);
 if ($stmt_supervisor->fetch()) {
-    $evaluator_name = strtoupper(trim("$sfn $smn $sln"));
+
+  $middle_initial = '';
+  if (!empty($smn)) {
+    $middle_initial = ' ' . substr($smn, 0, 1) . '.'; // Add space, initial, and period
+  }
+
+  $evaluator_name = strtoupper(trim("$sfn $middle_initial $sln"));
 }
 $stmt_supervisor->close();
 
@@ -133,8 +172,10 @@ $pdf->Cell(90, 8, $sef_avg, 1, 1, 'C');
 // --- Acknowledgement ---
 $pdf->Ln(5);
 $pdf->SetFont('Arial', '', 10);
-$pdf->MultiCell(0, 5,
-    "I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above. I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor."
+$pdf->MultiCell(
+  0,
+  5,
+  "I acknowledge that I have received and reviewed the faculty evaluation conducted for the period mentioned above. I understand that my signature below does not necessarily indicate agreement with the evaluation but confirms that I have been given the opportunity to discuss it with my supervisor."
 );
 
 // --- Section: Supervisor ---
@@ -181,4 +222,3 @@ $pdf->Cell(0, 7, '', 'RB', 1);
 // --- Output ---
 $pdf->Output('I', 'Acknowledgement-Form.pdf');
 exit;
-?>

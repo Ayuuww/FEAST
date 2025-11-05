@@ -2,14 +2,14 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// ✅ Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Fetch all faculty members
-$query = "SELECT * FROM faculty WHERE role = 'faculty'";
+// ✅ Fetch all registrar accounts
+$query = "SELECT * FROM registrar WHERE role = 'registrar'";
 $result = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
@@ -21,17 +21,17 @@ $result = mysqli_query($conn, $query);
 
 <body>
 
-  <?php include 'superadmin-header.php'; ?>
-  <?php include 'superadmin-sidebar.php'; ?>
+  <?php include 'register-header.php'; ?>
+  <?php include 'register-sidebar.php'; ?>
 
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>List of Faculty Members</h1>
+      <h1>List of Registrars</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Faculty</li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item">Registrar</li>
           <li class="breadcrumb-item active">List</li>
         </ol>
       </nav>
@@ -43,7 +43,7 @@ $result = mysqli_query($conn, $query);
 
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">Faculty Information</h5>
+              <h5 class="card-title">Registrar Information</h5>
 
               <?php if (isset($_SESSION['msg'])): ?>
                 <script>
@@ -67,7 +67,7 @@ $result = mysqli_query($conn, $query);
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
-                    <th>Academic Rank</th>
+                    <th>Employment Role</th>
                     <th>Department</th>
                     <th>Program</th>
                     <th>Status</th>
@@ -81,8 +81,8 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?= htmlspecialchars($row['first_name']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['mid_name']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['last_name']); ?></td>
-                      <td class="text-capitalize"><?= htmlspecialchars($row['faculty_rank']); ?></td>
-                      <td class="text-uppercase"><?= htmlspecialchars($row['department']); ?></td>
+                      <td class="text-capitalize"><?= htmlspecialchars($row['employment_role']); ?></td>
+                      <td class="text-uppercase"><?= htmlspecialchars($row['department'] ?? '—'); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['program'] ?? '—'); ?></td>
                       <td>
                         <span class="badge bg-<?= $row['status'] === 'active' ? 'success' : 'secondary'; ?>">
@@ -90,7 +90,7 @@ $result = mysqli_query($conn, $query);
                         </span>
                       </td>
                       <td>
-                        <a href="superadmin-editfaculty.php?id=<?= urlencode($row['idnumber']); ?>"
+                        <a href="register-editregistrar.php?id=<?= urlencode($row['idnumber']); ?>"
                           class="btn btn-warning btn-sm">
                           <i class="bi bi-pencil-square"></i> Edit
                         </a>

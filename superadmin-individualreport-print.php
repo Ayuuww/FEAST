@@ -28,19 +28,26 @@ $prep_stmt->bind_param("s", $superadmin_id);
 $prep_stmt->execute();
 $prep_stmt->bind_result($prep_fname, $prep_mname, $prep_lname);
 if ($prep_stmt->fetch()) {
-  $prepared_by_name = trim("$prep_fname $prep_mname $prep_lname");
+
+  $middle_initial = '';
+  if (!empty($prep_mname)) {
+    $middle_initial = ' ' . substr($prep_mname, 0, 1) . '.'; // Add space, initial, and period
+  }
+
+  $prepared_by_name = strtoupper("$prep_fname $middle_initial $prep_lname");
 }
 $prep_stmt->close();
 
 // --- Faculty Info ---
-$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+// --- Faculty basic info ---
+$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $mname, $dept, $faculty_rank);
+$stmt->bind_result($lname, $fname, $mname, $department, $faculty_program, $faculty_rank); // Added $faculty_program
 $stmt->fetch();
 $stmt->close();
 $faculty_name = strtoupper(trim("$fname $mname $lname"));
-$dept_display = strtoupper($dept);
+$dept_display = strtoupper($department);
 $rank_display = ucwords($faculty_rank);
 $term_display = ($filter_semester ?: "All Semesters") . " / " . ($filter_academic_year ?: "All Academic Years");
 
@@ -114,20 +121,32 @@ $stmt_sup_comments->close();
 
 // --- Reviewed By Name (FIXED QUERY) ---
 $reviewed_by_name = "N/A";
+// $dept and $faculty_program come from the faculty info query above
 $rev_stmt = $conn->prepare("
-    SELECT a.first_name, a.mid_name, a.last_name
-    FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?
-      AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%' OR a.position LIKE '%Director%')
-    ORDER BY CASE WHEN a.position LIKE '%Dean%' THEN 1 ELSE 2 END
-    LIMIT 1
+SELECT a.first_name, a.mid_name, a.last_name
+FROM admin a
+INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+WHERE ad.department_name = ?
+AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%' OR a.position LIKE '%Director%')
+ORDER BY
+-- Priority 1: Admin matches BOTH department and program
+CASE WHEN ad.program_name = ? THEN 1 ELSE 2 END ASC,
+-- Priority 2: Deans/Directors first, then Chairs/Heads
+CASE WHEN a.position LIKE '%Dean%' OR a.position LIKE '%Director%' THEN 1 ELSE 2 END ASC
+LIMIT 1
 ");
-$rev_stmt->bind_param("s", $dept);
+// Bind both the department and the faculty's program
+$rev_stmt->bind_param("ss", $department, $faculty_program);
 $rev_stmt->execute();
 $rev_stmt->bind_result($rev_fname, $rev_mname, $rev_lname);
 if ($rev_stmt->fetch()) {
-  $reviewed_by_name = trim("$rev_fname $rev_mname $rev_lname");
+
+  $middle_initial = '';
+  if (!empty($rev_mname)) {
+    $middle_initial = ' ' . substr($rev_mname, 0, 1) . '.'; // Add space, initial, and period
+  }
+
+  $reviewed_by_name = strtoupper("$rev_fname $middle_initial $rev_lname");
 }
 $rev_stmt->close();
 
@@ -137,7 +156,7 @@ $rev_stmt->close();
 
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn); // <-- pass $conn here
-$pdf->department = $dept;
+$pdf->department = $department;
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);

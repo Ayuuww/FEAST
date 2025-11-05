@@ -2,7 +2,7 @@
 session_start();
 include 'conn/conn.php';
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
     header("Location: pages-login.php");
     exit();
 }
@@ -116,7 +116,7 @@ if (isset($_POST['submit'])) {
 
         $conn->commit();
         $_SESSION['success_message'] = "Admin + Faculty account created successfully for $first_name $last_name!";
-        header("Location: superadmin-admincreation.php");
+        header("Location: register-admincreation.php");
         exit();
     } catch (mysqli_sql_exception $e) {
         $conn->rollback();
@@ -125,10 +125,10 @@ if (isset($_POST['submit'])) {
         } else {
             $_SESSION['error_message'] = "Database Error: " . $e->getMessage();
         }
-        header("Location: superadmin-admincreation.php");
+        header("Location: register-admincreation.php");
         exit();
     }
 } else {
-    header("Location: superadmin-admincreation.php");
+    header("Location: register-admincreation.php");
     exit();
 }

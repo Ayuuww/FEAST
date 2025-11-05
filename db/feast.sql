@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 02, 2025 at 02:38 PM
+-- Generation Time: Nov 05, 2025 at 02:52 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -219,7 +219,32 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (461, '221-0387-11', 'student', 'Rated 93.33% for ELCO102 handled by Frediz Winda Ferrer Badua', '2025-11-02 21:16:33'),
 (462, '221-0387-11', 'student', 'Rated 93.33% for ELCO102 handled by Frediz Winda Ferrer Badua', '2025-11-02 21:23:03'),
 (463, '221-0387-11', 'student', 'Rated 93.33% for ELCO102 handled by Frediz Winda Ferrer Badua', '2025-11-02 21:30:16'),
-(464, '221-0387-11', 'student', 'Rated 93.33% for ELCO102 handled by Frediz Winda Ferrer Badua', '2025-11-02 21:32:08');
+(464, '221-0387-11', 'student', 'Rated 93.33% for ELCO102 handled by Frediz Winda Ferrer Badua', '2025-11-02 21:32:08'),
+(465, '221-0387-11', 'student', 'Logged in', '2025-11-03 17:16:54'),
+(466, '41953', 'superadmin', 'Logged in', '2025-11-03 17:17:42'),
+(467, '41953', 'superadmin', 'Logged in', '2025-11-03 19:49:44'),
+(468, '221-0387-1', 'superadmin', 'Logged in', '2025-11-03 19:56:50'),
+(469, '221-0387-1', '', 'Logged in', '2025-11-03 19:58:07'),
+(470, '221-0387-1', '', 'Logged in', '2025-11-03 19:58:42'),
+(471, '41953', 'superadmin', 'Logged in', '2025-11-03 20:08:31'),
+(472, '221-0387-1', '', 'Logged in', '2025-11-03 20:08:50'),
+(473, '41953', 'superadmin', 'Logged in', '2025-11-03 20:25:22'),
+(474, '221-0387-1', '', 'Logged in', '2025-11-03 20:25:45'),
+(475, '41953', 'superadmin', 'Logged in', '2025-11-03 20:51:32'),
+(476, '00021', 'admin', 'Logged in', '2025-11-03 23:27:02'),
+(477, '41953', 'superadmin', 'Logged in', '2025-11-04 18:15:01'),
+(478, '00021', 'admin', 'Logged in', '2025-11-04 18:27:25'),
+(479, '221-0387-1', '', 'Logged in', '2025-11-04 18:41:03'),
+(480, '00021', 'admin', 'Logged in', '2025-11-04 19:24:23'),
+(481, '41953', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2025-2026\' to \'2nd Semester - 2025-2026\'', '2025-11-04 20:02:57'),
+(482, '41953', 'superadmin', 'Evaluation turned on', '2025-11-04 20:03:05'),
+(483, '221-0387-1', '', 'Logged in', '2025-11-04 20:04:20'),
+(484, '221-0387-2', 'faculty', 'Logged in', '2025-11-04 20:14:24'),
+(485, '221-0387-1', '', 'Logged in', '2025-11-04 20:41:20'),
+(486, '221-0387-2', '', 'Logged in', '2025-11-04 20:41:48'),
+(487, '10231', 'faculty', 'Logged in', '2025-11-04 21:31:33'),
+(488, '00021', 'admin', 'Logged in', '2025-11-04 21:33:27'),
+(489, '221-0387-2', '', 'Logged in', '2025-11-04 22:01:06');
 
 -- --------------------------------------------------------
 
@@ -256,7 +281,8 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `departm
 (128, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Science in Biology'),
 (129, NULL, 'Dean', NULL, NULL, NULL),
 (130, NULL, NULL, NULL, 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', NULL),
-(131, NULL, NULL, NULL, 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', 'Bachelor of Science in Agricultural and Biosystems Engineering');
+(131, NULL, NULL, NULL, 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', 'Bachelor of Science in Agricultural and Biosystems Engineering'),
+(132, 'Associate Professor IV', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -282,7 +308,10 @@ CREATE TABLE `admin` (
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`) VALUES
 ('00021', 'Edelita', 'C', 'Ebuenga', '$2y$10$boPOZg4h9iqY3DeSUj0H9OUNZ/8tDkC8YwfVaeffrojKNvTxDP4/u', 'Dean', 'admin', 'active', 'Instructor II'),
-('00102', 'Sample', 'Admin', 'Yes', '$2y$10$8Fzq/J9BTdYvEy4ZNhHSsedukVB24BwKlC3BTRWAZe2UxTSUP00Mu', 'Program Chair', 'admin', 'active', 'Instructor II');
+('00102', 'Sample', 'Admin', 'Yes', '$2y$10$8Fzq/J9BTdYvEy4ZNhHSsedukVB24BwKlC3BTRWAZe2UxTSUP00Mu', 'Program Chair', 'admin', 'active', 'Instructor II'),
+('00191', 'Desiry Mitch', 'D', 'Ocampo', '$2y$10$Cr1LIw6bXl1HGL/qneceZu0B.7LYPbOe6hvPsUthLWA8FI.4uhE2G', 'Program Chair', 'admin', 'active', 'Instructor II'),
+('00919', 'Sample', 'Faculty', 'Side', '$2y$10$Q6jc.hAnKAqb4FzrsMayxuVpOzaaRjX0g5J8YRsVOu58CBPWGsoJq', 'Program Chair', 'admin', 'active', 'Instructor II'),
+('10123', 'Mark', 'Kristian', 'Lagman', '$2y$10$LfPLAB9cOiaCZOv18hpQjOgvAUS7thu9SUdSirkUMJsVyGZolU9KS', 'Program Chair', 'admin', 'active', 'Associate Professor IV');
 
 -- --------------------------------------------------------
 
@@ -302,7 +331,10 @@ CREATE TABLE `admin_departments` (
 
 INSERT INTO `admin_departments` (`admin_idnumber`, `department_name`, `program_name`) VALUES
 ('00021', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-('00102', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language');
+('00102', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language'),
+('00191', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language'),
+('00919', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
+('10123', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Science in Biology');
 
 -- --------------------------------------------------------
 
@@ -430,7 +462,7 @@ CREATE TABLE `evaluation_settings` (
 --
 
 INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_at`) VALUES
-(1, '1st Semester', '2025-2026', '2025-10-27 12:59:09');
+(1, '2nd Semester', '2025-2026', '2025-11-04 12:02:57');
 
 -- --------------------------------------------------------
 
@@ -449,7 +481,7 @@ CREATE TABLE `evaluation_switch` (
 --
 
 INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`) VALUES
-(5, 'on', '221-0387-1');
+(6, 'on', '41953');
 
 -- --------------------------------------------------------
 
@@ -463,7 +495,7 @@ CREATE TABLE `faculty` (
   `mid_name` varchar(50) NOT NULL,
   `last_name` varchar(50) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `department` varchar(255) NOT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `program` varchar(255) DEFAULT NULL,
   `faculty_rank` varchar(50) DEFAULT NULL,
   `role` varchar(50) NOT NULL DEFAULT 'faculty',
@@ -478,11 +510,42 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('00021', 'Edelita', 'C', 'Ebuenga', '$2y$10$boPOZg4h9iqY3DeSUj0H9OUNZ/8tDkC8YwfVaeffrojKNvTxDP4/u', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor II', 'faculty', 'active'),
 ('00102', 'Sample', 'Admin', 'Yes', '$2y$10$8Fzq/J9BTdYvEy4ZNhHSsedukVB24BwKlC3BTRWAZe2UxTSUP00Mu', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'Instructor II', 'faculty', 'active'),
 ('00191', 'Desiry Mitch', 'D', 'Ocampo', '$2y$10$Cr1LIw6bXl1HGL/qneceZu0B.7LYPbOe6hvPsUthLWA8FI.4uhE2G', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'Instructor II', 'faculty', 'active'),
-('00919', 'Sample', 'Faculty', 'Side', '$2y$10$Q6jc.hAnKAqb4FzrsMayxuVpOzaaRjX0g5J8YRsVOu58CBPWGsoJq', 'COLLEGE OF EDUCATION', 'Bachelor of Early Childhood Education', 'Instructor II', 'faculty', 'active'),
+('00919', 'Sample', 'Faculty', 'Side', '$2y$10$Q6jc.hAnKAqb4FzrsMayxuVpOzaaRjX0g5J8YRsVOu58CBPWGsoJq', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor II', 'faculty', 'active'),
+('10123', 'Mark', 'Kristian', 'Lagman', '$2y$10$LfPLAB9cOiaCZOv18hpQjOgvAUS7thu9SUdSirkUMJsVyGZolU9KS', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Science in Biology', 'Associate Professor IV', 'faculty', 'active'),
 ('10231', 'Jose', 'P', 'Rizal', '$2y$10$/ktgmN78IP1NBfo7nT599ePJ8v0DmRYDuhAMKgXYKzDl40gbucq1.', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Science in Biology', 'Instructor II', 'faculty', 'active'),
+('123123123', '1231231', '123123', '123123', '$2y$10$RUQEmuLC1TzyNP1lVM7A3eQY/kZ.xOOtU471XnXeYl2MRTjsaAd5m', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'Associate Professor IV', 'faculty', 'active'),
+('221-0387-2', 'Clark', 'Joshua', 'Rojas', NULL, 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'Associate Professor IV', 'faculty', 'active'),
 ('33113', 'Yes', 'No', 'MAYBE', '$2y$10$ZgMDbPRQcY68B2HnHw/AQePujgOZt3kiGm1dl1LvjtK3hiQ9jT.My', 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', 'Bachelor of Science in Agricultural and Biosystems Engineering', 'Instructor II', 'faculty', 'active'),
 ('40207', 'Rhoda', 'M', 'Lilan', '$2y$10$LbejkMujq4jfIPZnT60KEOsUTHXh/rACORRR28dRtFbFsGXv0uPVC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor II', 'faculty', 'active'),
 ('41953', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$Aa0rYYNDp8B8f8gkNgzXTu.TinSbLy0YQRqgSecD/F7CK/SGZLFsO', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'Instructor II', 'faculty', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `registrar`
+--
+
+CREATE TABLE `registrar` (
+  `idnumber` varchar(255) NOT NULL,
+  `first_name` varchar(255) NOT NULL,
+  `mid_name` varchar(255) NOT NULL,
+  `last_name` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `department` varchar(255) DEFAULT NULL,
+  `program` varchar(255) DEFAULT NULL,
+  `status` varchar(50) NOT NULL DEFAULT 'active',
+  `role` varchar(50) NOT NULL DEFAULT 'registrar',
+  `employment_role` enum('Teaching','Non-Teaching') NOT NULL DEFAULT 'Non-Teaching',
+  `faculty_rank` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `registrar`
+--
+
+INSERT INTO `registrar` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `program`, `status`, `role`, `employment_role`, `faculty_rank`) VALUES
+('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$6K2A.hXTVJVlog0JaHyDrO4JTW8pAyDfGWISuhwywogxg3SNn5k0W', NULL, NULL, 'active', 'registrar', 'Non-Teaching', NULL),
+('221-0387-2', 'Clark', 'Joshua', 'Rojas', '$2y$10$sabFtiZX.EhxgdrY10mBquwUf7jjJuFkhWeNtD0q.SbbMutPEbgVS', 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'active', 'registrar', 'Teaching', 'Associate Professor IV');
 
 -- --------------------------------------------------------
 
@@ -507,7 +570,7 @@ CREATE TABLE `student` (
 --
 
 INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `program`, `section`, `role`) VALUES
-('221-0387-11', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$gPu55xku85X.9YbtfpjVse2UMcVMw7kotA3AdcKhJy6LQwOh9hFyq', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student');
+('221-0387-11', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$gPu55xku85X.9YbtfpjVse2UMcVMw7kotA3AdcKhJy6LQwOh9hFyq', 'COLLEGE OF EDUCATION', 'Bachelor of Early Childhood Education', '1-A', 'student');
 
 -- --------------------------------------------------------
 
@@ -611,7 +674,6 @@ CREATE TABLE `superadmin` (
 --
 
 INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `department`, `program`, `faculty_rank`, `position`, `status`) VALUES
-('221-0387-1', 'Clark Joshua', 'Velasco', 'Rojas', '$2y$10$NvnGGTMLAypTJ4d1jA4Gzuy1lmz8zx5c6Hyy2b90rOn1MvHmUXmGS', 'superadmin', NULL, NULL, NULL, 'Staff', 'active'),
 ('41953', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$USXT8cvNM3r8ivD6QErw9e/S0yiERn0k3qUTw.82KMzfo8AAGBqKq', 'superadmin', NULL, NULL, 'Instructor II', 'Head Instruction', 'active');
 
 --
@@ -705,6 +767,14 @@ ALTER TABLE `faculty`
   ADD KEY `fk_faculty_rank` (`faculty_rank`);
 
 --
+-- Indexes for table `registrar`
+--
+ALTER TABLE `registrar`
+  ADD PRIMARY KEY (`idnumber`),
+  ADD UNIQUE KEY `faculty_rank` (`faculty_rank`),
+  ADD KEY `fk_registrar_department` (`department`);
+
+--
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
@@ -756,13 +826,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=465;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=490;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -798,7 +868,7 @@ ALTER TABLE `evaluation_settings`
 -- AUTO_INCREMENT for table `evaluation_switch`
 --
 ALTER TABLE `evaluation_switch`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
@@ -870,6 +940,13 @@ ALTER TABLE `evaluation_switch`
 ALTER TABLE `faculty`
   ADD CONSTRAINT `fk_faculty_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_faculty_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `registrar`
+--
+ALTER TABLE `registrar`
+  ADD CONSTRAINT `fk_registrar_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_registrar_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `student`

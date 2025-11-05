@@ -2,8 +2,8 @@
 session_start();
 include 'conn/conn.php';
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -42,15 +42,15 @@ while ($row = $adds_data_result->fetch_assoc()) {
 </head>
 
 <body>
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Admin Creation</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Admin</li>
           <li class="breadcrumb-item active">Add New Admin</li>
         </ol>

@@ -10,7 +10,7 @@ if (!isset($_SESSION['idnumber'])) {
 
 // Fetch user's role and faculty status
 $id_number = $_SESSION['idnumber'];
-$user_check_query = "SELECT role, faculty FROM superadmin WHERE idnumber = ?";
+$user_check_query = "SELECT role FROM superadmin WHERE idnumber = ?";
 $user_stmt = $conn->prepare($user_check_query);
 $user_stmt->bind_param("s", $id_number);
 $user_stmt->execute();
@@ -24,7 +24,15 @@ if (!$user_data || $user_data['role'] !== 'superadmin') {
   exit();
 }
 
-$is_faculty = ($user_data['faculty'] === 'Yes');
+// NOW, check if this superadmin is also in the faculty table
+$faculty_check_stmt = $conn->prepare("SELECT COUNT(*) FROM faculty WHERE idnumber = ?");
+$faculty_check_stmt->bind_param("s", $id_number);
+$faculty_check_stmt->execute();
+$faculty_check_stmt->bind_result($faculty_count);
+$faculty_check_stmt->fetch();
+$faculty_check_stmt->close();
+
+$is_faculty = ($faculty_count > 0);
 $result = null;
 
 // ✅ Get active academic year & semester

@@ -2,8 +2,8 @@
 session_start();
 include 'conn/conn.php'; // Connection to the database
 
-// Check if the user is logged in and is a superadmin
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+// Check if the user is logged in and is a registrar
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -22,8 +22,8 @@ $result = mysqli_query($conn, $query);
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
 
@@ -31,7 +31,7 @@ $result = mysqli_query($conn, $query);
       <h1>List of Students</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Student</li>
           <li class="breadcrumb-item active">List</li>
         </ol>
@@ -72,7 +72,7 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['program'] ?? 'N/A'); ?></td>
                       <td class="text-uppercase"><?php echo htmlspecialchars($row['section']); ?></td>
                       <td>
-                        <a href="superadmin-editstudent.php?id=<?php echo htmlspecialchars($row['idnumber']); ?>" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="register-editstudent.php?id=<?php echo htmlspecialchars($row['idnumber']); ?>" class="btn btn-warning btn-sm">Edit</a>
                       </td>
                     </tr>
                   <?php

@@ -3,7 +3,7 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['msg'] = 'Student information updated successfully!';
     $_SESSION['msg_type'] = 'success';
 
-    header("Location: superadmin-editstudent.php?id=$student_id");
+    header("Location: register-editstudent.php?id=$student_id");
     exit();
   } else {
     echo "Update failed.";
@@ -102,16 +102,16 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Edit Student</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-studentlist.php">Student</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-studentlist.php">Student</a></li>
           <li class="breadcrumb-item">List</li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
@@ -199,7 +199,7 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
               </div>
 
               <button type="submit" class="btn btn-success">Update Student</button>
-              <a href="superadmin-studentlist.php" class="btn btn-secondary">Back</a>
+              <a href="register-studentlist.php" class="btn btn-secondary">Back</a>
             </form>
           </div>
         </div>

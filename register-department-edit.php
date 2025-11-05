@@ -3,14 +3,14 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
 
 $id = $_GET['id'] ?? null;
 if (!$id) {
-  header("Location: superadmin-department-info.php");
+  header("Location: register-department-info.php");
   exit();
 }
 
@@ -22,7 +22,7 @@ $result = $stmt->get_result();
 $dept = $result->fetch_assoc();
 
 if (!$dept) {
-  header("Location: superadmin-department-info.php");
+  header("Location: register-department-info.php");
   exit();
 }
 
@@ -59,13 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
   <?php include 'head.php'; ?>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="sweetalert2/sweetalert2@11.js"></script>
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php'; ?>
-  <?php include 'superadmin-sidebar.php'; ?>
+  <?php include 'register-header.php'; ?>
+  <?php include 'register-sidebar.php'; ?>
 
   <main id="main" class="main">
 
@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <h1>Department Information</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-department-info.php">Department Information</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-department-info.php">Department Information</a></li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
       </nav>
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <button type="submit" class="btn btn-success btn-sm px-4">
                     <i class="bi bi-check-circle"></i> Update
                   </button>
-                  <a href="superadmin-department-info.php" class="btn btn-secondary btn-sm px-4">
+                  <a href="register-department-info.php" class="btn btn-secondary btn-sm px-4">
                     <i class="bi bi-x-circle"></i> Cancel
                   </a>
                 </div>
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         confirmButtonText: 'OK'
       }).then(() => {
         // Redirect back to the main list
-        window.location.href = 'superadmin-department-info.php';
+        window.location.href = 'register-department-info.php';
       });
     </script>
   <?php endif; ?>

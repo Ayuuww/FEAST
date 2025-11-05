@@ -25,7 +25,7 @@ $check->close();
 if ($exists > 0) {
     $_SESSION['msg'] = "ID number already exists. Please enter a different one.";
     $_SESSION['msg_type'] = "warning";
-    header("Location: superadmin-facultycreation.php");
+    header("Location: register-facultycreation.php");
     exit();
 }
 
@@ -46,5 +46,5 @@ if ($stmt->execute()) {
 }
 
 $stmt->close();
-header("Location: superadmin-facultycreation.php");
+header("Location: register-facultycreation.php");
 exit();

@@ -56,7 +56,7 @@ $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
 // 🔹 FIX 3: Use the new display variable for the title
-$pdf->Cell(0, 10, strtoupper($admin_department_display) . ' SEF REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, 'COLLEGE SEF REPORT', 0, 1, 'C');
 
 // ... (Your filter display logic is fine, but I'll update it to be more robust like the SET report) ...
 
@@ -99,7 +99,7 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(150, 10, strtoupper($admin_department_display) . " SET REPORT", 0, 1, 'C', true);
+$pdf->Cell(150, 10, "COLLEGE SET REPORT", 0, 1, 'C', true);
 $pdf->Ln(2);
 
 // Table Headers
