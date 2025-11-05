@@ -83,12 +83,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $admin_updated = $update->execute();
       $update->close();
 
-      $update = $conn->prepare("UPDATE faculty SET password=? WHERE idnumber=?");
-      $update->bind_param("ss", $hashed_new, $idnumber);
-      $faculty_updated = $update->execute();
-      $update->close();
-
-      if ($admin_updated || $faculty_updated) {
+      if ($admin_updated) {
         $swal = "Swal.fire({
           icon: 'success',
           title: 'Password Changed',

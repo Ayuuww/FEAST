@@ -209,8 +209,13 @@ $subject_query = "
     FROM subject ss
     LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
     LEFT JOIN admin a ON ss.admin_id = a.idnumber
+    WHERE ss.admin_id = ?
     ORDER BY last_name, first_name, ss.title";
-$subject_result = $conn->query($subject_query);
+
+$subject_stmt = $conn->prepare($subject_query);
+$subject_stmt->bind_param("s", $admin_id);
+$subject_stmt->execute();
+$subject_result = $subject_stmt->get_result();
 $subjects_by_faculty = [];
 while ($subject = $subject_result->fetch_assoc()) {
   $instructor = trim($subject['first_name'] . ' ' . $subject['last_name']);

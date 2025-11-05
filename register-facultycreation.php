@@ -150,8 +150,17 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
     <i class="bi bi-arrow-up-short"></i>
   </a>
 
+  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="vendors/chart.js/chart.umd.js"></script>
+  <script src="vendors/echarts/echarts.min.js"></script>
+  <script src="vendors/quill/quill.js"></script>
+  <script src="vendors/simple-datatables/simple-datatables.js"></script>
+  <script src="vendors/tinymce/tinymce.min.js"></script>
+  <script src="vendors/php-email-form/validate.js"></script>
+
+  <!-- Template Main JS File -->
+  <script src="assets/js/main.js"></script>
 
   <script>
     // 🟢 Dynamic Program Loading based on Department

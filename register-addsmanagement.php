@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <option value="Rank">Rank</option>
               <option value="Position">Position</option>
               <option value="Section">Section</option>
-              <option value="Department">Department / College</option>
+              <option value="Department">College</option>
               <option value="Program">Program</option>
             </select>
           </div>
@@ -180,9 +180,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <input type="text" class="form-control" name="value" required>
           </div>
           <div class="col-md-4 d-none" id="departmentField">
-            <label class="form-label">Select Department / College</label>
+            <label class="form-label">Select College</label>
             <select class="form-select" name="department_name">
-              <option value="">-- Choose Department --</option>
+              <option value="">-- Choose College --</option>
               <?php
               $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
               while ($row = $departments->fetch_assoc()):
@@ -203,10 +203,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           <h5 class="mb-3"><i class="bi bi-building"></i> Colleges & Programs</h5>
           <?php
           $colleges = $conn->query("
-  SELECT MIN(id) AS id, department_name 
-  FROM adds 
-  WHERE department_name IS NOT NULL AND department_name != '' 
-  GROUP BY department_name 
+  SELECT id, department_name
+  FROM adds
+  WHERE department_name IS NOT NULL 
+    AND department_name != '' 
+    AND (program_name IS NULL OR program_name = '')
   ORDER BY department_name ASC
 ");
           while ($col = $colleges->fetch_assoc()):

@@ -127,7 +127,7 @@ $result = mysqli_query($conn, $query);
   <script src="assets/js/main.js"></script>
 
   <!-- SweetAlert2 CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="sweetalert2/sweetalert2@11.js"></script>
 
 </body>
 

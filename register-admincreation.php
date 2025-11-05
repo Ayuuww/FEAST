@@ -147,9 +147,9 @@ while ($row = $adds_data_result->fetch_assoc()) {
                 <div class="col-md-6">
                   <div class="form-floating">
                     <select class="form-select" name="main_department" id="main_department" required>
-                      <option value="" disabled selected>-- Select Main Department --</option>
+                      <option value="" disabled selected>-- Select Main College --</option>
                     </select>
-                    <label>Main Department</label>
+                    <label>Main College</label>
                   </div>
                 </div>
 
@@ -163,7 +163,7 @@ while ($row = $adds_data_result->fetch_assoc()) {
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label fw-bold">Assign *Additional* Department(s) (Optional)</label>
+                  <label class="form-label fw-bold">Assign *Additional* College(s) (Optional)</label>
                   <select name="departments[]" id="department" multiple></select>
                 </div>
 

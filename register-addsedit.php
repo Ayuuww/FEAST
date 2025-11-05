@@ -2,7 +2,7 @@
 session_start();
 include 'conn/conn.php';
 
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   header("Location: pages-login.php");
   exit();
 }
@@ -12,7 +12,7 @@ $type = $_GET['type'] ?? '';
 $message = '';
 
 if (!$id || !$type) {
-  header("Location: superadmin-addsmanagement.php");
+  header("Location: register-addsmanagement.php");
   exit();
 }
 
@@ -37,7 +37,7 @@ switch ($type) {
 }
 
 if (!$column) {
-  header("Location: superadmin-addsmanagement.php");
+  header("Location: register-addsmanagement.php");
   exit();
 }
 
@@ -103,8 +103,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt = $conn->prepare("UPDATE adds SET $column = ? WHERE id = ?");
         $stmt->bind_param("si", $new_value, $id);
         if ($stmt->execute()) {
-          $message = "$type updated successfully!";
-          $current_value = $new_value;
+          $_SESSION['msg'] = "$type updated successfully!";
+          $_SESSION['msg_type'] = "success";
+          header("Location: register-addsmanagement.php");
+          exit();
         } else {
           $message = "Update failed.";
         }
@@ -121,23 +123,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <head>
   <meta charset="UTF-8">
-  <title>Edit <?= htmlspecialchars($type) ?> | Superadmin</title>
+  <title>Edit <?= htmlspecialchars($type) ?> | register</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <?php include 'head.php'; ?>
 </head>
 
 <body>
 
-  <?php include 'superadmin-header.php' ?>
-  <?php include 'superadmin-sidebar.php' ?>
+  <?php include 'register-header.php' ?>
+  <?php include 'register-sidebar.php' ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Edit <?= htmlspecialchars($type) ?></h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="superadmin-addsmanagement.php">Manage</a></li>
+          <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="register-addsmanagement.php">Manage</a></li>
           <li class="breadcrumb-item active">Edit <?= htmlspecialchars($type) ?></li>
         </ol>
       </nav>
@@ -156,9 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
 
                 <div class="col-md-12">
-                  <label class="form-label">Select Department / College</label>
+                  <label class="form-label">Select College</label>
                   <select name="department_name" class="form-select" required>
-                    <option value="">-- Choose Department --</option>
+                    <option value="">-- Choose College --</option>
                     <?php
                     $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
                     while ($dept = $departments->fetch_assoc()):
@@ -178,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
               <div class="col-md-12 d-flex justify-content-end mt-3">
                 <button type="submit" class="btn btn-success me-2">Update</button>
-                <a href="superadmin-addsmanagement.php" class="btn btn-secondary">Back</a>
+                <a href="register-addsmanagement.php" class="btn btn-secondary">Back</a>
               </div>
             </form>
           </div>

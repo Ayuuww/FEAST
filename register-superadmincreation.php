@@ -69,7 +69,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
               <?php endif; ?>
 
               <h5 class="card-title text-center">Create New Super Admin</h5>
-              <form class="row g-3 needs-validation" novalidate method="post" action="registercreation.php">
+              <form class="row g-3 needs-validation" novalidate method="post" action="superadmincreation.php">
 
                 <div class="col-md-6">
                   <div class="form-floating">

@@ -55,15 +55,14 @@ if (isset($_POST['submit'])) {
         $stmt_faculty = $conn->prepare("
             INSERT INTO faculty 
             (idnumber, first_name, mid_name, last_name, password, role, status, department, program, faculty_rank)
-            VALUES (?, ?, ?, ?, ?, 'faculty', 'active', ?, ?, ?)
+            VALUES (?, ?, ?, ?, NULL, 'faculty', 'active', ?, ?, ?)
         ");
         $stmt_faculty->bind_param(
-            "ssssssss",
+            "sssssss",
             $idnumber,
             $first_name,
             $mid_name,
             $last_name,
-            $hashed_password,
             $main_department,
             $main_program,
             $faculty_rank

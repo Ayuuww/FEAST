@@ -63,34 +63,50 @@ while ($row = $adds_result->fetch_assoc()) {
 // --- End new query ---
 
 
-// --- ✅ 3. Fetch faculty ONLY from the admin's assigned departments ---
-$faculty_data = []; // Initialize the array
+// --- ✅ 3. Fetch faculty ONLY from the admin's assigned department + program ---
+$faculty_data = [];
 
-if (!empty($departments)) {
-  // Create placeholders for the IN clause (e.g., ?, ?, ?)
-  $placeholders = implode(',', array_fill(0, count($departments), '?'));
+$dept_prog_stmt = $conn->prepare("
+    SELECT department_name, program_name
+    FROM admin_departments
+    WHERE admin_idnumber = ?
+");
+$dept_prog_stmt->bind_param("s", $admin_id);
+$dept_prog_stmt->execute();
+$dept_prog_result = $dept_prog_stmt->get_result();
 
-  // Create the type string (e.g., "sss")
-  $types = str_repeat('s', count($departments));
+$conditions = [];
+$params = [];
+$types = '';
 
-  $faculty_query = "SELECT idnumber, first_name, mid_name, last_name 
-                      FROM faculty 
-                      WHERE status = 'active' 
-                      AND department IN ($placeholders)
-                      ORDER BY last_name, first_name";
+while ($row = $dept_prog_result->fetch_assoc()) {
+  $conditions[] = "(department = ? AND program = ?)";
+  $params[] = $row['department_name'];
+  $params[] = $row['program_name'];
+  $types .= "ss";
+}
+$dept_prog_stmt->close();
+
+if (!empty($conditions)) {
+  $faculty_query = "
+        SELECT idnumber, first_name, mid_name, last_name
+        FROM faculty
+        WHERE status = 'active' 
+        AND (" . implode(" OR ", $conditions) . ")
+        ORDER BY last_name, first_name
+    ";
 
   $faculty_stmt = $conn->prepare($faculty_query);
-
-  // Bind all department names as parameters
-  $faculty_stmt->bind_param($types, ...$departments);
-
+  $faculty_stmt->bind_param($types, ...$params);
   $faculty_stmt->execute();
   $faculty_result = $faculty_stmt->get_result();
 
-  while ($row = mysqli_fetch_assoc($faculty_result)) {
+  while ($row = $faculty_result->fetch_assoc()) {
     $faculty_data[] = $row;
   }
+  $faculty_stmt->close();
 }
+
 // --- End faculty fetch ---
 ?>
 
