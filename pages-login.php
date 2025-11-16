@@ -164,12 +164,21 @@ if (isset($_POST['login'])) {
     }
 
     @media (max-width: 768px) {
+      .login-card {
+        flex-direction: column;
+      }
+
       .login-left {
-        display: none;
+        width: 100%;
+        display: block;
+        border-radius: 20px 20px 0 0;
+        padding: 40px 20px;
       }
 
       .login-right {
-        border-radius: 20px;
+        width: 100%;
+        border-radius: 0 0 20px 20px;
+        padding: 40px 20px;
       }
     }
   </style>
@@ -218,19 +227,34 @@ if (isset($_POST['login'])) {
         <form method="post" action="login.php" class="needs-validation" novalidate>
           <div class="form-floating mb-3">
             <input type="text" name="idnumber" class="form-control" id="idnumber"
-              value="<?= (isset($_COOKIE['remember_idnumber']) && !isset($_SESSION['login_failed'])) ? $_COOKIE['remember_idnumber'] : '' ?>"
+              value="<?=
+                      isset($_SESSION['entered_idnumber'])
+                        ? htmlspecialchars($_SESSION['entered_idnumber'])
+                        : ((isset($_COOKIE['remember_idnumber']) && !isset($_SESSION['login_failed']))
+                          ? $_COOKIE['remember_idnumber']
+                          : '')
+                      ?>"
               placeholder="ID Number" pattern="^[0-9\-]+$" required>
             <label for="idnumber">ID Number</label>
             <div class="invalid-feedback">Please enter a valid ID number.</div>
           </div>
 
-          <div class="form-floating mb-3">
+          <div class="form-floating mb-3 position-relative">
             <input type="password" name="password" class="form-control" id="password"
               value="<?= (isset($_COOKIE['remember_password']) && !isset($_SESSION['login_failed'])) ? $_COOKIE['remember_password'] : '' ?>"
               placeholder="Password" required>
             <label for="password">Password</label>
+
+            <!-- 👁 Show Password Button -->
+            <span class="toggle-password" onclick="togglePassword()"
+              style="position:absolute; top:50%; right:15px; transform:translateY(-50%); cursor:pointer; font-size: 1.1rem; color: #6c757d;">
+
+              <i class="bi bi-eye-fill" id="togglePasswordIcon"></i>
+            </span>
+
             <div class="invalid-feedback">Please enter your password.</div>
           </div>
+
 
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
@@ -248,7 +272,33 @@ if (isset($_POST['login'])) {
   <!-- Vendor JS -->
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/main.js"></script>
+
+  <script>
+    function togglePassword() {
+      const password = document.getElementById("password");
+      const icon = document.getElementById("togglePasswordIcon"); // This is now the <i> tag
+
+      if (password.type === "password") {
+        // Password is HIDDEN, so change to TEXT
+        password.type = "text";
+
+        // Change icon to "slashed" (to mean "click to hide")
+        icon.classList.remove("bi-eye-fill");
+        icon.classList.add("bi-eye-slash-fill");
+      } else {
+        // Password is SHOWN, so change to PASSWORD
+        password.type = "password";
+
+        // Change icon back to "open" (to mean "click to show")
+        icon.classList.remove("bi-eye-slash-fill");
+        icon.classList.add("bi-eye-fill");
+      }
+    }
+  </script>
+
+
 </body>
 
 </html>
 <?php unset($_SESSION['login_failed']); ?>
+<?php unset($_SESSION['entered_idnumber']); ?>

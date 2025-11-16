@@ -140,15 +140,15 @@ $data = [
         [
             "label" => "Completed (%)",
             "data" => $completed,
-            "backgroundColor" => "rgba(75, 192, 192, 0.7)",
-            "borderColor" => "rgba(75, 192, 192, 1)",
+            "backgroundColor" => "rgba(75, 192, 192, 0.2)",  // <-- MODIFIED
+            "borderColor" => "rgb(75, 192, 192)",        // <-- MODIFIED
             "borderWidth" => 1
         ],
         [
             "label" => "Not Completed (%)",
             "data" => $notCompleted,
-            "backgroundColor" => "rgba(255, 99, 132, 0.7)",
-            "borderColor" => "rgba(255, 99, 132, 1)",
+            "backgroundColor" => "rgba(255, 99, 132, 0.2)",   // <-- MODIFIED
+            "borderColor" => "rgb(255, 99, 132)",         // <-- MODIFIED
             "borderWidth" => 1
         ]
     ],
@@ -160,4 +160,3 @@ $data = [
 
 header('Content-Type: application/json');
 echo json_encode($data);
-?>

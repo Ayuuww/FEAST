@@ -84,7 +84,57 @@ $year = $_GET['year'] ?? 'All';
 $semester = $_GET['semester'] ?? 'All';
 $dept = $_GET['dept'] ?? 'All';
 
+// --- START: Evaluation Trend Graph Data ---
 
+// 1. Get all student evaluation timestamps
+$student_trend_query = "SELECT created_at AS eval_time, 'student' AS type FROM evaluation";
+$result_student = $conn->query($student_trend_query);
+
+$all_evals = [];
+if ($result_student) {
+  while ($row = $result_student->fetch_assoc()) {
+    $all_evals[] = $row;
+  }
+}
+
+// 2. Get all admin evaluation timestamps
+$admin_trend_query = "SELECT evaluation_date AS eval_time, 'admin' AS type FROM admin_evaluation";
+$result_admin = $conn->query($admin_trend_query);
+
+if ($result_admin) {
+  while ($row = $result_admin->fetch_assoc()) {
+    $all_evals[] = $row;
+  }
+}
+
+// 3. Sort all evaluations by timestamp
+usort($all_evals, function ($a, $b) {
+  return strtotime($a['eval_time']) <=> strtotime($b['eval_time']);
+});
+
+// 4. Build the cumulative chart data
+$chart_timestamps = [];
+$student_eval_counts = [];
+$admin_eval_counts = [];
+$s_count = 0;
+$a_count = 0;
+
+foreach ($all_evals as $eval) {
+  if ($eval['type'] === 'student') {
+    $s_count++;
+  } else {
+    $a_count++;
+  }
+
+  // Add the timestamp to the X-axis
+  $chart_timestamps[] = $eval['eval_time'];
+
+  // Add the *current* cumulative count for *both* series
+  $student_eval_counts[] = $s_count;
+  $admin_eval_counts[] = $a_count;
+}
+
+// --- END: Evaluation Trend Graph Data ---
 ?>
 
 <!DOCTYPE html>
@@ -337,53 +387,100 @@ $dept = $_GET['dept'] ?? 'All';
                       fetch(`fetch-supervisor-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&dept=${encodeURIComponent(dept)}`)
                         .then(response => response.json())
                         .then(chartData => {
+
+                          const chartCanvas = document.querySelector('#stakedBarChart');
+                          let noDataMessage = document.querySelector('#supervisorNoData'); // Using the same ID as my previous fix
+
+                          if (chartData.labels.length === 0) {
+                            chartCanvas.style.display = 'none';
+                            if (noDataMessage) {
+                              noDataMessage.style.display = 'block';
+                            } else {
+                              const messageEl = document.createElement('p');
+                              messageEl.id = 'supervisorNoData';
+                              messageEl.textContent = 'No evaluation data found for the selected filters.';
+                              messageEl.className = 'text-center text-muted mt-3';
+                              chartCanvas.parentNode.appendChild(messageEl);
+                            }
+                            return;
+                          } else {
+                            chartCanvas.style.display = 'block';
+                            if (noDataMessage) noDataMessage.style.display = 'none';
+                          }
+
                           if (barChart) {
                             barChart.data.labels = chartData.labels;
                             barChart.data.datasets = chartData.datasets;
+                            barChart.data.ratios = chartData.ratios;
                             barChart.update();
                           } else {
-                            const ctx = document.querySelector('#stakedBarChart').getContext('2d');
+                            const ctx = chartCanvas.getContext('2d');
                             barChart = new Chart(ctx, {
                               type: 'bar',
-                              data: chartData,
+                              data: {
+                                labels: chartData.labels,
+                                datasets: chartData.datasets,
+                                ratios: chartData.ratios
+                              },
                               options: {
+                                // --- 🚀 HORIZONTAL CHART FIX ---
+                                indexAxis: 'y', // <-- Makes it horizontal
+                                // --- End of Fix ---
+
                                 responsive: true,
                                 plugins: {
                                   tooltip: {
                                     callbacks: {
                                       label: function(context) {
-                                        return context.dataset.label;
+                                        let label = context.dataset.label || '';
+                                        if (label) label += ': ';
+                                        // --- Note: Use .x for horizontal ---
+                                        if (context.parsed.x !== null) {
+                                          label += context.parsed.x.toFixed(2) + '%';
+                                        }
+                                        return label;
+                                      },
+                                      footer: function(tooltipItems) {
+                                        const index = tooltipItems[0].dataIndex;
+                                        const ratio = tooltipItems[0].chart.data.ratios[index];
+                                        return `Total: ${ratio}`;
                                       }
                                     }
                                   },
                                   legend: {
+                                    position: 'bottom',
                                     labels: {
-                                      usePointStyle: false, // 👈 rectangles instead of circles
+                                      usePointStyle: false,
                                       boxWidth: 40,
                                       boxHeight: 12,
                                       borderRadius: 2
                                     }
                                   }
                                 },
+                                // --- 🚀 SWAP THE SCALES ---
                                 scales: {
-                                  x: {
-                                    stacked: true
-                                  },
-                                  y: {
+                                  x: { // This is now the Percentage axis
                                     stacked: true,
                                     title: {
                                       display: true,
                                       text: 'Evaluation Progress (%)'
                                     },
-                                    suggestedMin: 0,
-                                    suggestedMax: 100
+                                    min: 0,
+                                    max: 100
+                                  },
+                                  y: { // This is now the Department axis
+                                    stacked: true,
+                                    grid: {
+                                      display: false // Cleaner look
+                                    }
                                   }
                                 }
+                                // --- End of Scale Swap ---
                               }
                             });
-
                           }
-                        });
+                        })
+                        .catch(err => console.error("Fetch error:", err));
                     }
 
                     document.addEventListener("DOMContentLoaded", () => {
@@ -500,25 +597,41 @@ $dept = $_GET['dept'] ?? 'All';
                   <canvas id="supervisorBarChart" style="max-height: 500px;"></canvas>
 
                   <script>
-                    // --- UPDATED JAVASCRIPT ---
-
-                    // Restore defaults to 'All'
                     let selectedYear = 'All';
-                    let selectedSemester = 'All'; // <-- ADDED BACK
+                    let selectedSemester = 'All';
                     let selectedDept = 'All';
                     let supervisorBarChart = null;
 
-                    // Updated function (with semester)
                     function fetchAdminChartData(year = 'All', semester = 'All', dept = 'All') {
-
-                      // Update label (with semester)
                       document.getElementById("adminYearLabel").textContent =
                         `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester} | ${dept === 'All' ? 'All Departments' : dept}`;
 
-                      // Update fetch URL (with semester)
                       fetch(`fetch-admin-chart-data.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&dept=${encodeURIComponent(dept)}`)
                         .then(response => response.json())
                         .then(chartData => {
+
+                          // Add a check for no data
+                          const chartCanvas = document.querySelector('#supervisorBarChart');
+                          const noDataMessage = document.querySelector('#supervisorNoData');
+                          if (chartData.labels.length === 0) {
+                            chartCanvas.style.display = 'none'; // Hide canvas
+                            if (noDataMessage) {
+                              noDataMessage.style.display = 'block'; // Show message
+                            } else {
+                              // Create message if it doesn't exist
+                              const messageEl = document.createElement('p');
+                              messageEl.id = 'supervisorNoData';
+                              messageEl.textContent = 'No evaluation data found for the selected filters.';
+                              messageEl.className = 'text-center text-muted mt-3';
+                              chartCanvas.parentNode.appendChild(messageEl);
+                            }
+                            return; // Stop here
+                          } else {
+                            // Show canvas and hide message if data exists
+                            chartCanvas.style.display = 'block';
+                            if (noDataMessage) noDataMessage.style.display = 'none';
+                          }
+
                           if (supervisorBarChart) {
                             // Update existing chart
                             supervisorBarChart.data.labels = chartData.labels;
@@ -526,25 +639,31 @@ $dept = $_GET['dept'] ?? 'All';
                             supervisorBarChart.data.ratios = chartData.ratios;
                             supervisorBarChart.update();
                           } else {
-                            // Create new chart (using the corrected logic from our first fix)
-                            const ctx = document.querySelector('#supervisorBarChart').getContext('2d');
+                            // Create new chart
+                            const ctx = chartCanvas.getContext('2d');
                             supervisorBarChart = new Chart(ctx, {
-                              type: 'bar',
+                              type: 'bar', // Stays 'bar', indexAxis makes it horizontal
                               data: {
                                 labels: chartData.labels,
                                 datasets: chartData.datasets,
                                 ratios: chartData.ratios
                               },
+                              // --- 🚀 THIS IS THE NEW PROFESSIONAL CONFIG ---
                               options: {
+                                indexAxis: 'y', // <-- THIS MAKES IT HORIZONTAL
                                 responsive: true,
+                                maintainAspectRatio: false, // Good for horizontal charts
                                 plugins: {
+                                  legend: {
+                                    position: 'bottom', // <-- Cleaner position
+                                  },
                                   tooltip: {
                                     callbacks: {
                                       label: function(context) {
                                         let label = context.dataset.label || '';
                                         if (label) label += ': ';
-                                        if (context.parsed.y !== null) {
-                                          label += context.parsed.y.toFixed(2) + '%';
+                                        if (context.parsed.x !== null) { // <-- Note: changed to .x
+                                          label += context.parsed.x.toFixed(2) + '%';
                                         }
                                         return label;
                                       },
@@ -556,21 +675,29 @@ $dept = $_GET['dept'] ?? 'All';
                                     }
                                   }
                                 },
+                                // --- Swap X and Y scales ---
                                 scales: {
-                                  x: {
-                                    stacked: true
-                                  },
-                                  y: {
+                                  x: { // This is now the Percentage axis
                                     stacked: true,
+                                    min: 0,
+                                    max: 100,
                                     title: {
                                       display: true,
                                       text: 'Evaluation Progress (%)'
+                                    }
+                                  },
+                                  y: { // This is now the Faculty/Subject axis
+                                    stacked: true,
+                                    ticks: {
+                                      autoSkip: false // Ensures all labels are shown
                                     },
-                                    min: 0,
-                                    max: 100
+                                    grid: {
+                                      display: false // <-- Cleaner look
+                                    }
                                   }
                                 }
                               }
+                              // --- END OF NEW CONFIG ---
                             });
                           }
                         })
@@ -578,7 +705,6 @@ $dept = $_GET['dept'] ?? 'All';
                     }
 
                     document.addEventListener("DOMContentLoaded", () => {
-                      // Initial fetch with defaults ('All', 'All', 'All')
                       fetchAdminChartData();
 
                       // Department filter
@@ -603,19 +729,16 @@ $dept = $_GET['dept'] ?? 'All';
                         });
                       });
 
-                      // Semester filter (ADDED BACK)
+                      // Semester filter (Your bug fix is already here and correct)
                       document.querySelectorAll(".admin-semester-filter").forEach(item => {
                         item.addEventListener("click", (e) => {
                           e.preventDefault();
                           selectedSemester = item.getAttribute("data-semester");
-                          fetchAdminChartData(selectedYear, selectedSemester, selectedDept); // Pass only 2 params
-                          document.querySelectorAll(".admin-year-filter").forEach(i => i.classList.remove("active"));
+                          fetchAdminChartData(selectedYear, selectedSemester, selectedDept);
+                          document.querySelectorAll(".admin-semester-filter").forEach(i => i.classList.remove("active"));
                           item.classList.add("active");
                         });
                       });
-
-                      // --- SEMESTER EVENT LISTENER REMOVED ---
-
                     });
                   </script>
 
@@ -760,6 +883,69 @@ $dept = $_GET['dept'] ?? 'All';
           </div>
           <!-- End Recent Activity -->
 
+          <!-- Evaluation Trend Graph -->
+          <div class="col-12">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Evaluation Trend <span>| All Time</span></h5>
+                <div id="evaluationTrendChart" style="height: 350px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <script>
+            document.addEventListener("DOMContentLoaded", () => {
+              new ApexCharts(document.querySelector("#evaluationTrendChart"), {
+                series: [{
+                  name: 'Student Evaluations',
+                  data: <?= json_encode($student_eval_counts) ?>
+                }, {
+                  name: 'Admin Evaluations',
+                  data: <?= json_encode($admin_eval_counts) ?>
+                }],
+                chart: {
+                  height: 350,
+                  type: 'line',
+                  toolbar: {
+                    show: false
+                  },
+                  zoom: {
+                    enabled: true
+                  }
+                },
+                markers: {
+                  size: 4
+                },
+                colors: ['#4154f1', '#ff771d'], // Blue for students, Orange for admins
+                fill: {
+                  type: "gradient",
+                  gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.3,
+                    opacityTo: 0.4,
+                    stops: [0, 90, 100]
+                  }
+                },
+                dataLabels: {
+                  enabled: false // Set to true if you want to see the numbers on the line
+                },
+                stroke: {
+                  curve: 'smooth',
+                  width: 2
+                },
+                xaxis: {
+                  type: 'datetime',
+                  categories: <?= json_encode($chart_timestamps) ?>
+                },
+                tooltip: {
+                  x: {
+                    format: 'MMM dd, yyyy'
+                  }
+                }
+              }).render();
+            });
+          </script>
+
           <!-- Superadmin as Faculty Progress Chart -->
           <?php
           // Use a temporary variable to avoid conflicts if $_SESSION['idnumber'] is used elsewhere
@@ -837,19 +1023,18 @@ $dept = $_GET['dept'] ?? 'All';
                     fetch(`fetch-superadmin-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}`)
                       .then(response => {
                         if (!response.ok) {
-                          // Handle server errors (like 500)
                           throw new Error(`HTTP error! Status: ${response.status}`);
                         }
                         return response.json();
                       })
                       .then(chartData => {
-                        // Check for PHP-level errors returned as JSON
                         if (chartData.error) {
                           console.error("Backend Error:", chartData.error, chartData.sql || '');
                           throw new Error(chartData.error);
                         }
 
                         const chartContainer = document.getElementById("saFacultyChartContainer");
+                        const chartCanvas = document.getElementById("superadminFacultyProgressChart");
 
                         // Check for no data
                         if (chartData.labels.length === 0) {
@@ -857,16 +1042,26 @@ $dept = $_GET['dept'] ?? 'All';
                             superadminFacultyChart.destroy();
                             superadminFacultyChart = null;
                           }
-                          // Reset canvas container and show "no data" message
-                          chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
-                          document.getElementById("superadminFacultyProgressChart").replaceWith("⚠️ No evaluation data found for the selected filters.");
+
+                          // Check if a "no data" message already exists
+                          let noDataEl = document.getElementById("saFacultyNoData");
+                          if (!noDataEl) {
+                            noDataEl = document.createElement('p');
+                            noDataEl.id = 'saFacultyNoData';
+                            noDataEl.className = 'text-center text-muted mt-3';
+                            noDataEl.textContent = '⚠️ No evaluation data found for the selected filters.';
+                            chartContainer.appendChild(noDataEl); // Add message
+                          }
+                          chartCanvas.style.display = 'none'; // Hide canvas
+                          noDataEl.style.display = 'block'; // Show message
                           return;
                         }
 
-                        // If we had a "no data" message, clear it and restore canvas
-                        if (!document.getElementById("superadminFacultyProgressChart")) {
-                          chartContainer.innerHTML = '<canvas id="superadminFacultyProgressChart" style="height: 400px;"></canvas>';
-                        }
+                        // If data exists, hide "no data" message and show canvas
+                        chartCanvas.style.display = 'block';
+                        let noDataEl = document.getElementById("saFacultyNoData");
+                        if (noDataEl) noDataEl.style.display = 'none';
+
 
                         // 2. Use the robust update/create pattern
                         if (superadminFacultyChart) {
@@ -877,7 +1072,7 @@ $dept = $_GET['dept'] ?? 'All';
                           superadminFacultyChart.update();
                         } else {
                           // Create new chart
-                          const ctx = document.getElementById("superadminFacultyProgressChart").getContext("2d");
+                          const ctx = chartCanvas.getContext("2d");
                           superadminFacultyChart = new Chart(ctx, {
                             type: "bar",
                             data: {
@@ -885,17 +1080,20 @@ $dept = $_GET['dept'] ?? 'All';
                               datasets: chartData.datasets,
                               meta: chartData.meta // Store meta data
                             },
+                            // --- 🚀 NEW PROFESSIONAL/HORIZONTAL OPTIONS ---
                             options: {
+                              indexAxis: 'y', // <-- MAKES IT HORIZONTAL
                               responsive: true,
+                              maintainAspectRatio: false,
                               plugins: {
                                 legend: {
-                                  position: "top"
+                                  position: "bottom" // <-- Cleaner position
                                 },
                                 tooltip: {
                                   callbacks: {
                                     label: function(context) {
                                       let datasetLabel = context.dataset.label;
-                                      let value = context.raw;
+                                      let value = context.parsed.x; // <-- Use .x for horizontal
                                       let idx = context.dataIndex;
                                       let done = context.chart.data.meta.done[idx];
                                       let total = context.chart.data.meta.total[idx];
@@ -910,11 +1108,9 @@ $dept = $_GET['dept'] ?? 'All';
                                   }
                                 }
                               },
+                              // --- SWAPPED SCALES ---
                               scales: {
-                                x: {
-                                  stacked: true
-                                },
-                                y: {
+                                x: { // This is now the Percentage axis
                                   stacked: true,
                                   beginAtZero: true,
                                   max: 100,
@@ -922,14 +1118,20 @@ $dept = $_GET['dept'] ?? 'All';
                                     display: true,
                                     text: "Evaluation Progress (%)"
                                   }
+                                },
+                                y: { // This is now the Subject axis
+                                  stacked: true,
+                                  grid: {
+                                    display: false // <-- Cleaner look
+                                  }
                                 }
                               }
                             }
+                            // --- END OF NEW OPTIONS ---
                           });
                         }
                       })
                       .catch(err => {
-                        // This catch block shows the error message
                         console.error("Fetch Error:", err);
                         document.getElementById("saFacultyChartContainer").innerHTML = "Error loading chart data. Check console (F12) for details.";
                       });
@@ -946,7 +1148,6 @@ $dept = $_GET['dept'] ?? 'All';
                         e.preventDefault();
                         selectedSaYear = item.getAttribute("data-year");
                         fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
-                        // Update active class
                         document.querySelectorAll(".sa-year-filter").forEach(i => i.classList.remove("active"));
                         item.classList.add("active");
                       });
@@ -958,18 +1159,17 @@ $dept = $_GET['dept'] ?? 'All';
                         e.preventDefault();
                         selectedSaSem = item.getAttribute("data-sem");
                         fetchSuperadminFacultyData(selectedSaYear, selectedSaSem);
-                        // Update active class
                         document.querySelectorAll(".sa-sem-filter").forEach(i => i.classList.remove("active"));
                         item.classList.add("active");
                       });
                     });
                   });
                 </script>
-
               </div>
             </div>
           </div>
           <!-- End Superadmin as Faculty Progress Chart -->
+
 
         </div><!-- End Right side columns -->
 
@@ -977,8 +1177,6 @@ $dept = $_GET['dept'] ?? 'All';
     </section>
 
   </main><!-- End #main -->
-
-
 
   <!-- ======= Footer ======= -->
   <?php include 'footer.php' ?>

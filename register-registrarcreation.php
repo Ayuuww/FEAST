@@ -26,8 +26,8 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item">Registrar</li>
-          <li class="breadcrumb-item active">Add New Registrar</li>
+          <li class="breadcrumb-item">Account Creator</li>
+          <li class="breadcrumb-item active">Add New Account Creator</li>
         </ol>
       </nav>
     </div>

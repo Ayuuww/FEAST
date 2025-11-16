@@ -177,7 +177,7 @@ $result = mysqli_query($conn, $sql);
 
             <div class="card shadow-sm">
               <div class="card-body">
-                <table class="table datatable">
+                <table class="table datatable table-hover">
                   <thead class="table text-center">
                     <tr>
                       <th>ID Number</th>

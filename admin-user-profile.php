@@ -257,7 +257,7 @@ $program_display = !empty($program_array) ? implode(', ', $program_array) : 'Not
                       <div class="col-md-8 col-lg-9"><input name="mid_name" type="text" class="form-control text-capitalize" value="<?= htmlspecialchars($data['mid_name']) ?>"></div>
                     </div>
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Department(s)</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> College(s)</label>
                       <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($department_display) ?>"></div>
                     </div>
                     <div class="row mb-3">

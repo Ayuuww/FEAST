@@ -23,6 +23,7 @@
 <link href="vendors/quill/quill.bubble.css" rel="stylesheet">
 <link href="vendors/remixicon/remixicon.css" rel="stylesheet">
 <link href="vendors/simple-datatables/style.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/bootstrap-icons.min.css">
 
 <!-- JS -->
 <script src="sweetalert2/sweetalert2@11.js"></script>

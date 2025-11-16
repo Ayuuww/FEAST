@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 05, 2025 at 03:15 PM
+-- Generation Time: Nov 13, 2025 at 03:01 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -267,7 +267,16 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (509, '221-0387-1', 'student', 'Logged in', '2025-11-05 22:06:45'),
 (510, '00000', '', 'Logged in', '2025-11-05 22:10:39'),
 (511, '40005', 'admin', 'Logged in', '2025-11-05 22:13:27'),
-(512, '40005', 'admin', 'Logged in', '2025-11-05 22:13:54');
+(512, '40005', 'admin', 'Logged in', '2025-11-05 22:13:54'),
+(513, '221-0387-1', 'student', 'Logged in', '2025-11-07 20:56:55'),
+(514, '221-0387-1', 'student', 'Logged in', '2025-11-07 20:57:04'),
+(515, '221-0387-1', 'student', 'Logged in', '2025-11-08 01:02:43'),
+(516, '221-0387-1', 'student', 'Logged in', '2025-11-08 01:02:58'),
+(517, '221-0387-1', 'student', 'Logged in', '2025-11-13 18:16:50'),
+(518, '40193', 'superadmin', 'Logged in', '2025-11-13 18:51:24'),
+(519, '40151', 'admin', 'Logged in', '2025-11-13 18:52:21'),
+(520, '221-0387-1', 'student', 'Logged in', '2025-11-13 19:00:51'),
+(521, '40193', 'superadmin', 'Logged in', '2025-11-13 20:19:55');
 
 -- --------------------------------------------------------
 
@@ -1409,7 +1418,7 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=513;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=522;
 
 --
 -- AUTO_INCREMENT for table `adds`

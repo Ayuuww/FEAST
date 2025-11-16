@@ -42,7 +42,7 @@ $sql = "
             {$subquery_where_clause}
             GROUP BY faculty_id, subject_code
         ) AS comp ON exp.faculty_id = comp.faculty_id
-                  AND exp.subject_code = comp.subject_code
+                    AND exp.subject_code = comp.subject_code
     JOIN
         faculty f ON exp.faculty_id = f.idnumber
     JOIN
@@ -74,7 +74,7 @@ $ratios = [];
 while ($row = mysqli_fetch_assoc($result)) {
     $expected = (int) $row['expected_count'];
     $completed = (int) $row['completed_count'];
-    
+
     $progress = ($expected > 0) ? round(($completed / $expected) * 100, 2) : 0;
 
     $labels[] = $row['faculty_name'] . " — " . $row['subject_name'];
@@ -91,12 +91,16 @@ echo json_encode([
         [
             "label" => "Completed",
             "data" => $completed_percent,
-            "backgroundColor" => "rgba(75, 192, 192, 0.85)"
+            "backgroundColor" => "rgba(75, 192, 192, 0.2)",  // <-- MODIFIED
+            "borderColor" => "rgb(75, 192, 192)",        // <-- MODIFIED
+            "borderWidth" => 1
         ],
         [
             "label" => "Pending",
             "data" => $pending_percent,
-            "backgroundColor" => "rgba(255, 99, 132, 0.7)"
+            "backgroundColor" => "rgba(255, 99, 132, 0.2)",   // <-- MODIFIED
+            "borderColor" => "rgb(255, 99, 132)",         // <-- MODIFIED
+            "borderWidth" => 1
         ]
     ]
 ]);

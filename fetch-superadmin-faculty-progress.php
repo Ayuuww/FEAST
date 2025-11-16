@@ -108,15 +108,17 @@ $data = [
         [
             "label" => "Completed (%)",
             "data" => $completed,
-            "backgroundColor" => "rgba(75, 192, 192, 0.7)",
-            "borderColor" => "#4bc0c0ff",
+            // --- MODIFIED COLORS ---
+            "backgroundColor" => "rgba(75, 192, 192, 0.2)",
+            "borderColor" => "rgb(75, 192, 192)",
             "borderWidth" => 1
         ],
         [
             "label" => "Pending (%)",
             "data" => $pending,
-            "backgroundColor" => "rgba(255, 99, 132, 0.7)",
-            "borderColor" => "#ff6384ff",
+            // --- MODIFIED COLORS ---
+            "backgroundColor" => "rgba(255, 99, 132, 0.2)",
+            "borderColor" => "rgb(255, 99, 132)",
             "borderWidth" => 1
         ]
     ],

@@ -184,6 +184,7 @@ if (!empty($conditions)) {
                 </div>
 
                 <div class="col-md-6">
+                  <h6>Where to Assign (College)</h6>
                   <div class="form-floating">
                     <select name="department" id="department" class="form-select" required>
                       <option value="" disabled selected>-- Select Department --</option>
@@ -191,11 +192,12 @@ if (!empty($conditions)) {
                         <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
                       <?php endforeach; ?>
                     </select>
-                    <label for="department">Department</label>
+                    <label for="department">College</label>
                   </div>
                 </div>
 
                 <div class="col-md-6">
+                  <h6>Where to Assign (Program)</h6>
                   <div class="form-floating">
                     <select name="program" id="program" class="form-select" required disabled>
                       <option value="" disabled selected>-- Select Program --</option>

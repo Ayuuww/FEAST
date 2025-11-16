@@ -145,7 +145,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <li class="nav-item">
       <a class="nav-link <?= in_array($currentPage, $regisPages) ? '' : 'collapsed' ?>"
         data-bs-target="#regis-nav" data-bs-toggle="collapse" href="#">
-        <i class="bi bi-person-fill"></i><span>Registrar</span><i class="bi bi-chevron-down ms-auto"></i>
+        <i class="bi bi-person-fill"></i><span>Account Creator</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
       <ul id="regis-nav" class="nav-content collapse <?= in_array($currentPage, $regisPages) ? 'show' : '' ?>"
         data-bs-parent="#sidebar-nav">
@@ -156,7 +156,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </li>
         <li>
           <a href="register-registrarcreation.php" class="<?= $currentPage == 'register-registrarcreation.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Add New Registrar</span>
+            <i class="bi bi-circle"></i><span>Add New Account Creator</span>
           </a>
         </li>
       </ul>

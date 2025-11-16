@@ -28,24 +28,38 @@ $sql = "
 
 // Apply filters
 if ($year !== 'All') {
+    // IMPORTANT: Add an alias to the joined table condition
     $conditions[] = "ae.academic_year = ?";
     $params[] = $year;
     $types .= 's';
 }
 if ($semester !== 'All') {
+    // IMPORTANT: Add an alias to the joined table condition
     $conditions[] = "ae.semester = ?";
     $params[] = $semester;
     $types .= 's';
 }
+
+// Build the JOIN...ON conditions dynamically (to handle 'All' filters)
+$join_conditions = "f.idnumber = ae.evaluatee_id";
+if (!empty($conditions)) {
+    $join_conditions .= " AND " . implode(' AND ', $conditions);
+}
+// Re-build the LEFT JOIN
+$sql = str_replace(
+    "LEFT JOIN admin_evaluation ae ON f.idnumber = ae.evaluatee_id",
+    "LEFT JOIN admin_evaluation ae ON {$join_conditions}",
+    $sql
+);
+
+
+// The Department filter goes in the WHERE clause
 if ($dept !== 'All') {
     $sql .= " WHERE f.department = ?";
     $params[] = $dept;
     $types .= 's';
 }
 
-if (!empty($conditions)) {
-    $sql .= ($dept !== 'All' ? ' AND ' : ' WHERE ') . implode(' AND ', $conditions);
-}
 
 $sql .= " GROUP BY f.department ORDER BY f.department ASC";
 
@@ -57,14 +71,14 @@ if ($stmt) {
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    echo json_encode(['error' => 'Query preparation failed.']);
+    echo json_encode(['error' => 'Query preparation failed.', 'sql' => $sql]);
     exit;
 }
 
 $labels = [];
 $completedData = [];
 $pendingData = [];
-$counts = [];
+$ratios = []; // <-- NEW: We'll store counts here
 
 while ($row = $result->fetch_assoc()) {
     $total = (int)$row['total_faculty'];
@@ -72,10 +86,11 @@ while ($row = $result->fetch_assoc()) {
     $pending = $total - $completed;
 
     $completedPercent = ($total > 0) ? round(($completed / $total) * 100, 2) : 0;
-    $pendingPercent = ($total > 0) ? round(($pending / $total) * 100, 2) : 0;
+    $pendingPercent = 100 - $completedPercent; // Simpler
 
-    // 👇 Add department name with count text
-    $labels[] = $row['department'] . " ({$completed}/{$total})";
+    // --- MODIFICATION ---
+    $labels[] = $row['department']; // Just the department name
+    $ratios[] = "{$completed}/{$total}"; // Store the ratio string separately
 
     $completedData[] = $completedPercent;
     $pendingData[] = $pendingPercent;
@@ -83,20 +98,24 @@ while ($row = $result->fetch_assoc()) {
 
 $data = [
     "labels" => $labels,
+    "ratios" => $ratios, // <-- NEW: Send the ratios
     "datasets" => [
         [
             "label" => "Completed",
             "data" => $completedData,
-            "backgroundColor" => "#4bc0c0ff"
+            "backgroundColor" => "rgba(75, 192, 192, 0.2)",  // <-- MODIFIED
+            "borderColor" => "rgb(75, 192, 192)",        // <-- MODIFIED
+            "borderWidth" => 1
         ],
         [
             "label" => "Pending",
             "data" => $pendingData,
-            "backgroundColor" => "#ff6384ff"
+            "backgroundColor" => "rgba(255, 99, 132, 0.2)",   // <-- MODIFIED
+            "borderColor" => "rgb(255, 99, 132)",         // <-- MODIFIED
+            "borderWidth" => 1
         ]
     ]
 ];
 
 header('Content-Type: application/json');
 echo json_encode($data);
-?>

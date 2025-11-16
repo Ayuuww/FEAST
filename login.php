@@ -89,5 +89,9 @@ if (tryLogin($conn, "student", $id, $password)) exit();
 // ❌ Invalid login
 $_SESSION['msg'] = "Invalid ID or Password.";
 $_SESSION['msg_type'] = "error";
+
+// ✅ Keep entered ID number in session so it stays on reload
+$_SESSION['entered_idnumber'] = $id;
+
 header("Location: pages-login.php");
 exit();
