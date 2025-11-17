@@ -19,12 +19,12 @@ $query = "SELECT
             ae.computed_rating,
             ae.academic_year,
             ae.semester,
-            ae.evaluation_date
+            ae.evaluation_date,
+            ae.comments
           FROM admin_evaluation ae
           JOIN faculty f ON ae.evaluatee_id = f.idnumber
           WHERE ae.evaluator_id = ?
           ORDER BY ae.evaluation_date DESC";
-
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $evaluator_id);
 $stmt->execute();
@@ -81,6 +81,7 @@ if (isset($_SESSION['msg'])) {
                   <th>Evaluatee Name</th>
                   <th>Total Score</th>
                   <th>Computed Rating</th>
+                  <th>Supervisor Comments</th>
                   <th>Semester</th>
                   <th>Academic Year</th>
                   <th>Evaluated On</th>
@@ -93,6 +94,7 @@ if (isset($_SESSION['msg'])) {
                       <td class="text-capitalize"><?= htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']) ?></td>
                       <td><?= htmlspecialchars($row['total_score']) ?></td>
                       <td><?= htmlspecialchars($row['computed_rating']) ?></td>
+                      <td><?= htmlspecialchars($row['comments']) ?></td>
                       <td><?= htmlspecialchars($row['semester']) ?></td>
                       <td><?= htmlspecialchars($row['academic_year']) ?></td>
                       <td><?= htmlspecialchars($row['evaluation_date']) ?></td>

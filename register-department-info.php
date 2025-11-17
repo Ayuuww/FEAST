@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'text' => 'New department info has been added.'
       ];
     }
-    header("Location: superadmin-department-info.php");
+    header("Location: register-department-info.php");
     exit();
   }
 
@@ -112,7 +112,6 @@ while ($row = $program_query->fetch_assoc()) {
 
 <head>
   <?php include 'head.php' ?>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>

@@ -109,24 +109,6 @@ if (!$sections_result) {
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select name="department" id="department" class="form-select" required>
-                      <option value="" disabled selected>Select Department</option>
-                    </select>
-                    <label for="department">Department</label>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select name="program" id="program" class="form-select" required disabled>
-                      <option value="" disabled selected>Select Program</option>
-                    </select>
-                    <label for="program">Program</label>
-                  </div>
-                </div>
-
-                <div class="col-md-12">
-                  <div class="form-floating">
                     <select name="section" id="section" class="form-select" required>
                       <option value="" disabled selected>Select Section</option>
                       <?php while ($row = $sections_result->fetch_assoc()): ?>
@@ -134,6 +116,24 @@ if (!$sections_result) {
                       <?php endwhile; ?>
                     </select>
                     <label for="section">Section</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select name="department" id="department" class="form-select" required>
+                      <option value="" disabled selected>Select Department</option>
+                    </select>
+                    <label for="department">College</label>
+                  </div>
+                </div>
+
+                <div class="col-md-12">
+                  <div class="form-floating">
+                    <select name="program" id="program" class="form-select" required disabled>
+                      <option value="" disabled selected>Select Program</option>
+                    </select>
+                    <label for="program">Program</label>
                   </div>
                 </div>
 

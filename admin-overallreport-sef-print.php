@@ -12,7 +12,7 @@ $admin_id = $_SESSION['idnumber'];
 
 // 🔹 FIX 1: Get admin info (removed 'department')
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
-                        FROM admin WHERE idnumber = ?");
+                           FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 // Removed $admin_department from binding
@@ -99,14 +99,16 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(150, 10, "COLLEGE SET REPORT", 0, 1, 'C', true);
+$pdf->Cell(180, 10, "COLLEGE SET EVALUATION REPORT", 0, 1, 'C', true); // Note: This says SET, might want to change to SEF
 $pdf->Ln(2);
 
-// Table Headers
+// --- ✅ MODIFICATION 1: Adjust Table Headers ---
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(100, 10, 'Faculty Name', 1);
-$pdf->Cell(50, 10, 'Average SEF Rating', 1, 0, 'C');
+$pdf->Cell(80, 10, 'Faculty Name', 1); // Adjusted width
+$pdf->Cell(60, 10, 'No. of Supervisor Evaluations', 1, 0, 'C'); // Added new column
+$pdf->Cell(40, 10, 'Avg. SEF Rating', 1, 0, 'C'); // Adjusted width
 $pdf->Ln();
+// --- End Modification 1 ---
 
 // 🔹 CHANGE 3: Fix Faculty Query (use Dept/Prog pairs)
 $faculties = [];
@@ -182,12 +184,15 @@ foreach ($faculties as $fac) {
     $r = $stmtEval->get_result()->fetch_assoc();
     $stmtEval->close();
 
-    $count = (int)$r['evals'];
+    $count = (int)$r['evals']; // ✅ This is the count
     $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
 
-    $pdf->Cell(100, 8, $name, 1);
-    $pdf->Cell(50, 8, "$avg", 1, 0, 'C');
+    // --- ✅ MODIFICATION 2: Add Data Cell ---
+    $pdf->Cell(80, 8, $name, 1); // Adjusted width
+    $pdf->Cell(60, 8, $count, 1, 0, 'C'); // Added cell for the count
+    $pdf->Cell(40, 8, "$avg", 1, 0, 'C'); // Adjusted width
     $pdf->Ln();
+    // --- End Modification 2 ---
 }
 
 $pdf->Ln(10);

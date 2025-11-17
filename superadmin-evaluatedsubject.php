@@ -55,29 +55,32 @@ if ($is_faculty) {
   $faculty_id = $_SESSION['idnumber'];
 
   $query = "
-            SELECT 
-              ss.subject_code,
-              subj.title,
-              ss.academic_year,
-              ss.semester,
-              COUNT(DISTINCT e.id) AS evaluated_count,
-              COUNT(DISTINCT ss.student_id) AS enrolled_count,
-              AVG(e.total_score) AS avg_score,
-              AVG(e.computed_rating) AS avg_rating,
-              GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
-            FROM student_subject ss
-            LEFT JOIN subject subj 
-              ON subj.code = ss.subject_code
-            LEFT JOIN evaluation e 
-              ON e.subject_code = ss.subject_code
-            AND e.academic_year = ss.academic_year
-            AND e.semester = ss.semester
-            AND e.faculty_id = ss.faculty_id
-            WHERE ss.faculty_id = ?
-              AND ss.academic_year = ?
-              AND ss.semester = ?
-            GROUP BY ss.subject_code, subj.title, ss.academic_year, ss.semester
-            ORDER BY ss.academic_year DESC, ss.semester DESC
+          SELECT 
+            ss.subject_code,
+            subj.title,
+            ss.academic_year,
+            ss.semester,
+            COUNT(DISTINCT e.id) AS evaluated_count,
+            COUNT(DISTINCT ss.student_id) AS enrolled_count,
+            AVG(e.total_score) AS avg_score,
+            AVG(e.computed_rating) AS avg_rating,
+            GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
+          FROM student_subject ss
+          LEFT JOIN subject subj 
+            ON subj.code = ss.subject_code
+          
+          -- ✅ MODIFICATION: Changed LEFT JOIN to INNER JOIN --
+          INNER JOIN evaluation e 
+            ON e.subject_code = ss.subject_code
+           AND e.academic_year = ss.academic_year
+           AND e.semester = ss.semester
+           AND e.faculty_id = ss.faculty_id
+          
+          WHERE ss.faculty_id = ?
+            AND ss.academic_year = ?
+            AND ss.semester = ?
+          GROUP BY ss.subject_code, subj.title, ss.academic_year, ss.semester
+          ORDER BY ss.academic_year DESC, ss.semester DESC
         ";
 
 
@@ -96,21 +99,14 @@ if ($is_faculty) {
 
 <head>
 
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
-
 </head>
 
 <body>
 
   <?php include 'superadmin-header.php' ?>
 
-  <!-- ======= Sidebar ======= -->
   <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
-
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Subjects</h1>
@@ -126,7 +122,6 @@ if ($is_faculty) {
       <div class="row">
 
         <?php if ($is_faculty): ?>
-          <!-- Filter -->
           <form method="get" class="row g-3 mb-3">
             <div class="col-md-4">
               <label for="year" class="form-label">Academic Year</label>
@@ -152,8 +147,6 @@ if ($is_faculty) {
               <button type="submit" class="btn btn-success w-100">Filter</button>
             </div>
           </form>
-          <!-- End Filter -->
-
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Evaluated Subjects You Handle</h5>
@@ -242,16 +235,10 @@ if ($is_faculty) {
 
       </div>
     </section>
-  </main><!-- End #main -->
-
-  <!-- ======= Footer ======= -->
-  <?php include 'footer.php' ?>
-  <!-- End Footer -->
-
+  </main><?php include 'footer.php' ?>
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
       class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
   <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendors/chart.js/chart.umd.js"></script>
@@ -261,7 +248,6 @@ if ($is_faculty) {
   <script src="vendors/tinymce/tinymce.min.js"></script>
   <script src="vendors/php-email-form/validate.js"></script>
 
-  <!-- Template Main JS File -->
   <script src="assets/js/main.js"></script>
   <script src="chart/chart.js"></script>
 

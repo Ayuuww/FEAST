@@ -614,32 +614,20 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
           title: 'Evaluation Submitted!',
-          text: 'Would you like to print your evaluation now?',
           icon: 'success',
-          showCancelButton: true,
-          confirmButtonText: 'Print Now',
-          cancelButtonText: 'Print Later'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // ✅ Open print page in a new tab
-            window.open(
-              "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>",
-              "_blank"
-            );
-          } else {
-            Swal.fire({
-              title: 'Saved!',
-              text: 'You may print it later from your evaluated faculty list.',
-              icon: 'info',
-              timer: 3000
-            }).then(() => {
-              window.location.reload(); // Reload to refresh dropdown
-            });
-          }
+          confirmButtonText: 'Print',
+          allowOutsideClick: false,
+          allowEscapeKey: false
+        }).then(() => {
+          window.open(
+            "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>",
+            "_blank"
+          );
         });
       });
     </script>
-    <?php unset($_SESSION['last_evaluated_faculty_id']); ?> <?php endif; ?>
+    <?php unset($_SESSION['last_evaluated_faculty_id']); ?>
+  <?php endif; ?>
 
   <?php if (isset($_SESSION['access_denied'])): ?>
     <script>

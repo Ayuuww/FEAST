@@ -119,7 +119,7 @@ $pdf->Cell(0, -5, 'Supervisor-to-Faculty Evaluation Summary', 0, 1, 'C');
 $pdf->Ln(10);
 
 // Faculty info
-$pdf->SetFont('Arial', '', 10);
+$pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
 $pdf->Cell(0, 6, "Academic Rank: " . $evaluateeRank, 0, 1);
 $pdf->Cell(0, 6, "Department/College: " . $evaluateeDept, 0, 1);

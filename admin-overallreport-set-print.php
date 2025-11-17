@@ -58,7 +58,7 @@ $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
 // Use the new display variable
-$pdf->Cell(0, 10, 'COLLEGE SET REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, 'COLLEGE SET EVALUATION REPORT', 0, 1, 'C');
 
 // ... (rest of your semester/year filter logic is fine) ...
 

@@ -4,8 +4,8 @@ include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
-    header("Location: pages-login.php");
-    exit();
+  header("Location: pages-login.php");
+  exit();
 }
 
 $admin_id = $_SESSION['idnumber'];
@@ -14,23 +14,23 @@ $admin_id = $_SESSION['idnumber'];
 $admin_assignments = [];
 $stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
 if ($stmt_admin_dept) {
-    $stmt_admin_dept->bind_param("s", $admin_id);
-    $stmt_admin_dept->execute();
-    $result = $stmt_admin_dept->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
-    }
-    $stmt_admin_dept->close();
+  $stmt_admin_dept->bind_param("s", $admin_id);
+  $stmt_admin_dept->execute();
+  $result = $stmt_admin_dept->get_result();
+  while ($row = $result->fetch_assoc()) {
+    $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
+  }
+  $stmt_admin_dept->close();
 }
 // --- END FIX ---
 
 // Handle case where admin has no assigned departments
 if (empty($admin_assignments)) {
-    // Provide a more user-friendly error
-    $_SESSION['msg'] = "You are not assigned to any department or program. Please contact the Superadmin.";
-    $_SESSION['msg_type'] = "error";
-    header("Location: admin-dashboard.php");
-    exit();
+  // Provide a more user-friendly error
+  $_SESSION['msg'] = "You are not assigned to any department or program. Please contact the Superadmin.";
+  $_SESSION['msg_type'] = "error";
+  header("Location: admin-dashboard.php");
+  exit();
 }
 
 // Get unique semesters and academic years for filters
@@ -61,10 +61,10 @@ $faculty_query_parts = [];
 $params = [];
 $types = "";
 foreach ($admin_assignments as $assignment) {
-    $faculty_query_parts[] = "(department = ? AND program = ?)";
-    $params[] = $assignment['department_name'];
-    $params[] = $assignment['program_name'];
-    $types .= "ss";
+  $faculty_query_parts[] = "(department = ? AND program = ?)";
+  $params[] = $assignment['department_name'];
+  $params[] = $assignment['program_name'];
+  $types .= "ss";
 }
 $faculty_where_sql = implode(' OR ', $faculty_query_parts);
 
@@ -106,9 +106,9 @@ $reviewer_query_str = "
 
 $reviewer_result = $conn->query($reviewer_query_str);
 if ($reviewer_result && $rev_row = $reviewer_result->fetch_assoc()) {
-    $middle_initial_rev = !empty($rev_row['mid_name']) ? ' ' . substr($rev_row['mid_name'], 0, 1) . '.' : '';
-    $reviewer_name = strtoupper(trim("{$rev_row['first_name']}{$middle_initial_rev} {$rev_row['last_name']}"));
-    $reviewer_position = $rev_row['position'];
+  $middle_initial_rev = !empty($rev_row['mid_name']) ? ' ' . substr($rev_row['mid_name'], 0, 1) . '.' : '';
+  $reviewer_name = strtoupper(trim("{$rev_row['first_name']}{$middle_initial_rev} {$rev_row['last_name']}"));
+  $reviewer_position = $rev_row['position'];
 }
 
 // ✅ Get Logged-in Admin Info (for "Prepared by")
@@ -117,9 +117,9 @@ $admin_info_query->bind_param("s", $admin_id);
 $admin_info_query->execute();
 $admin_info_query->bind_result($a_fname, $a_mname, $a_lname, $a_position);
 if ($admin_info_query->fetch()) {
-    $middle_initial = !empty($a_mname) ? ' ' . substr($a_mname, 0, 1) . '.' : '';
-    $prepared_by_name = strtoupper(trim("$a_fname $middle_initial $a_lname"));
-    $prepared_by_position = $a_position;
+  $middle_initial = !empty($a_mname) ? ' ' . substr($a_mname, 0, 1) . '.' : '';
+  $prepared_by_name = strtoupper(trim("$a_fname $middle_initial $a_lname"));
+  $prepared_by_position = $a_position;
 }
 $admin_info_query->close();
 ?>
@@ -369,12 +369,27 @@ $admin_info_query->close();
       $sef_result = $stmt_sef->get_result()->fetch_assoc();
       $sef_rating = number_format($sef_result['sef_rating'] ?? 0, 2);
 
-      // --- D. Student Comments ---
-      $comments_query = "SELECT comment FROM evaluation WHERE {$eval_where_sql} AND comment IS NOT NULL AND TRIM(comment) <> '' LIMIT 5";
+      // --- D. Student Comments grouped by subject_code ---
+      $comments_query = " SELECT subject_code, comment 
+                          FROM evaluation 
+                          WHERE {$eval_where_sql}
+                            AND comment IS NOT NULL 
+                            AND TRIM(comment) <> ''
+                          ORDER BY subject_code ASC, created_at ASC";
       $stmt_comments = $conn->prepare($comments_query);
       $stmt_comments->bind_param($params_types, ...$params_values);
       $stmt_comments->execute();
       $comments_q = $stmt_comments->get_result();
+
+      // Group comments by subject_code
+      $grouped_comments = [];
+      while ($row = $comments_q->fetch_assoc()) {
+        $subj = $row['subject_code'];
+        if (!isset($grouped_comments[$subj])) {
+          $grouped_comments[$subj] = [];
+        }
+        $grouped_comments[$subj][] = $row['comment'];
+      }
 
       // --- Supervisor Comments ---
       $sup_comments_query = "SELECT comments FROM admin_evaluation WHERE {$admin_eval_where_sql} AND comments IS NOT NULL AND TRIM(comments) <> '' LIMIT 5";
@@ -472,15 +487,37 @@ $admin_info_query->close();
             </tr>
           </thead>
           <tbody>
-            <?php
-            $comment_count = 0;
-            while ($row = $comments_q->fetch_assoc()) {
-              echo "<tr><td style='text-align: left;'><b>" . (++$comment_count) . ".</b> " . htmlspecialchars($row['comment']) . "</td></tr>";
-            }
-            if ($comment_count == 0) {
-              echo "<tr><td style='text-align: center; font-style: italic;'>No student comments available.</td></tr>";
-            }
-            ?>
+
+            <?php if (empty($grouped_comments)): ?>
+              <tr>
+                <td style="text-align: center; font-style: italic;">
+                  No student comments available.
+                </td>
+              </tr>
+            <?php else: ?>
+
+              <?php foreach ($grouped_comments as $subject_code => $comments): ?>
+                <tr>
+                  <td style="background: #f8f9fa; font-weight: bold; font-size: 1rem;">Subject Code:
+                    <?= htmlspecialchars($subject_code) ?>
+                  </td>
+                </tr>
+
+                <?php
+                $count = 1;
+                foreach ($comments as $comment):
+                ?>
+                  <tr>
+                    <td style="text-align: left;">
+                      <b><?= $count++ ?>.</b> <?= htmlspecialchars($comment) ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+
+              <?php endforeach; ?>
+
+            <?php endif; ?>
+
           </tbody>
         </table>
 

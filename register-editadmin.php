@@ -140,86 +140,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </nav>
     </div>
 
-    <section class="section">
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title text-center">Edit Admin Details</h5>
+    <section class="section ">
+      <div class="row justify-content-center">
+        <div class="card col-xxl-8">
+          <div class="card-body">
+            <h5 class="card-title text-center">Edit Admin Details</h5>
 
-          <?php if (!empty($_SESSION['error'])): ?>
-            <script>
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: <?= json_encode($_SESSION['error']) ?>
-              });
-            </script>
-            <?php unset($_SESSION['error']); ?>
-          <?php endif; ?>
+            <?php if (!empty($_SESSION['error'])): ?>
+              <script>
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: <?= json_encode($_SESSION['error']) ?>
+                });
+              </script>
+              <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
 
-          <form method="POST">
-            <input type="hidden" name="idnumber" value="<?= htmlspecialchars($admin['idnumber']) ?>">
+            <form method="POST">
+              <input type="hidden" name="idnumber" value="<?= htmlspecialchars($admin['idnumber']) ?>">
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <input type="text" class="form-control" value="<?= htmlspecialchars($admin['idnumber']) ?>" disabled>
-                  <label>ID Number</label>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($admin['idnumber']) ?>" disabled>
+                    <label>ID Number</label>
+                  </div>
                 </div>
-              </div>
 
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <input type="text" class="form-control" value="<?= htmlspecialchars($admin['first_name'] . ' ' . $admin['mid_name'] . ' ' . $admin['last_name']) ?>" disabled>
-                  <label>Full Name</label>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" value="<?= htmlspecialchars($admin['first_name'] . ' ' . $admin['mid_name'] . ' ' . $admin['last_name']) ?>" disabled>
+                    <label>Full Name</label>
+                  </div>
                 </div>
-              </div>
 
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" name="position" required>
-                    <?php foreach ($positions as $p): ?>
-                      <option value="<?= htmlspecialchars($p) ?>" <?= $p === $admin['position'] ? 'selected' : '' ?>><?= htmlspecialchars($p) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                  <label>Position</label>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <select class="form-select" name="position" required>
+                      <?php foreach ($positions as $p): ?>
+                        <option value="<?= htmlspecialchars($p) ?>" <?= $p === $admin['position'] ? 'selected' : '' ?>><?= htmlspecialchars($p) ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                    <label>Position</label>
+                  </div>
                 </div>
-              </div>
 
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" name="status">
-                    <option value="active" <?= $admin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-                    <option value="inactive" <?= $admin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-                  </select>
-                  <label>Status</label>
+                <div class="col-md-3">
+                  <div class="form-floating">
+                    <select class="form-select" name="status">
+                      <option value="active" <?= $admin['status'] === 'active' ? 'selected' : '' ?>>Active</option>
+                      <option value="inactive" <?= $admin['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                    </select>
+                    <label>Status</label>
+                  </div>
                 </div>
-              </div>
 
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" name="faculty_rank">
-                    <option value="">-- Select Rank --</option>
-                    <?php foreach ($ranks as $rank): ?>
-                      <option value="<?= htmlspecialchars($rank) ?>" <?= $rank === $admin['faculty_rank'] ? 'selected' : '' ?>><?= htmlspecialchars($rank) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                  <label>Faculty Rank</label>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" name="faculty_rank">
+                      <option value="">-- Select Rank --</option>
+                      <?php foreach ($ranks as $rank): ?>
+                        <option value="<?= htmlspecialchars($rank) ?>" <?= $rank === $admin['faculty_rank'] ? 'selected' : '' ?>><?= htmlspecialchars($rank) ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                    <label>Faculty Rank</label>
+                  </div>
                 </div>
+
+                <!-- Department(s) and Programs -->
+                <div class="col-12">
+                  <label class="fw-bold">Assigned Department(s)</label>
+                  <select id="departmentSelect" name="departments[]" multiple></select>
+                </div>
+                <div id="programContainer" class="mt-3"></div>
               </div>
 
-              <!-- Department(s) and Programs -->
-              <div class="col-12">
-                <label class="fw-bold">Assigned Department(s)</label>
-                <select id="departmentSelect" name="departments[]" multiple></select>
+              <div class="col-12 mt-3">
+                <button type="submit" class="btn btn-success">Update Admin</button>
+                <a href="register-adminlist.php" class="btn btn-secondary">Back</a>
               </div>
-              <div id="programContainer" class="mt-3"></div>
-            </div>
-
-            <div class="col-12 mt-3">
-              <button type="submit" class="btn btn-success">Update Admin</button>
-              <a href="register-adminlist.php" class="btn btn-secondary">Back</a>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </section>

@@ -118,7 +118,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
                       }
                       ?>
                     </select>
-                    <label>Department</label>
+                    <label>College</label>
                   </div>
                 </div>
 

@@ -99,7 +99,7 @@ $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
 // 🔹 FIX 4: Use the new display variable for the title
-$pdf->Cell(0, 10, strtoupper($admin_department_display) . " SET & SEF REPORT", 0, 1, 'C');
+$pdf->Cell(0, 10, "COLLEGE SET & SEF EVALUATION REPORT", 0, 1, 'C');
 $pdf->Ln(3);
 
 // Show filter info

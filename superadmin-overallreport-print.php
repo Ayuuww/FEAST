@@ -110,12 +110,12 @@ $pdf->department = $selected_department;
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
-$title = strtoupper($selected_department) . " OVERALL FACULTY EVALUATION REPORT";
+$title = "COLLEGE SET & SEF EVALUATION REPORT";
 $pdf->Cell(0, 10, $title, 0, 1, 'C');
 $pdf->Ln(3);
 
 // --- Filters Information ---
-$pdf->SetFont('Arial', '', 11);
+$pdf->SetFont('Arial', 'B', 11);
 $program_text = !empty($selected_program) ? $selected_program : 'All Programs'; // ✅ ADD THIS
 $semester_text = !empty($selected_semester) ? $selected_semester : 'All Semesters';
 $academic_text = !empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years';

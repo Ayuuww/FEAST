@@ -79,9 +79,9 @@ $pdf->AddPage();
 // 4️⃣ Title Section
 // ─────────────────────────────────────────────
 $pdf->SetFont('Arial', 'B', 14);
-$pdf->Cell(0, 10, ' COLLEGE SET REPORT', 0, 1, 'C');
+$pdf->Cell(0, 10, ' COLLEGE SET EVALUATION REPORT', 0, 1, 'C');
 
-$pdf->SetFont('Arial', '', 11);
+$pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Programs'), 0, 1); // ✅ ADD THIS
 $pdf->Cell(0, 8, 'Semester: ' . ($selected_semester ?: '1st / 2nd Semester'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . ($selected_academic_year ?: 'All Academic Years'), 0, 1);

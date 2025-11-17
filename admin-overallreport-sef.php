@@ -44,8 +44,6 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->close();
 
-// Fetch faculty
-// 🔹 Fix: Fetch faculty using the $departments array and an IN clause
 // Fetch all faculty in the admin's assigned departments AND programs
 $faculties = [];
 
@@ -121,12 +119,14 @@ foreach ($faculties as $fac) {
   $r = $stmtEval->get_result()->fetch_assoc();
   $stmtEval->close();
 
-  $count = (int)$r['evals'];
+  $count = (int)$r['evals']; // ✅ This is the count
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
   $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
+  // ✅ MODIFICATION: Added the $count variable in a new <td>
   $rows .= "<tr>
               <td>{$name}</td>
+              <td>{$count}</td>
               <td>{$avg}</td>
             </tr>";
 }
@@ -138,19 +138,13 @@ foreach ($faculties as $fac) {
 
 <head>
 
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
 </head>
 
 <body>
   <?php include 'admin-header.php'; ?>
 
-  <!-- ======= Sidebar ======= -->
   <?php include 'admin-sidebar.php' ?>
-  <!-- End Sidebar-->
-
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Supervisor Evaluation of Faculty Report</h1>
@@ -212,6 +206,7 @@ foreach ($faculties as $fac) {
                     <thead class="table-light">
                       <tr>
                         <th>Faculty Name</th>
+                        <th>No. of Evaluations</th>
                         <th>Average SEF Rating</th>
                       </tr>
                     </thead>
@@ -241,7 +236,6 @@ foreach ($faculties as $fac) {
     <i class="bi bi-arrow-up-short"></i>
   </a>
 
-  <!-- JS Vendor Files -->
   <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendors/chart.js/chart.umd.js"></script>

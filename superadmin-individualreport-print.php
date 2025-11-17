@@ -105,11 +105,27 @@ $sef_rating = number_format($sef_result['sef_rating'] ?? 0, 2);
 $stmt_sef->close();
 
 // --- Student & Supervisor Comments ---
-$comments_query = "SELECT comment FROM evaluation WHERE {$eval_where_sql} AND comment IS NOT NULL AND TRIM(comment) <> '' LIMIT 5";
+$comments_query = "
+    SELECT subject_code, comment 
+    FROM evaluation
+    WHERE {$eval_where_sql}
+      AND comment IS NOT NULL
+      AND TRIM(comment) <> ''
+    ORDER BY subject_code ASC, created_at ASC
+";
 $stmt_comments = $conn->prepare($comments_query);
 $stmt_comments->bind_param($params_types, ...$params_values);
 $stmt_comments->execute();
-$student_comments = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
+$result_comments = $stmt_comments->get_result();
+$grouped_student_comments = [];
+
+while ($row = $result_comments->fetch_assoc()) {
+  $subj = $row['subject_code'];
+  if (!isset($grouped_student_comments[$subj])) {
+    $grouped_student_comments[$subj] = [];
+  }
+  $grouped_student_comments[$subj][] = $row['comment'];
+}
 $stmt_comments->close();
 
 $sup_comments_query = "SELECT comments FROM admin_evaluation WHERE {$admin_eval_where_sql} AND comments IS NOT NULL AND TRIM(comments) <> '' LIMIT 5";
@@ -241,17 +257,39 @@ $pdf->SetFont('Arial', 'I', 8);
 $pdf->Cell(0, 5, '*Note: rating given by the supervisor using the SEF instrument', 0, 1, 'C');
 
 // --- Section D ---
+// --- Section D ---
+
 $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'D. Summary of Qualitative Comments and Suggestions', 0, 1);
+
+// ================================
+// STUDENT COMMENTS (GROUPED)
+// ================================
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 7, 'Comments and Suggestions from the Students', 1, 1, 'C', true);
 $pdf->SetFont('Arial', '', 9);
-if (empty($student_comments)) {
+
+if (empty($grouped_student_comments)) {
   $pdf->Cell(0, 7, 'No student comments available.', 1, 1, 'C');
 } else {
-  foreach ($student_comments as $i => $row) {
-    $pdf->MultiCell(0, 5, ($i + 1) . '. ' . $row['comment'], 'LRB', 'L');
+  foreach ($grouped_student_comments as $subj => $comments) {
+
+    // Subject header
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFillColor(240, 240, 240);
+    $pdf->Cell(0, 6, "SUBJECT: " . $subj, 1, 1, 'L', true);
+
+    // Comments list
+    $pdf->SetFont('Arial', '', 9);
+    $count = 1;
+
+    foreach ($comments as $cmt) {
+      $pdf->MultiCell(0, 5, "   {$count}. " . $cmt, 1, 'L');
+      $count++;
+    }
+
+    $pdf->Ln(1);
   }
 }
 $pdf->Ln(5);

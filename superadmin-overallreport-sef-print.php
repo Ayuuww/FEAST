@@ -10,7 +10,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 
 // Get selected filters from URL
 $selected_department = isset($_GET['department']) ? $_GET['department'] : "";
-$selected_program = isset($_GET['program']) ? $_GET['program'] : ""; // ✅ ADD THIS
+$selected_program = isset($_GET['program']) ? $_GET['program'] : "";
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
@@ -22,7 +22,6 @@ if (empty($selected_department)) {
 // 🔑 Store department in session so header/footer can access it
 $_SESSION['department'] = $selected_department;
 
-// ✅ Fetch supervisors from admin + admin_departments (new schema)
 // ✅ Fetch supervisors from admin + admin_departments (new schema)
 $supervisors = [];
 
@@ -73,8 +72,9 @@ $pdf->Cell(0, 10, ' COLLEGE SEF REPORT', 0, 1, 'C');
 $pdf->Ln(3);
 
 // 🔹 Show selected filters clearly
-$pdf->SetFont('Arial', '', 11);
-$pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Programs'), 0, 1); // ✅ ADD THIS
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Departments'), 0, 1);
+$pdf->Cell(0, 8, 'Program: ' . (!empty($selected_program) ? $selected_program : 'All Programs'), 0, 1); // ✅ **MODIFICATION 1: Show program**
 $pdf->Cell(0, 8, 'Semester: ' . (!empty($selected_semester) ? $selected_semester : 'All Semesters'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . (!empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years'), 0, 1);
 $pdf->Cell(0, 8, 'Date: ' . date('F j, Y'), 0, 1);
@@ -83,16 +83,17 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(150, 10, "COLLEGE SEF REPORT", 0, 1, 'C', true);
+$pdf->Cell(180, 10, "COLLEGE SEF EVALUATION REPORT", 0, 1, 'C', true);
 $pdf->Ln(2);
 
-// Table Headers
+// --- ✅ MODIFICATION 2: Adjust Table Headers ---
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(100, 10, 'Faculty Name', 1);
-$pdf->Cell(50, 10, 'Average SEF Rating', 1, 0, 'C');
+$pdf->Cell(80, 10, 'Faculty Name', 1); // Adjusted width
+$pdf->Cell(60, 10, 'No. of Supervisor Evaluations', 1, 0, 'C'); // Added new column
+$pdf->Cell(40, 10, 'Avg. SEF Rating', 1, 0, 'C'); // Adjusted width
 $pdf->Ln();
+// --- End Modification 2 ---
 
-// Fetch faculty for this department
 // Fetch faculty for this department (and program, if specified)
 $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
                 FROM faculty
@@ -136,12 +137,15 @@ foreach ($faculties as $fac) {
     WHERE $where
   ")->fetch_assoc();
 
-  $count = (int)$r['evaluations'];
+  $count = (int)$r['evaluations']; // This is the count you wanted
   $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
 
-  $pdf->Cell(100, 8, $name, 1);
-  $pdf->Cell(50, 8, "$avg", 1, 0, 'C');
+  // --- ✅ MODIFICATION 3: Add Data Cell ---
+  $pdf->Cell(80, 8, $name, 1); // Adjusted width
+  $pdf->Cell(60, 8, $count, 1, 0, 'C'); // Added cell for the count
+  $pdf->Cell(40, 8, "$avg", 1, 0, 'C'); // Adjusted width
   $pdf->Ln();
+  // --- End Modification 3 ---
 }
 
 // Get logged-in superadmin info
@@ -149,8 +153,8 @@ $prepared_by = "";
 $position = "";
 if (isset($_SESSION['idnumber'])) {
   $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
-                          FROM superadmin 
-                          WHERE idnumber = ?");
+                           FROM superadmin 
+                           WHERE idnumber = ?");
   $stmt->bind_param("s", $_SESSION['idnumber']);
   $stmt->execute();
   $res = $stmt->get_result()->fetch_assoc();

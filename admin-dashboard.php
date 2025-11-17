@@ -122,7 +122,7 @@ $result_student = $stmt->get_result();
 
 $all_evals = [];
 while ($row = $result_student->fetch_assoc()) {
-    $all_evals[] = $row;
+  $all_evals[] = $row;
 }
 $result_student->close();
 
@@ -142,13 +142,13 @@ $stmt->execute();
 $result_admin = $stmt->get_result();
 
 while ($row = $result_admin->fetch_assoc()) {
-    $all_evals[] = $row;
+  $all_evals[] = $row;
 }
 $stmt->close(); // Close statement here
 
 // 3. Sort all evaluations by timestamp
-usort($all_evals, function($a, $b) {
-    return strtotime($a['eval_time']) <=> strtotime($b['eval_time']);
+usort($all_evals, function ($a, $b) {
+  return strtotime($a['eval_time']) <=> strtotime($b['eval_time']);
 });
 
 // 4. Build the cumulative chart data
@@ -159,18 +159,18 @@ $s_count = 0;
 $a_count = 0;
 
 foreach ($all_evals as $eval) {
-    if ($eval['type'] === 'student') {
-        $s_count++;
-    } else {
-        $a_count++;
-    }
-    
-    // Add the timestamp to the X-axis
-    $months[] = $eval['eval_time']; 
-    
-    // Add the *current* cumulative count for *both* series
-    $eval_counts[] = $s_count;
-    $admin_eval_counts[] = $a_count;
+  if ($eval['type'] === 'student') {
+    $s_count++;
+  } else {
+    $a_count++;
+  }
+
+  // Add the timestamp to the X-axis
+  $months[] = $eval['eval_time'];
+
+  // Add the *current* cumulative count for *both* series
+  $eval_counts[] = $s_count;
+  $admin_eval_counts[] = $a_count;
 }
 ?>
 
@@ -276,7 +276,7 @@ foreach ($all_evals as $eval) {
         </div>
 
         <!-- Admin Progress Chart -->
-        <div class="col-12">
+        <div class="col-md-6">
           <div class="card">
             <!-- Filter -->
             <div class="filter">
@@ -374,6 +374,7 @@ foreach ($all_evals as $eval) {
                       meta: chartData.meta
                     },
                     options: {
+                      indexAxis: 'y',
                       responsive: true,
                       plugins: {
                         legend: {
@@ -476,7 +477,7 @@ foreach ($all_evals as $eval) {
         }
         ?>
 
-        <div class="col-12">
+        <div class="col-md-6">
           <div class="card shadow">
 
             <div class="filter">
@@ -565,6 +566,7 @@ foreach ($all_evals as $eval) {
                             meta: chartData.meta // Store meta data
                           },
                           options: {
+                            indexAxis: 'y',
                             responsive: true,
                             plugins: {
                               legend: {

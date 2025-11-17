@@ -422,11 +422,26 @@ LIMIT 1
       $stmt_sef->close();
 
       // --- D. Comments ---
-      $comments_query = "SELECT comment FROM evaluation WHERE {$eval_where_sql} AND comment IS NOT NULL AND TRIM(comment) <> '' LIMIT 5";
+      $comments_query = " SELECT subject_code, comment 
+                          FROM evaluation 
+                          WHERE {$eval_where_sql}
+                            AND comment IS NOT NULL 
+                            AND TRIM(comment) <> ''
+                          ORDER BY subject_code ASC, created_at ASC";
       $stmt_comments = $conn->prepare($comments_query);
       $stmt_comments->bind_param($params_types, ...$params_values);
       $stmt_comments->execute();
       $comments_q = $stmt_comments->get_result();
+
+      // Group comments by subject_code
+      $grouped_comments = [];
+      while ($row = $comments_q->fetch_assoc()) {
+        $subj = $row['subject_code'];
+        if (!isset($grouped_comments[$subj])) {
+          $grouped_comments[$subj] = [];
+        }
+        $grouped_comments[$subj][] = $row['comment'];
+      }
 
       $sup_comments_query = "SELECT comments FROM admin_evaluation WHERE {$admin_eval_where_sql} AND comments IS NOT NULL AND TRIM(comments) <> '' LIMIT 5";
       $stmt_sup_comments = $conn->prepare($sup_comments_query);
@@ -515,15 +530,37 @@ LIMIT 1
             </tr>
           </thead>
           <tbody>
-            <?php
-            $comment_count = 0;
-            while ($row = $comments_q->fetch_assoc()) {
-              echo "<tr><td style='text-align: left;'><b>" . (++$comment_count) . ".</b> " . htmlspecialchars($row['comment']) . "</td></tr>";
-            }
-            if ($comment_count == 0) {
-              echo "<tr><td style='text-align: center; font-style: italic;'>No student comments available.</td></tr>";
-            }
-            ?>
+
+            <?php if (empty($grouped_comments)): ?>
+              <tr>
+                <td style="text-align: center; font-style: italic;">
+                  No student comments available.
+                </td>
+              </tr>
+            <?php else: ?>
+
+              <?php foreach ($grouped_comments as $subject_code => $comments): ?>
+                <tr>
+                  <td style="background: #f8f9fa; font-weight: bold; font-size: 1rem;">Subject Code:
+                    <?= htmlspecialchars($subject_code) ?>
+                  </td>
+                </tr>
+
+                <?php
+                $count = 1;
+                foreach ($comments as $comment):
+                ?>
+                  <tr>
+                    <td style="text-align: left;">
+                      <b><?= $count++ ?>.</b> <?= htmlspecialchars($comment) ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+
+              <?php endforeach; ?>
+
+            <?php endif; ?>
+
           </tbody>
         </table>
         <table class="report-table comment-table" style="margin-top: 20px;">

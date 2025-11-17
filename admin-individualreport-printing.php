@@ -85,11 +85,27 @@ $sef_rating = number_format($sef_result['sef_rating'] ?? 0, 2);
 $stmt_sef->close();
 
 // --- Student Comments ---
-$comments_query = "SELECT comment FROM evaluation WHERE {$eval_where_sql} AND comment IS NOT NULL AND TRIM(comment) <> '' LIMIT 5";
+$comments_query = "
+    SELECT subject_code, comment 
+    FROM evaluation 
+    WHERE {$eval_where_sql}
+      AND comment IS NOT NULL 
+      AND TRIM(comment) <> ''
+    ORDER BY subject_code ASC, created_at ASC
+";
 $stmt_comments = $conn->prepare($comments_query);
 $stmt_comments->bind_param($params_types, ...$params_values);
 $stmt_comments->execute();
-$student_comments = $stmt_comments->get_result()->fetch_all(MYSQLI_ASSOC);
+$result_comments = $stmt_comments->get_result();
+$grouped_comments = [];
+
+while ($row = $result_comments->fetch_assoc()) {
+    $subject = $row['subject_code'];
+    if (!isset($grouped_comments[$subject])) {
+        $grouped_comments[$subject] = [];
+    }
+    $grouped_comments[$subject][] = $row['comment'];
+}
 $stmt_comments->close();
 
 // --- Supervisor Comments ---
@@ -250,11 +266,26 @@ $pdf->Cell(0, 8, 'D. Summary of Qualitative Comments and Suggestions', 0, 1);
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 7, 'Comments and Suggestions from the Students', 1, 1, 'C', true);
 $pdf->SetFont('Arial', '', 9);
-if (empty($student_comments)) {
+
+if (empty($grouped_comments)) {
     $pdf->Cell(0, 7, 'No student comments available.', 1, 1, 'C');
 } else {
-    foreach ($student_comments as $i => $row) {
-        $pdf->MultiCell(0, 5, ($i + 1) . '. ' . $row['comment'], 'LRB', 'L');
+    foreach ($grouped_comments as $subject_code => $comments) {
+
+        // Subject Header
+        $pdf->SetFont('Arial', 'B', 9);
+        $pdf->SetFillColor(240, 240, 240);
+        $pdf->Cell(0, 6, "Subject: " . $subject_code, 1, 1, 'L', true);
+
+        // Comments under this subject
+        $pdf->SetFont('Arial', '', 9);
+        $count = 1;
+        foreach ($comments as $comment) {
+            $pdf->MultiCell(0, 5, "   " . $count . ". " . $comment, 1, 'L');
+            $count++;
+        }
+
+        $pdf->Ln(2);
     }
 }
 $pdf->Ln(5);
