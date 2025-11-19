@@ -182,7 +182,7 @@ $result = mysqli_query($conn, $sql);
                     <tr>
                       <th>ID Number</th>
                       <th>Student Name</th>
-                      <th>Department</th>
+                      <th>College</th>
                       <th>Subject Code</th>
                       <th>Subject Title</th>
                       <th>Faculty Name</th>

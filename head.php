@@ -32,6 +32,7 @@
 <link href="assets/css/style.css" rel="stylesheet">
 
 <script src="jquery/jquery-3.6.0.min.js"></script>
+<script src="assets/js/xlsx.full.min.js"></script>
 
 <link rel="stylesheet" href="assets/css/select2.min.css" />
 <link rel="stylesheet" href="assets/css/choices.min.css" />

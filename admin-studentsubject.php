@@ -1,4 +1,8 @@
 <?php
+require 'vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -77,8 +81,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 }
 
 
-// --- ✅ NEW: Handle Bulk CSV Upload ---
+// --- UPDATED: Handle Bulk CSV & XLSX Upload ---
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])) {
+
   if (!$current_academic_year || !$current_semester) {
     $_SESSION['msg'] = "Cannot assign subjects because the current academic period is not set.";
     $_SESSION['msg_type'] = 'danger';
@@ -86,66 +91,129 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     exit();
   }
 
-  if (isset($_FILES['bulk_file']) && $_FILES['bulk_file']['error'] == UPLOAD_ERR_OK) {
-    $file_tmp_path = $_FILES['bulk_file']['tmp_name'];
-    $file_name = $_FILES['bulk_file']['name'];
-    $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+  if (!isset($_FILES['bulk_file']) || $_FILES['bulk_file']['error'] !== UPLOAD_ERR_OK) {
+    $_SESSION['msg'] = "File upload failed. Error code: " . ($_FILES['bulk_file']['error'] ?? 'Unknown');
+    $_SESSION['msg_type'] = 'danger';
+    header("Location: admin-studentsubject.php");
+    exit();
+  }
 
-    if ($file_ext != 'csv') {
-      $_SESSION['msg'] = "Upload failed. Only .csv files are allowed.";
+  $file_tmp_path = $_FILES['bulk_file']['tmp_name'];
+  $file_name = $_FILES['bulk_file']['name'];
+  $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
+
+  if (!in_array($file_ext, ['csv', 'xlsx'])) {
+    $_SESSION['msg'] = "Upload failed. Only .csv or .xlsx files are allowed.";
+    $_SESSION['msg_type'] = 'danger';
+    header("Location: admin-studentsubject.php");
+    exit();
+  }
+
+  $dataRows = [];
+
+  // ========================
+  // OPTION A: CSV FILE
+  // ========================
+  if ($file_ext === 'csv') {
+    if (($fp = fopen($file_tmp_path, "r")) !== FALSE) {
+      // Optional: Check for BOM in CSV to fix weird characters
+      $bom = fread($fp, 3);
+      if ($bom !== "\xEF\xBB\xBF") {
+        rewind($fp);
+      }
+
+      fgetcsv($fp); // Skip Header Row
+      while (($row = fgetcsv($fp)) !== FALSE) {
+        // Ensure row has data
+        if (array_filter($row)) {
+          $dataRows[] = $row;
+        }
+      }
+      fclose($fp);
+    }
+  }
+  // ========================
+  // OPTION B: XLSX FILE
+  // ========================
+  elseif ($file_ext === 'xlsx') {
+    try {
+      // Load the spreadsheet
+      $spreadsheet = IOFactory::load($file_tmp_path);
+      $sheet = $spreadsheet->getActiveSheet();
+
+      // Convert to array, indexed by A, B, C...
+      $rows = $sheet->toArray(null, true, true, true);
+
+      // Remove the header row (first row)
+      array_shift($rows);
+
+      foreach ($rows as $cells) {
+        // Map Excel Columns A and B to our array
+        $dataRows[] = [
+          trim($cells['A'] ?? ""), // Student ID
+          trim($cells['B'] ?? "")  // Subject Code
+        ];
+      }
+    } catch (Exception $e) {
+      $_SESSION['msg'] = "Error reading Excel file: " . $e->getMessage();
       $_SESSION['msg_type'] = 'danger';
       header("Location: admin-studentsubject.php");
       exit();
     }
-
-    if (($handle = fopen($file_tmp_path, "r")) !== FALSE) {
-      // Skip the header row (student_id, subject_code)
-      fgetcsv($handle);
-
-      $line = 1;
-      while (($row = fgetcsv($handle)) !== FALSE) {
-        $line++;
-        if (count($row) < 2) {
-          $_SESSION['detailed_errors'][] = "⚠️ Line $line: Skipping row, expected 2 columns but found " . count($row);
-          continue;
-        }
-
-        $student_id = trim($row[0]);
-        $subject_code = trim($row[1]);
-
-        if (empty($student_id) || empty($subject_code)) {
-          $_SESSION['detailed_errors'][] = "⚠️ Line $line: Skipping row, student_id or subject_code is empty.";
-          continue;
-        }
-
-        // Use the same assignment logic as the manual form
-        assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
-      }
-      fclose($handle);
-
-      // Set final session messages
-      if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-        $_SESSION['msg'] = "Uploaded file processed. Assigned **$success** subject(s), but some rows had issues.";
-        $_SESSION['msg_type'] = 'warning';
-      } elseif ($success > 0) {
-        $_SESSION['msg'] = "File upload successful. **$success** subject(s) assigned.";
-        $_SESSION['msg_type'] = 'success';
-      } else {
-        $_SESSION['msg'] = "No new subjects were assigned from the file. They may have already been assigned.";
-        $_SESSION['msg_type'] = 'info';
-      }
-    } else {
-      $_SESSION['msg'] = "Error reading the uploaded CSV file.";
-      $_SESSION['msg_type'] = 'danger';
-    }
-  } else {
-    $_SESSION['msg'] = "File upload failed. Error code: " . $_FILES['bulk_file']['error'];
-    $_SESSION['msg_type'] = 'danger';
   }
+
+  // ========================
+  // PROCESS DATA ROWS
+  // ========================
+  $line = 1; // Start at 1 (header was 1, so first data row is line 2)
+
+  foreach ($dataRows as $row) {
+    $line++;
+
+    // Basic validation
+    if (count($row) < 2) {
+      continue; // Skip empty rows
+    }
+
+    $student_id = trim($row[0]);
+    $subject_code = trim($row[1]);
+
+    if (empty($student_id) || empty($subject_code)) {
+      $_SESSION['detailed_errors'][] = "⚠️ Row $line: Missing student_id or subject_code.";
+      continue;
+    }
+
+    // Check student exists
+    $checkStudent = $conn->prepare("SELECT idnumber FROM student WHERE idnumber = ? LIMIT 1");
+    $checkStudent->bind_param("s", $student_id);
+    $checkStudent->execute();
+    $studentExists = $checkStudent->get_result()->num_rows > 0;
+    $checkStudent->close();
+
+    if (!$studentExists) {
+      $_SESSION['detailed_errors'][] = "❌ Row $line: Student ID $student_id does not exist.";
+      continue;
+    }
+
+    // Perform assignment
+    assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
+  }
+
+  // Summary
+  if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
+    $_SESSION['msg'] = "Processed file. Assigned $success subjects, but some rows had issues.";
+    $_SESSION['msg_type'] = 'warning';
+  } elseif ($success > 0) {
+    $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
+    $_SESSION['msg_type'] = 'success';
+  } else {
+    $_SESSION['msg'] = "No subjects assigned. Please check your file format.";
+    $_SESSION['msg_type'] = 'info';
+  }
+
   header("Location: admin-studentsubject.php");
   exit();
 }
-
 
 /**
  * ✅ NEW: Reusable function to assign a subject to a student.
@@ -282,26 +350,62 @@ ksort($subjects_by_faculty);
 
           <div class="card shadow-sm p-4 mb-4">
             <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via CSV Upload</h5>
+              <h5 class="card-title mb-4">Bulk Assign via CSV/XLSX Upload</h5>
               <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
                 <?php if (!$current_academic_year || !$current_semester): ?>
                   <div class="col-12">
                     <div class="alert alert-danger"><b>Warning:</b> Current academic period is not set. Please contact the superadmin.</div>
                   </div>
                 <?php endif; ?>
-                <div class="col-md-9">
-                  <label for="bulk_file" class="form-label">Upload CSV File</label>
-                  <input type="file" name="bulk_file" class="form-control" id="bulk_file" accept=".csv" required <?= (!$current_academic_year || !$current_semester) ? 'disabled' : '' ?>>
+                <div class="mt-2 p-3 border rounded bg-light">
+
+                  <!-- <strong>📌 CSV Upload Requirements</strong>
+                  <p class="mb-1">The CSV file will populate the <strong>student_subject</strong> table.</p>
+
+                  <p class="mb-1">It must contain <strong>exactly two columns</strong> in this specific order:</p>
+
+                  <ol class="mb-2">
+                    <li><strong>student_id</strong> — must match <code>student.idnumber</code></li>
+                    <li><strong>subject_code</strong> — must match <code>subject.code</code></li>
+                  </ol>
+
+                  <p class="mb-1">
+                    The system will automatically insert:
+                  <ul style="margin-left: 20px;">
+                    <li>academic_year (based on the current active term)</li>
+                    <li>semester (based on the current active term)</li>
+                    <li>faculty_id (from the subject table)</li>
+                    <li>admin_id (logged in admin)</li>
+                  </ul>
+                  </p> -->
+
+                  <strong>✔ Correct Sample CSV or XLSX Format:</strong>
+                  <pre class="border p-2 bg-white" style="white-space: pre-wrap;">
+  student_id|subject_code
+  123-4567-8|IT101
+  123-4567-8|CS102
+  123-4567-8|GE105
+</pre>
+
+                  <p class="small text-muted mb-0">
+                    Save your file as <strong>.csv</strong> or <strong> .xlsx </strong> (Comma Separated Values). No extra columns, no blank rows, no special characters.
+                  </p>
+
                 </div>
+
+                <div class="col-md-9">
+                  <label for="bulk_file" class="form-label fw-bold">Select CSV File</label>
+                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv, .xlsx" required>
+                </div>
+
                 <div class="col-md-3 d-flex align-items-end">
-                  <button type="submit" name="upload_bulk_assign" class="btn btn-primary w-100" <?= (!$current_academic_year || !$current_semester) ? 'disabled' : '' ?>>
+                  <button type="submit" name="upload_bulk_assign" class="btn btn-success w-100">
                     <i class="bi bi-upload"></i> Upload and Assign
                   </button>
                 </div>
                 <div class="col-12">
                   <p class="small text-muted mb-0">
-                    File must be a .csv with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>.
-                    <a href="templates/student_subject_template.csv" download>Download Template</a>
+                    File must be a .csv or .xlsx with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>
                   </p>
                 </div>
               </form>
@@ -342,21 +446,6 @@ ksort($subjects_by_faculty);
                 </div>
 
                 <div class="col-12">
-                  <label for="student_id" class="form-label fw-bold">Select Students</label>
-                  <select id="student_id" name="student_id[]" multiple>
-                    <?php foreach ($students_by_dept as $department => $students): ?>
-                      <optgroup label="<?= htmlspecialchars($department) ?>">
-                        <?php foreach ($students as $student): ?>
-                          <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
-                            <?= htmlspecialchars($student['last_name'] . ', ' . $student['first_name']) ?> (<?= htmlspecialchars($student['section']) ?>)
-                          </option>
-                        <?php endforeach; ?>
-                      </optgroup>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-
-                <div class="col-12">
                   <label for="subject_code" class="form-label fw-bold">Select Subjects</label>
                   <select id="subject_code" name="subject_code[]" multiple>
                     <?php foreach ($subjects_by_faculty as $faculty => $subjects): ?>
@@ -369,6 +458,21 @@ ksort($subjects_by_faculty);
                             value="<?= htmlspecialchars($sub['code']) ?>"
                             data-faculty="<?= htmlspecialchars($faculty) ?>">
                             <?= htmlspecialchars($displayText) ?>
+                          </option>
+                        <?php endforeach; ?>
+                      </optgroup>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label for="student_id" class="form-label fw-bold">Select Students</label>
+                  <select id="student_id" name="student_id[]" multiple>
+                    <?php foreach ($students_by_dept as $department => $students): ?>
+                      <optgroup label="<?= htmlspecialchars($department) ?>">
+                        <?php foreach ($students as $student): ?>
+                          <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
+                            <?= htmlspecialchars($student['last_name'] . ', ' . $student['first_name']) ?> (<?= htmlspecialchars($student['section']) ?>)
                           </option>
                         <?php endforeach; ?>
                       </optgroup>
@@ -415,6 +519,7 @@ ksort($subjects_by_faculty);
         placeholderValue: 'Click to select students...',
         searchPlaceholderValue: 'Search for a student...'
       });
+
       const subjectSelect = document.getElementById('subject_code');
       const subjectChoices = new Choices(subjectSelect, {
         removeItemButton: true,
@@ -430,49 +535,243 @@ ksort($subjects_by_faculty);
         }
       });
 
-      // --- Filter Elements ---
+      // --- When subject(s) change, filter students that ALREADY have those subjects ---
+      subjectSelect.addEventListener("change", function() {
+        // Get selected subject codes as array of strings
+        const selectedSubjects = subjectChoices.getValue(true);
+        // If nothing selected, restore original full student list
+        if (!selectedSubjects || selectedSubjects.length === 0) {
+          // rebuild grouped choices from originalStudentData
+          const groups = {};
+          originalStudentData.forEach(s => {
+            if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
+            groups[s.groupLabel].push({
+              value: s.value,
+              label: s.label
+            });
+          });
+          const formatted = Object.keys(groups).map(g => ({
+            label: g,
+            choices: groups[g]
+          }));
+          studentChoices.clearStore();
+          studentChoices.setChoices(formatted, 'value', 'label', true);
+          return;
+        }
+
+        // Prepare body for application/x-www-form-urlencoded: subject_codes[]=A&subject_codes[]=B...
+        const body = selectedSubjects.map(code => 'subject_codes[]=' + encodeURIComponent(code)).join('&');
+
+        fetch('admin-get-assigned-students.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: body
+          })
+          .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+          })
+          .then(assignedStudents => {
+            // assignedStudents should be array of student_id strings
+            const filtered = originalStudentData.filter(s => !assignedStudents.includes(s.value));
+            // Group the remaining students
+            const groups = {};
+            filtered.forEach(s => {
+              if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
+              groups[s.groupLabel].push({
+                value: s.value,
+                label: s.label
+              });
+            });
+            const formatted = Object.keys(groups).map(g => ({
+              label: g,
+              choices: groups[g]
+            }));
+            studentChoices.clearStore();
+            studentChoices.setChoices(formatted, 'value', 'label', true);
+          })
+          .catch(err => {
+            console.error('Error fetching assigned students:', err);
+            // fallback: restore full list so admin can still proceed
+            const groups = {};
+            originalStudentData.forEach(s => {
+              if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
+              groups[s.groupLabel].push({
+                value: s.value,
+                label: s.label
+              });
+            });
+            const formatted = Object.keys(groups).map(g => ({
+              label: g,
+              choices: groups[g]
+            }));
+            studentChoices.clearStore();
+            studentChoices.setChoices(formatted, 'value', 'label', true);
+            Swal.fire({
+              icon: 'error',
+              title: 'Could not check assigned students',
+              text: 'There was a problem checking which students already have the selected subject(s). Please try again or contact IT.'
+            });
+          });
+      });
+
+      // --- rest of your code (filters) remains unchanged ---
       const deptFilter = document.getElementById('departmentFilter');
       const sectionFilter = document.getElementById('sectionFilter');
 
       function filterStudents() {
         const selectedDept = deptFilter.value;
         const selectedSection = sectionFilter.value;
-
-        // Filter the JS array, not the DOM
         const filteredStudents = originalStudentData.filter(student => {
           const matchesDept = !selectedDept || student.department === selectedDept;
           const matchesSection = !selectedSection || student.section === selectedSection;
           return matchesDept && matchesSection;
         });
-
-        // Group the filtered students by their original optgroup label
         const groupedStudents = filteredStudents.reduce((acc, student) => {
-          if (!acc[student.groupLabel]) {
-            acc[student.groupLabel] = [];
-          }
+          if (!acc[student.groupLabel]) acc[student.groupLabel] = [];
           acc[student.groupLabel].push({
             value: student.value,
             label: student.label
           });
           return acc;
         }, {});
-
-        // Format for Choices.js setChoices API
         const choicesData = Object.keys(groupedStudents).map(groupLabel => ({
           label: groupLabel,
           choices: groupedStudents[groupLabel]
         }));
-
-        // Update the dropdown with the filtered and grouped data
         studentChoices.clearStore();
         studentChoices.setChoices(choicesData, 'value', 'label', true);
       }
 
-      // --- Attach Event Listeners ---
       deptFilter.addEventListener('change', filterStudents);
       sectionFilter.addEventListener('change', filterStudents);
     });
   </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+      const bulkFileInput = document.getElementById("bulk_file");
+
+      bulkFileInput.addEventListener("change", function() {
+        const file = this.files[0];
+        if (!file) return;
+
+        const fileName = file.name.toLowerCase();
+        const isCSV = fileName.endsWith(".csv");
+        const isXLSX = fileName.endsWith(".xlsx");
+
+        // 1. Validate Extension
+        if (!isCSV && !isXLSX) {
+          Swal.fire({
+            icon: "error",
+            title: "Invalid File",
+            text: "Please upload a valid .csv or .xlsx file."
+          });
+          this.value = ""; // Clear input
+          return;
+        }
+
+        const reader = new FileReader();
+
+        // ==========================================
+        // HANDLER FOR CSV FILES (Text Mode)
+        // ==========================================
+        if (isCSV) {
+          reader.onload = function(e) {
+            const text = e.target.result;
+            // Split by new line, then split by comma
+            const rows = text.trim().split("\n").map(r => r.split(","));
+            showPreview(rows, "CSV");
+          };
+          reader.readAsText(file);
+        }
+
+        // ==========================================
+        // HANDLER FOR XLSX FILES (Binary Mode)
+        // ==========================================
+        else if (isXLSX) {
+          reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {
+              type: 'array'
+            });
+
+            // Get the first sheet name and data
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to array of arrays (header: 1 means raw array output)
+            const rows = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1
+            });
+
+            // Clean up rows (remove empty rows and trim spaces)
+            const cleanedRows = rows.map(row => row.map(cell => (cell ? cell.toString().trim() : "")));
+
+            showPreview(cleanedRows, "Excel (XLSX)");
+          };
+          reader.readAsArrayBuffer(file); // Excel must be read as ArrayBuffer
+        }
+      });
+
+      // ==========================================
+      // REUSABLE PREVIEW FUNCTION
+      // ==========================================
+      function showPreview(rows, type) {
+        if (!rows || rows.length === 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "Empty File",
+            text: `The ${type} file has no data.`
+          });
+          return;
+        }
+
+        // Extract header (Row 0)
+        const header = rows[0];
+
+        // Generate Table HTML
+        let tableHTML = `
+        <div style="text-align:left; margin-bottom:10px;">
+            <strong>Format Detected:</strong> ${type}<br>
+            <strong>Total Rows:</strong> ${rows.length - 1} (excluding header)
+        </div>
+        <strong>Preview (First 5 rows):</strong><br>
+        <table border="1" cellpadding="5" style="width:100%; border-collapse: collapse; text-align:left; font-size: 12px;">
+          <tr style="background:#f0f0f0; font-weight:bold;">
+            ${header.map(h => `<th>${h}</th>`).join("")}
+          </tr>
+      `;
+
+        // Show max 5 data rows
+        const previewLimit = Math.min(6, rows.length); // 6 because index 0 is header
+        for (let i = 1; i < previewLimit; i++) {
+          const cols = rows[i].map(c => `<td>${c}</td>`).join("");
+          tableHTML += `<tr>${cols}</tr>`;
+        }
+        tableHTML += "</table>";
+
+        // Fire SweetAlert
+        Swal.fire({
+          title: "File Preview",
+          html: tableHTML,
+          width: 700,
+          confirmButtonText: "Looks Good",
+          showCancelButton: true,
+          cancelButtonText: "Cancel Upload"
+        }).then((result) => {
+          if (result.dismiss === Swal.DismissReason.cancel) {
+            document.getElementById("bulk_file").value = ""; // Clear input if canceled
+          }
+        });
+      }
+
+    });
+  </script>
+
 </body>
 
 </html>
