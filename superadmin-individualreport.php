@@ -340,7 +340,13 @@ $academic_years_query = $conn->query("
       $stmt->bind_result($lname, $fname, $mname, $department, $faculty_program, $faculty_rank); // Added $faculty_program
       $stmt->fetch();
       $stmt->close();
-      $faculty_name = strtoupper("$lname, $fname $mname");
+
+      $middle_initial = '';
+      if (!empty($mname)) {
+        $middle_initial = ' ' . substr($mname, 0, 1) . '.'; // Add space, initial, and period
+      }
+
+      $faculty_name = strtoupper("$fname $middle_initial $lname");
 
       // --- Reviewed by ---
       // --- Reviewed by ---

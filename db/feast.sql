@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 13, 2025 at 03:01 PM
+-- Generation Time: Nov 19, 2025 at 11:21 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -276,7 +276,57 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (518, '40193', 'superadmin', 'Logged in', '2025-11-13 18:51:24'),
 (519, '40151', 'admin', 'Logged in', '2025-11-13 18:52:21'),
 (520, '221-0387-1', 'student', 'Logged in', '2025-11-13 19:00:51'),
-(521, '40193', 'superadmin', 'Logged in', '2025-11-13 20:19:55');
+(521, '40193', 'superadmin', 'Logged in', '2025-11-13 20:19:55'),
+(522, '221-0387-1', 'student', 'Logged in', '2025-11-13 23:00:59'),
+(523, '40151', 'admin', 'Logged in', '2025-11-16 18:58:45'),
+(524, '00000', '', 'Logged in', '2025-11-16 19:05:53'),
+(525, '40193', 'superadmin', 'Logged in', '2025-11-16 19:09:48'),
+(526, '221-0387-1', 'student', 'Logged in', '2025-11-16 19:12:40'),
+(527, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 19:46:02'),
+(528, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:46:04'),
+(529, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:46:06'),
+(530, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:46:15'),
+(531, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 19:48:27'),
+(532, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:48:36'),
+(533, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:48:38'),
+(534, '40193', 'superadmin', 'Evaluation turned off | Start:  | End: ', '2025-11-16 19:48:40'),
+(535, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 19:58:38'),
+(536, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 20:01:33'),
+(537, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 20:02:36'),
+(538, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 20:02:48'),
+(539, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-17', '2025-11-16 20:06:11'),
+(540, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:06:20'),
+(541, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:11:03'),
+(542, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:14:44'),
+(543, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:20:58'),
+(544, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:21:09'),
+(545, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:21:14'),
+(546, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-16 20:21:18'),
+(547, '221-0388-1', 'student', 'Logged in', '2025-11-16 20:51:25'),
+(548, '221-0387-1', 'student', 'Logged in', '2025-11-16 20:51:42'),
+(549, '40151', 'admin', 'Logged in', '2025-11-16 20:51:54'),
+(550, '221-0387-1', 'student', 'Logged in', '2025-11-17 18:10:26'),
+(551, '40193', 'superadmin', 'Logged in', '2025-11-17 18:13:48'),
+(552, '40193', 'superadmin', 'Evaluation turned off | Start: 2025-11-16 | End: 2025-11-18', '2025-11-17 18:13:54'),
+(553, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-17 18:14:01'),
+(554, '221-0387-1', 'student', 'Rated 89.33% for ISBA 105 handled by Rufo Agaloos Baro', '2025-11-17 18:16:58'),
+(555, '40180', 'faculty', 'Logged in', '2025-11-17 18:20:24'),
+(556, '40151', 'admin', 'Logged in', '2025-11-17 18:24:07'),
+(557, '40151', 'admin', 'Evaluated Faculty: Larmie D. Barcelona for 2025-2026 1st Semester', '2025-11-17 18:37:01'),
+(558, '40151', 'admin', 'Evaluated Faculty: Kristine Maylan S. Espero for 2025-2026 1st Semester', '2025-11-17 18:40:52'),
+(559, '40151', 'admin', 'Evaluated Faculty: Reiner Jan A. Castelo for 2025-2026 1st Semester', '2025-11-17 18:43:19'),
+(560, '40207', 'faculty', 'Logged in', '2025-11-17 18:56:14'),
+(561, '40045', 'admin', 'Logged in', '2025-11-17 18:56:23'),
+(562, '40151', 'admin', 'Logged in', '2025-11-17 18:57:02'),
+(563, '40151', 'admin', 'Evaluated Faculty: Rufo A. Baro for 2025-2026 1st Semester', '2025-11-17 19:11:22'),
+(564, '40193', 'superadmin', 'Logged in', '2025-11-17 19:20:06'),
+(565, '00000', '', 'Logged in', '2025-11-17 19:27:46'),
+(566, '40193', 'superadmin', 'Logged in', '2025-11-17 21:28:15'),
+(567, '40151', 'admin', 'Logged in', '2025-11-17 21:36:38'),
+(568, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-17 22:02:27'),
+(569, '00000', '', 'Logged in', '2025-11-17 22:06:46'),
+(570, '00000', '', 'Logged in', '2025-11-17 22:46:26'),
+(571, '40193', 'superadmin', 'Logged in', '2025-11-18 20:31:28');
 
 -- --------------------------------------------------------
 
@@ -397,6 +447,16 @@ CREATE TABLE `admin_evaluation` (
   `evaluation_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `admin_evaluation`
+--
+
+INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
+(81, '40151', '02860', 'Dean', '2025-2026', '1st Semester', 75, 100.00, 'Excellent teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:37:01'),
+(82, '40151', '00421', 'Dean', '2025-2026', '1st Semester', 70, 93.33, 'good teaching', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:40:52'),
+(83, '40151', '0716', 'Dean', '2025-2026', '1st Semester', 67, 89.33, 'Good teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:43:19'),
+(84, '40151', '40180', 'Dean', '2025-2026', '1st Semester', 71, 94.67, 'goodteaching', 'COLLEGE OF INFORMATION SYSTEMS', '2025-11-17 19:11:22');
+
 -- --------------------------------------------------------
 
 --
@@ -421,7 +481,11 @@ CREATE TABLE `admin_evaluation_submissions` (
 --
 
 INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`, `semester`, `academic_year`, `total_score`, `rating_percent`, `comment`, `submission_date`, `form_data`) VALUES
-(56, '00021', '41953', '1st Semester', '2025-2026', 70, 93.33, '', '2025-11-02 17:26:40', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":5}');
+(56, '00021', '41953', '1st Semester', '2025-2026', 70, 93.33, '', '2025-11-02 17:26:40', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":5}'),
+(57, '40151', '02860', '1st Semester', '2025-2026', 75, 100.00, 'Excellent teacher', '2025-11-17 18:37:01', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}'),
+(58, '40151', '00421', '1st Semester', '2025-2026', 70, 93.33, 'good teaching', '2025-11-17 18:40:52', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":5}'),
+(59, '40151', '0716', '1st Semester', '2025-2026', 67, 89.33, 'Good teacher', '2025-11-17 18:43:19', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":4,\"q9\":4,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":5}'),
+(60, '40151', '40180', '1st Semester', '2025-2026', 71, 94.67, 'goodteaching', '2025-11-17 19:11:22', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":5}');
 
 -- --------------------------------------------------------
 
@@ -444,9 +508,11 @@ CREATE TABLE `department_info` (
 
 INSERT INTO `department_info` (`id`, `department_name`, `program_name`, `website`, `phone`, `email`) VALUES
 (5, 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'www.dmmmsu.edu.ph', '', ''),
-(6, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '', '', ''),
+(6, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'www.dmmmsu.edu.ph', '', ''),
 (7, 'COLLEGE OF EDUCATION', 'Bachelor of Early Childhood Education', '', '', ''),
-(8, 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', 'Bachelor of Science in Agricultural and Biosystems Engineering', '', '', '');
+(8, 'INSTITUTE OF AGRICULTURAL AND BIOSYSTEMS ENGINEERING', 'Bachelor of Science in Agricultural and Biosystems Engineering', '', '', ''),
+(9, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'www.dmmmsu.edu.ph', '', ''),
+(10, 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'www.dmmmsu.edu.ph', '', '');
 
 -- --------------------------------------------------------
 
@@ -476,7 +542,49 @@ CREATE TABLE `evaluation` (
 --
 
 INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`, `is_anonymous`) VALUES
-(147, '221-0387-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 112', 'IS Strategy Management and Acquisition', '2025-2026', '40184', 15.00, 20.00, '', '2025-11-05 14:04:30', '1st Semester', '4-B', 'yes');
+(149, '221-0325-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, '', '2025-11-06 05:42:08', '1st Semester', '4-B', 'yes'),
+(150, '221-0476-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, 'none', '2025-11-06 05:42:27', '1st Semester', '4-B', 'yes'),
+(151, '231-0884-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 45.00, 60.00, 'yes', '2025-11-06 05:43:52', '1st Semester', '4-B', 'yes'),
+(152, '221-0422-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 67.00, 89.33, 'napaka galing mo', '2025-11-06 05:44:42', '1st Semester', '4-B', 'yes'),
+(153, '211-0004-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 70.00, 93.33, '', '2025-11-06 05:44:49', '1st Semester', '4-B', 'yes'),
+(154, '211-0004-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 70.00, 93.33, '', '2025-11-06 05:45:25', '1st Semester', '4-B', 'yes'),
+(155, '221-0778-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 75.00, 100.00, '', '2025-11-06 05:45:46', '1st Semester', '4-A', 'yes'),
+(156, '221-0368-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, 'Wow', '2025-11-06 05:45:54', '1st Semester', '4-B', 'no'),
+(157, '211-0161-1 ', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 74.00, 98.67, '', '2025-11-06 05:45:58', '1st Semester', '4-A', 'yes'),
+(158, '221-0733-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 67.00, 89.33, 'N/A', '2025-11-06 05:46:00', '1st Semester', '4-A', 'no'),
+(159, '221-0026-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, '', '2025-11-06 05:46:00', '1st Semester', '4-A', 'yes'),
+(160, '221-0070-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 70.00, 93.33, 'N/A', '2025-11-06 05:46:27', '1st Semester', '4-A', 'yes'),
+(161, '202-0021-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 74.00, 98.67, '', '2025-11-06 05:46:53', '1st Semester', '4-A', 'no'),
+(162, '221-0146-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISSM 105', 'Principles of Systems Thinking', '2025-2026', '40023', 60.00, 80.00, 'None', '2025-11-06 05:47:19', '1st Semester', '4-A', 'no'),
+(163, '221-0387-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 112', 'IS Strategy Management and Acquisition', '2025-2026', '40184', 67.00, 89.33, 'nICE TEACHING', '2025-11-06 05:48:31', '1st Semester', '4-B', 'yes'),
+(164, '221-0852-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 112', 'IS Strategy Management and Acquisition', '2025-2026', '40184', 65.00, 86.67, 'Good teaching ', '2025-11-06 05:50:14', '1st Semester', '4-A', 'yes'),
+(165, '221-0867-1 ', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 112', 'IS Strategy Management and Acquisition', '2025-2026', '40184', 67.00, 89.33, 'none', '2025-11-06 05:50:55', '1st Semester', '4-B', 'yes'),
+(166, '221-0867-1 ', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 107', 'Professional Engagements', '2025-2026', '40207', 65.00, 86.67, 'None\r\n', '2025-11-06 05:55:15', '1st Semester', '4-B', 'yes'),
+(167, '221-0387-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISBA 105', 'Analytics Application', '2025-2026', '40180', 68.00, 90.67, 'Excellent Teaching', '2025-11-06 05:55:42', '1st Semester', '4-B', 'no'),
+(168, '221-0478-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISPC 114', 'Capstone Project 2', '2025-2026', '40413', 63.00, 84.00, '', '2025-11-06 06:01:45', '1st Semester', '4-B', 'yes'),
+(169, '251-0250-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, 'always take care po maam', '2025-11-06 06:18:10', '1st Semester', '1-A', 'no'),
+(170, '251-0416-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 75.00, 100.00, 'Gwapo', '2025-11-06 06:23:19', '1st Semester', '1-A', 'yes'),
+(171, '251-0057-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 75.00, 100.00, '', '2025-11-06 06:23:41', '1st Semester', '1-A', 'yes'),
+(172, '251-0234-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, 'Very good in teaching', '2025-11-06 06:24:53', '1st Semester', '1-A', 'no'),
+(173, '251-0269-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 102', 'Computer Programming 1', '2025-2026', '40094', 75.00, 100.00, 'N/A', '2025-11-06 06:27:41', '1st Semester', '1-A', 'yes'),
+(174, '251-0004-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 74.00, 98.67, 'very joyful teacher', '2025-11-06 06:27:54', '1st Semester', '1-A', 'no'),
+(175, '251-0009-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 102', 'Computer Programming 1', '2025-2026', '40094', 75.00, 100.00, 'Keep up the good work ma\'am<3', '2025-11-06 06:28:22', '1st Semester', '1-A', 'yes'),
+(176, '251-0233-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, 'Very good ', '2025-11-06 06:28:26', '1st Semester', '1-A', 'yes'),
+(177, '251-0008-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 102', 'Computer Programming 1', '2025-2026', '40094', 75.00, 100.00, '', '2025-11-06 06:28:32', '1st Semester', '1-A', 'yes'),
+(178, '251-0019-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, '', '2025-11-06 06:28:44', '1st Semester', '1-A', 'yes'),
+(179, '251-0458-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 102', 'Computer Programming 1', '2025-2026', '40094', 75.00, 100.00, 'N/A', '2025-11-06 06:28:57', '1st Semester', '1-A', 'yes'),
+(180, '251-0383-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 74.00, 98.67, 'ma\'am keep up the good work ma\'am really appreciated ^ ^', '2025-11-06 06:29:29', '1st Semester', '1-A', 'no'),
+(181, '251-0010-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 102', 'Computer Programming 1', '2025-2026', '40094', 75.00, 100.00, 'the best teacher and easy to approach ', '2025-11-06 06:29:44', '1st Semester', '1-A', 'yes'),
+(182, '251-0458-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 75.00, 100.00, 'N/A', '2025-11-06 06:30:15', '1st Semester', '1-A', 'yes'),
+(183, '251-0401-1', 'COLLEGE OF ARTS AND SCIENCES', 'GEEC 101', 'Environmental Science', '2025-2026', '0716', 75.00, 100.00, 'No comment ', '2025-11-06 06:31:04', '1st Semester', '1-A', 'yes'),
+(184, '251-0482-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, 'Iloveyousomuch ma\'am ', '2025-11-06 06:32:09', '1st Semester', '1-A', 'yes'),
+(185, '251-0010-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 75.00, 100.00, 'approachable teacher ', '2025-11-06 06:33:43', '1st Semester', '1-A', 'yes'),
+(186, '251-0482-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 75.00, 100.00, '', '2025-11-06 06:34:17', '1st Semester', '1-A', 'no'),
+(187, '251-0010-1', 'COLLEGE OF ARTS AND SCIENCES', 'GEEC 101', 'Environmental Science', '2025-2026', '0716', 73.00, 97.33, 'Approachable teacher', '2025-11-06 06:35:29', '1st Semester', '1-A', 'yes'),
+(188, '251-0010-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 75.00, 100.00, 'approachable teacher ', '2025-11-06 06:38:25', '1st Semester', '1-A', 'yes'),
+(189, '251-0369-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISCC 101', 'Introduction to Computing', '2025-2026', '00711', 60.00, 80.00, '', '2025-11-06 06:38:38', '1st Semester', '1-A', 'yes'),
+(190, '251-0369-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 101', 'Arts Appreciation', '2025-2026', '00421', 73.00, 97.33, '', '2025-11-06 06:39:50', '1st Semester', '1-A', 'yes'),
+(191, '251-0369-1', 'COLLEGE OF ARTS AND SCIENCES', 'GECC 103', 'Mathematics in the Modern World', '2025-2026', '02860', 66.00, 88.00, '', '2025-11-06 06:40:43', '1st Semester', '1-A', 'yes');
 
 -- --------------------------------------------------------
 
@@ -488,6 +596,7 @@ CREATE TABLE `evaluation_settings` (
   `id` int(11) NOT NULL,
   `semester` varchar(50) NOT NULL,
   `academic_year` varchar(20) NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -495,8 +604,8 @@ CREATE TABLE `evaluation_settings` (
 -- Dumping data for table `evaluation_settings`
 --
 
-INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_at`) VALUES
-(1, '1st Semester', '2025-2026', '2025-11-05 13:55:27');
+INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `status`, `updated_at`) VALUES
+(1, '1st Semester', '2025-2026', 1, '2025-11-05 13:55:27');
 
 -- --------------------------------------------------------
 
@@ -507,15 +616,17 @@ INSERT INTO `evaluation_settings` (`id`, `semester`, `academic_year`, `updated_a
 CREATE TABLE `evaluation_switch` (
   `id` int(11) NOT NULL,
   `status` enum('on','off') NOT NULL DEFAULT 'off',
-  `user_id` varchar(255) DEFAULT NULL
+  `user_id` varchar(255) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `evaluation_switch`
 --
 
-INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`) VALUES
-(7, 'on', '40193');
+INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`, `start_date`, `end_date`) VALUES
+(7, 'on', '40193', '2025-11-16', '2025-11-18');
 
 -- --------------------------------------------------------
 
@@ -714,8 +825,49 @@ CREATE TABLE `student_evaluation_submissions` (
 --
 
 INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
-(68, '221-0387-11', 'ELCO102', '41953', 'COLLEGE OF ARTS AND SCIENCE', '2025-2026', '1st Semester', '2025-11-02 21:32:08', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":4}', 70, 93.33, 'rers', 'yes'),
-(69, '221-0387-1', 'ISPC 112', '40184', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-05 22:04:30', '{\"q0\":1,\"q1\":1,\"q2\":1,\"q3\":1,\"q4\":1,\"q5\":1,\"q6\":1,\"q7\":1,\"q8\":1,\"q9\":1,\"q10\":1,\"q11\":1,\"q12\":1,\"q13\":1,\"q14\":1}', 15, 20.00, '', 'yes');
+(71, '221-0325-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:08', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(72, '221-0476-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:27', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'none', 'yes'),
+(73, '231-0884-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:43:52', '{\"q0\":3,\"q1\":3,\"q2\":3,\"q3\":3,\"q4\":3,\"q5\":3,\"q6\":3,\"q7\":3,\"q8\":3,\"q9\":3,\"q10\":3,\"q11\":3,\"q12\":3,\"q13\":3,\"q14\":3}', 45, 60.00, 'yes', 'yes'),
+(74, '221-0422-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:44:42', '{\"q0\":4,\"q1\":4,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":3,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":5}', 67, 89.33, 'napaka galing mo', 'yes'),
+(75, '211-0004-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:44:49', '{\"q0\":4,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 70, 93.33, '', 'yes'),
+(76, '211-0004-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:45:25', '{\"q0\":4,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":4}', 70, 93.33, '', 'yes'),
+(77, '221-0778-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:45:46', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(78, '221-0368-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:45:54', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Wow', 'no'),
+(79, '211-0161-1 ', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:45:58', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 74, 98.67, '', 'yes'),
+(80, '221-0733-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:46:00', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":5,\"q12\":4,\"q13\":4,\"q14\":5}', 67, 89.33, 'N/A', 'no'),
+(81, '221-0026-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:46:00', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(82, '221-0070-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:46:27', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":4,\"q12\":5,\"q13\":5,\"q14\":5}', 70, 93.33, 'N/A', 'yes'),
+(83, '202-0021-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:46:53', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 74, 98.67, '', 'no'),
+(84, '221-0146-1', 'ISSM 105', '40023', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:47:19', '{\"q0\":4,\"q1\":4,\"q2\":4,\"q3\":4,\"q4\":4,\"q5\":4,\"q6\":4,\"q7\":4,\"q8\":4,\"q9\":4,\"q10\":4,\"q11\":4,\"q12\":4,\"q13\":4,\"q14\":4}', 60, 80.00, 'None', 'no'),
+(85, '221-0387-1', 'ISPC 112', '40184', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:48:32', '{\"q0\":5,\"q1\":4,\"q2\":3,\"q3\":3,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":5,\"q14\":5}', 67, 89.33, 'nICE TEACHING', 'yes'),
+(86, '221-0852-1', 'ISPC 112', '40184', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:50:14', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":4}', 65, 86.67, 'Good teaching ', 'yes'),
+(87, '221-0867-1 ', 'ISPC 112', '40184', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:50:55', '{\"q0\":5,\"q1\":4,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":5,\"q7\":4,\"q8\":4,\"q9\":5,\"q10\":4,\"q11\":5,\"q12\":5,\"q13\":4,\"q14\":4}', 67, 89.33, 'none', 'yes'),
+(88, '221-0867-1 ', 'ISAE 107', '40207', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:55:15', '{\"q0\":4,\"q1\":4,\"q2\":3,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":4}', 65, 86.67, 'None\r\n', 'yes'),
+(89, '221-0387-1', 'ISBA 105', '40180', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:55:42', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":4,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":4,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":5}', 68, 90.67, 'Excellent Teaching', 'no'),
+(90, '221-0478-1', 'ISPC 114', '40413', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:01:45', '{\"q0\":4,\"q1\":4,\"q2\":4,\"q3\":4,\"q4\":4,\"q5\":4,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":4,\"q10\":4,\"q11\":4,\"q12\":4,\"q13\":4,\"q14\":5}', 63, 84.00, '', 'yes'),
+(91, '251-0250-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:18:10', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'always take care po maam', 'no'),
+(92, '251-0416-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:23:19', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Gwapo', 'yes'),
+(93, '251-0057-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:23:41', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(94, '251-0234-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:24:53', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Very good in teaching', 'no'),
+(95, '251-0269-1', 'ISCC 102', '40094', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:27:41', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'N/A', 'yes'),
+(96, '251-0004-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:27:54', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":5}', 74, 98.67, 'very joyful teacher', 'no'),
+(97, '251-0009-1', 'ISCC 102', '40094', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:28:22', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Keep up the good work ma\'am<3', 'yes'),
+(98, '251-0233-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:28:26', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Very good ', 'yes'),
+(99, '251-0008-1', 'ISCC 102', '40094', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:28:32', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(100, '251-0019-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:28:44', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
+(101, '251-0458-1', 'ISCC 102', '40094', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:28:57', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'N/A', 'yes'),
+(102, '251-0383-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:29:29', '{\"q0\":4,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 74, 98.67, 'ma\'am keep up the good work ma\'am really appreciated ^ ^', 'no'),
+(103, '251-0010-1', 'ISCC 102', '40094', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:29:44', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'the best teacher and easy to approach ', 'yes'),
+(104, '251-0458-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:30:15', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'N/A', 'yes'),
+(105, '251-0401-1', 'GEEC 101', '0716', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:31:04', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'No comment ', 'yes'),
+(106, '251-0482-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:32:09', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'Iloveyousomuch ma\'am ', 'yes'),
+(107, '251-0010-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:33:43', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'approachable teacher ', 'yes'),
+(108, '251-0482-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:34:17', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'no'),
+(109, '251-0010-1', 'GEEC 101', '0716', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:35:29', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 73, 97.33, 'Approachable teacher', 'yes'),
+(110, '251-0010-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:38:25', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'approachable teacher ', 'yes'),
+(111, '251-0369-1', 'ISCC 101', '00711', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 14:38:38', '{\"q0\":4,\"q1\":4,\"q2\":4,\"q3\":3,\"q4\":3,\"q5\":4,\"q6\":4,\"q7\":4,\"q8\":4,\"q9\":3,\"q10\":4,\"q11\":4,\"q12\":5,\"q13\":5,\"q14\":5}', 60, 80.00, '', 'yes'),
+(112, '251-0369-1', 'GECC 101', '00421', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:39:50', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":4}', 73, 97.33, '', 'yes'),
+(113, '251-0369-1', 'GECC 103', '02860', 'COLLEGE OF ARTS AND SCIENCES', '2025-2026', '1st Semester', '2025-11-06 14:40:43', '{\"q0\":4,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":4,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":4}', 66, 88.00, '', 'yes');
 
 -- --------------------------------------------------------
 
@@ -1418,7 +1570,7 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=522;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=572;
 
 --
 -- AUTO_INCREMENT for table `adds`
@@ -1430,25 +1582,25 @@ ALTER TABLE `adds`
 -- AUTO_INCREMENT for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=81;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation_submissions`
 --
 ALTER TABLE `admin_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `department_info`
 --
 ALTER TABLE `department_info`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `evaluation`
 --
 ALTER TABLE `evaluation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
 -- AUTO_INCREMENT for table `evaluation_settings`
@@ -1466,7 +1618,7 @@ ALTER TABLE `evaluation_switch`
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
 --
 ALTER TABLE `student_evaluation_submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=114;
 
 --
 -- AUTO_INCREMENT for table `student_subject`
