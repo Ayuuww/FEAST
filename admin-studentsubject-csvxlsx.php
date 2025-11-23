@@ -65,31 +65,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
     }
   }
 
-  // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-    $_SESSION['msg'] = "Processed file. Assigned $success subjects, but some rows had issues.";
+    $_SESSION['msg'] = "Assigned **$success** subject(s) manually, but some had issues.";
     $_SESSION['msg_type'] = 'warning';
   } elseif ($success > 0) {
-    $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
+    $_SESSION['msg'] = "**$success** subject(s) assigned successfully.";
     $_SESSION['msg_type'] = 'success';
-  } elseif (!empty($_SESSION['detailed_errors'])) {
-    // Check if all errors are warnings about already assigned
-    $onlyAlreadyAssigned = true;
-    foreach ($_SESSION['detailed_errors'] as $err) {
-      if (stripos($err, 'already assigned') === false) {
-        $onlyAlreadyAssigned = false;
-        break;
-      }
-    }
-    if ($onlyAlreadyAssigned) {
-      $_SESSION['msg'] = "No new subjects assigned because they were already assigned to the students for this period.";
-      $_SESSION['msg_type'] = 'info';
-    } else {
-      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
-      $_SESSION['msg_type'] = 'danger';
-    }
   } else {
-    $_SESSION['msg'] = "No subjects assigned.";
+    $_SESSION['msg'] = "No new subjects were assigned. They may have already been assigned.";
     $_SESSION['msg_type'] = 'info';
   }
 
@@ -98,7 +81,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 }
 
 
-// --- UPDATED: Handle Bulk CSV Upload ---
+// --- UPDATED: Handle Bulk CSV & XLSX Upload ---
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])) {
 
   if (!$current_academic_year || !$current_semester) {
@@ -119,8 +102,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   $file_name = $_FILES['bulk_file']['name'];
   $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-  if ($file_ext !== 'csv') {
-    $_SESSION['msg'] = "Upload failed. Only .csv files are allowed.";
+  if (!in_array($file_ext, ['csv', 'xlsx'])) {
+    $_SESSION['msg'] = "Upload failed. Only .csv or .xlsx files are allowed.";
     $_SESSION['msg_type'] = 'danger';
     header("Location: admin-studentsubject.php");
     exit();
@@ -133,11 +116,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   // ========================
   if ($file_ext === 'csv') {
     if (($fp = fopen($file_tmp_path, "r")) !== FALSE) {
+      // Optional: Check for BOM in CSV to fix weird characters
       $bom = fread($fp, 3);
-      if ($bom !== "\xEF\xBB\xBF") rewind($fp);
+      if ($bom !== "\xEF\xBB\xBF") {
+        rewind($fp);
+      }
 
-      fgetcsv($fp); // skip header
+      fgetcsv($fp); // Skip Header Row
       while (($row = fgetcsv($fp)) !== FALSE) {
+        // Ensure row has data
         if (array_filter($row)) {
           $dataRows[] = $row;
         }
@@ -145,14 +132,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       fclose($fp);
     }
   }
+  // ========================
+  // OPTION B: XLSX FILE
+  // ========================
+  elseif ($file_ext === 'xlsx') {
+    try {
+      // Load the spreadsheet
+      $spreadsheet = IOFactory::load($file_tmp_path);
+      $sheet = $spreadsheet->getActiveSheet();
 
+      // Convert to array, indexed by A, B, C...
+      $rows = $sheet->toArray(null, true, true, true);
+
+      // Remove the header row (first row)
+      array_shift($rows);
+
+      foreach ($rows as $cells) {
+        // Map Excel Columns A and B to our array
+        $dataRows[] = [
+          trim($cells['A'] ?? ""), // Student ID
+          trim($cells['B'] ?? "")  // Subject Code
+        ];
+      }
+    } catch (Exception $e) {
+      $_SESSION['msg'] = "Error reading Excel file: " . $e->getMessage();
+      $_SESSION['msg_type'] = 'danger';
+      header("Location: admin-studentsubject.php");
+      exit();
+    }
+  }
 
   // ========================
   // PROCESS DATA ROWS
   // ========================
   $line = 1; // Start at 1 (header was 1, so first data row is line 2)
-
-  $missing_subjects = [];
 
   foreach ($dataRows as $row) {
     $line++;
@@ -167,19 +180,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
 
     if (empty($student_id) || empty($subject_code)) {
       $_SESSION['detailed_errors'][] = "⚠️ Row $line: Missing student_id or subject_code.";
-      continue;
-    }
-
-    // Check subject exists
-    $subject_check = $conn->prepare("SELECT code FROM subject WHERE code = ? LIMIT 1");
-    $subject_check->bind_param("s", $subject_code);
-    $subject_check->execute();
-    $subject_exists = $subject_check->get_result()->num_rows > 0;
-    $subject_check->close();
-
-    if (!$subject_exists) {
-      $_SESSION['detailed_errors'][] = "❌ Row $line: Subject code **$subject_code** is not yet listed in your subjects.<br>";
-      $missing_subjects[] = $subject_code;
       continue;
     }
 
@@ -198,7 +198,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     // Perform assignment
     assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
   }
-  $_SESSION['missing_subjects'] = array_unique($missing_subjects);
 
   // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
@@ -207,27 +206,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   } elseif ($success > 0) {
     $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
     $_SESSION['msg_type'] = 'success';
-  } elseif (!empty($_SESSION['detailed_errors'])) {
-    // Check if ALL errors are "already assigned"
-    $onlyAlreadyAssigned = true;
-    foreach ($_SESSION['detailed_errors'] as $err) {
-      if (stripos($err, 'already assigned') === false) { // Not just "already assigned"
-        $onlyAlreadyAssigned = false;
-        break;
-      }
-    }
-    if ($onlyAlreadyAssigned) {
-      $_SESSION['msg'] = "No new subjects assigned because all subjects were already assigned to these students for this academic period.";
-      $_SESSION['msg_type'] = 'info';
-    } else {
-      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
-      $_SESSION['msg_type'] = 'danger';
-    }
   } else {
-    $_SESSION['msg'] = "No subjects assigned.";
+    $_SESSION['msg'] = "No subjects assigned. Please check your file format.";
     $_SESSION['msg_type'] = 'info';
   }
-
 
   header("Location: admin-studentsubject.php");
   exit();
@@ -362,37 +344,13 @@ ksort($subjects_by_faculty);
       <?php unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']); ?>
     <?php endif; ?>
 
-    <?php if (!empty($_SESSION['missing_subjects'])): ?>
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          const missingSubjects = <?= json_encode($_SESSION['missing_subjects']) ?>;
-          const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
-          let htmlContent = "<strong>The following subject codes are NOT listed in your subject table:</strong><br><ul>";
-          missingSubjects.forEach((sub) => htmlContent += "<li><b>" + sub + "</b></li>");
-          htmlContent += "</ul>";
-
-          if (errors.length > 0) {
-            htmlContent += `<div style="margin-top:10px;text-align:left;"><strong>Other Errors:</strong><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
-          }
-
-          Swal.fire({
-            icon: "warning",
-            title: "Missing Subjects Detected",
-            html: htmlContent,
-            confirmButtonText: "OK"
-          });
-        });
-      </script>
-      <?php unset($_SESSION['missing_subjects'], $_SESSION['detailed_errors']); ?>
-    <?php endif; ?>
-
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
 
           <div class="card shadow-sm p-4 mb-4">
             <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via CSV Upload</h5>
+              <h5 class="card-title mb-4">Bulk Assign via CSV/XLSX Upload</h5>
               <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
                 <?php if (!$current_academic_year || !$current_semester): ?>
                   <div class="col-12">
@@ -421,7 +379,7 @@ ksort($subjects_by_faculty);
                   </ul>
                   </p> -->
 
-                  <strong>✔ Correct Sample CSV Format:</strong>
+                  <strong>✔ Correct Sample CSV or XLSX Format:</strong>
                   <pre class="border p-2 bg-white" style="white-space: pre-wrap;">
   student_id|subject_code
   123-4567-8|IT101
@@ -430,14 +388,14 @@ ksort($subjects_by_faculty);
 </pre>
 
                   <p class="small text-muted mb-0">
-                    Save your file as <strong>.csv</strong> (Comma Separated Values). No extra columns, no blank rows, no special characters.
+                    Save your file as <strong>.csv</strong> or <strong> .xlsx </strong> (Comma Separated Values). No extra columns, no blank rows, no special characters.
                   </p>
 
                 </div>
 
                 <div class="col-md-9">
                   <label for="bulk_file" class="form-label fw-bold">Select CSV File</label>
-                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv" required>
+                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv, .xlsx" required>
                 </div>
 
                 <div class="col-md-3 d-flex align-items-end">
@@ -447,7 +405,7 @@ ksort($subjects_by_faculty);
                 </div>
                 <div class="col-12">
                   <p class="small text-muted mb-0">
-                    File must be a .csv with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>
+                    File must be a .csv or .xlsx with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>
                   </p>
                 </div>
               </form>
@@ -703,14 +661,16 @@ ksort($subjects_by_faculty);
 
         const fileName = file.name.toLowerCase();
         const isCSV = fileName.endsWith(".csv");
+        const isXLSX = fileName.endsWith(".xlsx");
 
-        if (!isCSV) {
+        // 1. Validate Extension
+        if (!isCSV && !isXLSX) {
           Swal.fire({
             icon: "error",
             title: "Invalid File",
-            text: "Please upload a valid .csv file."
+            text: "Please upload a valid .csv or .xlsx file."
           });
-          this.value = "";
+          this.value = ""; // Clear input
           return;
         }
 
@@ -727,6 +687,33 @@ ksort($subjects_by_faculty);
             showPreview(rows, "CSV");
           };
           reader.readAsText(file);
+        }
+
+        // ==========================================
+        // HANDLER FOR XLSX FILES (Binary Mode)
+        // ==========================================
+        else if (isXLSX) {
+          reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {
+              type: 'array'
+            });
+
+            // Get the first sheet name and data
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+
+            // Convert sheet to array of arrays (header: 1 means raw array output)
+            const rows = XLSX.utils.sheet_to_json(worksheet, {
+              header: 1
+            });
+
+            // Clean up rows (remove empty rows and trim spaces)
+            const cleanedRows = rows.map(row => row.map(cell => (cell ? cell.toString().trim() : "")));
+
+            showPreview(cleanedRows, "Excel (XLSX)");
+          };
+          reader.readAsArrayBuffer(file); // Excel must be read as ArrayBuffer
         }
       });
 

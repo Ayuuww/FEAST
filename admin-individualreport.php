@@ -244,6 +244,7 @@ $admin_info_query->close();
 </head>
 
 <body>
+  
   <?php include 'admin-header.php' ?>
   <?php include 'admin-sidebar.php' ?>
 

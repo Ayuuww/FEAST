@@ -1,34 +1,41 @@
 <?php
 session_start();
-include 'conn/conn.php';// Connection to the database
+include 'conn/conn.php';
 
-// Deleting subject
-if (isset($_POST['delete'])) {
-    $subject_code = $_POST['code'];
-
-    // Check if subject code exists
-    $check_query    = "SELECT * FROM subject WHERE code='$subject_code'";
-    $check_result   = mysqli_query($conn, $check_query);
-
-    if (mysqli_num_rows($check_result) == 0) {
-        $_SESSION['msg'] = 'Subject does not exist!';
-        header("Location: admin-subjectlist.php");
-        exit();
-        
-    } else {
-        // Delete the subject
-        $delete_query = "DELETE FROM subject WHERE code='$subject_code'";
-        
-        if (mysqli_query($conn, $delete_query)) {
-            $_SESSION['msg'] = 'Subject deleted successfully!';
-            header("Location: admin-subjectlist.php");
-            exit();
-        } else {
-            echo "<script>alert('Error deleting subject: " . mysqli_error($conn) . "');</script>";
-        }
-    }
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
+    header("Location: pages-login.php");
+    exit();
 }
 
+if (isset($_POST['idnumber'])) {
 
+    $id = $_POST['idnumber'];
 
-?>
+    // Check if subject exists
+    $check_stmt = $conn->prepare("SELECT idnumber FROM subject WHERE idnumber = ?");
+    $check_stmt->bind_param("i", $id);
+    $check_stmt->execute();
+    $check_stmt->store_result();
+
+    if ($check_stmt->num_rows == 0) {
+        $_SESSION['msg'] = "Subject does not exist!";
+        $_SESSION['msg_type'] = "error";
+        header("Location: admin-subjectlist.php");
+        exit();
+    }
+
+    // Now delete
+    $delete_stmt = $conn->prepare("DELETE FROM subject WHERE idnumber = ?");
+    $delete_stmt->bind_param("i", $id);
+
+    if ($delete_stmt->execute()) {
+        $_SESSION['msg'] = "Subject deleted successfully!";
+        $_SESSION['msg_type'] = "success";
+    } else {
+        $_SESSION['msg'] = "Error deleting subject!";
+        $_SESSION['msg_type'] = "error";
+    }
+
+    header("Location: admin-subjectlist.php");
+    exit();
+}

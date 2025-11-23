@@ -61,18 +61,44 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
     foreach ($subject_codes as $subject_code) {
       // (Your existing, correct assignment logic is here)
       // This is a reusable function now
-      assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
+      assignSubject(
+        $conn,
+        $student_id,
+        $subject_code,
+        $current_academic_year,
+        $current_semester,
+        $success,
+        $faculty_id,
+        $admin_csv_id
+      );
     }
   }
 
+  // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-    $_SESSION['msg'] = "Assigned **$success** subject(s) manually, but some had issues.";
+    $_SESSION['msg'] = "Processed file. Assigned $success subjects, but some rows had issues.";
     $_SESSION['msg_type'] = 'warning';
   } elseif ($success > 0) {
-    $_SESSION['msg'] = "**$success** subject(s) assigned successfully.";
+    $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
     $_SESSION['msg_type'] = 'success';
+  } elseif (!empty($_SESSION['detailed_errors'])) {
+    // Check if all errors are warnings about already assigned
+    $onlyAlreadyAssigned = true;
+    foreach ($_SESSION['detailed_errors'] as $err) {
+      if (stripos($err, 'already assigned') === false) {
+        $onlyAlreadyAssigned = false;
+        break;
+      }
+    }
+    if ($onlyAlreadyAssigned) {
+      $_SESSION['msg'] = "No new subjects assigned because they were already assigned to the students for this period.";
+      $_SESSION['msg_type'] = 'info';
+    } else {
+      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
+      $_SESSION['msg_type'] = 'danger';
+    }
   } else {
-    $_SESSION['msg'] = "No new subjects were assigned. They may have already been assigned.";
+    $_SESSION['msg'] = "No subjects assigned.";
     $_SESSION['msg_type'] = 'info';
   }
 
@@ -81,7 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 }
 
 
-// --- UPDATED: Handle Bulk CSV & XLSX Upload ---
+// --- UPDATED: Handle Bulk CSV Upload ---
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])) {
 
   if (!$current_academic_year || !$current_semester) {
@@ -102,8 +128,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   $file_name = $_FILES['bulk_file']['name'];
   $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-  if (!in_array($file_ext, ['csv', 'xlsx'])) {
-    $_SESSION['msg'] = "Upload failed. Only .csv or .xlsx files are allowed.";
+  if ($file_ext !== 'csv') {
+    $_SESSION['msg'] = "Upload failed. Only .csv files are allowed.";
     $_SESSION['msg_type'] = 'danger';
     header("Location: admin-studentsubject.php");
     exit();
@@ -116,15 +142,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   // ========================
   if ($file_ext === 'csv') {
     if (($fp = fopen($file_tmp_path, "r")) !== FALSE) {
-      // Optional: Check for BOM in CSV to fix weird characters
       $bom = fread($fp, 3);
-      if ($bom !== "\xEF\xBB\xBF") {
-        rewind($fp);
-      }
+      if ($bom !== "\xEF\xBB\xBF") rewind($fp);
 
-      fgetcsv($fp); // Skip Header Row
+      fgetcsv($fp); // skip header
       while (($row = fgetcsv($fp)) !== FALSE) {
-        // Ensure row has data
         if (array_filter($row)) {
           $dataRows[] = $row;
         }
@@ -132,58 +154,73 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       fclose($fp);
     }
   }
-  // ========================
-  // OPTION B: XLSX FILE
-  // ========================
-  elseif ($file_ext === 'xlsx') {
-    try {
-      // Load the spreadsheet
-      $spreadsheet = IOFactory::load($file_tmp_path);
-      $sheet = $spreadsheet->getActiveSheet();
 
-      // Convert to array, indexed by A, B, C...
-      $rows = $sheet->toArray(null, true, true, true);
-
-      // Remove the header row (first row)
-      array_shift($rows);
-
-      foreach ($rows as $cells) {
-        // Map Excel Columns A and B to our array
-        $dataRows[] = [
-          trim($cells['A'] ?? ""), // Student ID
-          trim($cells['B'] ?? "")  // Subject Code
-        ];
-      }
-    } catch (Exception $e) {
-      $_SESSION['msg'] = "Error reading Excel file: " . $e->getMessage();
-      $_SESSION['msg_type'] = 'danger';
-      header("Location: admin-studentsubject.php");
-      exit();
-    }
-  }
 
   // ========================
   // PROCESS DATA ROWS
   // ========================
   $line = 1; // Start at 1 (header was 1, so first data row is line 2)
 
+  $missing_subjects = [];
+
   foreach ($dataRows as $row) {
     $line++;
 
-    // Basic validation
-    if (count($row) < 2) {
-      continue; // Skip empty rows
-    }
+    // Expecting 7 columns: student_id, subject_code, subject_title, faculty_id, admin_id, department, program
+    if (count($row) < 2) continue; // You may want to use count($row) < 7 for strict checking
 
-    $student_id = trim($row[0]);
-    $subject_code = trim($row[1]);
+    $student_id    = trim($row[0]);
+    $subject_code  = trim($row[1]);
+    $subject_title = isset($row[2]) ? trim($row[2]) : "Untitled Subject";
+    $faculty_id    = isset($row[3]) ? trim($row[3]) : null;
+    $admin_csv_id  = isset($row[4]) ? trim($row[4]) : $admin_id;
+    $department    = isset($row[5]) ? trim($row[5]) : "";
+    $program       = isset($row[6]) ? trim($row[6]) : "";
 
     if (empty($student_id) || empty($subject_code)) {
       $_SESSION['detailed_errors'][] = "⚠️ Row $line: Missing student_id or subject_code.";
       continue;
     }
 
-    // Check student exists
+    // --- Check if subject exists ---
+    $subject_check = $conn->prepare("SELECT code FROM subject WHERE code = ? LIMIT 1");
+    $subject_check->bind_param("s", $subject_code);
+    $subject_check->execute();
+    $subject_exists = $subject_check->get_result()->num_rows > 0;
+    $subject_check->close();
+
+    // --- Create subject if missing ---
+    if (!$subject_exists) {
+
+      // Clean empty fields
+      $faculty_id_db = (!empty($faculty_id)) ? $faculty_id : null;
+      $admin_id_db   = (!empty($admin_csv_id)) ? $admin_csv_id : null;
+
+      $insert_subject = $conn->prepare("
+        INSERT INTO subject
+        (code, title, faculty_id, admin_id, department, program)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+
+      $insert_subject->bind_param(
+        "ssssss",
+        $subject_code,
+        $subject_title,
+        $faculty_id_db,
+        $admin_id_db,
+        $department,
+        $program
+      );
+
+      $insert_subject->execute();
+      $insert_subject->close();
+
+      $_SESSION['detailed_errors'][] =
+        "ℹ️ Row $line: Subject <b>{$subject_code}</b> created with faculty {$faculty_id_db} and admin {$admin_id_db}.";
+    }
+
+
+    // --- Check student exists ---
     $checkStudent = $conn->prepare("SELECT idnumber FROM student WHERE idnumber = ? LIMIT 1");
     $checkStudent->bind_param("s", $student_id);
     $checkStudent->execute();
@@ -195,9 +232,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       continue;
     }
 
-    // Perform assignment
-    assignSubject($conn, $student_id, $subject_code, $current_academic_year, $current_semester, $success);
+    // --- Assign Subject ---
+    assignSubject(
+      $conn,
+      $student_id,
+      $subject_code,
+      $current_academic_year,
+      $current_semester,
+      $success,
+      $faculty_id,      // <-- from CSV
+      $admin_csv_id     // <-- from CSV or logged admin
+    );
   }
+  $_SESSION['missing_subjects'] = array_unique($missing_subjects);
 
   // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
@@ -206,10 +253,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   } elseif ($success > 0) {
     $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
     $_SESSION['msg_type'] = 'success';
+  } elseif (!empty($_SESSION['detailed_errors'])) {
+    // Check if ALL errors are "already assigned"
+    $onlyAlreadyAssigned = true;
+    foreach ($_SESSION['detailed_errors'] as $err) {
+      if (stripos($err, 'already assigned') === false) { // Not just "already assigned"
+        $onlyAlreadyAssigned = false;
+        break;
+      }
+    }
+    if ($onlyAlreadyAssigned) {
+      $_SESSION['msg'] = "No new subjects assigned because all subjects were already assigned to these students for this academic period.";
+      $_SESSION['msg_type'] = 'info';
+    } else {
+      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
+      $_SESSION['msg_type'] = 'danger';
+    }
   } else {
-    $_SESSION['msg'] = "No subjects assigned. Please check your file format.";
+    $_SESSION['msg'] = "No subjects assigned.";
     $_SESSION['msg_type'] = 'info';
   }
+
 
   header("Location: admin-studentsubject.php");
   exit();
@@ -219,7 +283,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
  * ✅ NEW: Reusable function to assign a subject to a student.
  * This function is used by BOTH the manual and bulk assign logic.
  */
-function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter)
+function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter, $csv_faculty_id = null, $csv_admin_id = null)
 {
   // 1. Get subject/instructor details
   $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ?");
@@ -229,9 +293,21 @@ function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_c
   $stmt_subj->close();
 
   if ($subject_data) {
+    // If subject has instructor info in DB, use it
     $faculty_id = $subject_data['faculty_id'] ?? null;
-    $admin_id = $subject_data['admin_id'] ?? null;
+    $admin_id   = $subject_data['admin_id'] ?? null;
+
+    // If subject is NEW (created from CSV), use CSV values
+    if (!$faculty_id && $csv_faculty_id) $faculty_id = $csv_faculty_id;
+    if (!$admin_id   && $csv_admin_id)   $admin_id   = $csv_admin_id;
+
     $instructor_id = $faculty_id ?: $admin_id;
+
+    // Allow subject without instructor during CSV creation
+    if (!$instructor_id) {
+      $faculty_id = null;
+      $admin_id   = null;
+    }
 
     if (!$instructor_id) {
       $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** has no assigned instructor.";
@@ -244,8 +320,20 @@ function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_c
     $check_stmt->execute();
     if ($check_stmt->get_result()->num_rows === 0) {
       // 3. Insert if it doesn't exist
-      $insert_stmt = $conn->prepare("INSERT INTO student_subject (student_id, subject_code, faculty_id, admin_id, academic_year, semester) VALUES (?, ?, ?, ?, ?, ?)");
-      $insert_stmt->bind_param("ssssss", $student_id, $subject_code, $faculty_id, $admin_id, $ay, $sem);
+      $insert_stmt = $conn->prepare(" INSERT INTO student_subject
+                                      (student_id, subject_code, faculty_id, admin_id, academic_year, semester)
+                                      VALUES (?, ?, ?, ?, ?, ?)
+                                      ");
+      $insert_stmt->bind_param(
+        "ssssss",
+        $student_id,
+        $subject_code,
+        $faculty_id,   // Now includes CSV instructor if new subject
+        $admin_id,
+        $ay,
+        $sem
+      );
+
       if ($insert_stmt->execute()) {
         $success_counter++;
       } else {
@@ -344,22 +432,30 @@ ksort($subjects_by_faculty);
       <?php unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']); ?>
     <?php endif; ?>
 
-    <section class="section">
-      <div class="row">
-        <div class="col-lg-12">
+    <?php if (!empty($_SESSION['missing_subjects'])): ?>
+      <script>
+        document.addEventListener("DOMContentLoaded", function() {
+          const missingSubjects = <?= json_encode($_SESSION['missing_subjects']) ?>;
+          const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
+          let htmlContent = "<strong>The following subject codes are NOT listed in your subject table:</strong><br><ul>";
+          missingSubjects.forEach((sub) => htmlContent += "<li><b>" + sub + "</b></li>");
+          htmlContent += "</ul>";
 
-          <div class="card shadow-sm p-4 mb-4">
-            <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via CSV/XLSX Upload</h5>
-              <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
-                <?php if (!$current_academic_year || !$current_semester): ?>
-                  <div class="col-12">
-                    <div class="alert alert-danger"><b>Warning:</b> Current academic period is not set. Please contact the superadmin.</div>
-                  </div>
-                <?php endif; ?>
-                <div class="mt-2 p-3 border rounded bg-light">
+          if (errors.length > 0) {
+            htmlContent += `<div style="margin-top:10px;text-align:left;"><strong>Other Errors:</strong><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+          }
 
-                  <!-- <strong>📌 CSV Upload Requirements</strong>
+          Swal.fire({
+            icon: "warning",
+            title: "Missing Subjects Detected",
+            html: htmlContent,
+            confirmButtonText: "OK"
+          });
+        });
+      </script>
+      <?php unset($_SESSION['missing_subjects'], $_SESSION['detailed_errors']); ?>
+    <?php endif; ?>
+    <!-- <strong>📌 CSV Upload Requirements</strong>
                   <p class="mb-1">The CSV file will populate the <strong>student_subject</strong> table.</p>
 
                   <p class="mb-1">It must contain <strong>exactly two columns</strong> in this specific order:</p>
@@ -378,26 +474,64 @@ ksort($subjects_by_faculty);
                     <li>admin_id (logged in admin)</li>
                   </ul>
                   </p> -->
+    <section class="section">
+      <div class="row">
+        <div class="col-lg-12">
 
-                  <strong>✔ Correct Sample CSV or XLSX Format:</strong>
-                  <pre class="border p-2 bg-white" style="white-space: pre-wrap;">
-  student_id|subject_code
-  123-4567-8|IT101
-  123-4567-8|CS102
-  123-4567-8|GE105
-</pre>
+          <div class="card shadow-sm p-4 mb-4">
+            <div class="card-body">
+              <h5 class="card-title mb-4">Bulk Assign via CSV Upload</h5>
+              <div class="alert alert-info border-info mt-2" style="font-size: 14px;">
+                <strong>📌 Reminder:</strong><br>
+                <ul class="mb-0">
+                  <li><strong>Only <code>student_id</code> and <code>subject_code</code></strong> need to be filled in for every row.</li>
+                  <li>Other fields (<code>subject_title</code>, <code>faculty_id</code>, <code>admin_id</code>, <code>department</code>, <code>program</code>)
+                    can be entered <strong>once</strong> and reused automatically for new subjects.</li>
+                  <li>If the subject already exists in the database, you may leave the extra fields <strong>blank</strong>.</li>
+                  <li>If the subject does <strong>not</strong> exist, the system will create it using the additional fields from your CSV.</li>
+                </ul>
+              </div>
 
+              <!-- CSV Template Download Button -->
+              <div class="mb-3">
+                <a href="downloads/sample_template.csv" class="btn btn-success" download>
+                  <i class="bi bi-download"></i> Download CSV Template
+                </a>
+                <span class="small text-muted ms-2">
+                  Use this file as your starting template.
+                </span>
+              </div>
+              <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
+                <?php if (!$current_academic_year || !$current_semester): ?>
+                  <div class="col-12">
+                    <div class="alert alert-danger"><b>Warning:</b> Current academic period is not set. Please contact the superadmin.</div>
+                  </div>
+                <?php endif; ?>
+                <div class="mt-2 p-3 border rounded bg-light">
+                  <strong>✔ Correct Sample CSV Format:</strong>
+                  <pre class="border p-2 bg-white" style="white-space: pre-wrap; font-size: 90%;">
+student_id|subject_code|subject_title     |faculty_id|admin_id|department                    |program                                   |
+202-3110-1|IT101       |Introduction to IT|10001     |00001   |COLLEGE OF INFORMATION SYSTEMS|Bachelor of Science in Information Systems|
+202-3110-2|IT101       |
+202-3121-2|IT101       |
+        </pre>
+                  <ul style="font-size: 90%;margin-top:10px;">
+                    <li><strong>student_id</strong>: student ID as listed in your student table.</li>
+                    <li><strong>subject_code</strong>: unique subject code.</li>
+                    <li><strong>subject_title</strong>: title of the subject (required if code is new).</li>
+                    <li><strong>faculty_id</strong>: (optional) faculty/instructor ID for the subject.</li>
+                    <li><strong>admin_id</strong>: (optional) admin responsible for the subject.</li>
+                    <li><strong>department</strong>: (optional) college/department for the subject.</li>
+                    <li><strong>program</strong>: (optional) program under which the subject falls.</li>
+                  </ul>
                   <p class="small text-muted mb-0">
-                    Save your file as <strong>.csv</strong> or <strong> .xlsx </strong> (Comma Separated Values). No extra columns, no blank rows, no special characters.
+                    Save your file as <b>.csv</b> (comma separated values) with these columns in this order. For existing subjects, you may leave other subject fields blank.
                   </p>
-
                 </div>
-
                 <div class="col-md-9">
                   <label for="bulk_file" class="form-label fw-bold">Select CSV File</label>
-                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv, .xlsx" required>
+                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv" required>
                 </div>
-
                 <div class="col-md-3 d-flex align-items-end">
                   <button type="submit" name="upload_bulk_assign" class="btn btn-success w-100">
                     <i class="bi bi-upload"></i> Upload and Assign
@@ -405,12 +539,13 @@ ksort($subjects_by_faculty);
                 </div>
                 <div class="col-12">
                   <p class="small text-muted mb-0">
-                    File must be a .csv or .xlsx with two columns (in this order): <strong>student_id</strong> and <strong>subject_code</strong>
+                    Data is validated on upload. Any missing or incorrect IDs/codes will be shown in the feedback popup.
                   </p>
                 </div>
               </form>
             </div>
           </div>
+
 
           <div class="card shadow-sm p-4">
             <div class="card-body">
@@ -661,16 +796,14 @@ ksort($subjects_by_faculty);
 
         const fileName = file.name.toLowerCase();
         const isCSV = fileName.endsWith(".csv");
-        const isXLSX = fileName.endsWith(".xlsx");
 
-        // 1. Validate Extension
-        if (!isCSV && !isXLSX) {
+        if (!isCSV) {
           Swal.fire({
             icon: "error",
             title: "Invalid File",
-            text: "Please upload a valid .csv or .xlsx file."
+            text: "Please upload a valid .csv file."
           });
-          this.value = ""; // Clear input
+          this.value = "";
           return;
         }
 
@@ -687,33 +820,6 @@ ksort($subjects_by_faculty);
             showPreview(rows, "CSV");
           };
           reader.readAsText(file);
-        }
-
-        // ==========================================
-        // HANDLER FOR XLSX FILES (Binary Mode)
-        // ==========================================
-        else if (isXLSX) {
-          reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, {
-              type: 'array'
-            });
-
-            // Get the first sheet name and data
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-
-            // Convert sheet to array of arrays (header: 1 means raw array output)
-            const rows = XLSX.utils.sheet_to_json(worksheet, {
-              header: 1
-            });
-
-            // Clean up rows (remove empty rows and trim spaces)
-            const cleanedRows = rows.map(row => row.map(cell => (cell ? cell.toString().trim() : "")));
-
-            showPreview(cleanedRows, "Excel (XLSX)");
-          };
-          reader.readAsArrayBuffer(file); // Excel must be read as ArrayBuffer
         }
       });
 

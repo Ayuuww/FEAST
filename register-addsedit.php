@@ -100,18 +100,52 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       if ($check->num_rows > 0) {
         $message = "$type already exists!";
       } else {
-        $stmt = $conn->prepare("UPDATE adds SET $column = ? WHERE id = ?");
-        $stmt->bind_param("si", $new_value, $id);
-        if ($stmt->execute()) {
-          $_SESSION['msg'] = "$type updated successfully!";
-          $_SESSION['msg_type'] = "success";
-          header("Location: register-addsmanagement.php");
-          exit();
-        } else {
-          $message = "Update failed.";
+        $new_value = trim($_POST['value']);
+        if ($new_value) {
+
+          // Check for duplicates (same name but different ID)
+          $check = $conn->prepare("SELECT id FROM adds WHERE $column = ? AND id != ?");
+          $check->bind_param("si", $new_value, $id);
+          $check->execute();
+          $check->store_result();
+
+          if ($check->num_rows > 0) {
+            $message = "$type already exists!";
+          } else {
+
+            // --- GET OLD VALUE BEFORE UPDATE ---
+            $old_value_query = $conn->prepare("SELECT $column FROM adds WHERE id = ?");
+            $old_value_query->bind_param("i", $id);
+            $old_value_query->execute();
+            $old_value_query->bind_result($old_value);
+            $old_value_query->fetch();
+            $old_value_query->close();
+
+            // --- CASCADE UPDATE (IMPORTANT PART) ---
+            // If editing department_name → update ALL rows with the same old department_name
+            if ($column === 'department_name') {
+              $stmt = $conn->prepare("UPDATE adds SET department_name = ? WHERE department_name = ?");
+              $stmt->bind_param("ss", $new_value, $old_value);
+            } else {
+              // Normal update for Rank / Position / Section
+              $stmt = $conn->prepare("UPDATE adds SET $column = ? WHERE id = ?");
+              $stmt->bind_param("si", $new_value, $id);
+            }
+
+            if ($stmt->execute()) {
+              $_SESSION['msg'] = "$type updated successfully!";
+              $_SESSION['msg_type'] = "success";
+              header("Location: register-addsmanagement.php");
+              exit();
+            } else {
+              $message = "Update failed.";
+            }
+            $stmt->close();
+          }
+          $check->close();
         }
-        $stmt->close();
       }
+
       $check->close();
     }
   }

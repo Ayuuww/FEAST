@@ -693,6 +693,7 @@ foreach ($all_evals as $eval) {
     </script>
   <?php endif; ?>
 
+  <!-- Evaluation Trends Chart Script -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       new ApexCharts(document.querySelector("#evalTrendChart"), {

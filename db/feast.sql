@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 19, 2025 at 11:21 AM
+-- Generation Time: Nov 22, 2025 at 03:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -326,7 +326,17 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (568, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-16 | End: 2025-11-18', '2025-11-17 22:02:27'),
 (569, '00000', '', 'Logged in', '2025-11-17 22:06:46'),
 (570, '00000', '', 'Logged in', '2025-11-17 22:46:26'),
-(571, '40193', 'superadmin', 'Logged in', '2025-11-18 20:31:28');
+(571, '40193', 'superadmin', 'Logged in', '2025-11-18 20:31:28'),
+(572, '40193', 'superadmin', 'Logged in', '2025-11-19 18:24:00'),
+(573, '40151', 'admin', 'Logged in', '2025-11-19 19:12:08'),
+(574, '40151', 'admin', 'Logged in', '2025-11-20 14:49:55'),
+(575, '40193', 'superadmin', 'Logged in', '2025-11-20 20:37:34'),
+(576, '40151', 'admin', 'Logged in', '2025-11-20 21:10:26'),
+(577, '40045', 'admin', 'Logged in', '2025-11-20 21:17:33'),
+(578, '40151', 'admin', 'Logged in', '2025-11-21 14:42:14'),
+(579, '40151', 'admin', 'Logged in', '2025-11-21 17:54:31'),
+(580, '00000', '', 'Logged in', '2025-11-21 18:03:48'),
+(581, '00000', '', 'Logged in', '2025-11-22 22:30:28');
 
 -- --------------------------------------------------------
 
@@ -1322,7 +1332,6 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (1083, '221-0484-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
 (1084, '221-0484-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
 (1085, '221-0484-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
-(1086, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
 (1087, '221-0387-1', 'ISPC 112', '2025-2026', '1st Semester', '40184', '40151'),
 (1088, '221-0387-1', 'ISPC 114', '2025-2026', '1st Semester', '40413', '40151'),
 (1089, '221-0387-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
@@ -1351,7 +1360,10 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (1112, '211-0004-1', 'ISPC 114', '2025-2026', '1st Semester', '40413', '40151'),
 (1113, '211-0004-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
 (1114, '211-0004-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
-(1115, '211-0004-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151');
+(1115, '211-0004-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
+(1119, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
+(1130, '221-0387-1', 'IT 101', '2025-2026', '1st Semester', '00711', '40151'),
+(1131, '221-0388-1', 'IT 101', '2025-2026', '1st Semester', '00711', '40151');
 
 -- --------------------------------------------------------
 
@@ -1386,7 +1398,8 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `d
 (72, 'GECC 101', 'Arts Appreciation', '00421', '40045', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (73, 'GECC 102', 'Purposive Communication', '40193', '40050', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (74, 'ISCC 101', 'Introduction to Computing', '00711', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
+(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
+(91, 'IT 101', 'Introduction to IT', '00711', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
 
 -- --------------------------------------------------------
 
@@ -1570,7 +1583,7 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=572;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=582;
 
 --
 -- AUTO_INCREMENT for table `adds`
@@ -1624,13 +1637,13 @@ ALTER TABLE `student_evaluation_submissions`
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1116;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1132;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- Constraints for dumped tables
@@ -1717,7 +1730,6 @@ ALTER TABLE `student_subject`
 ALTER TABLE `subject`
   ADD CONSTRAINT `subject_admin_fk` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`idnumber`),
   ADD CONSTRAINT `subject_admin_id` FOREIGN KEY (`admin_id`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `subject_faculty_fk` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`idnumber`),
   ADD CONSTRAINT `subject_faculty_id` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --

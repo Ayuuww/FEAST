@@ -172,7 +172,7 @@ $result = $sub_stmt->get_result();
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['program']); ?></td>
                       <td>
                         <form method="post" class="delete-form" action="deletesubject.php">
-                          <input type="hidden" name="code" value="<?php echo htmlspecialchars($row['code']); ?>">
+                          <input type="hidden" name="idnumber" value="<?php echo $row['idnumber']; ?>">
                           <button type="button" class="btn btn-danger btn-sm delete-btn" data-subject="<?php echo htmlspecialchars($row['title']); ?>">Delete</button>
                         </form>
                       </td>
