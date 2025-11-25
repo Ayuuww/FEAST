@@ -51,7 +51,7 @@ $result = mysqli_query($conn, $query);
                     <th>First Name</th>
                     <th>Middle Name</th>
                     <th>Last Name</th>
-                    <th>Department</th>
+                    <th>College</th>
                     <th>Program</th>
                     <th>Section</th>
                     <th>Action</th>
@@ -68,7 +68,7 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['first_name']); ?></td>
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['mid_name']); ?></td>
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['last_name']); ?></td>
-                      <td class="text-uppercase"><?php echo htmlspecialchars($row['department']); ?></td>
+                      <td class="text-uppercase"><?php echo htmlspecialchars($row['college']); ?></td>
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['program'] ?? 'N/A'); ?></td>
                       <td class="text-uppercase"><?php echo htmlspecialchars($row['section']); ?></td>
                       <td>

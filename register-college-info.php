@@ -13,22 +13,22 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
 if (isset($_GET['delete'])) {
   $id = $_GET['delete'];
   try {
-    $stmt = $conn->prepare("DELETE FROM department_info WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM college_info WHERE id = ?");
     $stmt->bind_param("i", $id);
     $stmt->execute();
     $_SESSION['alert'] = [
       'type' => 'success',
       'title' => 'Deleted!',
-      'text' => 'Department information has been deleted.'
+      'text' => 'college information has been deleted.'
     ];
   } catch (mysqli_sql_exception $e) {
     $_SESSION['alert'] = [
       'type' => 'error',
       'title' => 'Error!',
-      'text' => 'Could not delete department. It might be in use.'
+      'text' => 'Could not delete college. It might be in use.'
     ];
   }
-  header("Location: register-department-info.php");
+  header("Location: register-college-info.php");
   exit();
 }
 
@@ -36,16 +36,16 @@ if (isset($_GET['delete'])) {
 // Handle Add/Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // ✅ --- FIX 2: Changed 'college_name' to 'program_name' ---
-  $dept = trim($_POST['department_name']);
+  $dept = trim($_POST['college_name']);
   $program = trim($_POST['program_name']); // <-- RENAMED
   $website = trim($_POST['website']);
   $phone = trim($_POST['phone']);
   $email = trim($_POST['email']);
 
-  // Add Department
+  // Add college
   if (isset($_POST['add'])) {
     // Check if combination already exists
-    $check = $conn->prepare("SELECT COUNT(*) FROM department_info WHERE department_name = ? AND program_name = ?");
+    $check = $conn->prepare("SELECT COUNT(*) FROM college_info WHERE college_name = ? AND program_name = ?");
     $check->bind_param("ss", $dept, $program);
     $check->execute();
     $check->bind_result($count);
@@ -56,54 +56,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $_SESSION['alert'] = [
         'type' => 'error',
         'title' => 'Duplicate Entry',
-        'text' => 'This department and program combination already exists.'
+        'text' => 'This college and program combination already exists.'
       ];
     } else {
       // ✅ Updated query to use program_name
-      $stmt = $conn->prepare("INSERT INTO department_info (department_name, program_name, website, phone, email) VALUES (?, ?, ?, ?, ?)");
+      $stmt = $conn->prepare("INSERT INTO college_info (college_name, program_name, website, phone, email) VALUES (?, ?, ?, ?, ?)");
       $stmt->bind_param("sssss", $dept, $program, $website, $phone, $email);
       $stmt->execute();
 
       $_SESSION['alert'] = [
         'type' => 'success',
         'title' => 'Added Successfully',
-        'text' => 'New department info has been added.'
+        'text' => 'New college info has been added.'
       ];
     }
-    header("Location: register-department-info.php");
+    header("Location: register-college-info.php");
     exit();
   }
 
-  // Update Department (This is unused in this file, but fixed for your 'edit' page)
+  // Update college (This is unused in this file, but fixed for your 'edit' page)
   if (isset($_POST['update'])) {
     $id = $_POST['id'];
     // ✅ Updated query to use program_name
-    $stmt = $conn->prepare("UPDATE department_info SET department_name=?, program_name=?, website=?, phone=?, email=? WHERE id=?");
+    $stmt = $conn->prepare("UPDATE college_info SET college_name=?, program_name=?, website=?, phone=?, email=? WHERE id=?");
     $stmt->bind_param("sssssi", $dept, $program, $website, $phone, $email, $id);
     $stmt->execute();
 
     $_SESSION['alert'] = [
       'type' => 'success',
       'title' => 'Updated Successfully',
-      'text' => 'Department information has been updated.'
+      'text' => 'college information has been updated.'
     ];
-    header("Location: register-department-info.php");
+    header("Location: register-college-info.php");
     exit();
   }
 }
 
 
-// Fetch all departments info for the LIST
-$list_result = $conn->query("SELECT * FROM department_info ORDER BY department_name ASC");
+// Fetch all college info for the LIST
+$list_result = $conn->query("SELECT * FROM college_info ORDER BY college_name ASC");
 
-// Fetch distinct departments from 'adds' table for the DROPDOWN
-$departments_result = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
+// Fetch distinct college from 'adds' table for the DROPDOWN
+$college_result = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' ORDER BY college_name ASC");
 
 // ✅ --- FIX 3: Fetch all Dept/Prog relationships for dependent dropdown ---
-$program_query = $conn->query("SELECT DISTINCT department_name, program_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' AND program_name IS NOT NULL AND program_name != '' ORDER BY program_name ASC");
+$program_query = $conn->query("SELECT DISTINCT college_name, program_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' AND program_name IS NOT NULL AND program_name != '' ORDER BY program_name ASC");
 $dept_programs = [];
 while ($row = $program_query->fetch_assoc()) {
-  $dept_programs[$row['department_name']][] = $row['program_name'];
+  $dept_programs[$row['college_name']][] = $row['program_name'];
 }
 ?>
 
@@ -121,11 +121,11 @@ while ($row = $program_query->fetch_assoc()) {
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Department Information</h1>
+      <h1>college Information</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item active">Department Information</li>
+          <li class="breadcrumb-item active">college Information</li>
         </ol>
       </nav>
     </div>
@@ -135,18 +135,18 @@ while ($row = $program_query->fetch_assoc()) {
         <div class="col-lg-12">
           <div class="card shadow-sm border-0">
             <div class="card-body">
-              <h5 class="card-title">Add New Department Info</h5>
+              <h5 class="card-title">Add New college Info</h5>
 
               <form method="POST" class="mb-4">
                 <div class="row gy-3 gx-3">
 
                   <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-semibold">Department</label>
-                    <select name="department_name" id="department" class="form-select" required>
-                      <option value="">Select Department</option>
-                      <?php while ($d = $departments_result->fetch_assoc()): ?>
-                        <option value="<?= htmlspecialchars($d['department_name']) ?>">
-                          <?= htmlspecialchars($d['department_name']) ?>
+                    <label class="form-label fw-semibold">college</label>
+                    <select name="college_name" id="college" class="form-select" required>
+                      <option value="">Select college</option>
+                      <?php while ($d = $college_result->fetch_assoc()): ?>
+                        <option value="<?= htmlspecialchars($d['college_name']) ?>">
+                          <?= htmlspecialchars($d['college_name']) ?>
                         </option>
                       <?php endwhile; ?>
                     </select>
@@ -155,7 +155,7 @@ while ($row = $program_query->fetch_assoc()) {
                   <div class="col-lg-3 col-md-6">
                     <label class="form-label fw-semibold">Program</label>
                     <select name="program_name" id="program" class="form-select" required disabled>
-                      <option value="">Select Department First</option>
+                      <option value="">Select college First</option>
                     </select>
                   </div>
 
@@ -178,7 +178,7 @@ while ($row = $program_query->fetch_assoc()) {
 
                 <div class="mt-3 text-end">
                   <button type="submit" name="add" class="btn btn-success btn-sm px-4">
-                    Add Department Info
+                    Add college Info
                   </button>
                 </div>
               </form>
@@ -187,7 +187,7 @@ while ($row = $program_query->fetch_assoc()) {
                 <table class="table table-hover align-middle datatable">
                   <thead class="table-success">
                     <tr>
-                      <th>College/Department</th>
+                      <th>College/college</th>
                       <th>Program</th>
                       <th>Website</th>
                       <th>Phone</th>
@@ -198,13 +198,13 @@ while ($row = $program_query->fetch_assoc()) {
                   <tbody>
                     <?php while ($row = $list_result->fetch_assoc()): ?>
                       <tr>
-                        <td><?= htmlspecialchars($row['department_name']) ?></td>
+                        <td><?= htmlspecialchars($row['college_name']) ?></td>
                         <td><?= htmlspecialchars($row['program_name']) ?></td>
                         <td><?= htmlspecialchars($row['website']) ?></td>
                         <td><?= htmlspecialchars($row['phone']) ?></td>
                         <td><?= htmlspecialchars($row['email']) ?></td>
                         <td class="text-center">
-                          <a href="register-department-edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm me-1">
+                          <a href="register-college-edit.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm me-1">
                             Edit
                           </a>
                           <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete(<?= $row['id'] ?>)">
@@ -239,7 +239,7 @@ while ($row = $program_query->fetch_assoc()) {
     function confirmDelete(id) {
       Swal.fire({
         title: "Are you sure?",
-        text: "This department info will be permanently deleted.",
+        text: "This college info will be permanently deleted.",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#d33",
@@ -269,7 +269,7 @@ while ($row = $program_query->fetch_assoc()) {
     // --- NEW: Dependent Dropdown Logic ---
     const allPrograms = <?= json_encode($dept_programs) ?>;
 
-    document.getElementById('department').addEventListener('change', function() {
+    document.getElementById('college').addEventListener('change', function() {
       const programSelect = document.getElementById('program');
       const selectedDept = this.value;
 
@@ -285,7 +285,7 @@ while ($row = $program_query->fetch_assoc()) {
       } else {
         // Disable if no dept or no programs
         programSelect.disabled = true;
-        programSelect.innerHTML = '<option value="">Select Department First</option>';
+        programSelect.innerHTML = '<option value="">Select college First</option>';
       }
     });
   </script>

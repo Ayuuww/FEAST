@@ -18,7 +18,7 @@ if (isset($_POST['addsubject'])) {
   $subject_code   = $_POST['code'] ?? null;
   $subject_title  = $_POST['title'] ?? null;
   $faculty_id     = $_POST['faculty_id'] ?? null;
-  $department     = $_POST['department'] ?? null;
+  $college     = $_POST['college'] ?? null;
   $program        = $_POST['program'] ?? null;
 
   // --- Validation ---
@@ -34,8 +34,8 @@ if (isset($_POST['addsubject'])) {
     header("Location: admin-subjectadding.php");
     exit;
   }
-  if (empty($department) || empty($program)) {
-    $_SESSION['msg'] = 'Please select the Department and Program for this subject.';
+  if (empty($college) || empty($program)) {
+    $_SESSION['msg'] = 'Please select the College and Program for this subject.';
     $_SESSION['msg_type'] = 'danger';
     header("Location: admin-subjectadding.php");
     exit;
@@ -45,7 +45,7 @@ if (isset($_POST['addsubject'])) {
 
   // ✅ 2. Prepare the new INSERT statement with 'admin_id'
   $stmt = $conn->prepare("
-        INSERT INTO subject (code, title, faculty_id, department, program, admin_id) 
+        INSERT INTO subject (code, title, faculty_id, college, program, admin_id) 
         VALUES (?, ?, ?, ?, ?, ?)
     ");
 
@@ -55,7 +55,7 @@ if (isset($_POST['addsubject'])) {
     $subject_code,
     $subject_title,
     $faculty_id,
-    $department,
+    $college,
     $program,
     $assigning_admin_id  // Add the admin's ID here
   );

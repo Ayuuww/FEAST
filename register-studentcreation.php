@@ -8,22 +8,22 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   exit();
 }
 
-// --- ✅ FIX 1: This query is NOW ONLY for Departments and Programs ---
-$query_dept_prog = "SELECT DISTINCT department_name, program_name 
+// --- ✅ FIX 1: This query is NOW ONLY for college and Programs ---
+$query_dept_prog = "SELECT DISTINCT college_name, program_name 
                   FROM adds 
-                  WHERE department_name IS NOT NULL AND department_name != '' 
+                  WHERE college_name IS NOT NULL AND college_name != '' 
                     AND program_name IS NOT NULL AND program_name != ''
-                  ORDER BY department_name, program_name";
+                  ORDER BY college_name, program_name";
 
 $result_dept_prog = $conn->query($query_dept_prog);
 if (!$result_dept_prog) {
   die("Query Failed: " . $conn->error);
 }
 
-// This array is now simpler: $data['Department'] = ['Program 1', 'Program 2']
+// This array is now simpler: $data['college'] = ['Program 1', 'Program 2']
 $data = [];
 while ($row = $result_dept_prog->fetch_assoc()) {
-  $dept = $row['department_name'];
+  $dept = $row['college_name'];
   $prog = $row['program_name'];
 
   if (!isset($data[$dept])) {
@@ -121,10 +121,10 @@ if (!$sections_result) {
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select name="department" id="department" class="form-select" required>
-                      <option value="" disabled selected>Select Department</option>
+                    <select name="college" id="college" class="form-select" required>
+                      <option value="" disabled selected>Select college</option>
                     </select>
-                    <label for="department">College</label>
+                    <label for="college">College</label>
                   </div>
                 </div>
 
@@ -161,18 +161,18 @@ if (!$sections_result) {
     const allData = <?php echo json_encode($data); ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
-      const deptSelect = document.getElementById('department');
+      const deptSelect = document.getElementById('college');
       const progSelect = document.getElementById('program');
       // const secSelect = document.getElementById('section'); // No longer needed
 
-      // 1. Populate Departments
-      const departments = Object.keys(allData);
-      departments.forEach(dept => {
+      // 1. Populate college
+      const college = Object.keys(allData);
+      college.forEach(dept => {
         const option = new Option(dept, dept);
         deptSelect.add(option);
       });
 
-      // 2. Department Change Event
+      // 2. college Change Event
       deptSelect.addEventListener('change', function() {
         // Clear and disable program dropdown
         progSelect.innerHTML = '<option value="" disabled selected>Select Program</option>';

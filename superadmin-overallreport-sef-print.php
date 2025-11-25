@@ -9,27 +9,27 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Get selected filters from URL
-$selected_department = isset($_GET['department']) ? $_GET['department'] : "";
+$selected_college = isset($_GET['college']) ? $_GET['college'] : "";
 $selected_program = isset($_GET['program']) ? $_GET['program'] : "";
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
-// If no department is selected, stop
-if (empty($selected_department)) {
-  die("No department selected. Please go back and select a department.");
+// If no college is selected, stop
+if (empty($selected_college)) {
+  die("No college selected. Please go back and select a college.");
 }
 
-// 🔑 Store department in session so header/footer can access it
-$_SESSION['department'] = $selected_department;
+// 🔑 Store college in session so header/footer can access it
+$_SESSION['college'] = $selected_college;
 
-// ✅ Fetch supervisors from admin + admin_departments (new schema)
+// ✅ Fetch supervisors from admin + admin_college (new schema)
 $supervisors = [];
 
 $sql = "SELECT a.first_name, a.mid_name, a.last_name, a.position
         FROM admin a
-        INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-        WHERE ad.department_name = ?";
-$params = [$selected_department];
+        INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+        WHERE ad.college_name = ?";
+$params = [$selected_college];
 $types = "s";
 
 // Add program filter if it was selected
@@ -63,7 +63,7 @@ $stmt->close();
 // Custom PDF class
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
-$pdf->department = $selected_department;
+$pdf->college = $selected_college;
 $pdf->AddPage();
 
 // Title (same layout)
@@ -73,7 +73,7 @@ $pdf->Ln(3);
 
 // 🔹 Show selected filters clearly
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Departments'), 0, 1);
+$pdf->Cell(0, 8, 'college/College: ' . (!empty($selected_college) ? $selected_college : 'All college'), 0, 1);
 $pdf->Cell(0, 8, 'Program: ' . (!empty($selected_program) ? $selected_program : 'All Programs'), 0, 1); // ✅ **MODIFICATION 1: Show program**
 $pdf->Cell(0, 8, 'Semester: ' . (!empty($selected_semester) ? $selected_semester : 'All Semesters'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . (!empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years'), 0, 1);
@@ -94,11 +94,11 @@ $pdf->Cell(40, 10, 'Avg. SEF Rating', 1, 0, 'C'); // Adjusted width
 $pdf->Ln();
 // --- End Modification 2 ---
 
-// Fetch faculty for this department (and program, if specified)
+// Fetch faculty for this college (and program, if specified)
 $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
                 FROM faculty
-                WHERE department = ?";
-$params = [$selected_department];
+                WHERE college = ?";
+$params = [$selected_college];
 $types = "s";
 
 // Add program filter if it was selected

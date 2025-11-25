@@ -9,20 +9,20 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get admin's departments from the correct table
-$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// Get admin's college from the correct table
+$stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$departments = []; // This will hold all assigned departments
+$college = []; // This will hold all assigned college
 while ($row = $result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 $stmt->close();
 
 // This new variable is just for the HTML title
-$admin_department_display = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+$admin_college_display = !empty($college) ? implode(', ', $college) : 'No college Assigned';
 
 // --- Filters ---
 $semester_filter = isset($_GET['semester']) ? $_GET['semester'] : '';
@@ -44,14 +44,14 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->close();
 
-// Get all faculty in this department
-// Fetch all faculty in the admin's assigned departments AND programs
+// Get all faculty in this college
+// Fetch all faculty in the admin's assigned college AND programs
 $faculties = [];
 
 // ✅ FIRST, get the admin's assignments as pairs
 $admin_assignments = [];
-// We need to re-fetch the department/program pairs
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+// We need to re-fetch the college/program pairs
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_admin_dept->bind_param("s", $admin_id);
 $stmt_admin_dept->execute();
 $result = $stmt_admin_dept->get_result();
@@ -68,8 +68,8 @@ if (!empty($admin_assignments)) {
   $types = "";
 
   foreach ($admin_assignments as $assignment) {
-    $faculty_query_parts[] = "(department = ? AND program = ?)";
-    $params[] = $assignment['department_name'];
+    $faculty_query_parts[] = "(college = ? AND program = ?)";
+    $params[] = $assignment['college_name'];
     $params[] = $assignment['program_name'];
     $types .= "ss";
   }
@@ -224,7 +224,7 @@ $final_sef_average = ($faculty_with_sef > 0) ? ($total_sef_avg / $faculty_with_s
             <div class="card">
               <div class="card-body">
                 <h4 class="card-title text-center my-3">
-                  Overall Evaluation Report – <?= htmlspecialchars($admin_department_display) ?>
+                  Overall Evaluation Report – <?= htmlspecialchars($admin_college_display) ?>
                 </h4>
 
                 <form method="GET" class="mb-3">
@@ -276,7 +276,7 @@ $final_sef_average = ($faculty_with_sef > 0) ? ($total_sef_avg / $faculty_with_s
                     </tbody>
                     <tfoot>
                       <tr class="table-light fw-bold">
-                        <td class="text-end">Department Average:</td>
+                        <td class="text-end">college Average:</td>
                         <td class="text-center"><?= number_format($final_set_average, 2) ?></td>
                         <td class="text-center"><?= number_format($final_sef_average, 2) ?></td>
                       </tr>

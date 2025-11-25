@@ -43,12 +43,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
     </li>
 
-    <!-- Department Information -->
+    <!-- College Information -->
     <li class="nav-item">
-      <a class="nav-link <?= $currentPage == 'register-department-info.php' ? 'active' : 'collapsed' ?>"
-        href="register-department-info.php">
+      <a class="nav-link <?= $currentPage == 'register-college-info.php' ? 'active' : 'collapsed' ?>"
+        href="register-college-info.php">
         <i class="bi bi-building"></i>
-        <span>Department Information</span>
+        <span>College Information</span>
       </a>
     </li>
 

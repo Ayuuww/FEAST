@@ -10,23 +10,23 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// --- ✅ START FIX: Get all department/program pairs assigned to this admin ---
+// --- ✅ START FIX: Get all college/program pairs assigned to this admin ---
 $admin_assignments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 if ($stmt_admin_dept) {
   $stmt_admin_dept->bind_param("s", $admin_id);
   $stmt_admin_dept->execute();
   $result = $stmt_admin_dept->get_result();
   while ($row = $result->fetch_assoc()) {
-    $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
+    $admin_assignments[] = $row; // Store as pairs, e.g., ['college_name' => 'CAS', 'program_name' => 'BSCS']
   }
   $stmt_admin_dept->close();
 }
 // --- END FIX ---
 
-// Handle case where admin has no assigned departments
+// Handle case where admin has no assigned colleges
 if (empty($admin_assignments)) {
-  die("You are not assigned to any department or program. Please contact the Superadmin.");
+  die("You are not assigned to any college or program. Please contact the Superadmin.");
 }
 
 // Get unique semesters and academic years for filters
@@ -83,8 +83,8 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
               $params = [];
               $types = "";
               foreach ($admin_assignments as $assignment) {
-                $faculty_query_parts[] = "(department = ? AND program = ?)";
-                $params[] = $assignment['department_name'];
+                $faculty_query_parts[] = "(college = ? AND program = ?)";
+                $params[] = $assignment['college_name'];
                 $params[] = $assignment['program_name'];
                 $types .= "ss";
               }
@@ -165,7 +165,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 
         // --- Fetch all data needed for the report ---
         $fname = $mname = $lname = $dept = $program = $rank = '';
-        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
+        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, program, faculty_rank FROM faculty WHERE idnumber = ?");
         $stmt->bind_param("s", $faculty_id);
         $stmt->execute();
         $stmt->bind_result($fname, $mname, $lname, $dept, $program, $rank);
@@ -210,8 +210,8 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
         $evaluator_name = 'N/A';
         $stmt_supervisor = $conn->prepare("
                     SELECT a.first_name, a.mid_name, a.last_name FROM admin a
-                    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+                    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+                    WHERE ad.college_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
                     ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
         $stmt_supervisor->bind_param("s", $dept);
         $stmt_supervisor->execute();
@@ -240,7 +240,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
               <td style="font-weight: bold;"><?= htmlspecialchars($full_name) ?></td>
             </tr>
             <tr>
-              <th>Department/College</th>
+              <th>college/College</th>
               <td style="text-align: center;">:</td>
               <td style="font-weight: bold;"><?= htmlspecialchars($dept_display) ?></td>
             </tr>

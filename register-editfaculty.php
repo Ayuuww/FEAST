@@ -38,22 +38,22 @@ while ($row = $rankQuery->fetch_assoc()) {
   $facultyRanks[] = $row['rank_name'];
 }
 
-// Fetch departments and programs for dynamic dropdowns
+// Fetch college and programs for dynamic dropdowns
 $adds_data_result = $conn->query("
-    SELECT DISTINCT department_name, program_name 
+    SELECT DISTINCT college_name, program_name 
     FROM adds 
-    WHERE department_name IS NOT NULL AND department_name != '' 
-    ORDER BY department_name, program_name ASC
+    WHERE college_name IS NOT NULL AND college_name != '' 
+    ORDER BY college_name, program_name ASC
 ");
-$departmentPrograms = [];
+$collegePrograms = [];
 while ($row = $adds_data_result->fetch_assoc()) {
-  $department = $row['department_name'];
+  $college = $row['college_name'];
   $program = $row['program_name'];
-  if (!isset($departmentPrograms[$department])) {
-    $departmentPrograms[$department] = [];
+  if (!isset($collegePrograms[$college])) {
+    $collegePrograms[$college] = [];
   }
-  if ($program && !in_array($program, $departmentPrograms[$department])) {
-    $departmentPrograms[$department][] = $program;
+  if ($program && !in_array($program, $collegePrograms[$college])) {
+    $collegePrograms[$college][] = $program;
   }
 }
 // --- End Data Fetching ---
@@ -95,11 +95,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $position = $_POST['position'] ?? NULL;
 
       // ✅ Get Main Dept/Program
-      $main_department = $_POST['main_department'] ?? NULL;
+      $main_college = $_POST['main_college'] ?? NULL;
       $main_program = $_POST['main_program'] ?? ''; // Default to ''
 
       // ✅ Get *Additional* (optional) assignments
-      $departments = $_POST['departments'] ?? [];
+      $college = $_POST['college'] ?? [];
       $programs_by_dept = $_POST['programs'] ?? [];
 
       // ✅ Use an array to track added entries and prevent duplicates
@@ -128,21 +128,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $insertAdmin->execute();
 
         // 2. UPDATE the existing faculty record with new main dept/program
-        $updateFaculty = $conn->prepare("UPDATE faculty SET status = ?, faculty_rank = ?, department = ?, program = ? WHERE idnumber = ?");
-        $updateFaculty->bind_param("sssss", $new_status, $new_faculty_rank, $main_department, $main_program, $faculty_id);
+        $updateFaculty = $conn->prepare("UPDATE faculty SET status = ?, faculty_rank = ?, college = ?, program = ? WHERE idnumber = ?");
+        $updateFaculty->bind_param("sssss", $new_status, $new_faculty_rank, $main_college, $main_program, $faculty_id);
         $updateFaculty->execute();
 
 
-        // 3. Prepare statement for 'admin_departments'
-        $stmt_dept = $conn->prepare("INSERT INTO admin_departments (admin_idnumber, department_name, program_name) VALUES (?, ?, ?)");
+        // 3. Prepare statement for 'admin_college'
+        $stmt_dept = $conn->prepare("INSERT INTO admin_college (admin_idnumber, college_name, program_name) VALUES (?, ?, ?)");
 
-        // 4. Insert the MAIN department/program assignment first
-        $stmt_dept->bind_param("sss", $faculty_id, $main_department, $main_program);
+        // 4. Insert the MAIN college/program assignment first
+        $stmt_dept->bind_param("sss", $faculty_id, $main_college, $main_program);
         $stmt_dept->execute();
-        $added_assignments[$main_department . "::" . $main_program] = true; // Track it
+        $added_assignments[$main_college . "::" . $main_program] = true; // Track it
 
         // 5. Loop and insert *ADDITIONAL* assignments
-        foreach ($departments as $dept_name) {
+        foreach ($college as $dept_name) {
           if (isset($programs_by_dept[$dept_name]) && !empty($programs_by_dept[$dept_name])) {
             // Case 1: Dept has programs
             foreach ($programs_by_dept[$dept_name] as $prog_name) {
@@ -292,8 +292,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                   <div class="col-md-6">
                     <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['department']); ?>" disabled>
-                      <label class="form-label">Current Main Department</label>
+                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['college']); ?>" disabled>
+                      <label class="form-label">Current Main college</label>
                     </div>
                   </div>
 
@@ -365,10 +365,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     <div class="col-md-6">
                       <div class="form-floating">
-                        <select class="form-select" name="main_department" id="main_department">
-                          <option value="" disabled selected>-- Select Main Department --</option>
+                        <select class="form-select" name="main_college" id="main_college">
+                          <option value="" disabled selected>-- Select Main college --</option>
                         </select>
-                        <label>New Main Department</label>
+                        <label>New Main college</label>
                       </div>
                     </div>
 
@@ -381,9 +381,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                       </div>
                     </div>
 
-                    <div class="col-12" id="department_div">
-                      <label for="department" class="form-label fw-bold">Assign *Additional* Department(s) (Optional)</label>
-                      <select name="departments[]" id="department" multiple></select>
+                    <div class="col-12" id="college_div">
+                      <label for="college" class="form-label fw-bold">Assign *Additional* college(s) (Optional)</label>
+                      <select name="college[]" id="college" multiple></select>
                     </div>
 
                     <div class="col-12 mt-3" id="program_container"></div>
@@ -415,8 +415,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   <script>
     // Pass PHP array to JavaScript
-    const departmentPrograms = <?= json_encode($departmentPrograms) ?>;
-    const allDepartments = Object.keys(departmentPrograms);
+    const collegePrograms = <?= json_encode($collegePrograms) ?>;
+    const allcollege = Object.keys(collegePrograms);
 
     document.addEventListener('DOMContentLoaded', function() {
       const roleSelect = document.querySelector('select[name="role"]');
@@ -424,21 +424,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       // --- Elements for Admin Options ---
       const adminPosition = document.getElementById('position');
-      const mainDeptSelect = document.getElementById('main_department');
+      const mainDeptSelect = document.getElementById('main_college');
       const mainProgramSelect = document.getElementById('main_program');
-      const departmentElement = document.getElementById('department');
+      const collegeElement = document.getElementById('college');
       const programContainer = document.getElementById('program_container');
 
-      // --- Populate Main Department Dropdown ---
-      allDepartments.forEach(dept => {
+      // --- Populate Main college Dropdown ---
+      allcollege.forEach(dept => {
         const opt = new Option(dept, dept);
         mainDeptSelect.appendChild(opt.cloneNode(true));
       });
 
-      // --- When main department changes, load its programs ---
+      // --- When main college changes, load its programs ---
       mainDeptSelect.addEventListener('change', function() {
         const dept = this.value;
-        const programs = departmentPrograms[dept] || [];
+        const programs = collegePrograms[dept] || [];
         mainProgramSelect.innerHTML = `<option value="" selected>-- Select Main Program (if any) --</option>`;
         programs.forEach(p => {
           const opt = new Option(p, p);
@@ -446,29 +446,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         });
       });
 
-      // --- Initialize Choices.js for *additional* departments ---
-      const departmentChoices = new Choices(departmentElement, {
+      // --- Initialize Choices.js for *additional* college ---
+      const collegeChoices = new Choices(collegeElement, {
         removeItemButton: true,
-        placeholderValue: 'Select additional department(s)...',
-        searchPlaceholderValue: 'Search departments...',
+        placeholderValue: 'Select additional college(s)...',
+        searchPlaceholderValue: 'Search college...',
       });
 
-      // Populate *additional* department choices
-      departmentChoices.setChoices(
-        allDepartments.map(d => ({
+      // Populate *additional* college choices
+      collegeChoices.setChoices(
+        allcollege.map(d => ({
           value: d,
           label: d
         })),
         'value', 'label', true
       );
 
-      // Handle *Additional* Department selection to show programs
-      departmentElement.addEventListener('change', function() {
-        const selectedDepartments = Array.from(departmentElement.selectedOptions).map(opt => opt.value);
+      // Handle *Additional* college selection to show programs
+      collegeElement.addEventListener('change', function() {
+        const selectedcollege = Array.from(collegeElement.selectedOptions).map(opt => opt.value);
         programContainer.innerHTML = ''; // clear previous
 
-        selectedDepartments.forEach(dep => {
-          const programs = departmentPrograms[dep] || [];
+        selectedcollege.forEach(dep => {
+          const programs = collegePrograms[dep] || [];
           if (programs.length > 0) {
             const div = document.createElement('div');
             div.classList.add('mt-3', 'p-3', 'border', 'rounded');
@@ -502,7 +502,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           adminPosition.setAttribute('required', 'required');
           mainDeptSelect.setAttribute('required', 'required');
           // mainProgramSelect is optional
-          // departmentElement (additional) is optional
+          // collegeElement (additional) is optional
         } else {
           adminOptions.style.display = 'none';
           adminPosition.removeAttribute('required');

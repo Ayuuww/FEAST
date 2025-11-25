@@ -10,12 +10,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// 🔹 CHANGE 1: Fix Admin Info Query (Remove 'department')
+// 🔹 CHANGE 1: Fix Admin Info Query (Remove 'college')
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
                         FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-// Bind to new variables (removed $admin_department)
+// Bind to new variables (removed $admin_college)
 $stmt->bind_result($fname, $mname, $lname, $position);
 $stmt->fetch();
 $stmt->close();
@@ -28,21 +28,21 @@ if (!empty($mname)) {
 $admin_name = $fname . $middle_initial . ' ' . $lname; // e.g., "Sample A. Yes"
 // ✅ END FIX
 
-// 🔹 CHANGE 2: Add correct logic to fetch departments
-// Fetch all departments assigned to this admin
-$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// 🔹 CHANGE 2: Add correct logic to fetch college
+// Fetch all college assigned to this admin
+$stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$departments = [];
+$college = [];
 while ($row = $result->fetch_assoc()) {
-    $departments[] = $row['department_name'];
+    $college[] = $row['college_name'];
 }
 $stmt->close();
 
 // For the PDF title
-$admin_department_display = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+$admin_college_display = !empty($college) ? implode(', ', $college) : 'No college Assigned';
 
 
 // 🔹 Get filters
@@ -104,7 +104,7 @@ $pdf->Ln(5);
 // Section Header
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->SetFillColor(240, 240, 240);
-$pdf->Cell(180, 10, strtoupper($admin_department_display) . " SET REPORT", 0, 1, 'C', true);
+$pdf->Cell(180, 10, strtoupper($admin_college_display) . " SET REPORT", 0, 1, 'C', true);
 $pdf->Ln(2);
 
 // Table Headers
@@ -119,7 +119,7 @@ $faculties = [];
 
 // ✅ FIRST, get the admin's assignments as pairs
 $admin_assignments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_admin_dept->bind_param("s", $admin_id);
 $stmt_admin_dept->execute();
 $result = $stmt_admin_dept->get_result();
@@ -136,8 +136,8 @@ if (!empty($admin_assignments)) {
     $types = "";
 
     foreach ($admin_assignments as $assignment) {
-        $faculty_query_parts[] = "(department = ? AND program = ?)";
-        $params[] = $assignment['department_name'];
+        $faculty_query_parts[] = "(college = ? AND program = ?)";
+        $params[] = $assignment['college_name'];
         $params[] = $assignment['program_name'];
         $types .= "ss";
     }
@@ -210,16 +210,16 @@ foreach ($faculties as $fac) {
 } // <-- ✅ END OF THE FOREACH LOOP
 
 // ✅ --- PASTE THE CODE BLOCK HERE ---
-$department_average = 0;
+$college_average = 0;
 if ($faculty_count_with_evals > 0) {
-    $department_average = $total_avg_rating / $faculty_count_with_evals;
+    $college_average = $total_avg_rating / $faculty_count_with_evals;
 }
 
 // --- Draw the Total Row (now outside the loop) ---
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->SetFillColor(240, 240, 240); // Light gray background
 $pdf->Cell(130, 10, 'College Average:', 1, 0, 'R', true);
-$pdf->Cell(50, 10, number_format($department_average, 2), 1, 1, 'C', true);
+$pdf->Cell(50, 10, number_format($college_average, 2), 1, 1, 'C', true);
 // --- END OF FIX ---
 
 // --- Prepared by Block ---

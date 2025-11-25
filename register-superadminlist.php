@@ -16,7 +16,7 @@ $query = "
     mid_name,
     last_name,
     faculty_rank,
-    department,
+    college,
     program,
     position,
     status
@@ -65,7 +65,7 @@ $result = mysqli_query($conn, $query);
                     <th>ID Number</th>
                     <th>Full Name</th>
                     <th>Faculty Rank</th>
-                    <th>Department</th>
+                    <th>College</th>
                     <th>Program</th>
                     <th>Position</th>
                     <th>Status</th>
@@ -81,10 +81,10 @@ $result = mysqli_query($conn, $query);
                       </td>
                       <td><?= htmlspecialchars($row['faculty_rank'] ?? '—'); ?></td>
 
-                      <!-- Department (College) -->
+                      <!-- college (College) -->
                       <td>
-                        <?php if (!empty($row['department'])): ?>
-                          <?php foreach (explode(', ', $row['department']) as $dept): ?>
+                        <?php if (!empty($row['college'])): ?>
+                          <?php foreach (explode(', ', $row['college']) as $dept): ?>
                             <span class="badge bg-primary mb-1"><?= htmlspecialchars($dept); ?></span><br>
                           <?php endforeach; ?>
                         <?php else: ?>

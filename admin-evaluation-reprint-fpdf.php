@@ -33,7 +33,7 @@ $data['answers'] = json_decode($data['form_data'], true);
 
 // Helper to get full name
 function getFacultyDetails($conn, $id) {
-    $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+    $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
     $stmt->bind_param("s", $id);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -66,7 +66,7 @@ $evaluateeData = getFacultyDetails($conn, $data['evaluatee_id']);
 $evaluatorName = $evaluatorData ? $evaluatorData['first_name'] . ' ' . $evaluatorData['mid_name'] . ' ' . $evaluatorData['last_name'] : 'Unknown';
 $evaluateeName = $evaluateeData ? $evaluateeData['first_name'] . ' ' . $evaluateeData['mid_name'] . ' ' . $evaluateeData['last_name'] : 'Unknown';
 
-$evaluateeDept = $evaluateeData['department'] ?? 'N/A';
+$evaluateeDept = $evaluateeData['college'] ?? 'N/A';
 $evaluateeRank = $evaluateeData['faculty_rank'] ?? 'N/A';
 $evaluatorPosition = $evaluatorData['position'] ?? 'Not Set';
 
@@ -122,7 +122,7 @@ $pdf->Ln(10);
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
 $pdf->Cell(0, 6, "Academic Rank: " . $evaluateeRank, 0, 1);
-$pdf->Cell(0, 6, "Department/College: " . $evaluateeDept, 0, 1);
+$pdf->Cell(0, 6, "College: " . $evaluateeDept, 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 

@@ -9,7 +9,7 @@ $mid_name   = mysqli_real_escape_string($conn, $_POST['mid_name']);
 $last_name  = mysqli_real_escape_string($conn, $_POST['last_name']);
 $password   = trim($_POST['password']);
 $rank       = mysqli_real_escape_string($conn, $_POST['faculty_rank']);
-$department = mysqli_real_escape_string($conn, $_POST['department']);
+$college = mysqli_real_escape_string($conn, $_POST['college']);
 $program    = mysqli_real_escape_string($conn, $_POST['program']);
 
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
@@ -32,10 +32,10 @@ if ($exists > 0) {
 // Insert
 $stmt = $conn->prepare("
   INSERT INTO faculty 
-  (idnumber, first_name, mid_name, last_name, password, faculty_rank, department, program)
+  (idnumber, first_name, mid_name, last_name, password, faculty_rank, college, program)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 ");
-$stmt->bind_param("ssssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed_password, $rank, $department, $program);
+$stmt->bind_param("ssssssss", $idnumber, $first_name, $mid_name, $last_name, $hashed_password, $rank, $college, $program);
 
 if ($stmt->execute()) {
     $_SESSION['msg'] = "Faculty account has been created successfully.";

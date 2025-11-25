@@ -9,25 +9,25 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Default filters
-$selected_department = $_GET['department'] ?? "";
+$selected_college = $_GET['college'] ?? "";
 $selected_program = $_GET['program'] ?? "";
 $selected_semester = $_GET['semester'] ?? "";
 $selected_academic_year = $_GET['academic_year'] ?? "";
 
-// --- Build department dropdown ---
-$dept_options = "";
-$dept_query = $conn->query("SELECT DISTINCT department FROM faculty ORDER BY department ASC");
-while ($row = $dept_query->fetch_assoc()) {
-  $dept = $row['department'];
-  $selected = ($dept === $selected_department) ? "selected" : "";
-  $dept_options .= "<option value='$dept' $selected>$dept</option>";
+// --- Build college dropdown ---
+$col_options = "";
+$col_query = $conn->query("SELECT DISTINCT college FROM faculty ORDER BY college ASC");
+while ($row = $col_query->fetch_assoc()) {
+  $col = $row['college'];
+  $selected = ($col === $selected_college) ? "selected" : "";
+  $col_options .= "<option value='$col' $selected>$col</option>";
 }
 
-// --- Build program dropdown (depends on selected department) ---
+// --- Build program dropdown (depends on selected college) ---
 $prog_options = "<option value=''>-- All Programs --</option>";
-if (!empty($selected_department)) {
-  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE department = ? AND program != '' ORDER BY program ASC");
-  $prog_stmt->bind_param("s", $selected_department);
+if (!empty($selected_college)) {
+  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE college = ? AND program != '' ORDER BY program ASC");
+  $prog_stmt->bind_param("s", $selected_college);
   $prog_stmt->execute();
   $prog_result = $prog_stmt->get_result();
   while ($row = $prog_result->fetch_assoc()) {
@@ -58,9 +58,9 @@ while ($row = $year_query->fetch_assoc()) {
 
 // --- Fetch faculty for selected filters ---
 $rows = "";
-if (!empty($selected_department)) {
-  $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name FROM faculty WHERE department = ?";
-  $params = [$selected_department];
+if (!empty($selected_college)) {
+  $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name FROM faculty WHERE college = ?";
+  $params = [$selected_college];
   $types = "s";
 
   if (!empty($selected_program)) {
@@ -113,7 +113,7 @@ if (!empty($selected_department)) {
   }
 
   // --- Compute College Average ---
-  $department_average = $total_faculty > 0 ? number_format($total_avg_sum / $total_faculty, 2) : '0.00';
+  $college_average = $total_faculty > 0 ? number_format($total_avg_sum / $total_faculty, 2) : '0.00';
 
   // --- Add College Average row at bottom ---
   // if (!empty($rows)) {
@@ -172,19 +172,19 @@ if (!empty($selected_department)) {
                 <!-- Filters -->
                 <form method="GET" class="mb-3">
                   <div class="row align-items-end">
-                    <!-- Department -->
+                    <!-- college -->
                     <div class="col-md-3">
-                      <label for="department" class="form-label">Select Department/College</label>
-                      <select name="department" id="department" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Choose Department --</option>
-                        <?= $dept_options ?>
+                      <label for="college" class="form-label">Select College</label>
+                      <select name="college" id="college" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Choose College --</option>
+                        <?= $col_options ?>
                       </select>
                     </div>
 
                     <!-- Program -->
                     <div class="col-md-3">
                       <label for="program" class="form-label">Select Program</label>
-                      <select name="program" id="program" class="form-select" <?= empty($selected_department) ? 'disabled' : '' ?>>
+                      <select name="program" id="program" class="form-select" <?= empty($selected_college) ? 'disabled' : '' ?>>
                         <?= $prog_options ?>
                       </select>
                     </div>
@@ -214,7 +214,7 @@ if (!empty($selected_department)) {
                 </form>
                 <!-- End Filters -->
 
-                <?php if (!empty($selected_department)) { ?>
+                <?php if (!empty($selected_college)) { ?>
                   <div class="table-responsive">
                     <table class="table table-bordered table-hover">
                       <thead class="table-light">
@@ -230,20 +230,20 @@ if (!empty($selected_department)) {
                       <tfoot>
                         <tr class="table-light fw-bold">
                           <td colspan="2" class="text-end">College Average:</td>
-                          <td><?= number_format($department_average, 2) ?></td>
+                          <td><?= number_format($college_average, 2) ?></td>
                         </tr>
                       </tfoot>
                     </table>
                   </div>
 
                   <div class="text-end mb-3">
-                    <a href="superadmin-overallreport-set-print.php?department=<?= urlencode($selected_department) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
+                    <a href="superadmin-overallreport-set-print.php?college=<?= urlencode($selected_college) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
                       class="btn btn-secondary" target="_blank">
                       <i class="bi bi-printer"></i> Print Report
                     </a>
                   </div>
                 <?php } else { ?>
-                  <p class="text-center text-muted">Please select a department to generate the report.</p>
+                  <p class="text-center text-muted">Please select a college to generate the report.</p>
                 <?php } ?>
 
               </div>

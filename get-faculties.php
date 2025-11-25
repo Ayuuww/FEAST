@@ -1,13 +1,13 @@
 <?php
 include 'conn/conn.php';
 
-if (isset($_GET['department'])) {
-    $department = mysqli_real_escape_string($conn, $_GET['department']);
+if (isset($_GET['college'])) {
+    $college = mysqli_real_escape_string($conn, $_GET['college']);
     $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 
     $query = "SELECT idnumber, last_name, first_name, mid_name 
               FROM faculty 
-              WHERE department = '$department'";
+              WHERE college = '$college'";
 
     if (!empty($search)) {
         $query .= " AND (last_name LIKE '%$search%' 

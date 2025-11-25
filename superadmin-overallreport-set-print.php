@@ -11,16 +11,16 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 // ─────────────────────────────────────────────
 // 1️⃣ Get filter selections
 // ─────────────────────────────────────────────
-$selected_department = $_GET['department'] ?? "";
+$selected_college = $_GET['college'] ?? "";
 $selected_semester = $_GET['semester'] ?? "";
 $selected_academic_year = $_GET['academic_year'] ?? "";
 
-if (empty($selected_department)) {
-  die("No department selected. Please go back and select a department.");
+if (empty($selected_college)) {
+  die("No college selected. Please go back and select a college.");
 }
 
-// Store department in session (used by header/footer)
-$_SESSION['department'] = $selected_department;
+// Store college in session (used by header/footer)
+$_SESSION['college'] = $selected_college;
 
 // ─────────────────────────────────────────────
 // 2️⃣ Fetch program chair / supervisor(s)
@@ -30,23 +30,23 @@ $selected_program = $_GET['program'] ?? "";
 
 // Build SQL with both filters
 if (!empty($selected_program)) {
-  // Fetch admins assigned to BOTH department and program
+  // Fetch admins assigned to BOTH college and program
   $stmt = $conn->prepare("
     SELECT a.first_name, a.mid_name, a.last_name, a.position 
     FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ? AND ad.program_name = ?
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ? AND ad.program_name = ?
   ");
-  $stmt->bind_param("ss", $selected_department, $selected_program);
+  $stmt->bind_param("ss", $selected_college, $selected_program);
 } else {
-  // Fetch all admins of the department (no specific program)
+  // Fetch all admins of the college (no specific program)
   $stmt = $conn->prepare("
     SELECT a.first_name, a.mid_name, a.last_name, a.position 
     FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ?
   ");
-  $stmt->bind_param("s", $selected_department);
+  $stmt->bind_param("s", $selected_college);
 }
 
 $stmt->execute();
@@ -72,7 +72,7 @@ $stmt->close();
 // ─────────────────────────────────────────────
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
-$pdf->department = $selected_department;
+$pdf->college = $selected_college;
 $pdf->AddPage();
 
 // ─────────────────────────────────────────────
@@ -82,7 +82,7 @@ $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, ' COLLEGE SET EVALUATION REPORT', 0, 1, 'C');
 
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'Department/College: ' . (!empty($selected_department) ? $selected_department : 'All Programs'), 0, 1); // ✅ ADD THIS
+$pdf->Cell(0, 8, 'college/College: ' . (!empty($selected_college) ? $selected_college : 'All Programs'), 0, 1); // ✅ ADD THIS
 $pdf->Cell(0, 8, 'Semester: ' . ($selected_semester ?: '1st / 2nd Semester'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . ($selected_academic_year ?: 'All Academic Years'), 0, 1);
 $pdf->Cell(0, 8, 'Date: ' . date('F j, Y'), 0, 1);
@@ -104,14 +104,14 @@ $pdf->Cell(50, 10, 'Average SET Rating', 1);
 $pdf->Ln();
 
 // ─────────────────────────────────────────────
-// 6️⃣ Faculty List per Department (AND PROGRAM)
+// 6️⃣ Faculty List per college (AND PROGRAM)
 // ─────────────────────────────────────────────
 $faculty_sql = "
 SELECT idnumber, last_name, first_name, mid_name
 FROM faculty
-WHERE department = ?
+WHERE college = ?
 ";
-$params = [$selected_department];
+$params = [$selected_college];
 $types = "s";
 
 // Add program filter if it exists
@@ -151,9 +151,9 @@ foreach ($faculties as $fac) {
 }
 
 // ─────────────────────────────────────────────
-// ✅ 6.5️⃣ College Average (Overall Department Average)
+// ✅ 6.5️⃣ College Average (Overall college Average)
 // ─────────────────────────────────────────────
-$college_where = ["f.department = '" . $conn->real_escape_string($selected_department) . "'"];
+$college_where = ["f.college = '" . $conn->real_escape_string($selected_college) . "'"];
 if (!empty($selected_program)) $college_where[] = "f.program = '" . $conn->real_escape_string($selected_program) . "'";
 if (!empty($selected_academic_year)) $college_where[] = "academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
 $college_where_sql = implode(" AND ", $college_where);

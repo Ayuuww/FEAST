@@ -106,15 +106,15 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
                   </div>
                 </div>
 
-                <!-- Department -->
+                <!-- college -->
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="department" id="department" required>
-                      <option value="" disabled selected>Select Department</option>
+                    <select class="form-select" name="college" id="college" required>
+                      <option value="" disabled selected>Select College</option>
                       <?php
-                      $deptQuery = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
+                      $deptQuery = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != ''");
                       while ($row = $deptQuery->fetch_assoc()) {
-                        echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                        echo '<option value="' . htmlspecialchars($row['college_name']) . '">' . htmlspecialchars($row['college_name']) . '</option>';
                       }
                       ?>
                     </select>
@@ -122,7 +122,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
                   </div>
                 </div>
 
-                <!-- Program (changes based on department) -->
+                <!-- Program (changes based on college) -->
                 <div class="col-md-12">
                   <div class="form-floating">
                     <select class="form-select" name="program" id="program" required>
@@ -163,13 +163,13 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   <script src="assets/js/main.js"></script>
 
   <script>
-    // 🟢 Dynamic Program Loading based on Department
-    document.getElementById('department').addEventListener('change', function() {
+    // 🟢 Dynamic Program Loading based on college
+    document.getElementById('college').addEventListener('change', function() {
       let dept = this.value;
       let programSelect = document.getElementById('program');
       programSelect.innerHTML = '<option disabled selected>Loading...</option>';
 
-      fetch('get_programs.php?department=' + encodeURIComponent(dept))
+      fetch('get_programs.php?college=' + encodeURIComponent(dept))
         .then(res => res.json())
         .then(data => {
           programSelect.innerHTML = '<option disabled selected>Select Program</option>';

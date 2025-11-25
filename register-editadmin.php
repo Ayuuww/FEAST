@@ -28,28 +28,28 @@ if (!$admin) {
   exit();
 }
 
-// --- Fetch all available departments & programs ---
-$departments = [];
-$dept_res = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name!='' ORDER BY department_name ASC");
+// --- Fetch all available college & programs ---
+$college = [];
+$dept_res = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name!='' ORDER BY college_name ASC");
 while ($r = $dept_res->fetch_assoc()) {
-  $departments[$r['department_name']] = [];
+  $college[$r['college_name']] = [];
 }
-$prog_res = $conn->query("SELECT department_name, program_name FROM adds WHERE department_name IS NOT NULL AND program_name IS NOT NULL ORDER BY department_name, program_name");
+$prog_res = $conn->query("SELECT college_name, program_name FROM adds WHERE college_name IS NOT NULL AND program_name IS NOT NULL ORDER BY college_name, program_name");
 while ($r = $prog_res->fetch_assoc()) {
-  $departments[$r['department_name']][] = $r['program_name'];
+  $college[$r['college_name']][] = $r['program_name'];
 }
 
-// ✅ Get current admin assigned departments/programs
-$dept_stmt = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Get current admin assigned college/programs
+$dept_stmt = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $res = $dept_stmt->get_result();
 
-$admin_departments = [];
+$admin_college = [];
 while ($row = $res->fetch_assoc()) {
-  $dept = $row['department_name'];
-  if (!isset($admin_departments[$dept])) $admin_departments[$dept] = [];
-  if (!empty($row['program_name'])) $admin_departments[$dept][] = $row['program_name'];
+  $dept = $row['college_name'];
+  if (!isset($admin_college[$dept])) $admin_college[$dept] = [];
+  if (!empty($row['program_name'])) $admin_college[$dept][] = $row['program_name'];
 }
 
 // ✅ Dropdown options for position and rank
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $position = trim($_POST['position']);
   $faculty_rank = trim($_POST['faculty_rank']) !== '' ? trim($_POST['faculty_rank']) : null;
   $status = trim($_POST['status']);
-  $departments_post = $_POST['departments'] ?? [];
+  $college_post = $_POST['college'] ?? [];
   $programs_post = $_POST['programs'] ?? [];
 
   if ($new_id === '') {
@@ -88,14 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update_admin->bind_param("sssss", $new_id, $position, $faculty_rank, $status, $admin_id);
     $update_admin->execute();
 
-    // 2) Clear old department/programs
-    $del = $conn->prepare("DELETE FROM admin_departments WHERE admin_idnumber = ?");
+    // 2) Clear old college/programs
+    $del = $conn->prepare("DELETE FROM admin_college WHERE admin_idnumber = ?");
     $del->bind_param("s", $admin_id);
     $del->execute();
 
-    // 3) Insert new departments/programs
-    $ins = $conn->prepare("INSERT INTO admin_departments (admin_idnumber, department_name, program_name) VALUES (?, ?, ?)");
-    foreach ($departments_post as $dept) {
+    // 3) Insert new college/programs
+    $ins = $conn->prepare("INSERT INTO admin_college (admin_idnumber, college_name, program_name) VALUES (?, ?, ?)");
+    foreach ($college_post as $dept) {
       $progs = $programs_post[$dept] ?? [null];
       foreach ($progs as $prog) {
         $prog_val = $prog ?: null;
@@ -208,10 +208,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
                 </div>
 
-                <!-- Department(s) and Programs -->
+                <!-- college(s) and Programs -->
                 <div class="col-12">
-                  <label class="fw-bold">Assigned Department(s)</label>
-                  <select id="departmentSelect" name="departments[]" multiple></select>
+                  <label class="fw-bold">Assigned college(s)</label>
+                  <select id="collegeelect" name="college[]" multiple></select>
                 </div>
                 <div id="programContainer" class="mt-3"></div>
               </div>
@@ -243,18 +243,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="sweetalert2/sweetalert2@11.js"></script>
 
   <script>
-    const departmentPrograms = <?= json_encode($departments, JSON_UNESCAPED_UNICODE) ?>;
-    const adminDepartments = <?= json_encode($admin_departments, JSON_UNESCAPED_UNICODE) ?>;
+    const collegePrograms = <?= json_encode($college, JSON_UNESCAPED_UNICODE) ?>;
+    const admincollege = <?= json_encode($admin_college, JSON_UNESCAPED_UNICODE) ?>;
 
     document.addEventListener('DOMContentLoaded', () => {
-      const deptSelect = document.getElementById('departmentSelect');
+      const deptSelect = document.getElementById('collegeelect');
       const programContainer = document.getElementById('programContainer');
 
-      Object.keys(departmentPrograms).forEach(dept => {
+      Object.keys(collegePrograms).forEach(dept => {
         const opt = document.createElement('option');
         opt.value = dept;
         opt.textContent = dept;
-        if (adminDepartments.hasOwnProperty(dept)) opt.selected = true;
+        if (admincollege.hasOwnProperty(dept)) opt.selected = true;
         deptSelect.appendChild(opt);
       });
 
@@ -279,12 +279,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           const ch = new Choices(select, {
             removeItemButton: true
           });
-          const available = departmentPrograms[dept] || [];
+          const available = collegePrograms[dept] || [];
 
           const opts = available.map(p => ({
             value: p,
             label: p,
-            selected: adminDepartments[dept] ? adminDepartments[dept].includes(p) : false
+            selected: admincollege[dept] ? admincollege[dept].includes(p) : false
           }));
           ch.setChoices(opts, 'value', 'label', true);
         });

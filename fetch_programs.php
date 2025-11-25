@@ -1,11 +1,11 @@
 <?php
 include 'conn/conn.php';
 
-if (isset($_POST['department'])) {
-  $department = mysqli_real_escape_string($conn, $_POST['department']);
+if (isset($_POST['college'])) {
+  $college = mysqli_real_escape_string($conn, $_POST['college']);
 
   $query = "SELECT DISTINCT program_name FROM adds 
-            WHERE department_name = '$department' 
+            WHERE college_name = '$college' 
             AND program_name IS NOT NULL 
             AND program_name != ''";
   $result = mysqli_query($conn, $query);

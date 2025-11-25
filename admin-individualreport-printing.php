@@ -22,10 +22,10 @@ $filter_academic_year = $_GET['academic_year'] ?? '';
 // =======================================================
 
 // --- Faculty Info ---
-$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
+$stmt->bind_result($lname, $fname, $mname, $college, $faculty_rank);
 $stmt->fetch();
 $stmt->close();
 $faculty_name = strtoupper("$fname $mname $lname");
@@ -139,10 +139,10 @@ $reviewer_name = "N/A";
 $reviewer_position = "N/A";
 $rev_stmt = $conn->prepare("
     SELECT a.first_name, a.mid_name, a.last_name, a.position FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
     ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
-$rev_stmt->bind_param("s", $department);
+$rev_stmt->bind_param("s", $college);
 $rev_stmt->execute();
 $rev_stmt->bind_result($rfn, $rmn, $rln, $rpos);
 if ($rev_stmt->fetch()) {
@@ -174,10 +174,10 @@ $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 7, $faculty_name, 1, 1);
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, 'Department/College', 1, 0);
+$pdf->Cell(65, 7, 'college/College', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 7, $department, 1, 1);
+$pdf->Cell(0, 7, $college, 1, 1);
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(65, 7, 'Current Faculty Rank', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');

@@ -79,7 +79,7 @@ $pdf->Ln(10);
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
 $pdf->Cell(0, 6, "Academic Rank: " . $data['faculty_rank'], 0, 1);
-$pdf->Cell(0, 6, "Department/College: " . $data['department'], 0, 1);
+$pdf->Cell(0, 6, "College: " . $data['college'], 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 

@@ -14,17 +14,17 @@ $semester      = $_GET['semester'] ?? '';
 $subject_code  = $_GET['subject_code'] ?? '';
 
 // Faculty info
-$stmt = $conn->prepare("SELECT department,faculty_rank, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT college,faculty_rank, first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($department, $faculty_rank, $fname, $mname, $lname);
+$stmt->bind_result($college, $faculty_rank, $fname, $mname, $lname);
 $stmt->fetch();
 $stmt->close();
 
 $faculty_name = trim("$fname $mname $lname");
 
-// Save department in session (so headerfooter can read it)
-$_SESSION['department'] = $department;
+// Save college in session (so headerfooter can read it)
+$_SESSION['college'] = $college;
 
 // --- Build evaluation query ---
 $params = [$faculty_id];
@@ -69,7 +69,7 @@ $pdf->AddPage();
 // Faculty + filter info
 $pdf->SetFont('Arial', '', 11);
 $pdf->Cell(0, 6, "Name: $faculty_name", 0, 1, 'L');
-$pdf->Cell(0, 6, "Department: $department", 0, 1, 'L');
+$pdf->Cell(0, 6, "college: $college", 0, 1, 'L');
 
 $filters = [];
 // Handle Semester display

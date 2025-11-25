@@ -116,18 +116,18 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
                 </div>
 
 
-                <div class="col-md-6" id="department_div">
+                <div class="col-md-6" id="college_div">
                   <div class="form-floating">
-                    <select class="form-select" name="department" id="department">
-                      <option value="" disabled selected>Select Department</option>
+                    <select class="form-select" name="college" id="college">
+                      <option value="" disabled selected>Select college</option>
                       <?php
-                      $departments = mysqli_query($conn, "SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != ''");
-                      while ($row = mysqli_fetch_assoc($departments)) {
-                        echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                      $college = mysqli_query($conn, "SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != ''");
+                      while ($row = mysqli_fetch_assoc($college)) {
+                        echo '<option value="' . htmlspecialchars($row['college_name']) . '">' . htmlspecialchars($row['college_name']) . '</option>';
                       }
                       ?>
                     </select>
-                    <label for="department">College</label>
+                    <label for="college">College</label>
                   </div>
                 </div>
 
@@ -209,14 +209,14 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   <script src="jquery/jquery-3.6.0.min.js"></script>
   <script>
     $(document).ready(function() {
-      $('#department').on('change', function() {
-        var department = $(this).val();
-        if (department) {
+      $('#college').on('change', function() {
+        var college = $(this).val();
+        if (college) {
           $.ajax({
             type: 'POST',
             url: 'fetch_programs.php',
             data: {
-              department: department
+              college: college
             },
             success: function(html) {
               $('#program').html(html);

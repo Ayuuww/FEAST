@@ -10,21 +10,21 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// ✅ Fetch all departments assigned to this admin
-$dept_query = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Fetch all college assigned to this admin
+$dept_query = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_query->bind_param("s", $admin_id);
 $dept_query->execute();
 $dept_result = $dept_query->get_result();
 
-$departments = [];
+$college = [];
 while ($row = $dept_result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 $dept_query->close();
 
-// If no departments found, block access
-if (empty($departments)) {
-  $_SESSION['msg'] = "You are not assigned to any department. Please contact the Superadmin.";
+// If no college found, block access
+if (empty($college)) {
+  $_SESSION['msg'] = "You are not assigned to any college. Please contact the Superadmin.";
   $_SESSION['msg_type'] = "error";
   header("Location: admin-dashboard.php");
   exit();
@@ -35,12 +35,12 @@ $academic_year = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_e
 $semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null;
 $subject = isset($_GET['subject']) && $_GET['subject'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['subject']) : null;
 
-// Base query: find students who have NOT evaluated their instructors (within admin’s department)
+// Base query: find students who have NOT evaluated their instructors (within admin’s college)
 $sql = "
 SELECT 
     s.idnumber AS student_id,
     CONCAT(s.first_name, ' ', s.last_name) AS student_name,
-    s.department AS student_department,
+    s.college AS student_college,
     s.section AS student_section,
     subj.code AS subject_code,
     subj.title AS subject_title,
@@ -59,7 +59,7 @@ LEFT JOIN evaluation e
     AND e.academic_year = ss.academic_year
     AND e.semester = ss.semester
 WHERE e.id IS NULL
-  AND s.department IN ('" . implode("','", $departments) . "')  /* ✅ Only show students in admin’s department */
+  AND s.college IN ('" . implode("','", $college) . "')  /* ✅ Only show students in admin’s college */
 ";
 
 // Apply filters
@@ -82,7 +82,7 @@ $sems = mysqli_query($conn, "SELECT DISTINCT semester FROM student_subject ORDER
 $subjects = mysqli_query($conn, "
   SELECT DISTINCT subj.code, subj.title 
   FROM subject subj 
-  WHERE subj.department IN ('" . implode("','", $departments) . "')
+  WHERE subj.college IN ('" . implode("','", $college) . "')
   ORDER BY subj.title ASC
 ");
 

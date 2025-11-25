@@ -8,7 +8,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
   exit();
 }
 
-// ✅ Fetch all admins and combine their departments/programs
+// ✅ Fetch all admins and combine their college/programs
 $query = "
   SELECT 
     a.idnumber,
@@ -18,10 +18,10 @@ $query = "
     a.faculty_rank,
     a.position,
     a.status,
-    GROUP_CONCAT(DISTINCT ad.department_name ORDER BY ad.department_name SEPARATOR ', ') AS departments,
+    GROUP_CONCAT(DISTINCT ad.college_name ORDER BY ad.college_name SEPARATOR ', ') AS college,
     GROUP_CONCAT(DISTINCT ad.program_name ORDER BY ad.program_name SEPARATOR ', ') AS programs
   FROM admin a
-  LEFT JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
+  LEFT JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
   WHERE a.role = 'admin'
   GROUP BY a.idnumber
   ORDER BY a.last_name ASC
@@ -69,7 +69,7 @@ $result = mysqli_query($conn, $query);
                       <th>ID Number</th>
                       <th>Full Name</th>
                       <th>Faculty Rank</th>
-                      <th>Departments</th>
+                      <th>college</th>
                       <th>Programs</th>
                       <th>Position</th>
                       <th>Status</th>
@@ -85,10 +85,10 @@ $result = mysqli_query($conn, $query);
                         </td>
                         <td><?= htmlspecialchars($row['faculty_rank'] ?? '—'); ?></td>
 
-                        <!-- Departments -->
+                        <!-- college -->
                         <td>
-                          <?php if (!empty($row['departments'])): ?>
-                            <?php foreach (explode(', ', $row['departments']) as $dept): ?>
+                          <?php if (!empty($row['college'])): ?>
+                            <?php foreach (explode(', ', $row['college']) as $dept): ?>
                               <span class="badge bg-primary mb-1"><?= htmlspecialchars($dept); ?></span><br>
                             <?php endforeach; ?>
                           <?php else: ?>

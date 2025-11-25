@@ -16,23 +16,23 @@ $subject_code  = $_GET['subject_code'] ?? '';
 
 // Superadmin info
 $superadmin_id = $_SESSION['idnumber'];
-$super_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank 
+$super_stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, faculty_rank 
                               FROM superadmin WHERE idnumber = ?");
 $super_stmt->bind_param("s", $superadmin_id);
 $super_stmt->execute();
-$super_stmt->bind_result($sa_fname, $sa_mname, $sa_lname, $sa_department, $sa_faculty_rank);
+$super_stmt->bind_result($sa_fname, $sa_mname, $sa_lname, $sa_college, $sa_faculty_rank);
 $super_stmt->fetch();
 $super_stmt->close();
 $superadmin_name = trim("$sa_fname $sa_mname $sa_lname");
 
-// Save department in session (for header/footer logos)
-$_SESSION['department'] = $sa_department;
+// Save college in session (for header/footer logos)
+$_SESSION['college'] = $sa_college;
 
 // Always use superadmin’s ID as faculty_id
 $faculty_id = $superadmin_id;
 
-// Save department in session (for header/footer logos)
-$_SESSION['department'] = $sa_department;
+// Save college in session (for header/footer logos)
+$_SESSION['college'] = $sa_college;
 
 // --- Build evaluation query ---
 $params = [$faculty_id];

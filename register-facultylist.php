@@ -68,7 +68,7 @@ $result = mysqli_query($conn, $query);
                     <th>Middle Name</th>
                     <th>Last Name</th>
                     <th>Academic Rank</th>
-                    <th>Department</th>
+                    <th>College</th>
                     <th>Program</th>
                     <th>Status</th>
                     <th width="120px">Action</th>
@@ -82,7 +82,7 @@ $result = mysqli_query($conn, $query);
                       <td class="text-capitalize"><?= htmlspecialchars($row['mid_name']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['last_name']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['faculty_rank']); ?></td>
-                      <td class="text-uppercase"><?= htmlspecialchars($row['department']); ?></td>
+                      <td class="text-uppercase"><?= htmlspecialchars($row['college']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['program'] ?? '—'); ?></td>
                       <td>
                         <span class="badge bg-<?= $row['status'] === 'active' ? 'success' : 'secondary'; ?>">

@@ -12,23 +12,23 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
 $positions_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != '' ORDER BY position_name ASC");
 $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != '' ORDER BY rank_name ASC");
 
-// ✅ Fetch departments and programs properly (FIXED SPACES)
+// ✅ Fetch college and programs properly (FIXED SPACES)
 $adds_data_result = $conn->query("
-    SELECT DISTINCT department_name, program_name 
+    SELECT DISTINCT college_name, program_name 
     FROM adds 
-    WHERE department_name IS NOT NULL AND department_name != '' 
-    ORDER BY department_name, program_name ASC
+    WHERE college_name IS NOT NULL AND college_name != '' 
+    ORDER BY college_name, program_name ASC
 ");
 
-$departmentPrograms = [];
+$collegePrograms = [];
 while ($row = $adds_data_result->fetch_assoc()) {
-  $department = $row['department_name'];
+  $college = $row['college_name'];
   $program = $row['program_name'];
-  if (!isset($departmentPrograms[$department])) {
-    $departmentPrograms[$department] = [];
+  if (!isset($collegePrograms[$college])) {
+    $collegePrograms[$college] = [];
   }
-  if ($program && !in_array($program, $departmentPrograms[$department])) {
-    $departmentPrograms[$department][] = $program;
+  if ($program && !in_array($program, $collegePrograms[$college])) {
+    $collegePrograms[$college][] = $program;
   }
 }
 ?>
@@ -146,7 +146,7 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="main_department" id="main_department" required>
+                    <select class="form-select" name="main_college" id="main_college" required>
                       <option value="" disabled selected>-- Select Main College --</option>
                     </select>
                     <label>Main College</label>
@@ -164,7 +164,7 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
                 <div class="col-12">
                   <label class="form-label fw-bold">Assign *Additional* College(s) (Optional)</label>
-                  <select name="departments[]" id="department" multiple></select>
+                  <select name="college[]" id="college" multiple></select>
                 </div>
 
                 <div class="col-12 mt-3" id="program_container"></div>
@@ -187,25 +187,25 @@ while ($row = $adds_data_result->fetch_assoc()) {
   <script src="assets/js/main.js"></script>
 
   <script>
-    const departmentPrograms = <?= json_encode($departmentPrograms) ?>;
+    const collegePrograms = <?= json_encode($collegePrograms) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
-      const departmentSelect = document.getElementById('department');
-      const mainDeptSelect = document.getElementById('main_department');
+      const collegeelect = document.getElementById('college');
+      const mainDeptSelect = document.getElementById('main_college');
       const mainProgramSelect = document.getElementById('main_program');
       const programContainer = document.getElementById('program_container');
 
-      // Populate all departments (for main + multi-select)
-      const allDepartments = Object.keys(departmentPrograms);
-      allDepartments.forEach(dept => {
+      // Populate all college (for main + multi-select)
+      const allcollege = Object.keys(collegePrograms);
+      allcollege.forEach(dept => {
         const opt = new Option(dept, dept);
         mainDeptSelect.appendChild(opt);
       });
 
-      // ✅ When main department changes, load its programs
+      // ✅ When main college changes, load its programs
       mainDeptSelect.addEventListener('change', function() {
         const dept = this.value;
-        const programs = departmentPrograms[dept] || [];
+        const programs = collegePrograms[dept] || [];
         // ✅ FIX: Updated placeholder
         mainProgramSelect.innerHTML = `<option value="" selected>-- Select Main Program (if any) --</option>`;
         programs.forEach(p => {
@@ -214,14 +214,14 @@ while ($row = $adds_data_result->fetch_assoc()) {
         });
       });
 
-      // ✅ Choices.js for multiple department selection
-      const deptChoices = new Choices(departmentSelect, {
+      // ✅ Choices.js for multiple college selection
+      const deptChoices = new Choices(collegeelect, {
         removeItemButton: true,
-        placeholderValue: 'Select additional departments...'
+        placeholderValue: 'Select additional college...'
       });
 
       deptChoices.setChoices(
-        allDepartments.map(d => ({
+        allcollege.map(d => ({
           value: d,
           label: d
         })),
@@ -230,13 +230,13 @@ while ($row = $adds_data_result->fetch_assoc()) {
         true
       );
 
-      // ✅ Dynamic programs under selected departments
-      departmentSelect.addEventListener('change', function() {
+      // ✅ Dynamic programs under selected college
+      collegeelect.addEventListener('change', function() {
         programContainer.innerHTML = '';
-        const selectedDepartments = Array.from(departmentSelect.selectedOptions).map(opt => opt.value);
+        const selectedcollege = Array.from(collegeelect.selectedOptions).map(opt => opt.value);
 
-        selectedDepartments.forEach(dept => {
-          const programs = departmentPrograms[dept] || [];
+        selectedcollege.forEach(dept => {
+          const programs = collegePrograms[dept] || [];
           if (programs.length > 0) {
             const div = document.createElement('div');
             div.classList.add('mt-3', 'p-3', 'border', 'rounded');

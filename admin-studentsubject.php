@@ -14,7 +14,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get admin’s department + position for access control
+// Get admin’s college + position for access control
 $pos_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $pos_stmt->bind_param("s", $admin_id);
 $pos_stmt->execute();
@@ -166,7 +166,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   foreach ($dataRows as $row) {
     $line++;
 
-    // Expecting 7 columns: student_id, subject_code, subject_title, faculty_id, admin_id, department, program
+    // Expecting 7 columns: student_id, subject_code, subject_title, faculty_id, admin_id, college, program
     if (count($row) < 2) continue; // You may want to use count($row) < 7 for strict checking
 
     $student_id    = trim($row[0]);
@@ -174,7 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     $subject_title = isset($row[2]) ? trim($row[2]) : "Untitled Subject";
     $faculty_id    = isset($row[3]) ? trim($row[3]) : null;
     $admin_csv_id  = isset($row[4]) ? trim($row[4]) : $admin_id;
-    $department    = isset($row[5]) ? trim($row[5]) : "";
+    $college    = isset($row[5]) ? trim($row[5]) : "";
     $program       = isset($row[6]) ? trim($row[6]) : "";
 
     if (empty($student_id) || empty($subject_code)) {
@@ -198,7 +198,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
 
       $insert_subject = $conn->prepare("
         INSERT INTO subject
-        (code, title, faculty_id, admin_id, department, program)
+        (code, title, faculty_id, admin_id, college, program)
         VALUES (?, ?, ?, ?, ?, ?)
     ");
 
@@ -208,7 +208,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
         $subject_title,
         $faculty_id_db,
         $admin_id_db,
-        $department,
+        $college,
         $program
       );
 
@@ -351,11 +351,11 @@ function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_c
 
 
 // --- Fetch data for the form (existing code) ---
-$student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.department, s.section FROM student s WHERE s.role = 'student' ORDER BY s.department, s.last_name ASC";
+$student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.college, s.section FROM student s WHERE s.role = 'student' ORDER BY s.college, s.last_name ASC";
 $student_result = $conn->query($student_query);
 $students_by_dept = [];
 while ($row = $student_result->fetch_assoc()) {
-  $students_by_dept[$row['department']][] = $row;
+  $students_by_dept[$row['college']][] = $row;
 }
 
 $subject_query = "
@@ -485,7 +485,7 @@ ksort($subjects_by_faculty);
                 <strong>📌 Reminder:</strong><br>
                 <ul class="mb-0">
                   <li><strong>Only <code>student_id</code> and <code>subject_code</code></strong> need to be filled in for every row.</li>
-                  <li>Other fields (<code>subject_title</code>, <code>faculty_id</code>, <code>admin_id</code>, <code>department</code>, <code>program</code>)
+                  <li>Other fields (<code>subject_title</code>, <code>faculty_id</code>, <code>admin_id</code>, <code>college</code>, <code>program</code>)
                     can be entered <strong>once</strong> and reused automatically for new subjects.</li>
                   <li>If the subject already exists in the database, you may leave the extra fields <strong>blank</strong>.</li>
                   <li>If the subject does <strong>not</strong> exist, the system will create it using the additional fields from your CSV.</li>
@@ -510,7 +510,7 @@ ksort($subjects_by_faculty);
                 <div class="mt-2 p-3 border rounded bg-light">
                   <strong>✔ Correct Sample CSV Format:</strong>
                   <pre class="border p-2 bg-white" style="white-space: pre-wrap; font-size: 90%;">
-student_id|subject_code|subject_title     |faculty_id|admin_id|department                    |program                                   |
+student_id|subject_code|subject_title     |faculty_id|admin_id|college                       |program                                   |
 202-3110-1|IT101       |Introduction to IT|10001     |00001   |COLLEGE OF INFORMATION SYSTEMS|Bachelor of Science in Information Systems|
 202-3110-2|IT101       |
 202-3121-2|IT101       |
@@ -521,7 +521,7 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|department       
                     <li><strong>subject_title</strong>: title of the subject (required if code is new).</li>
                     <li><strong>faculty_id</strong>: (optional) faculty/instructor ID for the subject.</li>
                     <li><strong>admin_id</strong>: (optional) admin responsible for the subject.</li>
-                    <li><strong>department</strong>: (optional) college/department for the subject.</li>
+                    <li><strong>college</strong>: (optional) college/college for the subject.</li>
                     <li><strong>program</strong>: (optional) program under which the subject falls.</li>
                   </ul>
                   <p class="small text-muted mb-0">
@@ -553,9 +553,9 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|department       
 
               <form method="POST" action="" class="row g-4">
                 <div class="col-md-3">
-                  <label for="departmentFilter" class="form-label">Filter Students by Department</label>
-                  <select id="departmentFilter" class="form-select">
-                    <option value="">All Departments</option>
+                  <label for="collegeFilter" class="form-label">Filter Students by college</label>
+                  <select id="collegeFilter" class="form-select">
+                    <option value="">All Colleges</option>
                     <?php ksort($students_by_dept);
                     foreach (array_keys($students_by_dept) as $dept): ?>
                       <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
@@ -603,10 +603,10 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|department       
                 <div class="col-12">
                   <label for="student_id" class="form-label fw-bold">Select Students</label>
                   <select id="student_id" name="student_id[]" multiple>
-                    <?php foreach ($students_by_dept as $department => $students): ?>
-                      <optgroup label="<?= htmlspecialchars($department) ?>">
+                    <?php foreach ($students_by_dept as $college => $students): ?>
+                      <optgroup label="<?= htmlspecialchars($college) ?>">
                         <?php foreach ($students as $student): ?>
-                          <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-department="<?= $student['department'] ?>">
+                          <option value="<?= $student['idnumber'] ?>" data-section="<?= $student['section'] ?>" data-college="<?= $student['college'] ?>">
                             <?= htmlspecialchars($student['last_name'] . ', ' . $student['first_name']) ?> (<?= htmlspecialchars($student['section']) ?>)
                           </option>
                         <?php endforeach; ?>
@@ -642,7 +642,7 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|department       
       const originalStudentData = Array.from(studentSelectElement.options).map(opt => ({
         value: opt.value,
         label: opt.textContent,
-        department: opt.dataset.department,
+        college: opt.dataset.college,
         section: opt.dataset.section,
         groupLabel: opt.parentElement.label
       }));
@@ -753,14 +753,14 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|department       
       });
 
       // --- rest of your code (filters) remains unchanged ---
-      const deptFilter = document.getElementById('departmentFilter');
+      const deptFilter = document.getElementById('collegeFilter');
       const sectionFilter = document.getElementById('sectionFilter');
 
       function filterStudents() {
         const selectedDept = deptFilter.value;
         const selectedSection = sectionFilter.value;
         const filteredStudents = originalStudentData.filter(student => {
-          const matchesDept = !selectedDept || student.department === selectedDept;
+          const matchesDept = !selectedDept || student.college === selectedDept;
           const matchesSection = !selectedSection || student.section === selectedSection;
           return matchesDept && matchesSection;
         });

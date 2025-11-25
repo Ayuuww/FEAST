@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 25, 2025 at 01:59 PM
+-- Generation Time: Nov 22, 2025 at 03:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -336,20 +336,7 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (578, '40151', 'admin', 'Logged in', '2025-11-21 14:42:14'),
 (579, '40151', 'admin', 'Logged in', '2025-11-21 17:54:31'),
 (580, '00000', '', 'Logged in', '2025-11-21 18:03:48'),
-(581, '00000', '', 'Logged in', '2025-11-22 22:30:28'),
-(582, '40151', 'admin', 'Logged in', '2025-11-23 00:11:01'),
-(583, '00000', '', 'Logged in', '2025-11-23 00:11:55'),
-(584, '221-0388-1', 'student', 'Logged in', '2025-11-25 19:38:33'),
-(585, '40151', 'admin', 'Logged in', '2025-11-25 19:46:37'),
-(586, '40193', 'superadmin', 'Logged in', '2025-11-25 20:32:55'),
-(587, '40193', 'superadmin', 'Logged in', '2025-11-25 20:52:44'),
-(588, 'system', '', 'Evaluation auto turned OFF (end date reached)', '2025-11-25 20:53:25'),
-(589, '221-0387-1', 'student', 'Logged in', '2025-11-25 20:53:43'),
-(590, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-25 20:54:05'),
-(591, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-04 | End: 2025-11-06', '2025-11-25 20:54:16'),
-(592, 'system', '', 'Evaluation auto turned OFF (end date reached)', '2025-11-25 20:54:16'),
-(593, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-25 20:54:26'),
-(594, '40151', 'admin', 'Logged in', '2025-11-25 20:54:58');
+(581, '00000', '', 'Logged in', '2025-11-22 22:30:28');
 
 -- --------------------------------------------------------
 
@@ -362,7 +349,7 @@ CREATE TABLE `adds` (
   `rank_name` varchar(100) DEFAULT NULL,
   `position_name` varchar(100) DEFAULT NULL,
   `section_name` varchar(100) DEFAULT NULL,
-  `college_name` varchar(255) DEFAULT NULL,
+  `department_name` varchar(255) DEFAULT NULL,
   `program_name` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -370,7 +357,7 @@ CREATE TABLE `adds` (
 -- Dumping data for table `adds`
 --
 
-INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `college_name`, `program_name`) VALUES
+INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `department_name`, `program_name`) VALUES
 (116, NULL, NULL, NULL, 'COLLEGE OF INFORMATION SYSTEMS', NULL),
 (117, NULL, NULL, NULL, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (118, 'Instructor II', NULL, NULL, NULL, NULL),
@@ -426,25 +413,25 @@ INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passwor
 ('40005', 'Theresa', 'Crispino', 'Cachero', '$2y$10$7ddHbp89iZO1TUPNADI7YeeoXSXU37LtR2rpNL0ipjRuJ9dDGrFIC', 'Program Chair', 'admin', 'active', 'Assistant Professor IV'),
 ('40045', 'Christianne Glory', 'L', 'Arbollente', '$2y$10$AL3JqU.T22XvzvwruiOuTuIZGPLP1TOgB.oZOYgNWI79bTA8RF1Kq', 'Program Chair', 'admin', 'active', 'Instructor III'),
 ('40050', 'Lynbelle', 'Chan', 'Pascua', '$2y$10$zY3B9.cA1L3I/btGOpiEpuDfvsOPzS2OBT/LgINzG05GYucNc9X22', 'Program Chair', 'admin', 'active', 'Instructor I'),
-('40151', 'Edelita', 'Corpuz', 'Ebuenga', '$2y$10$Ltz8JeCc3EJ1vVtTPbSE5.rh3X7Rb4EEO28tQ69OLePJi78EZ0wu.', 'Dean', 'admin', 'active', 'Associate Professor V');
+('40151', 'Edilita', 'Corpuz', 'Ebuenga', '$2y$10$Ltz8JeCc3EJ1vVtTPbSE5.rh3X7Rb4EEO28tQ69OLePJi78EZ0wu.', 'Dean', 'admin', 'active', 'Associate Professor V');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `admin_college`
+-- Table structure for table `admin_departments`
 --
 
-CREATE TABLE `admin_college` (
+CREATE TABLE `admin_departments` (
   `admin_idnumber` varchar(11) NOT NULL,
-  `college_name` varchar(255) NOT NULL,
+  `department_name` varchar(255) NOT NULL,
   `program_name` varchar(255) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `admin_college`
+-- Dumping data for table `admin_departments`
 --
 
-INSERT INTO `admin_college` (`admin_idnumber`, `college_name`, `program_name`) VALUES
+INSERT INTO `admin_departments` (`admin_idnumber`, `department_name`, `program_name`) VALUES
 ('40005', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology'),
 ('40045', 'COLLEGE OF ARTS AND SCIENCES', 'General Education'),
 ('40050', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language'),
@@ -466,7 +453,7 @@ CREATE TABLE `admin_evaluation` (
   `total_score` int(11) NOT NULL,
   `computed_rating` decimal(5,2) NOT NULL,
   `comments` text DEFAULT NULL,
-  `college` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `evaluation_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -474,7 +461,7 @@ CREATE TABLE `admin_evaluation` (
 -- Dumping data for table `admin_evaluation`
 --
 
-INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `college`, `evaluation_date`) VALUES
+INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `department`, `evaluation_date`) VALUES
 (81, '40151', '02860', 'Dean', '2025-2026', '1st Semester', 75, 100.00, 'Excellent teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:37:01'),
 (82, '40151', '00421', 'Dean', '2025-2026', '1st Semester', 70, 93.33, 'good teaching', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:40:52'),
 (83, '40151', '0716', 'Dean', '2025-2026', '1st Semester', 67, 89.33, 'Good teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:43:19'),
@@ -513,12 +500,12 @@ INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`
 -- --------------------------------------------------------
 
 --
--- Table structure for table `college_info`
+-- Table structure for table `department_info`
 --
 
-CREATE TABLE `college_info` (
+CREATE TABLE `department_info` (
   `id` int(11) NOT NULL,
-  `college_name` varchar(255) NOT NULL,
+  `department_name` varchar(255) NOT NULL,
   `program_name` varchar(255) NOT NULL,
   `website` varchar(255) DEFAULT 'www.dmmmsu.edu.ph',
   `phone` varchar(50) DEFAULT NULL,
@@ -526,10 +513,10 @@ CREATE TABLE `college_info` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `college_info`
+-- Dumping data for table `department_info`
 --
 
-INSERT INTO `college_info` (`id`, `college_name`, `program_name`, `website`, `phone`, `email`) VALUES
+INSERT INTO `department_info` (`id`, `department_name`, `program_name`, `website`, `phone`, `email`) VALUES
 (5, 'COLLEGE OF ARTS AND SCIENCE', 'Bachelor of Arts in English Language', 'www.dmmmsu.edu.ph', '', ''),
 (6, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'www.dmmmsu.edu.ph', '', ''),
 (7, 'COLLEGE OF EDUCATION', 'Bachelor of Early Childhood Education', '', '', ''),
@@ -546,7 +533,7 @@ INSERT INTO `college_info` (`id`, `college_name`, `program_name`, `website`, `ph
 CREATE TABLE `evaluation` (
   `id` int(11) NOT NULL,
   `student_id` varchar(50) DEFAULT NULL,
-  `college` varchar(255) NOT NULL,
+  `department` varchar(255) NOT NULL,
   `subject_code` varchar(50) DEFAULT NULL,
   `subject_title` varchar(50) NOT NULL,
   `academic_year` varchar(9) NOT NULL,
@@ -564,7 +551,7 @@ CREATE TABLE `evaluation` (
 -- Dumping data for table `evaluation`
 --
 
-INSERT INTO `evaluation` (`id`, `student_id`, `college`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`, `is_anonymous`) VALUES
+INSERT INTO `evaluation` (`id`, `student_id`, `department`, `subject_code`, `subject_title`, `academic_year`, `faculty_id`, `total_score`, `computed_rating`, `comment`, `created_at`, `semester`, `student_section`, `is_anonymous`) VALUES
 (149, '221-0325-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, '', '2025-11-06 05:42:08', '1st Semester', '4-B', 'yes'),
 (150, '221-0476-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 75.00, 100.00, 'none', '2025-11-06 05:42:27', '1st Semester', '4-B', 'yes'),
 (151, '231-0884-1', 'COLLEGE OF INFORMATION SYSTEMS', 'ISAE 108', 'Technoprenuership', '2025-2026', '40182', 45.00, 60.00, 'yes', '2025-11-06 05:43:52', '1st Semester', '4-B', 'yes'),
@@ -649,7 +636,7 @@ CREATE TABLE `evaluation_switch` (
 --
 
 INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`, `start_date`, `end_date`) VALUES
-(7, 'on', '40193', '2025-11-25', '2025-11-28');
+(7, 'on', '40193', '2025-11-16', '2025-11-18');
 
 -- --------------------------------------------------------
 
@@ -663,7 +650,7 @@ CREATE TABLE `faculty` (
   `mid_name` varchar(50) NOT NULL,
   `last_name` varchar(50) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
-  `college` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `program` varchar(255) DEFAULT NULL,
   `faculty_rank` varchar(50) DEFAULT NULL,
   `role` varchar(50) NOT NULL DEFAULT 'faculty',
@@ -674,7 +661,7 @@ CREATE TABLE `faculty` (
 -- Dumping data for table `faculty`
 --
 
-INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `faculty_rank`, `role`, `status`) VALUES
+INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `program`, `faculty_rank`, `role`, `status`) VALUES
 ('00421', 'Kristine Maylan', 'Sabado', 'Espero', '$2y$10$6sDggnKta7b7xCdaP1Ib/eIe85tOjuo1lb3v7am4JtP4vZ9M1eG5W', 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'Instructor I', 'faculty', 'active'),
 ('00711', 'Mark Kenneth', 'Molina', 'Mangaser', '$2y$10$STXSd0A4CyFoab/G/ADv7.MOKWUTUpQTz66kdgIfF.lcval9XV5b6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
 ('02860', 'Larmie', 'Dosono', 'Barcelona', '$2y$10$Z/Bqwy3zpmgkVX6A7uoo7eCyBX01V64mIOyjhRbxa/1FHyCkxUfve', 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'Instructor I', 'faculty', 'active'),
@@ -685,7 +672,7 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 ('40050', 'Lynbelle', 'Chan', 'Pascua', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Instructor I', 'faculty', 'active'),
 ('40094', 'Maricel', 'Oficiar', 'Pre', '$2y$10$7Q4SgyxGufI6HtGAQ9Ssa..7t6bpDWmjcSvphzG6Cd3cfXWbchyPy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
 ('40112', 'Jhonalyn', 'Bautista', 'Lardizabal', '$2y$10$HnDfJjH8lTY4stHShIsMeeNMZzoYWR6jnL8cP1n.BHPLu1fOczE0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
-('40151', 'Edelita', 'Corpuz', 'Ebuenga', NULL, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
+('40151', 'Edilita', 'Corpuz', 'Ebuenga', NULL, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
 ('40180', 'Rufo', 'Agaloos', 'Baro', '$2y$10$awW24CgCqZVTGxqR6A6THOYA8AxTrg.pxKsOYIhWE8KOiR/4XEz.O', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
 ('40182', 'Daniel', 'Almojuela', 'Neri', '$2y$10$Lzvob3L7hGF1aqMPlcgeNuVg0HgBYFqbk.degfuS52jDPOV0gphNS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor II', 'faculty', 'active'),
 ('40184', 'Herve', 'Estrada', 'Orpilla', '$2y$10$Vgm05e3hAx2417BIfAIS4uEpPTWzLOu8KTGMhSZs3W1QAcF.uiUtu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor III', 'faculty', 'active'),
@@ -705,7 +692,7 @@ CREATE TABLE `registrar` (
   `mid_name` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `college` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `program` varchar(255) DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'active',
   `role` varchar(50) NOT NULL DEFAULT 'registrar',
@@ -717,7 +704,7 @@ CREATE TABLE `registrar` (
 -- Dumping data for table `registrar`
 --
 
-INSERT INTO `registrar` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `status`, `role`, `employment_role`, `faculty_rank`) VALUES
+INSERT INTO `registrar` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `program`, `status`, `role`, `employment_role`, `faculty_rank`) VALUES
 ('00000', 'Account', 'Creator', 'System', '$2y$10$oIAZEL68lgR8cOOc6YP5d.UA5GaQwnCLtrSP/7cv03CNmGt6fylRm', NULL, NULL, 'active', 'registrar', 'Non-Teaching', NULL);
 
 -- --------------------------------------------------------
@@ -732,7 +719,7 @@ CREATE TABLE `student` (
   `mid_name` varchar(50) NOT NULL,
   `last_name` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `college` varchar(255) NOT NULL,
+  `department` varchar(255) NOT NULL,
   `program` varchar(255) DEFAULT NULL,
   `section` varchar(11) NOT NULL,
   `role` varchar(50) NOT NULL DEFAULT 'student'
@@ -742,7 +729,7 @@ CREATE TABLE `student` (
 -- Dumping data for table `student`
 --
 
-INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `section`, `role`) VALUES
+INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `department`, `program`, `section`, `role`) VALUES
 ('201-0326-1', 'Rodel Andre', 'Bumatay', 'Cardona', '$2y$10$.3J8f0HN56qVyud..gugsOsmAykyg2DfS7eBlHfeXM6HEkZB1wEQ2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
 ('202-0021-1', 'Ren Ren', 'Alimpia', 'Donato', '$2y$10$hx3jjm..uGUIVfq4PX0w6u7jKAi2cNkSgm/D2O9SvvYBAVgseOC.O', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
 ('211-0004-1', 'Symphony Angel', 'Manalo', 'Vivit', '$2y$10$Zb2BkcFRnQEvUlsxZRKUEO6CRvNQheG0XKgl.iLr4sL6RbFAOtnui', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
@@ -832,7 +819,7 @@ CREATE TABLE `student_evaluation_submissions` (
   `student_id` varchar(50) DEFAULT NULL,
   `subject_code` varchar(50) DEFAULT NULL,
   `faculty_id` varchar(50) DEFAULT NULL,
-  `college` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
   `academic_year` varchar(20) DEFAULT NULL,
   `semester` varchar(20) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -847,7 +834,7 @@ CREATE TABLE `student_evaluation_submissions` (
 -- Dumping data for table `student_evaluation_submissions`
 --
 
-INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `college`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
+INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
 (71, '221-0325-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:08', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
 (72, '221-0476-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:27', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'none', 'yes'),
 (73, '231-0884-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:43:52', '{\"q0\":3,\"q1\":3,\"q2\":3,\"q3\":3,\"q4\":3,\"q5\":3,\"q6\":3,\"q7\":3,\"q8\":3,\"q9\":3,\"q10\":3,\"q11\":3,\"q12\":3,\"q13\":3,\"q14\":3}', 45, 60.00, 'yes', 'yes'),
@@ -1390,7 +1377,7 @@ CREATE TABLE `subject` (
   `title` varchar(255) NOT NULL,
   `faculty_id` varchar(11) DEFAULT NULL,
   `admin_id` varchar(11) DEFAULT NULL,
-  `college` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `program` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -1398,7 +1385,7 @@ CREATE TABLE `subject` (
 -- Dumping data for table `subject`
 --
 
-INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `college`, `program`) VALUES
+INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `department`, `program`) VALUES
 (62, 'ISPC 110', 'Business Process Management', '40112', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (63, 'ISPC 112', 'IS Strategy Management and Acquisition', '40184', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (64, 'ISAE 107', 'Professional Engagements', '40207', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
@@ -1427,7 +1414,7 @@ CREATE TABLE `superadmin` (
   `last_name` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` varchar(255) NOT NULL DEFAULT 'superadmin',
-  `college` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
   `program` varchar(255) DEFAULT NULL,
   `faculty_rank` varchar(255) DEFAULT NULL,
   `position` varchar(255) NOT NULL,
@@ -1438,7 +1425,7 @@ CREATE TABLE `superadmin` (
 -- Dumping data for table `superadmin`
 --
 
-INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `college`, `program`, `faculty_rank`, `position`, `status`) VALUES
+INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `department`, `program`, `faculty_rank`, `position`, `status`) VALUES
 ('40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$e6ZHPQM/6xvk1/jvupujHO4pggmk8P27m5TeUAnRpyZ9Iiblm.lpa', 'superadmin', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'Head Instruction', 'active');
 
 --
@@ -1460,8 +1447,7 @@ ALTER TABLE `adds`
   ADD KEY `rank_name` (`rank_name`),
   ADD KEY `position_name` (`position_name`),
   ADD KEY `section_name` (`section_name`),
-  ADD KEY `department_name` (`college_name`),
-  ADD KEY `college_name` (`college_name`);
+  ADD KEY `department_name` (`department_name`);
 
 --
 -- Indexes for table `admin`
@@ -1472,11 +1458,11 @@ ALTER TABLE `admin`
   ADD KEY `fk_admin_faculty_rank` (`faculty_rank`);
 
 --
--- Indexes for table `admin_college`
+-- Indexes for table `admin_departments`
 --
-ALTER TABLE `admin_college`
-  ADD PRIMARY KEY (`admin_idnumber`,`college_name`,`program_name`),
-  ADD KEY `department_name` (`college_name`),
+ALTER TABLE `admin_departments`
+  ADD PRIMARY KEY (`admin_idnumber`,`department_name`,`program_name`),
+  ADD KEY `department_name` (`department_name`),
   ADD KEY `admin_program` (`program_name`);
 
 --
@@ -1487,8 +1473,7 @@ ALTER TABLE `admin_evaluation`
   ADD KEY `fk_admin_evaluator` (`evaluator_id`),
   ADD KEY `fk_faculty_evaluatee` (`evaluatee_id`),
   ADD KEY `fk_evaluator_position` (`evaluator_position`),
-  ADD KEY `fk_admin_evaluation_department` (`college`),
-  ADD KEY `college` (`college`);
+  ADD KEY `fk_admin_evaluation_department` (`department`);
 
 --
 -- Indexes for table `admin_evaluation_submissions`
@@ -1497,9 +1482,9 @@ ALTER TABLE `admin_evaluation_submissions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `college_info`
+-- Indexes for table `department_info`
 --
-ALTER TABLE `college_info`
+ALTER TABLE `department_info`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -1511,7 +1496,7 @@ ALTER TABLE `evaluation`
   ADD KEY `subject_code_key` (`subject_code`),
   ADD KEY `faculty_id_key` (`faculty_id`),
   ADD KEY `subject_title` (`subject_title`),
-  ADD KEY `fk_evaluation_department` (`college`),
+  ADD KEY `fk_evaluation_department` (`department`),
   ADD KEY `fk_evaluation_student_section` (`student_section`);
 
 --
@@ -1532,10 +1517,9 @@ ALTER TABLE `evaluation_switch`
 --
 ALTER TABLE `faculty`
   ADD PRIMARY KEY (`idnumber`),
-  ADD KEY `department` (`college`),
+  ADD KEY `department` (`department`),
   ADD KEY `fk_faculty_rank` (`faculty_rank`),
-  ADD KEY `fk_faculty_program` (`program`),
-  ADD KEY `college` (`college`);
+  ADD KEY `fk_faculty_program` (`program`);
 
 --
 -- Indexes for table `registrar`
@@ -1543,7 +1527,7 @@ ALTER TABLE `faculty`
 ALTER TABLE `registrar`
   ADD PRIMARY KEY (`idnumber`),
   ADD UNIQUE KEY `faculty_rank` (`faculty_rank`),
-  ADD KEY `fk_registrar_department` (`college`),
+  ADD KEY `fk_registrar_department` (`department`),
   ADD KEY `fk_registrar_program` (`program`);
 
 --
@@ -1551,7 +1535,7 @@ ALTER TABLE `registrar`
 --
 ALTER TABLE `student`
   ADD PRIMARY KEY (`idnumber`),
-  ADD KEY `department` (`college`),
+  ADD KEY `department` (`department`),
   ADD KEY `section` (`section`),
   ADD KEY `section_2` (`section`);
 
@@ -1588,7 +1572,7 @@ ALTER TABLE `superadmin`
   ADD PRIMARY KEY (`idnumber`),
   ADD KEY `fk_superadmin_faculty_rank` (`faculty_rank`),
   ADD KEY `fk_superadmin_position` (`position`),
-  ADD KEY `fk_superadmin_department` (`college`),
+  ADD KEY `fk_superadmin_department` (`department`),
   ADD KEY `fk_superadmin_program` (`program`);
 
 --
@@ -1599,13 +1583,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=595;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=582;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=147;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -1620,9 +1604,9 @@ ALTER TABLE `admin_evaluation_submissions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
--- AUTO_INCREMENT for table `college_info`
+-- AUTO_INCREMENT for table `department_info`
 --
-ALTER TABLE `college_info`
+ALTER TABLE `department_info`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
@@ -1673,10 +1657,10 @@ ALTER TABLE `admin`
   ADD CONSTRAINT `fk_admin_position` FOREIGN KEY (`position`) REFERENCES `adds` (`position_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `admin_college`
+-- Constraints for table `admin_departments`
 --
-ALTER TABLE `admin_college`
-  ADD CONSTRAINT `admin_college_ibfk_2` FOREIGN KEY (`college_name`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+ALTER TABLE `admin_departments`
+  ADD CONSTRAINT `admin_departments_ibfk_2` FOREIGN KEY (`department_name`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `admin_program` FOREIGN KEY (`program_name`) REFERENCES `adds` (`program_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_admin_id` FOREIGN KEY (`admin_idnumber`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE;
 
@@ -1684,7 +1668,7 @@ ALTER TABLE `admin_college`
 -- Constraints for table `admin_evaluation`
 --
 ALTER TABLE `admin_evaluation`
-  ADD CONSTRAINT `fk_admin_evaluation_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_admin_evaluation_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_admin_evaluator` FOREIGN KEY (`evaluator_id`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE,
   ADD CONSTRAINT `fk_eval_admin` FOREIGN KEY (`evaluator_id`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_eval_faculty` FOREIGN KEY (`evaluatee_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -1696,7 +1680,7 @@ ALTER TABLE `admin_evaluation`
 --
 ALTER TABLE `evaluation`
   ADD CONSTRAINT `faculty_id_key` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_evaluation_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_evaluation_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_evaluation_student_section` FOREIGN KEY (`student_section`) REFERENCES `student` (`section`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `student` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -1712,7 +1696,7 @@ ALTER TABLE `evaluation_switch`
 -- Constraints for table `faculty`
 --
 ALTER TABLE `faculty`
-  ADD CONSTRAINT `fk_faculty_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_faculty_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_faculty_program` FOREIGN KEY (`program`) REFERENCES `adds` (`program_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_faculty_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -1720,7 +1704,7 @@ ALTER TABLE `faculty`
 -- Constraints for table `registrar`
 --
 ALTER TABLE `registrar`
-  ADD CONSTRAINT `fk_registrar_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_registrar_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_registrar_program` FOREIGN KEY (`program`) REFERENCES `adds` (`program_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_registrar_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -1728,7 +1712,7 @@ ALTER TABLE `registrar`
 -- Constraints for table `student`
 --
 ALTER TABLE `student`
-  ADD CONSTRAINT `fk_student_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_student_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_student_section` FOREIGN KEY (`section`) REFERENCES `adds` (`section_name`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -1752,7 +1736,7 @@ ALTER TABLE `subject`
 -- Constraints for table `superadmin`
 --
 ALTER TABLE `superadmin`
-  ADD CONSTRAINT `fk_superadmin_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_superadmin_department` FOREIGN KEY (`department`) REFERENCES `adds` (`department_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_superadmin_faculty_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_superadmin_position` FOREIGN KEY (`position`) REFERENCES `adds` (`position_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_superadmin_program` FOREIGN KEY (`program`) REFERENCES `adds` (`program_name`) ON DELETE CASCADE ON UPDATE CASCADE;

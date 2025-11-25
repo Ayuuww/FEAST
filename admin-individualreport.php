@@ -10,24 +10,24 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// --- ✅ START FIX: Get all department/program pairs assigned to this admin ---
+// --- ✅ START FIX: Get all college/program pairs assigned to this admin ---
 $admin_assignments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 if ($stmt_admin_dept) {
   $stmt_admin_dept->bind_param("s", $admin_id);
   $stmt_admin_dept->execute();
   $result = $stmt_admin_dept->get_result();
   while ($row = $result->fetch_assoc()) {
-    $admin_assignments[] = $row; // Store as pairs, e.g., ['department_name' => 'CAS', 'program_name' => 'BSCS']
+    $admin_assignments[] = $row; // Store as pairs, e.g., ['college_name' => 'CAS', 'program_name' => 'BSCS']
   }
   $stmt_admin_dept->close();
 }
 // --- END FIX ---
 
-// Handle case where admin has no assigned departments
+// Handle case where admin has no assigned college
 if (empty($admin_assignments)) {
   // Provide a more user-friendly error
-  $_SESSION['msg'] = "You are not assigned to any department or program. Please contact the Superadmin.";
+  $_SESSION['msg'] = "You are not assigned to any college or program. Please contact the Superadmin.";
   $_SESSION['msg_type'] = "error";
   header("Location: admin-dashboard.php");
   exit();
@@ -61,8 +61,8 @@ $faculty_query_parts = [];
 $params = [];
 $types = "";
 foreach ($admin_assignments as $assignment) {
-  $faculty_query_parts[] = "(department = ? AND program = ?)";
-  $params[] = $assignment['department_name'];
+  $faculty_query_parts[] = "(college = ? AND program = ?)";
+  $params[] = $assignment['college_name'];
   $params[] = $assignment['program_name'];
   $types .= "ss";
 }
@@ -86,14 +86,14 @@ $prepared_by_name = "N/A";
 $prepared_by_position = "N/A";
 
 // ✅ Get Reviewer Info (Dean/Chairperson)
-// We need just the department names for this part
-$admin_departments_only = array_unique(array_column($admin_assignments, 'department_name'));
-$placeholders = implode("','", array_map([$conn, 'real_escape_string'], $admin_departments_only));
+// We need just the college names for this part
+$admin_college_only = array_unique(array_column($admin_assignments, 'college_name'));
+$placeholders = implode("','", array_map([$conn, 'real_escape_string'], $admin_college_only));
 $reviewer_query_str = "
     SELECT first_name, mid_name, last_name, position 
     FROM admin 
     WHERE idnumber IN (
-        SELECT admin_idnumber FROM admin_departments WHERE department_name IN ('$placeholders')
+        SELECT admin_idnumber FROM admin_college WHERE college_name IN ('$placeholders')
     ) AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%' OR position LIKE 'Director%')
     ORDER BY CASE 
         WHEN position LIKE 'Dean%' THEN 1
@@ -309,10 +309,10 @@ $admin_info_query->close();
       // =======================================================
 
       // --- Faculty basic info ---
-      $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+      $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
       $stmt->bind_param("s", $selected_faculty_id);
       $stmt->execute();
-      $stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
+      $stmt->bind_result($lname, $fname, $mname, $college, $faculty_rank);
       $stmt->fetch();
       $stmt->close();
       $faculty_name = strtoupper("$lname, $fname $mname");
@@ -411,8 +411,8 @@ $admin_info_query->close();
             <td>: <?= htmlspecialchars($faculty_name) ?></td>
           </tr>
           <tr>
-            <th>Department/College</th>
-            <td>: <?= htmlspecialchars($department) ?></td>
+            <th>college/College</th>
+            <td>: <?= htmlspecialchars($college) ?></td>
           </tr>
           <tr>
             <th>Current Faculty Rank</th>

@@ -3,7 +3,7 @@ include 'conn/conn.php'; // Make sure path is correct
 
 class PDF_EXTENDED extends FPDF
 {
-  public $department;
+  public $college;
   private $conn;
 
   function __construct($orientation = 'P', $unit = 'mm', $size = 'A4', $conn = null)
@@ -24,16 +24,16 @@ class PDF_EXTENDED extends FPDF
     $college_phone = '';
     $college_email = '';
 
-    // Get department info dynamically
-    if ($this->conn && !empty($this->department)) {
+    // Get college info dynamically
+    if ($this->conn && !empty($this->college)) {
       // Use prepared statement to prevent SQL injection
-      $stmt = $this->conn->prepare("SELECT * FROM department_info WHERE department_name = ? LIMIT 1");
-      $stmt->bind_param("s", $this->department);
+      $stmt = $this->conn->prepare("SELECT * FROM college_info WHERE college_name = ? LIMIT 1");
+      $stmt->bind_param("s", $this->college);
       $stmt->execute();
       $result = $stmt->get_result();
 
       if ($result && $row = $result->fetch_assoc()) {
-        $college_name = strtoupper($row['department_name']); // Using department_name as requested
+        $college_name = strtoupper($row['college_name']); // Using college_name as requested
         $college_website = $row['website'] ?: $college_website;
         $college_phone = $row['phone'] ?: $college_phone;
         $college_email = $row['email'] ?: $college_email;

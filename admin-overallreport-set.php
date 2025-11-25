@@ -8,20 +8,20 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Fetch all departments assigned to this admin
-$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// Fetch all college assigned to this admin
+$stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$departments = [];
+$college = [];
 while ($row = $result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 $stmt->close();
 
-// Use first department as default (for display/title)
-$admin_department = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+// Use first college as default (for display/title)
+$admin_college = !empty($college) ? implode(', ', $college) : 'No college Assigned';
 
 
 // Get filter values from request
@@ -48,13 +48,13 @@ while ($row = $res->fetch_assoc()) {
 }
 $res->close();
 
-// Fetch all faculty in the admin's assigned departments
-// Fetch all faculty in the admin's assigned departments AND programs
+// Fetch all faculty in the admin's assigned college
+// Fetch all faculty in the admin's assigned college AND programs
 $faculties = [];
 
 // ✅ FIRST, get the admin's assignments as pairs
 $admin_assignments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_admin_dept->bind_param("s", $admin_id);
 $stmt_admin_dept->execute();
 $result = $stmt_admin_dept->get_result();
@@ -71,8 +71,8 @@ if (!empty($admin_assignments)) {
   $types = "";
 
   foreach ($admin_assignments as $assignment) {
-    $faculty_query_parts[] = "(department = ? AND program = ?)";
-    $params[] = $assignment['department_name'];
+    $faculty_query_parts[] = "(college = ? AND program = ?)";
+    $params[] = $assignment['college_name'];
     $params[] = $assignment['program_name'];
     $types .= "ss";
   }
@@ -143,9 +143,9 @@ foreach ($faculties as $fac) {
   $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg_display}</td></tr>";
 }
 
-$department_average = 0;
+$college_average = 0;
 if ($faculty_count_with_evals > 0) {
-  $department_average = $total_avg_rating / $faculty_count_with_evals;
+  $college_average = $total_avg_rating / $faculty_count_with_evals;
 }
 // --- END ADD ---
 ?>
@@ -190,7 +190,7 @@ if ($faculty_count_with_evals > 0) {
               <div class="card-body">
 
                 <h4 class="card-title text-center my-3">
-                  Overall SET Report – <?= htmlspecialchars($admin_department) ?>
+                  Overall SET Report – <?= htmlspecialchars($admin_college) ?>
                 </h4>
 
                 <!-- 🔹 Filter Form -->
@@ -244,7 +244,7 @@ if ($faculty_count_with_evals > 0) {
                     <tfoot>
                       <tr class="table-light fw-bold">
                         <td colspan="2" class="text-end">College Average:</td>
-                        <td><?= number_format($department_average, 2) ?></td>
+                        <td><?= number_format($college_average, 2) ?></td>
                       </tr>
                     </tfoot>
                   </table>

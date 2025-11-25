@@ -9,22 +9,22 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// ✅ Get all departments assigned to the logged-in admin
-$admin_departments = [];
-$stmt_admin_dept = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Get all colleges assigned to the logged-in admin
+$admin_college = [];
+$stmt_admin_dept = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 if ($stmt_admin_dept) {
   $stmt_admin_dept->bind_param("s", $admin_id);
   $stmt_admin_dept->execute();
   $result = $stmt_admin_dept->get_result();
   while ($row = $result->fetch_assoc()) {
-    $admin_departments[] = $row['department_name'];
+    $admin_college[] = $row['college_name'];
   }
   $stmt_admin_dept->close();
 }
 
-// Handle case where admin has no assigned departments
-if (empty($admin_departments)) {
-  die("You are not assigned to any department. Please contact the Superadmin.");
+// Handle case where admin has no assigned colleges
+if (empty($admin_college)) {
+  die("You are not assigned to any college. Please contact the Superadmin.");
 }
 
 
@@ -96,10 +96,10 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
             <select class="form-select" name="faculty_id" id="faculty_id" required>
               <option value="" disabled selected>-- Choose Faculty --</option>
               <?php
-              // ✅ Fetch faculty from all departments assigned to this admin
+              // ✅ Fetch faculty from all colleges assigned to this admin
               $faculty_query = "SELECT idnumber, first_name, mid_name, last_name 
                                 FROM faculty 
-                                WHERE department IN ('" . implode("','", $admin_departments) . "')
+                                WHERE college IN ('" . implode("','", $admin_college) . "')
                                 ORDER BY last_name ASC";
               $faculty_result = $conn->query($faculty_query);
               while ($row = $faculty_result->fetch_assoc()) {
@@ -179,16 +179,16 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
           $admin_eval_params[] = $selected_academic_year;
         }
 
-        // ✅ Restrict data to admin’s assigned departments only
-        if (!empty($admin_departments)) {
-          $in_placeholder = implode(',', array_fill(0, count($admin_departments), '?'));
-          $eval_where[] = "department IN ($in_placeholder)";
-          $admin_eval_where[] = "department IN ($in_placeholder)";
+        // ✅ Restrict data to admin’s assigned colleges only
+        if (!empty($admin_college)) {
+          $in_placeholder = implode(',', array_fill(0, count($admin_college), '?'));
+          $eval_where[] = "college IN ($in_placeholder)";
+          $admin_eval_where[] = "college IN ($in_placeholder)";
 
-          $eval_types .= str_repeat('s', count($admin_departments));
-          $admin_eval_types .= str_repeat('s', count($admin_departments));
-          $eval_params = array_merge($eval_params, $admin_departments);
-          $admin_eval_params = array_merge($admin_eval_params, $admin_departments);
+          $eval_types .= str_repeat('s', count($admin_college));
+          $admin_eval_types .= str_repeat('s', count($admin_college));
+          $eval_params = array_merge($eval_params, $admin_college);
+          $admin_eval_params = array_merge($admin_eval_params, $admin_college);
         }
 
         $eval_where_sql = implode(' AND ', $eval_where);
@@ -197,7 +197,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 
         // Get faculty info using prepared statement
         $fname = $mname = $lname = $dept = $rank = '';
-        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
         if ($stmt) {
           $stmt->bind_param("s", $faculty_id);
           $stmt->execute();
@@ -266,15 +266,15 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
         }
 
 
-        // Get the supervisor (Dean / Chair / Program Chair) of the same department
-        // ✅ Get the supervisor (Dean / Chair / Program Chair) of the same department
+        // Get the supervisor (Dean / Chair / Program Chair) of the same college
+        // ✅ Get the supervisor (Dean / Chair / Program Chair) of the same college
         $evaluator_name = 'N/A';
 
-        // Find any admin who is assigned to the same department as the faculty
+        // Find any admin who is assigned to the same college as the faculty
         $stmt_supervisor = $conn->prepare("SELECT a.first_name, a.mid_name, a.last_name, a.position
                                                   FROM admin a
-                                                  INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                                                  WHERE ad.department_name = ?
+                                                  INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+                                                  WHERE ad.college_name = ?
                                                     AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%')
                                                   ORDER BY 
                                                     CASE 
@@ -307,7 +307,7 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
               <td><?= htmlspecialchars($full_name) ?></td>
             </tr>
             <tr>
-              <th>Department/College</th>
+              <th>college/College</th>
               <td><?= htmlspecialchars($dept_display) ?></td>
             </tr>
             <tr>

@@ -20,7 +20,7 @@ $student_id = $data['student_id'];
 $faculty_id = $data['faculty_id'];
 $subject_code = $data['subject_code'];
 $academic_year = $data['academic_year'];
-$department = $data['department'];
+$college = $data['college'];
 $is_anonymous = $data['is_anonymous'] ?? 'no';
 $answers = $data['answers'] ?? [];
 
@@ -83,7 +83,7 @@ $pdf->Ln(3);
 // Info Section
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Name of Faculty being Evaluated: " . $faculty_name, 0, 1);
-$pdf->Cell(0, 6, "Department/College: " . $department, 0, 1);
+$pdf->Cell(0, 6, "College: " . $college, 0, 1);
 $pdf->Cell(0, 6, "Course Code/Title: " . $subject_code . " - " . $subject_title, 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $academic_year, 0, 1);
 $pdf->Ln(4);

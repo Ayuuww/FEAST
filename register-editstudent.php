@@ -28,11 +28,11 @@ if (!$student) {
 }
 
 // --- ✅ MODIFICATION 1: Fetch all data for dynamic dropdowns ---
-$query = "SELECT DISTINCT department_name, program_name, section_name 
+$query = "SELECT DISTINCT college_name, program_name, section_name 
           FROM adds 
-          WHERE department_name IS NOT NULL AND department_name != '' 
+          WHERE college_name IS NOT NULL AND college_name != '' 
             AND program_name IS NOT NULL AND program_name != ''
-          ORDER BY department_name, program_name, section_name";
+          ORDER BY college_name, program_name, section_name";
 
 $result = $conn->query($query);
 if (!$result) {
@@ -41,7 +41,7 @@ if (!$result) {
 
 $data = [];
 while ($row = $result->fetch_assoc()) {
-  $dept = $row['department_name'];
+  $dept = $row['college_name'];
   $prog = $row['program_name'];
   $sect = $row['section_name']; // This might be NULL, and that's okay
 
@@ -60,14 +60,14 @@ while ($row = $result->fetch_assoc()) {
 
 // --- ✅ MODIFICATION 2: Handle form submission with 'program' ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $new_department = $_POST['department'];
+  $new_college = $_POST['college'];
   $new_program = $_POST['program']; // Added this
   $new_section = $_POST['section'];
 
   // Added 'program = ?'
-  $update = $conn->prepare("UPDATE student SET department = ?, program = ?, section = ? WHERE idnumber = ?");
+  $update = $conn->prepare("UPDATE student SET college = ?, program = ?, section = ? WHERE idnumber = ?");
   // Added '$new_program' and changed type string to "ssss"
-  $update->bind_param("ssss", $new_department, $new_program, $new_section, $student_id);
+  $update->bind_param("ssss", $new_college, $new_program, $new_section, $student_id);
 
   if ($update->execute()) {
     // We must re-fetch the student data AFTER update
@@ -179,10 +179,10 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-floating mb-3">
-                    <select name="department" class="form-select" id="department" required>
-                      <option value="" disabled>Select Department</option>
+                    <select name="college" class="form-select" id="college" required>
+                      <option value="" disabled>Select college</option>
                     </select>
-                    <label for="department">Department</label>
+                    <label for="college">college</label>
                   </div>
                 </div>
 
@@ -216,12 +216,12 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
     const allData = <?php echo json_encode($data); ?>;
 
     // Get student's current values
-    const currentDept = "<?= htmlspecialchars($student['department']) ?>";
+    const currentDept = "<?= htmlspecialchars($student['college']) ?>";
     const currentProg = "<?= htmlspecialchars($student['program']) ?>";
     // const currentSect = "<?= htmlspecialchars($student['section']) ?>"; // Not needed by JS
 
     document.addEventListener('DOMContentLoaded', function() {
-      const deptSelect = document.getElementById('department');
+      const deptSelect = document.getElementById('college');
       const progSelect = document.getElementById('program');
       // --- Section select is no longer controlled by JavaScript ---
 
@@ -242,9 +242,9 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
         }
       }
 
-      // --- 1. Populate Departments on Page Load ---
-      const departments = Object.keys(allData);
-      departments.forEach(dept => {
+      // --- 1. Populate Colleges on Page Load ---
+      const college = Object.keys(allData);
+      college.forEach(dept => {
         const option = new Option(dept, dept);
         deptSelect.add(option);
       });

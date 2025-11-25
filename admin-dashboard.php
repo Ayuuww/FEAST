@@ -31,56 +31,56 @@ if ($setting_result && $setting_result->num_rows > 0) {
 }
 
 
-// ✅ Get all departments for this admin (can be multiple)
-$dept_query = "SELECT department_name FROM admin_departments WHERE admin_idnumber = ?";
+// ✅ Get all college for this admin (can be multiple)
+$dept_query = "SELECT college_name FROM admin_college WHERE admin_idnumber = ?";
 $stmt = $conn->prepare($dept_query);
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$departments = [];
+$college = [];
 while ($row = $result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 
 // Create a comma-separated string for display
-$department_list = implode(", ", $departments);
+$college_list = implode(", ", $college);
 
-// In case no department assigned
-if (empty($departments)) {
-  $departments = ['None'];
+// In case no college assigned
+if (empty($college)) {
+  $college = ['None'];
 }
 
-// Count faculty in same department
-// Build placeholders (?, ?, ?) dynamically for each department
-$placeholders = implode(',', array_fill(0, count($departments), '?'));
-$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE department IN ($placeholders) AND status = 'active'";
+// Count faculty in same college
+// Build placeholders (?, ?, ?) dynamically for each college
+$placeholders = implode(',', array_fill(0, count($college), '?'));
+$faculty_query = "SELECT COUNT(*) AS total FROM faculty WHERE college IN ($placeholders) AND status = 'active'";
 $stmt = $conn->prepare($faculty_query);
-$types = str_repeat('s', count($departments));
-$stmt->bind_param($types, ...$departments);
+$types = str_repeat('s', count($college));
+$stmt->bind_param($types, ...$college);
 $stmt->execute();
 $totalfaculty = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
-// Count students in same department
-$student_query = "SELECT COUNT(*) AS total FROM student WHERE department IN ($placeholders)";
+// Count students in same college
+$student_query = "SELECT COUNT(*) AS total FROM student WHERE college IN ($placeholders)";
 $stmt = $conn->prepare($student_query);
-$types = str_repeat('s', count($departments));
-$stmt->bind_param($types, ...$departments);
+$types = str_repeat('s', count($college));
+$stmt->bind_param($types, ...$college);
 $stmt->execute();
 $totalstudent = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
 // Count total evaluations from students
-$placeholders = implode(',', array_fill(0, count($departments), '?'));
+$placeholders = implode(',', array_fill(0, count($college), '?'));
 $student_eval_query = "
   SELECT COUNT(*) AS total FROM evaluation e
   JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department IN ($placeholders)
+  WHERE f.college IN ($placeholders)
   AND e.academic_year = ?
   AND e.semester = ?
 ";
 $stmt = $conn->prepare($student_eval_query);
-$types = str_repeat('s', count($departments)) . 'ss';
-$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$types = str_repeat('s', count($college)) . 'ss';
+$params = array_merge($college, [$current_acad_year, $current_semester]);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $student_eval_count = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
@@ -89,13 +89,13 @@ $student_eval_count = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 $admin_eval_query = "
   SELECT COUNT(*) AS total FROM admin_evaluation ae
   JOIN faculty f ON ae.evaluatee_id = f.idnumber
-  WHERE f.department IN ($placeholders)
+  WHERE f.college IN ($placeholders)
   AND ae.academic_year = ?
   AND ae.semester = ?
 ";
 $stmt = $conn->prepare($admin_eval_query);
-$types = str_repeat('s', count($departments)) . 'ss';
-$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$types = str_repeat('s', count($college)) . 'ss';
+$params = array_merge($college, [$current_acad_year, $current_semester]);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $admin_eval_count = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
@@ -109,13 +109,13 @@ $eval_trend_query = "
     SELECT e.created_at AS eval_time, 'student' AS type
     FROM evaluation e
     JOIN faculty f ON e.faculty_id = f.idnumber
-    WHERE f.department IN ($placeholders)
+    WHERE f.college IN ($placeholders)
     AND e.academic_year = ?
     AND e.semester = ?
 ";
 $stmt = $conn->prepare($eval_trend_query);
-$types = str_repeat('s', count($departments)) . 'ss';
-$params = array_merge($departments, [$current_acad_year, $current_semester]);
+$types = str_repeat('s', count($college)) . 'ss';
+$params = array_merge($college, [$current_acad_year, $current_semester]);
 $stmt->bind_param($types, ...$params);
 $stmt->execute();
 $result_student = $stmt->get_result();
@@ -131,7 +131,7 @@ $admin_eval_trend_query = "
     SELECT ae.evaluation_date AS eval_time, 'admin' AS type
     FROM admin_evaluation ae
     JOIN faculty f ON ae.evaluatee_id = f.idnumber
-    WHERE f.department IN ($placeholders)
+    WHERE f.college IN ($placeholders)
     AND ae.academic_year = ?
     AND ae.semester = ?
 ";
@@ -289,14 +289,14 @@ foreach ($all_evals as $eval) {
                 <li class="dropdown-header">Academic Year</li>
                 <li><a class="dropdown-item progress-year-filter active" href="#" data-year="All">All</a></li>
                 <?php
-                // ✅ FIX: Query is now scoped to the admin's departments and uses prepared statements
+                // ✅ FIX: Query is now scoped to the admin's college and uses prepared statements
                 $year_sql = "SELECT DISTINCT e.academic_year 
                             FROM evaluation e
                             JOIN faculty f ON e.faculty_id = f.idnumber
-                            WHERE f.department IN (" . implode(',', array_fill(0, count($departments), '?')) . ")
+                            WHERE f.college IN (" . implode(',', array_fill(0, count($college), '?')) . ")
                             ORDER BY e.academic_year DESC";
                 $year_stmt = $conn->prepare($year_sql);
-                $year_stmt->bind_param(str_repeat('s', count($departments)), ...$departments);
+                $year_stmt->bind_param(str_repeat('s', count($college)), ...$college);
                 $year_stmt->execute();
                 $year_result = $year_stmt->get_result();
                 while ($row = $year_result->fetch_assoc()): ?>
@@ -313,14 +313,14 @@ foreach ($all_evals as $eval) {
                 <li class="dropdown-header">Semester</li>
                 <li><a class="dropdown-item progress-semester-filter active" href="#" data-semester="All">All</a></li>
                 <?php
-                // ✅ FIX: Query is now scoped to the admin's departments and uses prepared statements
+                // ✅ FIX: Query is now scoped to the admin's college and uses prepared statements
                 $sem_sql = "SELECT DISTINCT e.semester 
                             FROM evaluation e
                             JOIN faculty f ON e.faculty_id = f.idnumber
-                            WHERE f.department IN (" . implode(',', array_fill(0, count($departments), '?')) . ")
+                            WHERE f.college IN (" . implode(',', array_fill(0, count($college), '?')) . ")
                             ORDER BY e.semester ASC";
                 $sem_stmt = $conn->prepare($sem_sql);
-                $sem_stmt->bind_param(str_repeat('s', count($departments)), ...$departments);
+                $sem_stmt->bind_param(str_repeat('s', count($college)), ...$college);
                 $sem_stmt->execute();
                 $sem_result = $sem_stmt->get_result();
                 while ($row = $sem_result->fetch_assoc()):

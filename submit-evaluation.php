@@ -23,7 +23,7 @@ $setting_stmt->close();
 $student_id     = $_SESSION['idnumber'];
 $academic_year  = $_POST['academic_year'] ?? $current_year;
 $semester       = $_POST['semester'] ?? $current_semester;
-$department     = $_POST['department'] ?? '';
+$college        = $_POST['college'] ?? '';
 $comment        = $_POST['comment'] ?? '';
 // ✅ NEW: Get the anonymous value
 $is_anonymous   = $_POST['is_anonymous'] ?? 'no'; // Default to 'no'
@@ -108,7 +108,7 @@ try {
   // ✅ FIX: Insert into main evaluation table (added is_anonymous)
   $stmt = $conn->prepare("INSERT INTO evaluation (
             student_id, faculty_id, subject_code, subject_title,
-            department, academic_year, semester,
+            college, academic_year, semester,
             total_score, computed_rating, comment, student_section, is_anonymous
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
 
@@ -118,7 +118,7 @@ try {
     $faculty_id,
     $subject_code,
     $subject_title,
-    $department,
+    $college,
     $academic_year,
     $semester,
     $total_score,
@@ -147,7 +147,7 @@ try {
 
   // ✅ FIX: Insert into archive table (added is_anonymous)
   $archive_stmt = $conn->prepare("INSERT INTO student_evaluation_submissions (
-            student_id, subject_code, faculty_id, department,
+            student_id, subject_code, faculty_id, college,
             academic_year, semester, answers,
             total_score, computed_rating, comment, is_anonymous
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
@@ -157,7 +157,7 @@ try {
     $student_id,
     $subject_code,
     $faculty_id,
-    $department,
+    $college,
     $academic_year,
     $semester,
     $answers_json,
@@ -179,7 +179,7 @@ try {
     'faculty_id' => $faculty_id,
     'subject_code' => $subject_code,
     'academic_year' => $academic_year,
-    'department' => $department,
+    'college' => $college,
     'is_anonymous' => $is_anonymous,
     'answers' => $answers,
     'total_score' => $total_score,

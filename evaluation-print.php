@@ -151,7 +151,7 @@ $questions = [
         <div class="row mb-3">
           <div class="col-12">
             <p><strong>Name of Faculty being Evaluated:</strong> <span class="text-capitalize fw-bold"><?= htmlspecialchars($faculty_name) ?></span></p>
-            <p><strong>Department/College:</strong> <?= htmlspecialchars($data['department']) ?></p>
+            <p><strong>College:</strong> <?= htmlspecialchars($data['college']) ?></p>
             <p><strong>Subject Code/Title:</strong> <?= htmlspecialchars($data['subject_code'] . "/" . $data['subject_title']) ?></p>
             <p><strong>Academic Year:</strong> <?= htmlspecialchars($data['academic_year']) ?></p>
           </div>

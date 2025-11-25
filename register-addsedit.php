@@ -26,8 +26,8 @@ switch ($type) {
   case 'Section':
     $column = 'section_name';
     break;
-  case 'Department':
-    $column = 'department_name';
+  case 'college':
+    $column = 'college_name';
     break;
   case 'Program':
     $column = 'program_name';
@@ -43,10 +43,10 @@ if (!$column) {
 
 // 🟢 Fetch current values
 if ($type === 'Program') {
-  $stmt = $conn->prepare("SELECT program_name, department_name FROM adds WHERE id = ?");
+  $stmt = $conn->prepare("SELECT program_name, college_name FROM adds WHERE id = ?");
   $stmt->bind_param("i", $id);
   $stmt->execute();
-  $stmt->bind_result($current_program, $current_department);
+  $stmt->bind_result($current_program, $current_college);
   $stmt->fetch();
   $stmt->close();
 } else {
@@ -62,24 +62,24 @@ if ($type === 'Program') {
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   if ($type === 'Program') {
     $new_program = trim($_POST['program_name']);
-    $new_department = trim($_POST['department_name']);
+    $new_college = trim($_POST['college_name']);
 
-    if ($new_program && $new_department) {
+    if ($new_program && $new_college) {
       // Check for duplicates
-      $check = $conn->prepare("SELECT id FROM adds WHERE LOWER(program_name)=LOWER(?) AND LOWER(department_name)=LOWER(?) AND id != ?");
-      $check->bind_param("ssi", $new_program, $new_department, $id);
+      $check = $conn->prepare("SELECT id FROM adds WHERE LOWER(program_name)=LOWER(?) AND LOWER(college_name)=LOWER(?) AND id != ?");
+      $check->bind_param("ssi", $new_program, $new_college, $id);
       $check->execute();
       $check->store_result();
 
       if ($check->num_rows > 0) {
-        $message = "Program already exists in this department!";
+        $message = "Program already exists in this college!";
       } else {
-        $stmt = $conn->prepare("UPDATE adds SET program_name = ?, department_name = ? WHERE id = ?");
-        $stmt->bind_param("ssi", $new_program, $new_department, $id);
+        $stmt = $conn->prepare("UPDATE adds SET program_name = ?, college_name = ? WHERE id = ?");
+        $stmt->bind_param("ssi", $new_program, $new_college, $id);
         if ($stmt->execute()) {
           $message = "Program updated successfully!";
           $current_program = $new_program;
-          $current_department = $new_department;
+          $current_college = $new_college;
         } else {
           $message = "Update failed.";
         }
@@ -122,9 +122,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $old_value_query->close();
 
             // --- CASCADE UPDATE (IMPORTANT PART) ---
-            // If editing department_name → update ALL rows with the same old department_name
-            if ($column === 'department_name') {
-              $stmt = $conn->prepare("UPDATE adds SET department_name = ? WHERE department_name = ?");
+            // If editing college_name → update ALL rows with the same old college_name
+            if ($column === 'college_name') {
+              $stmt = $conn->prepare("UPDATE adds SET college_name = ? WHERE college_name = ?");
               $stmt->bind_param("ss", $new_value, $old_value);
             } else {
               // Normal update for Rank / Position / Section
@@ -193,13 +193,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 <div class="col-md-12">
                   <label class="form-label">Select College</label>
-                  <select name="department_name" class="form-select" required>
+                  <select name="college_name" class="form-select" required>
                     <option value="">-- Choose College --</option>
                     <?php
-                    $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
-                    while ($dept = $departments->fetch_assoc()):
-                      $selected = ($current_department === $dept['department_name']) ? 'selected' : '';
-                      echo "<option value='" . htmlspecialchars($dept['department_name']) . "' $selected>" . htmlspecialchars($dept['department_name']) . "</option>";
+                    $college = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' ORDER BY college_name ASC");
+                    while ($dept = $college->fetch_assoc()):
+                      $selected = ($current_college === $dept['college_name']) ? 'selected' : '';
+                      echo "<option value='" . htmlspecialchars($dept['college_name']) . "' $selected>" . htmlspecialchars($dept['college_name']) . "</option>";
                     endwhile;
                     ?>
                   </select>

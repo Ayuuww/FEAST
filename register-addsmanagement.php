@@ -22,8 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       case 'Section':
         $column = 'section_name';
         break;
-      case 'Department':
-        $column = 'department_name';
+      case 'college':
+        $column = 'college_name';
         break;
       case 'Program':
         $column = 'program_name';
@@ -34,27 +34,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($column) {
       if ($type === 'Program') {
-        $department_name = trim($_POST['department_name'] ?? '');
-        if (empty($department_name)) {
-          $_SESSION['msg'] = "Please select a department for the program.";
+        $college_name = trim($_POST['college_name'] ?? '');
+        if (empty($college_name)) {
+          $_SESSION['msg'] = "Please select a college for the program.";
           $_SESSION['msg_type'] = "warning";
           header("Location: register-addsmanagement.php");
           exit();
         }
 
-        $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER(program_name)=LOWER(?) AND LOWER(department_name)=LOWER(?)");
-        $check->bind_param("ss", $value, $department_name);
+        $check = $conn->prepare("SELECT COUNT(*) FROM adds WHERE LOWER(program_name)=LOWER(?) AND LOWER(college_name)=LOWER(?)");
+        $check->bind_param("ss", $value, $college_name);
         $check->execute();
         $check->bind_result($count);
         $check->fetch();
         $check->close();
 
         if ($count > 0) {
-          $_SESSION['msg'] = "Program already exists in this department.";
+          $_SESSION['msg'] = "Program already exists in this college.";
           $_SESSION['msg_type'] = "warning";
         } else {
-          $stmt = $conn->prepare("INSERT INTO adds (department_name, program_name) VALUES (?, ?)");
-          $stmt->bind_param("ss", $department_name, $value);
+          $stmt = $conn->prepare("INSERT INTO adds (college_name, program_name) VALUES (?, ?)");
+          $stmt->bind_param("ss", $college_name, $value);
           $stmt->execute();
           $_SESSION['msg'] = "Program added successfully!";
           $_SESSION['msg_type'] = "success";
@@ -166,12 +166,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <form method="POST" class="row g-3">
           <div class="col-md-4">
             <label class="form-label">Type</label>
-            <select class="form-select" name="type" id="type" onchange="toggleDepartmentDropdown()" required>
+            <select class="form-select" name="type" id="type" onchange="togglecollegeDropdown()" required>
               <option value="">-- Select Type --</option>
               <option value="Rank">Rank</option>
               <option value="Position">Position</option>
               <option value="Section">Section</option>
-              <option value="Department">College</option>
+              <option value="college">College</option>
               <option value="Program">Program</option>
             </select>
           </div>
@@ -179,15 +179,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <label class="form-label">Name</label>
             <input type="text" class="form-control" name="value" required>
           </div>
-          <div class="col-md-4 d-none" id="departmentField">
+          <div class="col-md-4 d-none" id="collegeField">
             <label class="form-label">Select College</label>
-            <select class="form-select" name="department_name">
+            <select class="form-select" name="college_name">
               <option value="">-- Choose College --</option>
               <?php
-              $departments = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
-              while ($row = $departments->fetch_assoc()):
+              $college = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' ORDER BY college_name ASC");
+              while ($row = $college->fetch_assoc()):
               ?>
-                <option value="<?= htmlspecialchars($row['department_name']) ?>"><?= htmlspecialchars($row['department_name']) ?></option>
+                <option value="<?= htmlspecialchars($row['college_name']) ?>"><?= htmlspecialchars($row['college_name']) ?></option>
               <?php endwhile; ?>
             </select>
           </div>
@@ -203,21 +203,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           <h5 class="mb-3"><i class="bi bi-building"></i> Colleges & Programs</h5>
           <?php
           $colleges = $conn->query("
-  SELECT id, department_name
+  SELECT id, college_name
   FROM adds
-  WHERE department_name IS NOT NULL 
-    AND department_name != '' 
+  WHERE college_name IS NOT NULL 
+    AND college_name != '' 
     AND (program_name IS NULL OR program_name = '')
-  ORDER BY department_name ASC
+  ORDER BY college_name ASC
 ");
           while ($col = $colleges->fetch_assoc()):
-            $dept = $col['department_name'];
-            $programs = $conn->query("SELECT id, program_name FROM adds WHERE department_name='$dept' AND program_name IS NOT NULL ORDER BY program_name ASC");
+            $dept = $col['college_name'];
+            $programs = $conn->query("SELECT id, program_name FROM adds WHERE college_name='$dept' AND program_name IS NOT NULL ORDER BY program_name ASC");
           ?>
             <div class="college-card">
               <div class="d-flex justify-content-between align-items-center">
                 <div class="college-title text-success"><?= htmlspecialchars($dept) ?></div>
-                <a href="register-addsedit.php?id=<?= $col['id'] ?>&type=Department" class="btn btn-sm btn-warning">Edit</a>
+                <a href="register-addsedit.php?id=<?= $col['id'] ?>&type=college" class="btn btn-sm btn-warning">Edit</a>
               </div>
               <?php if ($programs->num_rows > 0): ?>
                 <ul class="program-list">
@@ -305,9 +305,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       });
     });
 
-    function toggleDepartmentDropdown() {
+    function togglecollegeDropdown() {
       const type = document.getElementById("type").value;
-      const field = document.getElementById("departmentField");
+      const field = document.getElementById("collegeField");
       field.classList.toggle("d-none", type !== "Program");
     }
   </script>

@@ -59,7 +59,7 @@ $query = "SELECT
               COALESCE(f.mid_name, a.mid_name) AS mid_name,
               COALESCE(f.last_name, a.last_name) AS last_name,
               COALESCE(f.status, a.status) AS status,
-              COALESCE(f.department, ad.department_name, s.department) AS department,
+              COALESCE(f.college, ad.college_name, s.college) AS college,
               CASE
                   WHEN f.idnumber IS NOT NULL THEN 'faculty'
                   WHEN a.idnumber IS NOT NULL THEN 'admin'
@@ -72,7 +72,7 @@ $query = "SELECT
             ON ss.faculty_id = f.idnumber AND f.status = 'active'
           LEFT JOIN admin a 
             ON ss.admin_id = a.idnumber AND a.status = 'active'
-          LEFT JOIN admin_departments ad 
+          LEFT JOIN admin_college ad 
             ON ad.admin_idnumber = a.idnumber
           WHERE ss.student_id = ?
             AND ss.academic_year = ?
@@ -98,14 +98,14 @@ while ($row = $result->fetch_assoc()) {
   $subjects[] = $row;
 }
 
-// Fetching faculty department (used for dropdown, but not directly tied to the subjects for evaluation)
-$dept_query = "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC";
+// Fetching faculty college (used for dropdown, but not directly tied to the subjects for evaluation)
+$dept_query = "SELECT DISTINCT college FROM faculty WHERE college IS NOT NULL AND college != '' ORDER BY college ASC";
 $dept_result = mysqli_query($conn, $dept_query);
-$department = [];
+$college = [];
 
 if ($dept_result && mysqli_num_rows($dept_result) > 0) {
   while ($row = mysqli_fetch_assoc($dept_result)) {
-    $department[] = $row;
+    $college[] = $row;
   }
 }
 
@@ -247,7 +247,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                                   $tag = $row['role'] === 'admin' ? ' (Admin)' : '';
                                 ?>
                                   <option value="<?= $subjectCode . '|' . $facultyId ?>"
-                                    data-department="<?= htmlspecialchars($row['department']) ?>">
+                                    data-college="<?= htmlspecialchars($row['college']) ?>">
                                     <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName . $tag ?>
                                   </option>
                                 <?php endforeach; ?>
@@ -475,7 +475,7 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
                       </div>
 
                       <input type="hidden" name="student_section" value="<?= htmlspecialchars($student_section ?? '') ?>">
-                      <input type="hidden" name="department" id="department_hidden">
+                      <input type="hidden" name="college" id="college_hidden">
 
                       <div class="col-md-4 offset-md-4 mb-3">
                         <button type="submit" class="btn btn-success btn-block w-100 <?= $evaluation_closed || empty($subjects) ? 'disabled-button' : '' ?>"
@@ -557,12 +557,12 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
         input.addEventListener('change', calculateScore);
       });
 
-      const deptHiddenInput = document.getElementById('department_hidden');
+      const deptHiddenInput = document.getElementById('college_hidden');
 
       subjectSelect.addEventListener('change', function() {
         const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
-        const department = selectedOption.getAttribute('data-department') || '';
-        deptHiddenInput.value = department;
+        const college = selectedOption.getAttribute('data-college') || '';
+        deptHiddenInput.value = college;
         calculateScore(); // Recalculate score and re-check button state when subject changes
       });
 

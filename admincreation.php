@@ -17,14 +17,14 @@ if (isset($_POST['submit'])) {
     $faculty_rank = $_POST['faculty_rank'] ?? NULL;
 
     // ✅ Main assignment (required)
-    $main_department = $_POST['main_department'];
+    $main_college = $_POST['main_college'];
     // Use empty string '' if NULL, to match database (NOT NULL)
     $main_program = $_POST['main_program'] ?? '';
 
     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
     // ✅ Optional additional assignments
-    $departments = $_POST['departments'] ?? [];
+    $college = $_POST['college'] ?? [];
     $programs_by_dept = $_POST['programs'] ?? [];
 
     // ✅ Use an array to track added entries and prevent duplicates
@@ -54,7 +54,7 @@ if (isset($_POST['submit'])) {
         // ✅ 2. Insert into faculty (mirror record)
         $stmt_faculty = $conn->prepare("
             INSERT INTO faculty 
-            (idnumber, first_name, mid_name, last_name, password, role, status, department, program, faculty_rank)
+            (idnumber, first_name, mid_name, last_name, password, role, status, college, program, faculty_rank)
             VALUES (?, ?, ?, ?, NULL, 'faculty', 'active', ?, ?, ?)
         ");
         $stmt_faculty->bind_param(
@@ -63,28 +63,28 @@ if (isset($_POST['submit'])) {
             $first_name,
             $mid_name,
             $last_name,
-            $main_department,
+            $main_college,
             $main_program,
             $faculty_rank
         );
         $stmt_faculty->execute();
 
-        // ✅ 3. Prepare statement for admin_departments
+        // ✅ 3. Prepare statement for admin_college
         $stmt_dept = $conn->prepare("
-            INSERT INTO admin_departments (admin_idnumber, department_name, program_name)
+            INSERT INTO admin_college (admin_idnumber, college_name, program_name)
             VALUES (?, ?, ?)
         ");
 
-        // ✅ 4. Insert the MAIN department/program assignment
+        // ✅ 4. Insert the MAIN college/program assignment
         // This is the primary admin role
-        $stmt_dept->bind_param("sss", $idnumber, $main_department, $main_program);
+        $stmt_dept->bind_param("sss", $idnumber, $main_college, $main_program);
         $stmt_dept->execute();
         // Track it to avoid duplicates
-        $added_assignments[$main_department . "::" . $main_program] = true;
+        $added_assignments[$main_college . "::" . $main_program] = true;
 
 
         // ✅ 5. Loop and insert *ADDITIONAL* assignments (from multi-select)
-        foreach ($departments as $dept_name) {
+        foreach ($college as $dept_name) {
             if (isset($programs_by_dept[$dept_name]) && !empty($programs_by_dept[$dept_name])) {
                 // Admin is assigned to specific programs in this dept
                 foreach ($programs_by_dept[$dept_name] as $prog_name) {
@@ -99,7 +99,7 @@ if (isset($_POST['submit'])) {
                     $added_assignments[$key] = true; // Track it
                 }
             } else {
-                // Admin is assigned to the whole department (program_name = '')
+                // Admin is assigned to the whole college (program_name = '')
                 $prog_name = '';
                 $key = $dept_name . "::" . $prog_name;
                 // Skip if this was already added as the "Main" assignment

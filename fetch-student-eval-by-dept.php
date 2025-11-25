@@ -4,12 +4,12 @@ session_start();
 
 $admin_id = $_SESSION['idnumber'] ?? '';
 
-// Get the department of the logged-in admin
-$dept_stmt = $conn->prepare("SELECT department FROM admin WHERE idnumber = ?");
+// Get the college of the logged-in admin
+$dept_stmt = $conn->prepare("SELECT college FROM admin WHERE idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
-$department = $dept_result->fetch_assoc()['department'] ?? '';
+$college = $dept_result->fetch_assoc()['college'] ?? '';
 
 $year = $_GET['year'] ?? 'All';
 $semester = $_GET['semester'] ?? 'All';
@@ -18,10 +18,10 @@ $query = "
   SELECT f.idnumber, f.first_name, f.mid_name, f.last_name, AVG(e.computed_rating) as avg_rating
   FROM evaluation e
   JOIN faculty f ON e.faculty_id = f.idnumber
-  WHERE f.department = ?
+  WHERE f.college = ?
 ";
 
-$params = [$department];
+$params = [$college];
 $types = 's';
 
 if ($year !== 'All') {

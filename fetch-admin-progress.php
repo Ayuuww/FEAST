@@ -10,20 +10,20 @@ if (!isset($_SESSION['idnumber'])) {
 }
 $admin_id = $_SESSION['idnumber'];
 
-// ✅ 1. Get all departments assigned to the logged-in admin
-$stmt_depts = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ 1. Get all college assigned to the logged-in admin
+$stmt_depts = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_depts->bind_param("s", $admin_id);
 $stmt_depts->execute();
 $result_depts = $stmt_depts->get_result();
 
-$departments = [];
+$college = [];
 while ($row = $result_depts->fetch_assoc()) {
-    $departments[] = $row['department_name'];
+    $college[] = $row['college_name'];
 }
 $stmt_depts->close();
 
-// If admin has no departments, return empty data to prevent errors
-if (empty($departments)) {
+// If admin has no college, return empty data to prevent errors
+if (empty($college)) {
     echo json_encode(["labels" => [], "datasets" => [], "meta" => ["done" => [], "total" => []]]);
     exit();
 }
@@ -53,17 +53,17 @@ if (!empty($subquery_conditions)) {
     $subquery_where_sql = "WHERE " . implode(" AND ", $subquery_conditions);
 }
 
-// Main query (for department filtering)
-$placeholders = implode(',', array_fill(0, count($departments), '?'));
-$main_where_sql = "WHERE f.department IN ($placeholders)";
-foreach ($departments as $dept) {
-    $params[] = $dept; // Add departments to the end of the params list
+// Main query (for college filtering)
+$placeholders = implode(',', array_fill(0, count($college), '?'));
+$main_where_sql = "WHERE f.college IN ($placeholders)";
+foreach ($college as $dept) {
+    $params[] = $dept; // Add college to the end of the params list
 }
-$types .= str_repeat('s', count($departments));
+$types .= str_repeat('s', count($college));
 
 // The subquery parameters need to be duplicated for the second subquery
-$final_params = array_merge(array_slice($params, 0, strlen($types) - count($departments)), array_slice($params, 0, strlen($types) - count($departments)), array_slice($params, strlen($types) - count($departments)));
-$final_types = str_repeat(substr($types, 0, strlen($types) - count($departments)), 2) . substr($types, strlen($types) - count($departments));
+$final_params = array_merge(array_slice($params, 0, strlen($types) - count($college)), array_slice($params, 0, strlen($types) - count($college)), array_slice($params, strlen($types) - count($college)));
+$final_types = str_repeat(substr($types, 0, strlen($types) - count($college)), 2) . substr($types, strlen($types) - count($college));
 
 
 // ✅ 2. THE NEW, SINGLE, SECURE QUERY

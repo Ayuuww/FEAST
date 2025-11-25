@@ -118,19 +118,19 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
                 </div>
 
 
-                <!-- Department (only for Teaching) -->
-                <div class="col-md-6 teaching-only" id="departmentDiv">
+                <!-- College (only for Teaching) -->
+                <div class="col-md-6 teaching-only" id="collegeDiv">
                   <div class="form-floating">
-                    <select class="form-select" name="department" id="department" required>
-                      <option value="" selected disabled>-- Select Department --</option>
+                    <select class="form-select" name="college" id="college" required>
+                      <option value="" selected disabled>-- Select College --</option>
                       <?php
-                      $deptQuery = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL AND department_name != '' ORDER BY department_name ASC");
+                      $deptQuery = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' ORDER BY college_name ASC");
                       while ($row = $deptQuery->fetch_assoc()) {
-                        echo '<option value="' . htmlspecialchars($row['department_name']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                        echo '<option value="' . htmlspecialchars($row['college_name']) . '">' . htmlspecialchars($row['college_name']) . '</option>';
                       }
                       ?>
                     </select>
-                    <label>Department</label>
+                    <label>College</label>
                   </div>
                 </div>
 
@@ -171,12 +171,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
 
   <script>
     // Dynamic Program loading
-    document.getElementById('department').addEventListener('change', function() {
+    document.getElementById('college').addEventListener('change', function() {
       let dept = this.value;
       let programSelect = document.getElementById('program');
       programSelect.innerHTML = '<option disabled selected>Loading...</option>';
 
-      fetch('get_programs.php?department=' + encodeURIComponent(dept))
+      fetch('get_programs.php?college=' + encodeURIComponent(dept))
         .then(res => res.json())
         .then(data => {
           programSelect.innerHTML = '<option value="">-- Select Program --</option>';

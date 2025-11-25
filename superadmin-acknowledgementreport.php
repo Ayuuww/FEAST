@@ -27,19 +27,19 @@ if ($prep_stmt->fetch()) {
 $prep_stmt->close();
 
 // Get filter values from URL
-$selected_dept = $_GET['department'] ?? '';
+$selected_col = $_GET['college'] ?? '';
 $selected_faculty_id = $_GET['faculty_id'] ?? '';
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
 // --- Fetch data for dropdowns ---
-$departments_result = $conn->query("SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC");
+$college_result = $conn->query("SELECT DISTINCT college FROM faculty WHERE college IS NOT NULL AND college != '' ORDER BY college ASC");
 
-// Fetch programs based on selected department
+// Fetch programs based on selected college
 $programs_result = null;
-if (!empty($selected_dept)) {
-  $programs_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE department = ? AND program IS NOT NULL AND program != '' ORDER BY program ASC");
-  $programs_stmt->bind_param("s", $selected_dept);
+if (!empty($selected_col)) {
+  $programs_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE college = ? AND program IS NOT NULL AND program != '' ORDER BY program ASC");
+  $programs_stmt->bind_param("s", $selected_col);
   $programs_stmt->execute();
   $programs_result = $programs_stmt->get_result();
 }
@@ -48,9 +48,9 @@ $faculty_sql = "SELECT idnumber, first_name, mid_name, last_name FROM faculty WH
 $params = [];
 $types = "";
 
-if (!empty($selected_dept)) {
-  $faculty_sql .= " AND department = ?";
-  $params[] = $selected_dept;
+if (!empty($selected_col)) {
+  $faculty_sql .= " AND college = ?";
+  $params[] = $selected_col;
   $types .= "s";
 }
 if (!empty($_GET['program'])) {
@@ -105,14 +105,14 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
 
       <form method="GET" action="">
         <div class="row g-3">
-          <!-- Department -->
+          <!-- college -->
           <div class="col-md-4">
-            <label for="department" class="form-label fw-semibold">College / Department</label>
-            <select class="form-select" name="department" id="department" onchange="this.form.submit()">
-              <option value="">-- Select College / Department --</option>
-              <?php while ($row = $departments_result->fetch_assoc()): ?>
-                <option value="<?= htmlspecialchars($row['department']) ?>" <?= ($selected_dept == $row['department']) ? 'selected' : '' ?>>
-                  <?= htmlspecialchars($row['department']) ?>
+            <label for="college" class="form-label fw-semibold">College / college</label>
+            <select class="form-select" name="college" id="college" onchange="this.form.submit()">
+              <option value="">-- Select College / college --</option>
+              <?php while ($row = $college_result->fetch_assoc()): ?>
+                <option value="<?= htmlspecialchars($row['college']) ?>" <?= ($selected_col == $row['college']) ? 'selected' : '' ?>>
+                  <?= htmlspecialchars($row['college']) ?>
                 </option>
               <?php endwhile; ?>
             </select>
@@ -121,7 +121,7 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
           <!-- Program -->
           <div class="col-md-4">
             <label for="program" class="form-label fw-semibold">Program</label>
-            <select class="form-select" name="program" id="program" <?= empty($selected_dept) ? 'disabled' : '' ?> onchange="this.form.submit()">
+            <select class="form-select" name="program" id="program" <?= empty($selected_col) ? 'disabled' : '' ?> onchange="this.form.submit()">
               <option value="">-- Select Program --</option>
               <?php if ($programs_result): ?>
                 <?php while ($row = $programs_result->fetch_assoc()): ?>
@@ -216,10 +216,10 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
         $admin_eval_where_sql = implode(' AND ', $admin_eval_where_clauses);
 
         // --- Fetch all data needed for the report ---
-        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
+        $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, program, faculty_rank FROM faculty WHERE idnumber = ?");
         $stmt->bind_param("s", $faculty_id);
         $stmt->execute();
-        $stmt->bind_result($fname, $mname, $lname, $dept, $faculty_program, $rank); // Added $faculty_program
+        $stmt->bind_result($fname, $mname, $lname, $col, $faculty_program, $rank); // Added $faculty_program
         $stmt->fetch();
         $stmt->close();
 
@@ -229,7 +229,7 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
         }
 
         $full_name = strtoupper(trim("$fname $middle_initial $lname"));
-        $dept_display = strtoupper($dept);
+        $col_display = strtoupper($col);
         $rank_display = ucwords($rank);
 
         $sem = $selected_semester ?: "All Semesters";
@@ -264,8 +264,8 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
         $evaluator_name = 'N/A';
         $stmt_supervisor = $conn->prepare("SELECT a.first_name, a.mid_name, a.last_name
                                                   FROM admin a
-                                                  INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-                                                  WHERE ad.department_name = ?
+                                                  INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+                                                  WHERE ad.college_name = ?
                                                   AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
                                                   ORDER BY
                                                   -- Priority 1: Admin matches the faculty's specific program
@@ -279,8 +279,8 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
                                                   ELSE 5
                                                   END
                                                   LIMIT 1");
-        // Bind both department AND program
-        $stmt_supervisor->bind_param("ss", $dept, $faculty_program); // use faculty's department
+        // Bind both college AND program
+        $stmt_supervisor->bind_param("ss", $col, $faculty_program); // use faculty's college
         $stmt_supervisor->execute();
         $stmt_supervisor->bind_result($sfn, $smn, $sln);
         if ($stmt_supervisor->fetch()) {
@@ -307,9 +307,9 @@ $academic_years_query = $conn->query("SELECT DISTINCT academic_year FROM evaluat
               <td style="font-weight: bold;"><?= htmlspecialchars($full_name) ?></td>
             </tr>
             <tr>
-              <th>Department/College</th>
+              <th>college/College</th>
               <td style="text-align: center;">:</td>
-              <td style="font-weight: bold;"><?= htmlspecialchars($dept_display) ?></td>
+              <td style="font-weight: bold;"><?= htmlspecialchars($col_display) ?></td>
             </tr>
             <tr>
               <th>Current Faculty Rank</th>

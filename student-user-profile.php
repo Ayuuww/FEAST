@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 // ✅ Fetch student data
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, section, department, program FROM student WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, role, section, college, program FROM student WHERE idnumber = ?");
 $stmt->bind_param("s", $idnumber);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -229,9 +229,9 @@ $stmt->close();
                     </div>
 
                     <div class="row mb-3">
-                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Department</label>
+                      <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> College</label>
                       <div class="col-md-8 col-lg-9">
-                        <input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['department']) ?>">
+                        <input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($data['college']) ?>">
                       </div>
                     </div>
 

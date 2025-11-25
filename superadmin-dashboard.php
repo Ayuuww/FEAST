@@ -320,11 +320,11 @@ foreach ($all_evals as $eval) {
                 $semesters[] = $row['semester'];
               }
 
-              // Departments
-              $dept_result = mysqli_query($conn, "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL ORDER BY department ASC");
-              $departments = [];
+              // college
+              $dept_result = mysqli_query($conn, "SELECT DISTINCT college FROM faculty WHERE college IS NOT NULL ORDER BY college ASC");
+              $college = [];
               while ($row = mysqli_fetch_assoc($dept_result)) {
-                $departments[] = $row['department'];
+                $college[] = $row['college'];
               }
               ?>
 
@@ -334,10 +334,10 @@ foreach ($all_evals as $eval) {
                   <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height:400px;overflow-y:auto;">
 
-                    <!-- Department filter -->
-                    <li class="dropdown-header">Department</li>
+                    <!-- college filter -->
+                    <li class="dropdown-header">College</li>
                     <li><a class="dropdown-item dept-filter <?= $selectedDept == 'All' ? 'active' : '' ?>" href="#" data-dept="All">All</a></li>
-                    <?php foreach ($departments as $dept): ?>
+                    <?php foreach ($college as $dept): ?>
                       <li><a class="dropdown-item dept-filter <?= $selectedDept == $dept ? 'active' : '' ?>" href="#" data-dept="<?= $dept ?>"><?= $dept ?></a></li>
                     <?php endforeach; ?>
 
@@ -368,7 +368,7 @@ foreach ($all_evals as $eval) {
                 <div class="card-body">
                   <h5 class="card-title">
                     <strong>Evaluation Progress Per College</strong>
-                    <span id="yearLabel" class="text-muted small">| All Years | All Semesters | All Departments</span><br><br>
+                    <span id="yearLabel" class="text-muted small">| All Years | All Semesters | All college</span><br><br>
                     Supervisor-to-Faculty Evaluation
                   </h5>
 
@@ -382,7 +382,7 @@ foreach ($all_evals as $eval) {
 
                     function fetchSupervisorFacultyData(year = 'All', semester = 'All', dept = 'All') {
                       document.getElementById("yearLabel").textContent =
-                        `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester} | ${dept === 'All' ? 'All Departments' : dept}`;
+                        `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester} | ${dept === 'All' ? 'All college' : dept}`;
 
                       fetch(`fetch-supervisor-faculty-progress.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&dept=${encodeURIComponent(dept)}`)
                         .then(response => response.json())
@@ -468,7 +468,7 @@ foreach ($all_evals as $eval) {
                                     min: 0,
                                     max: 100
                                   },
-                                  y: { // This is now the Department axis
+                                  y: { // This is now the college axis
                                     stacked: true,
                                     grid: {
                                       display: false // Cleaner look
@@ -508,7 +508,7 @@ foreach ($all_evals as $eval) {
                         });
                       });
 
-                      // Department filter
+                      // college filter
                       document.querySelectorAll(".dept-filter").forEach(item => {
                         item.addEventListener("click", (e) => {
                           e.preventDefault();
@@ -529,11 +529,11 @@ foreach ($all_evals as $eval) {
             <!-- Evaluation Progress (Student Evaluation) -->
             <div class="col-lg-12">
               <?php
-              // Distinct departments
-              $dept_result = mysqli_query($conn, "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL AND department != '' ORDER BY department ASC");
-              $departments = [];
+              // Distinct college
+              $dept_result = mysqli_query($conn, "SELECT DISTINCT college FROM faculty WHERE college IS NOT NULL AND college != '' ORDER BY college ASC");
+              $college = [];
               while ($row = mysqli_fetch_assoc($dept_result)) {
-                $departments[] = $row['department'];
+                $college[] = $row['college'];
               }
 
               // Distinct academic years
@@ -558,9 +558,9 @@ foreach ($all_evals as $eval) {
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow" style="max-height: 400px; overflow-y: auto;">
 
-                    <li class="dropdown-header">Department</li>
+                    <li class="dropdown-header">college</li>
                     <li><a class="dropdown-item admin-dept-filter active" href="#" data-dept="All">All</a></li>
-                    <?php foreach ($departments as $dept): ?>
+                    <?php foreach ($college as $dept): ?>
                       <li><a class="dropdown-item admin-dept-filter" href="#" data-dept="<?= $dept ?>"><?= $dept ?></a></li>
                     <?php endforeach; ?>
 
@@ -604,7 +604,7 @@ foreach ($all_evals as $eval) {
 
                     function fetchAdminChartData(year = 'All', semester = 'All', dept = 'All') {
                       document.getElementById("adminYearLabel").textContent =
-                        `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester} | ${dept === 'All' ? 'All Departments' : dept}`;
+                        `| ${year === 'All' ? 'All Years' : year} | ${semester === 'All' ? 'All Semesters' : semester} | ${dept === 'All' ? 'All college' : dept}`;
 
                       fetch(`fetch-admin-chart-data.php?year=${encodeURIComponent(year)}&semester=${encodeURIComponent(semester)}&dept=${encodeURIComponent(dept)}`)
                         .then(response => response.json())
@@ -707,7 +707,7 @@ foreach ($all_evals as $eval) {
                     document.addEventListener("DOMContentLoaded", () => {
                       fetchAdminChartData();
 
-                      // Department filter
+                      // college filter
                       document.querySelectorAll(".admin-dept-filter").forEach(item => {
                         item.addEventListener("click", (e) => {
                           e.preventDefault();

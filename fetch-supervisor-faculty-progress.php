@@ -20,7 +20,7 @@ $conditions = [];
 
 // Base query
 $sql = "
-    SELECT f.department, COUNT(DISTINCT f.idnumber) AS total_faculty,
+    SELECT f.college, COUNT(DISTINCT f.idnumber) AS total_faculty,
            COUNT(DISTINCT ae.evaluatee_id) AS completed_evaluations
     FROM faculty f
     LEFT JOIN admin_evaluation ae ON f.idnumber = ae.evaluatee_id
@@ -53,15 +53,15 @@ $sql = str_replace(
 );
 
 
-// The Department filter goes in the WHERE clause
+// The college filter goes in the WHERE clause
 if ($dept !== 'All') {
-    $sql .= " WHERE f.department = ?";
+    $sql .= " WHERE f.college = ?";
     $params[] = $dept;
     $types .= 's';
 }
 
 
-$sql .= " GROUP BY f.department ORDER BY f.department ASC";
+$sql .= " GROUP BY f.college ORDER BY f.college ASC";
 
 $stmt = $conn->prepare($sql);
 if ($stmt) {
@@ -89,7 +89,7 @@ while ($row = $result->fetch_assoc()) {
     $pendingPercent = 100 - $completedPercent; // Simpler
 
     // --- MODIFICATION ---
-    $labels[] = $row['department']; // Just the department name
+    $labels[] = $row['college']; // Just the college name
     $ratios[] = "{$completed}/{$total}"; // Store the ratio string separately
 
     $completedData[] = $completedPercent;

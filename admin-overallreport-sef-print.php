@@ -10,12 +10,12 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// 🔹 FIX 1: Get admin info (removed 'department')
+// 🔹 FIX 1: Get admin info (removed 'college')
 $stmt = $conn->prepare("SELECT first_name, mid_name, last_name, position 
                            FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-// Removed $admin_department from binding
+// Removed $admin_college from binding
 $stmt->bind_result($fname, $mname, $lname, $position);
 $stmt->fetch();
 $stmt->close();
@@ -27,20 +27,20 @@ if (!empty($mname)) {
 
 $admin_name = strtoupper($fname . ' ' . $middle_initial  . ' ' . $lname);
 
-// 🔹 FIX 2: Get all assigned departments from the correct table
-$stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// 🔹 FIX 2: Get all assigned colleges from the correct table
+$stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
-$departments = []; // This will be an array
+$colleges = []; // This will be an array
 while ($row = $result->fetch_assoc()) {
-    $departments[] = $row['department_name'];
+    $colleges[] = $row['college_name'];
 }
 $stmt->close();
 
 // This string is for the PDF title
-$admin_department_display = !empty($departments) ? implode(', ', $departments) : 'No Department Assigned';
+$admin_college_display = !empty($colleges) ? implode(', ', $colleges) : 'No college Assigned';
 
 
 // 🔹 Get filters
@@ -115,8 +115,8 @@ $faculties = [];
 
 // ✅ FIRST, get the admin's assignments as pairs
 $admin_assignments = [];
-// We need to re-fetch the department/program pairs
-$stmt_admin_dept = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+// We need to re-fetch the college/program pairs
+$stmt_admin_dept = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_admin_dept->bind_param("s", $admin_id);
 $stmt_admin_dept->execute();
 $result = $stmt_admin_dept->get_result();
@@ -133,8 +133,8 @@ if (!empty($admin_assignments)) {
     $types = "";
 
     foreach ($admin_assignments as $assignment) {
-        $faculty_query_parts[] = "(department = ? AND program = ?)";
-        $params[] = $assignment['department_name'];
+        $faculty_query_parts[] = "(college = ? AND program = ?)";
+        $params[] = $assignment['college_name'];
         $params[] = $assignment['program_name'];
         $types .= "ss";
     }

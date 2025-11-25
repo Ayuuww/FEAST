@@ -19,10 +19,10 @@ $selected_academic_year = $_GET['academic_year'] ?? '';
 // =======================================================
 
 // Faculty Info
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, program, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($fname, $mname, $lname, $dept, $faculty_program, $faculty_rank); // Added $faculty_program
+$stmt->bind_result($fname, $mname, $lname, $col, $faculty_program, $faculty_rank); // Added $faculty_program
 $stmt->fetch();
 $stmt->close();
 
@@ -32,7 +32,7 @@ if (!empty($mname)) {
 }
 
 $full_name = strtoupper(trim("$fname $middle_initial $lname"));
-$dept_display = strtoupper($dept);
+$col_display = strtoupper($col);
 $rank_display = ucwords($faculty_rank);
 
 // Semester/Academic Year
@@ -84,8 +84,8 @@ $evaluator_name = 'N/A';
 $stmt_supervisor = $conn->prepare("
 SELECT a.first_name, a.mid_name, a.last_name 
 FROM admin a
-INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-WHERE ad.department_name = ?
+INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+WHERE ad.college_name = ?
  AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
 ORDER BY 
  -- Priority 1: Admin matches the faculty's specific program
@@ -100,8 +100,8 @@ ELSE 5
  END
 LIMIT 1
 ");
-// Bind both department AND program
-$stmt_supervisor->bind_param("ss", $dept, $faculty_program);
+// Bind both college AND program
+$stmt_supervisor->bind_param("ss", $col, $faculty_program);
 $stmt_supervisor->execute();
 $stmt_supervisor->bind_result($sfn, $smn, $sln);
 if ($stmt_supervisor->fetch()) {
@@ -121,7 +121,7 @@ $stmt_supervisor->close();
 
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn); // <-- pass $conn here
-$pdf->department = $dept;
+$pdf->college = $col;
 $pdf->AddPage();
 
 // --- Title ---
@@ -140,10 +140,10 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 7, $full_name, 1, 1);
 
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, 'Department/College', 1, 0);
+$pdf->Cell(65, 7, 'college/College', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 7, $dept_display, 1, 1);
+$pdf->Cell(0, 7, $col_display, 1, 1);
 
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(65, 7, 'Current Faculty Rank', 1, 0);

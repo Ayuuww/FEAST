@@ -33,14 +33,14 @@ if ($prep_stmt->fetch()) {
 $prep_stmt->close();
 
 // --- Faculty Info ---
-$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $mname, $dept, $faculty_rank);
+$stmt->bind_result($lname, $fname, $mname, $col, $faculty_rank);
 $stmt->fetch();
 $stmt->close();
 $faculty_name = strtoupper(trim("$fname $mname $lname"));
-$dept_display = strtoupper($dept);
+$col_display = strtoupper($col);
 $rank_display = ucwords($faculty_rank);
 
 // --- Build WHERE clauses for filters ---
@@ -121,13 +121,13 @@ $reviewed_by_name = "N/A";
 $rev_stmt = $conn->prepare("
     SELECT a.first_name, a.mid_name, a.last_name
     FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ?
       AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%')
     ORDER BY CASE WHEN a.position LIKE '%Dean%' THEN 1 ELSE 2 END
     LIMIT 1
 ");
-$rev_stmt->bind_param("s", $dept);
+$rev_stmt->bind_param("s", $col);
 $rev_stmt->execute();
 $rev_stmt->bind_result($rev_fname, $rev_mname, $rev_lname);
 if ($rev_stmt->fetch()) {
@@ -141,7 +141,7 @@ $rev_stmt->close();
 
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
-$pdf->department = $dept;
+$pdf->college = $col;
 $pdf->SetMargins(15, 15, 15);
 $pdf->AddPage();
 
@@ -155,8 +155,8 @@ $pdf->Cell(0, 10, 'A. Faculty Information', 0, 1);
 $pdf->SetFont('Arial', '', 11);
 $pdf->Cell(80, 8, 'Name of Faculty Evaluated:', 1);
 $pdf->Cell(110, 8, $faculty_name, 1, 1);
-$pdf->Cell(80, 8, 'Department/College:', 1);
-$pdf->Cell(110, 8, $dept_display, 1, 1);
+$pdf->Cell(80, 8, 'college/College:', 1);
+$pdf->Cell(110, 8, $col_display, 1, 1);
 $pdf->Cell(80, 8, 'Current Faculty Rank:', 1);
 $pdf->Cell(110, 8, $rank_display, 1, 1);
 $pdf->Cell(80, 8, 'Semester / Academic Year:', 1);

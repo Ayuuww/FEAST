@@ -49,10 +49,10 @@ $sql = "
         subject s ON exp.subject_code = s.code
 ";
 
-// The department filter is applied on the main query
+// The college filter is applied on the main query
 $main_conditions = [];
 if ($dept) {
-    $main_conditions[] = "f.department = '{$dept}'";
+    $main_conditions[] = "f.college = '{$dept}'";
 }
 if (!empty($main_conditions)) {
     $sql .= " WHERE " . implode(" AND ", $main_conditions);

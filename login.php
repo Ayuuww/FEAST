@@ -38,7 +38,7 @@ function tryLogin($conn, $table, $id, $password)
             $_SESSION['last_name']  = $row['last_name'];
             $_SESSION['role']       = $row['role'];
 
-            if (isset($row['department']))   $_SESSION['department']   = $row['department'];
+            if (isset($row['college']))      $_SESSION['college']      = $row['college'];
             if (isset($row['faculty_rank'])) $_SESSION['faculty_rank'] = $row['faculty_rank'];
             if (isset($row['position']))     $_SESSION['position']     = $row['position'];
             if (isset($row['section']))      $_SESSION['section']      = $row['section'];

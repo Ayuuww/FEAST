@@ -32,7 +32,7 @@ if (!$superadmin) {
 // ✅ Fetch dropdowns from adds table
 $positions = [];
 $ranks = [];
-$departments = [];
+$college = [];
 
 $pos_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL ORDER BY position_name ASC");
 while ($row = $pos_result->fetch_assoc()) {
@@ -44,9 +44,9 @@ while ($row = $rank_result->fetch_assoc()) {
   $ranks[] = $row['rank_name'];
 }
 
-$dept_result = $conn->query("SELECT DISTINCT department_name FROM adds WHERE department_name IS NOT NULL ORDER BY department_name ASC");
+$dept_result = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL ORDER BY college_name ASC");
 while ($row = $dept_result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 
 // ✅ Handle update
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $new_status = $_POST['status'] ?? 'active';
   $new_position = $_POST['position'] ?? null;
   $new_rank = $_POST['faculty_rank'] ?? null;
-  $new_department = $_POST['department'] ?? null;
+  $new_college = $_POST['college'] ?? null;
   $new_program = $_POST['program'] ?? null;
 
   // Validation
@@ -67,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   $stmt = $conn->prepare("
       UPDATE superadmin
-      SET status = ?, position = ?, faculty_rank = ?, department = ?, program = ?
+      SET status = ?, position = ?, faculty_rank = ?, college = ?, program = ?
       WHERE idnumber = ?
   ");
-  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_department, $new_program, $superadmin_id);
+  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_college, $new_program, $superadmin_id);
   $stmt->execute();
 
   header("Location: register-editsuperadmin.php?id=$superadmin_id&update=success");
@@ -131,18 +131,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   </div>
 
                   <div class="row">
-                    <!-- Department -->
+                    <!-- college -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <select name="department" id="department" class="form-select" required>
-                          <option value="">-- Select Department --</option>
-                          <?php foreach ($departments as $dept): ?>
-                            <option value="<?= htmlspecialchars($dept) ?>" <?= $superadmin['department'] === $dept ? 'selected' : '' ?>>
+                        <select name="college" id="college" class="form-select" required>
+                          <option value="">-- Select college --</option>
+                          <?php foreach ($college as $dept): ?>
+                            <option value="<?= htmlspecialchars($dept) ?>" <?= $superadmin['college'] === $dept ? 'selected' : '' ?>>
                               <?= htmlspecialchars($dept) ?>
                             </option>
                           <?php endforeach; ?>
                         </select>
-                        <label>Department</label>
+                        <label>college</label>
                       </div>
                     </div>
 
@@ -152,9 +152,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <select name="program" id="program" class="form-select">
                           <option value="">-- Select Program --</option>
                           <?php
-                          if (!empty($superadmin['department'])) {
-                            $stmt_prog = $conn->prepare("SELECT DISTINCT program_name FROM adds WHERE department_name = ? AND program_name IS NOT NULL ORDER BY program_name ASC");
-                            $stmt_prog->bind_param("s", $superadmin['department']);
+                          if (!empty($superadmin['college'])) {
+                            $stmt_prog = $conn->prepare("SELECT DISTINCT program_name FROM adds WHERE college_name = ? AND program_name IS NOT NULL ORDER BY program_name ASC");
+                            $stmt_prog->bind_param("s", $superadmin['college']);
                             $stmt_prog->execute();
                             $res_prog = $stmt_prog->get_result();
                             while ($prog = $res_prog->fetch_assoc()):
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <?php endif; ?>
 
   <script>
-    document.getElementById('department').addEventListener('change', function() {
+    document.getElementById('college').addEventListener('change', function() {
       const dept = this.value;
       const programSelect = document.getElementById('program');
 
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       programSelect.innerHTML = '<option value="">-- Loading Programs... --</option>';
 
       if (dept) {
-        fetch(`get_programs.php?department=${encodeURIComponent(dept)}`)
+        fetch(`get_programs.php?college=${encodeURIComponent(dept)}`)
           .then(response => response.json())
           .then(programs => {
             programSelect.innerHTML = '<option value="">-- Select Program --</option>';
@@ -271,7 +271,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             programSelect.innerHTML = '<option value="">-- Error Loading Programs --</option>';
           });
       } else {
-        programSelect.innerHTML = '<option value="">-- Select Department First --</option>';
+        programSelect.innerHTML = '<option value="">-- Select college First --</option>';
       }
     });
   </script>

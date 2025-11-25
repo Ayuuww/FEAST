@@ -12,11 +12,11 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get the department of the current admin
-$stmt = $conn->prepare("SELECT department FROM admin WHERE idnumber = ?");
+// Get the college of the current admin
+$stmt = $conn->prepare("SELECT college FROM admin WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$admin_dept = $stmt->get_result()->fetch_assoc()['department'] ?? '';
+$admin_dept = $stmt->get_result()->fetch_assoc()['college'] ?? '';
 
 $year = $_GET['year'] ?? 'All';
 $semester = $_GET['semester'] ?? 'All';
@@ -47,7 +47,7 @@ $sql = "
         FROM admin_evaluation
     ) AS all_data
     JOIN faculty f ON f.idnumber = all_data.fac_id
-    WHERE f.department = ?
+    WHERE f.college = ?
 ";
 
 $types = "s";

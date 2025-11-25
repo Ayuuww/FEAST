@@ -27,19 +27,19 @@ $prepared_by = strtoupper(trim("$s_fname$prep_middle_initial $s_lname"));
 $s_position = strtoupper($s_position);
 
 // 🔹 Get filters from request
-$selected_department = $_GET['department'] ?? '';
+$selected_college = $_GET['college'] ?? '';
 $selected_program = $_GET['program'] ?? '';
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
-// 🔹 Get all faculty in the selected department
-// 🔹 Get all faculty in the selected department (and program, if selected)
+// 🔹 Get all faculty in the selected college
+// 🔹 Get all faculty in the selected college (and program, if selected)
 $faculties = [];
-if (!empty($selected_department)) {
+if (!empty($selected_college)) {
     $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
           FROM faculty
-          WHERE department = ?";
-    $params = [$selected_department];
+          WHERE college = ?";
+    $params = [$selected_college];
     $types = "s";
 
     // Add program filter if it exists
@@ -63,9 +63,9 @@ if (!empty($selected_department)) {
 $reviewers = [];
 $sql = "SELECT a.first_name, a.mid_name, a.last_name, a.position
     FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ?";
-$params_rev = [$selected_department];
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ?";
+$params_rev = [$selected_college];
 $types_rev = "s";
 
 // Add program filter if it was selected
@@ -106,7 +106,7 @@ $stmt_rev->close();
 // 🔹 Custom PDF class (with header/footer)
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
-$pdf->department = $selected_department;
+$pdf->college = $selected_college;
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);

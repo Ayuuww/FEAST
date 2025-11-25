@@ -9,7 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Filters
-$department = isset($_GET['department']) && $_GET['department'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['department']) : null;
+$college = isset($_GET['college']) && $_GET['college'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['college']) : null;
 $academic_year = isset($_GET['year']) && $_GET['year'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['year']) : null;
 $semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_real_escape_string($conn, $_GET['semester']) : null;
 
@@ -17,7 +17,7 @@ $semester = isset($_GET['semester']) && $_GET['semester'] !== 'All' ? mysqli_rea
 $sql = " SELECT 
     s.idnumber AS student_id,
     CONCAT(s.first_name, ' ', s.last_name) AS student_name,
-    s.department AS student_department,
+    s.college AS student_college,
     subj.code AS subject_code,
     subj.title AS subject_title,
     f.idnumber AS faculty_id,
@@ -37,8 +37,8 @@ LEFT JOIN evaluation e
 WHERE e.id IS NULL  /* ❗ means student has not yet evaluated */ ";
 
 // Apply filters dynamically
-if ($department) {
-  $sql .= " AND s.department = '{$department}'";
+if ($college) {
+  $sql .= " AND s.college = '{$college}'";
 }
 if ($academic_year) {
   $sql .= " AND ss.academic_year = '{$academic_year}'";
@@ -102,16 +102,16 @@ $result = mysqli_query($conn, $sql);
 
             <!-- Filter Form -->
             <?php
-            // Fetch distinct academic years, semesters, departments, and subjects dynamically
+            // Fetch distinct academic years, semesters, colleges, and subjects dynamically
             $years = mysqli_query($conn, "SELECT DISTINCT academic_year FROM student_subject ORDER BY academic_year DESC");
             $sems = mysqli_query($conn, "SELECT DISTINCT semester FROM student_subject ORDER BY semester ASC");
-            $depts = mysqli_query($conn, "SELECT DISTINCT department FROM faculty WHERE department IS NOT NULL ORDER BY department ASC");
+            $depts = mysqli_query($conn, "SELECT DISTINCT college FROM faculty WHERE college IS NOT NULL ORDER BY college ASC");
             $subjects = mysqli_query($conn, "SELECT DISTINCT code, title FROM subject ORDER BY title ASC");
 
             // Preserve selected filters
             $selected_year = $academic_year ?? '';
             $selected_sem = $semester ?? '';
-            $selected_dept = $department ?? '';
+            $selected_dept = $college ?? '';
             $selected_subject = isset($_GET['subject']) && $_GET['subject'] !== 'All' ? $_GET['subject'] : '';
             ?>
 
@@ -143,13 +143,13 @@ $result = mysqli_query($conn, $sql);
               </div>
 
               <div class="col-md-2">
-                <label for="department" class="form-label fw-semibold">Department</label>
-                <select class="form-select" name="department" id="department">
+                <label for="college" class="form-label fw-semibold">college</label>
+                <select class="form-select" name="college" id="college">
                   <option value="All">All</option>
                   <?php while ($d = mysqli_fetch_assoc($depts)): ?>
-                    <option value="<?= htmlspecialchars($d['department']) ?>"
-                      <?= ($selected_dept == $d['department']) ? 'selected' : '' ?>>
-                      <?= htmlspecialchars($d['department']) ?>
+                    <option value="<?= htmlspecialchars($d['college']) ?>"
+                      <?= ($selected_dept == $d['college']) ? 'selected' : '' ?>>
+                      <?= htmlspecialchars($d['college']) ?>
                     </option>
                   <?php endwhile; ?>
                 </select>
@@ -199,7 +199,7 @@ $result = mysqli_query($conn, $sql);
                         echo "<tr>
                                 <td class='text-center'>{$row['student_id']}</td>
                                 <td>{$row['student_name']}</td>
-                                <td>{$row['student_department']}</td>
+                                <td>{$row['student_college']}</td>
                                 <td>{$row['subject_code']}</td>
                                 <td>{$row['subject_title']}</td>
                                 <td>{$row['faculty_name']}</td>
@@ -210,7 +210,7 @@ $result = mysqli_query($conn, $sql);
                         $i++;
                       }
                     } else {
-                      echo "<tr><td colspan='9' class='text-center text-muted'>All students in {$department} have completed their evaluations.</td></tr>";
+                      echo "<tr><td colspan='9' class='text-center text-muted'>All students in {$college} have completed their evaluations.</td></tr>";
                     }
                     ?>
                   </tbody>

@@ -13,7 +13,7 @@ $student_id = $_SESSION['idnumber'];
 $faculty_id = $_GET['faculty_id'] ?? '';
 $subject_code = $_GET['subject_code'] ?? '';
 $academic_year = $_GET['academic_year'] ?? '';
-$department = $_GET['department'] ?? '';
+$college = $_GET['college'] ?? '';
 
 if (!$faculty_id || !$subject_code || !$academic_year) {
   echo "Missing parameters.";
@@ -106,7 +106,7 @@ $pdf->Ln(3);
 // Info Section
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Name of Faculty being Evaluated: " . $faculty_name, 0, 1);
-$pdf->Cell(0, 6, "Department/College: " . $data['department'], 0, 1);
+$pdf->Cell(0, 6, "college/College: " . $data['college'], 0, 1);
 $pdf->Cell(0, 6, "Course Code/Title: " . $data['subject_code'] . " - " . $data['subject_title'], 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);

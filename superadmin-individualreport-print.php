@@ -40,14 +40,14 @@ $prep_stmt->close();
 
 // --- Faculty Info ---
 // --- Faculty basic info ---
-$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, program, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT last_name, first_name, mid_name, college, program, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
-$stmt->bind_result($lname, $fname, $mname, $department, $faculty_program, $faculty_rank); // Added $faculty_program
+$stmt->bind_result($lname, $fname, $mname, $college, $faculty_program, $faculty_rank); // Added $faculty_program
 $stmt->fetch();
 $stmt->close();
 $faculty_name = strtoupper(trim("$fname $mname $lname"));
-$dept_display = strtoupper($department);
+$col_display = strtoupper($college);
 $rank_display = ucwords($faculty_rank);
 $term_display = ($filter_semester ?: "All Semesters") . " / " . ($filter_academic_year ?: "All Academic Years");
 
@@ -137,22 +137,22 @@ $stmt_sup_comments->close();
 
 // --- Reviewed By Name (FIXED QUERY) ---
 $reviewed_by_name = "N/A";
-// $dept and $faculty_program come from the faculty info query above
+// $col and $faculty_program come from the faculty info query above
 $rev_stmt = $conn->prepare("
 SELECT a.first_name, a.mid_name, a.last_name
 FROM admin a
-INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-WHERE ad.department_name = ?
+INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+WHERE ad.college_name = ?
 AND (a.position LIKE '%Dean%' OR a.position LIKE '%Chair%' OR a.position LIKE '%Program Head%' OR a.position LIKE '%Director%')
 ORDER BY
--- Priority 1: Admin matches BOTH department and program
+-- Priority 1: Admin matches BOTH college and program
 CASE WHEN ad.program_name = ? THEN 1 ELSE 2 END ASC,
 -- Priority 2: Deans/Directors first, then Chairs/Heads
 CASE WHEN a.position LIKE '%Dean%' OR a.position LIKE '%Director%' THEN 1 ELSE 2 END ASC
 LIMIT 1
 ");
-// Bind both the department and the faculty's program
-$rev_stmt->bind_param("ss", $department, $faculty_program);
+// Bind both the college and the faculty's program
+$rev_stmt->bind_param("ss", $college, $faculty_program);
 $rev_stmt->execute();
 $rev_stmt->bind_result($rev_fname, $rev_mname, $rev_lname);
 if ($rev_stmt->fetch()) {
@@ -172,7 +172,7 @@ $rev_stmt->close();
 
 require 'superadmin-printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn); // <-- pass $conn here
-$pdf->department = $department;
+$pdf->college = $college;
 $pdf->AddPage();
 
 $pdf->SetFont('Arial', 'B', 14);
@@ -188,10 +188,10 @@ $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 7, $faculty_name, 1, 1);
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, 'Department/College', 1, 0);
+$pdf->Cell(65, 7, 'college/College', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
-$pdf->Cell(0, 7, $dept_display, 1, 1);
+$pdf->Cell(0, 7, $col_display, 1, 1);
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(65, 7, 'Current Faculty Rank', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');

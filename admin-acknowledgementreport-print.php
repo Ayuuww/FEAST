@@ -41,7 +41,7 @@ $eval_where_sql = implode(' AND ', $eval_where_clauses);
 
 // Get faculty info
 $fname = $mname = $lname = $dept = $rank = '';
-$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+$stmt = $conn->prepare("SELECT first_name, mid_name, last_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
 $stmt->bind_param("s", $faculty_id);
 $stmt->execute();
 $stmt->bind_result($fname, $mname, $lname, $dept, $rank);
@@ -87,8 +87,8 @@ $stmt_sef_avg->close();
 $evaluator_name = 'N/A';
 $stmt_supervisor = $conn->prepare("
     SELECT a.first_name, a.mid_name, a.last_name FROM admin a
-    INNER JOIN admin_departments ad ON a.idnumber = ad.admin_idnumber
-    WHERE ad.department_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+    INNER JOIN admin_college ad ON a.idnumber = ad.admin_idnumber
+    WHERE ad.college_name = ? AND (a.position LIKE 'Dean%' OR a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
     ORDER BY CASE WHEN a.position LIKE 'Dean%' THEN 1 ELSE 2 END LIMIT 1");
 $stmt_supervisor->bind_param("s", $dept);
 $stmt_supervisor->execute();
@@ -128,7 +128,7 @@ $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 7, $full_name, 1, 1);
 
 $pdf->SetFont('Arial', '', 10);
-$pdf->Cell(65, 7, 'Department/College', 1, 0);
+$pdf->Cell(65, 7, 'College', 1, 0);
 $pdf->Cell(5, 7, ':', 1, 0, 'C');
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 7, $dept_display, 1, 1);

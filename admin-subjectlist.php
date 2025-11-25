@@ -18,14 +18,14 @@ $pos_res = $pos_stmt->get_result();
 $admin_position = ($pos_res->fetch_assoc())['position'] ?? '';
 $pos_stmt->close();
 
-// ✅ Get all departments assigned to this admin
-$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Get all college assigned to this admin
+$dept_stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $dept_res = $dept_stmt->get_result();
-$departments = [];
+$college = [];
 while ($row = $dept_res->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 $dept_stmt->close();
 
@@ -60,12 +60,12 @@ $sub_q = "
 
 $where_clauses = [];
 
-// 1. Add department clause ONLY if departments exist
-if (!empty($departments)) {
-  $placeholders = implode(',', array_fill(0, count($departments), '?'));
-  $where_clauses[] = "subject.department IN ($placeholders)";
-  $params = array_merge($params, $departments); // Add all departments to params
-  $types .= str_repeat('s', count($departments)); // Add 's' for each dept
+// 1. Add college clause ONLY if college exist
+if (!empty($college)) {
+  $placeholders = implode(',', array_fill(0, count($college), '?'));
+  $where_clauses[] = "subject.college IN ($placeholders)";
+  $params = array_merge($params, $college); // Add all college to params
+  $types .= str_repeat('s', count($college)); // Add 's' for each dept
 }
 
 // 2. Add the "created by me" clause
@@ -154,8 +154,8 @@ $result = $sub_stmt->get_result();
                     <th><b>Subject Code</b></th>
                     <th>Descriptive Title</th>
                     <th>Faculty Name</th>
-                    <th>Department</th>
-                    <th>Program</th>
+                    <th>Assigned College</th>
+                    <th>Assigned Program</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -168,7 +168,7 @@ $result = $sub_stmt->get_result();
                         <?php echo htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])); ?>
                       </td>
 
-                      <td class="text-uppercase"><?php echo htmlspecialchars($row['department']); ?></td>
+                      <td class="text-uppercase"><?php echo htmlspecialchars($row['college']); ?></td>
                       <td class="text-capitalize"><?php echo htmlspecialchars($row['program']); ?></td>
                       <td>
                         <form method="post" class="delete-form" action="deletesubject.php">

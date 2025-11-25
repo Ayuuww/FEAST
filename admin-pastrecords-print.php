@@ -14,19 +14,19 @@ $semester      = $_GET['semester'] ?? '';
 $subject_code  = $_GET['subject_code'] ?? '';
 
 // Fetch admin info
-$stmt = $conn->prepare("SELECT department, faculty_rank, first_name, mid_name, last_name, position 
+$stmt = $conn->prepare("SELECT college, faculty_rank, first_name, mid_name, last_name, position 
                         FROM admin 
                         WHERE idnumber = ?");
 $stmt->bind_param("s", $admin_id);
 $stmt->execute();
-$stmt->bind_result($department, $faculty_rank, $fname, $mname, $lname, $position);
+$stmt->bind_result($college, $faculty_rank, $fname, $mname, $lname, $position);
 $stmt->fetch();
 $stmt->close();
 
 $admin_name = trim("$fname $mname $lname");
 
-// Save department for header/footer
-$_SESSION['department'] = $department;
+// Save college for header/footer
+$_SESSION['college'] = $college;
 
 // --- Build evaluation query ---
 $params = [$admin_id];
@@ -59,7 +59,7 @@ $pdf->AddPage();
 // Admin + filter info
 $pdf->SetFont('Arial','',11);
 $pdf->Cell(0,6,"Name: $admin_name",0,1,'L');
-$pdf->Cell(0,6,"Department: $department",0,1,'L');
+$pdf->Cell(0,6,"college: $college",0,1,'L');
 
 if ($semester) {
     $pdf->Cell(0,6,"Semester: $semester",0,1,'L');

@@ -25,14 +25,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $comments           = $_POST['comments'] ?? '';
   $evaluator_position = $_POST['evaluator_position'] ?? '';
 
-  // ✅ Get the faculty's actual department (fix)
-  $faculty_department = 'Unknown';
-  $dept_stmt = $conn->prepare("SELECT department FROM faculty WHERE idnumber = ?");
+  // ✅ Get the faculty's actual college (fix)
+  $faculty_college = 'Unknown';
+  $dept_stmt = $conn->prepare("SELECT college FROM faculty WHERE idnumber = ?");
   $dept_stmt->bind_param("s", $evaluatee_id);
   $dept_stmt->execute();
   $dept_result = $dept_stmt->get_result();
   if ($dept_row = $dept_result->fetch_assoc()) {
-    $faculty_department = $dept_row['department'];
+    $faculty_college = $dept_row['college'];
   }
   $dept_stmt->close();
 
@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   // ✅ Insert into admin_evaluation
   $insert_query = "INSERT INTO admin_evaluation
-        (evaluator_id, evaluatee_id, evaluator_position, academic_year, semester, total_score, computed_rating, comments, department)
+        (evaluator_id, evaluatee_id, evaluator_position, academic_year, semester, total_score, computed_rating, comments, college)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   $stmt_insert = $conn->prepare($insert_query);
   $stmt_insert->bind_param(
@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $total_score,
     $computed_rating,
     $comments,
-    $faculty_department // ✅ fixed: use the faculty's actual department
+    $faculty_college // ✅ fixed: use the faculty's actual college
   );
 
   if ($stmt_insert->execute()) {
@@ -142,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       'semester'          => $semester,
       'comment'           => $comments,
       'evaluator_position' => $evaluator_position,
-      'department'        => $faculty_department,
+      'college'        => $faculty_college,
       'faculty_rank'      => $faculty_row['faculty_rank'] ?? 'N/A',
       'answers'           => $questions_data,
       'total_score'       => $total_score,

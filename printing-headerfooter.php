@@ -7,40 +7,40 @@ class PDF_EXTENDED extends FPDF
     $logo_left  = 'pics/bagong_pilipinas.jpg';
     $logo_right = 'pics/DMMMSUlogo_header.png';
 
-    // --- Get Department Name ---
-    $department = $_SESSION['department'] ?? null;
+    // --- Get college Name ---
+    $college = $_SESSION['college'] ?? null;
 
-    // If not found in session, get it from admin_departments
-    if (!$department && isset($_SESSION['idnumber'])) {
+    // If not found in session, get it from admin_college
+    if (!$college && isset($_SESSION['idnumber'])) {
       global $conn;
       if (!isset($conn)) include 'conn/conn.php';
       $admin_id = $_SESSION['idnumber'];
 
-      $stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ? LIMIT 1");
+      $stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ? LIMIT 1");
       $stmt->bind_param("s", $admin_id);
       $stmt->execute();
       $result = $stmt->get_result();
       if ($row = $result->fetch_assoc()) {
-        $department = $row['department_name'];
+        $college = $row['college_name'];
       }
       $stmt->close();
     }
 
-    // --- Fetch department info dynamically ---
+    // --- Fetch college info dynamically ---
     $college_name = 'COLLEGE';
     $website = 'www.dmmmsu.edu.ph';
     $phone = '';
     $email = '';
 
-    if ($department) {
+    if ($college) {
       global $conn;
       if (!isset($conn)) include 'conn/conn.php';
-      $stmt = $conn->prepare("SELECT department_name, website, phone, email FROM department_info WHERE department_name = ? LIMIT 1");
-      $stmt->bind_param("s", $department);
+      $stmt = $conn->prepare("SELECT college_name, website, phone, email FROM college_info WHERE college_name = ? LIMIT 1");
+      $stmt->bind_param("s", $college);
       $stmt->execute();
       $result = $stmt->get_result();
       if ($row = $result->fetch_assoc()) {
-        $college_name = $row['department_name'];
+        $college_name = $row['college_name'];
         $website = $row['website'] ?: $website;
         $phone = $row['phone'] ?: '';
         $email = $row['email'] ?: '';

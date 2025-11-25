@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $last_name       = trim($_POST['last_name']);
   $employment_role = $_POST['employment_role'];
   $faculty_rank    = !empty($_POST['faculty_rank']) ? trim($_POST['faculty_rank']) : NULL;
-  $department = !empty($_POST['department']) ? trim($_POST['department']) : NULL;
+  $college = !empty($_POST['college']) ? trim($_POST['college']) : NULL;
   $program    = !empty($_POST['program']) ? trim($_POST['program']) : NULL;
 
   // Defaults
@@ -22,10 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $password = password_hash($password_plain, PASSWORD_DEFAULT);
 
   // ✅ Step 1 — Insert into registrar table
-  $query = "INSERT INTO registrar (idnumber, first_name, mid_name, last_name, password, department, program, status, role, employment_role, faculty_rank)
+  $query = "INSERT INTO registrar (idnumber, first_name, mid_name, last_name, password, college, program, status, role, employment_role, faculty_rank)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   $stmt = $conn->prepare($query);
-  $stmt->bind_param("sssssssssss", $idnumber, $first_name, $mid_name, $last_name, $password, $department, $program, $status, $role, $employment_role, $faculty_rank);
+  $stmt->bind_param("sssssssssss", $idnumber, $first_name, $mid_name, $last_name, $password, $college, $program, $status, $role, $employment_role, $faculty_rank);
 
   if ($stmt->execute()) {
 
@@ -33,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (strtolower($employment_role) === 'teaching') {
       $faculty_role = "faculty";
 
-      $query2 = "INSERT INTO faculty (idnumber, first_name, mid_name, last_name, department, program, faculty_rank, role, status)
+      $query2 = "INSERT INTO faculty (idnumber, first_name, mid_name, last_name, college, program, faculty_rank, role, status)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
       $stmt2 = $conn->prepare($query2);
-      $stmt2->bind_param("sssssssss", $idnumber, $first_name, $mid_name, $last_name, $department, $program, $faculty_rank, $faculty_role, $status);
+      $stmt2->bind_param("sssssssss", $idnumber, $first_name, $mid_name, $last_name, $college, $program, $faculty_rank, $faculty_role, $status);
       $stmt2->execute();
       $stmt2->close();
     }

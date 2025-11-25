@@ -8,25 +8,25 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
 }
 
 // Default filters
-$selected_department = isset($_GET['department']) ? $_GET['department'] : "";
+$selected_college = isset($_GET['college']) ? $_GET['college'] : "";
 $selected_program = isset($_GET['program']) ? $_GET['program'] : ""; // ✅ ADD THIS
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
-// Build department dropdown (from faculty table)
-$dept_options = "";
-$dept_query = $conn->query("SELECT DISTINCT department FROM faculty ORDER BY department ASC");
-while ($row = $dept_query->fetch_assoc()) {
-  $dept = $row['department'];
-  $selected = ($dept === $selected_department) ? "selected" : "";
-  $dept_options .= "<option value='$dept' $selected>$dept</option>";
+// Build college dropdown (from faculty table)
+$col_options = "";
+$col_query = $conn->query("SELECT DISTINCT college FROM faculty ORDER BY college ASC");
+while ($row = $col_query->fetch_assoc()) {
+  $col = $row['college'];
+  $selected = ($col === $selected_college) ? "selected" : "";
+  $col_options .= "<option value='$col' $selected>$col</option>";
 }
 
-// --- Build program dropdown (depends on selected department) ---
+// --- Build program dropdown (depends on selected college) ---
 $prog_options = "<option value=''>-- All Programs --</option>";
-if (!empty($selected_department)) {
-  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE department = ? AND program != '' ORDER BY program ASC");
-  $prog_stmt->bind_param("s", $selected_department);
+if (!empty($selected_college)) {
+  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE college = ? AND program != '' ORDER BY program ASC");
+  $prog_stmt->bind_param("s", $selected_college);
   $prog_stmt->execute();
   $prog_result = $prog_stmt->get_result();
   while ($row = $prog_result->fetch_assoc()) {
@@ -59,13 +59,13 @@ $set_rows = '';
 $sef_rows = '';
 $overall_rows = '';
 
-if (!empty($selected_department)) {
-  // Get all faculty in department
-  // Get all faculty in department (and program, if selected)
+if (!empty($selected_college)) {
+  // Get all faculty in college
+  // Get all faculty in college (and program, if selected)
   $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
          FROM faculty
-         WHERE department = ?";
-  $params = [$selected_department];
+         WHERE college = ?";
+  $params = [$selected_college];
   $types = "s";
 
   // Add program filter if it exists
@@ -176,7 +176,7 @@ if (!empty($selected_department)) {
               <div class="card-body">
                 <h4 class="card-title text-center my-3">
                   Overall SET/SEF Report
-                  <?= !empty($selected_department) ? " – " . htmlspecialchars($selected_department) : "" ?>
+                  <?= !empty($selected_college) ? " – " . htmlspecialchars($selected_college) : "" ?>
                   <?= !empty($selected_semester) ? " | Semester: " . htmlspecialchars($selected_semester) : "" ?>
                   <?= !empty($selected_academic_year) ? " | AY: " . htmlspecialchars($selected_academic_year) : "" ?>
                 </h4>
@@ -185,15 +185,15 @@ if (!empty($selected_department)) {
                 <form method="GET" class="mb-3">
                   <div class="row align-items-end g-3">
                     <div class="col-md-3">
-                      <label for="department" class="form-label">Select Department</label>
-                      <select name="department" id="department" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Choose Department --</option>
-                        <?= $dept_options ?>
+                      <label for="college" class="form-label">Select College</label>
+                      <select name="college" id="college" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Choose College --</option>
+                        <?= $col_options ?>
                       </select>
                     </div>
                     <div class="col-md-3">
                       <label for="program" class="form-label">Select Program</label>
-                      <select name="program" id="program" class="form-select" <?= empty($selected_department) ? 'disabled' : '' ?>>
+                      <select name="program" id="program" class="form-select" <?= empty($selected_college) ? 'disabled' : '' ?>>
                         <?= $prog_options ?>
                       </select>
                     </div>
@@ -217,7 +217,7 @@ if (!empty($selected_department)) {
                   </div>
                 </form>
 
-                <?php if (!empty($selected_department)) { ?>
+                <?php if (!empty($selected_college)) { ?>
 
                   <!-- Overall Table -->
                   <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
@@ -235,14 +235,14 @@ if (!empty($selected_department)) {
                   </div>
 
                   <div class="text-end mb-3">
-                    <a href="superadmin-overallreport-print.php?department=<?= urlencode($selected_department) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
+                    <a href="superadmin-overallreport-print.php?college=<?= urlencode($selected_college) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
                       class="btn btn-secondary" target="_blank">
                       <i class="bi bi-printer"></i> Print Report
                     </a>
                   </div>
 
                 <?php } else { ?>
-                  <p class="text-center text-muted">Please select a department to generate the report.</p>
+                  <p class="text-center text-muted">Please select a college to generate the report.</p>
                 <?php } ?>
 
               </div>

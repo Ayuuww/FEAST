@@ -110,18 +110,18 @@ $result = $stmt->get_result();
 $data = $result->fetch_assoc();
 $stmt->close();
 
-// ✅ Fetch assigned departments
-$stmt_depts = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ Fetch assigned college
+$stmt_depts = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $stmt_depts->bind_param("s", $idnumber);
 $stmt_depts->execute();
 $result_depts = $stmt_depts->get_result();
-$departments_array = [];
+$college_array = [];
 while ($row = $result_depts->fetch_assoc()) {
-  $departments_array[] = $row['department_name'];
+  $college_array[] = $row['college_name'];
   $program_array[] = $row['program_name'];
 }
 $stmt_depts->close();
-$department_display = !empty($departments_array) ? implode(', ', $departments_array) : 'Not Assigned';
+$college_display = !empty($college_array) ? implode(', ', $college_array) : 'Not Assigned';
 $program_display = !empty($program_array) ? implode(', ', $program_array) : 'Not Assigned';
 ?>
 
@@ -258,7 +258,7 @@ $program_display = !empty($program_array) ? implode(', ', $program_array) : 'Not
                     </div>
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> College(s)</label>
-                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($department_display) ?>"></div>
+                      <div class="col-md-8 col-lg-9"><input type="text" class="form-control text-capitalize" readonly value="<?= htmlspecialchars($college_display) ?>"></div>
                     </div>
                     <div class="row mb-3">
                       <label class="col-md-4 col-lg-3 col-form-label"><i class="bi bi-building"></i> Program(s)</label>

@@ -7,11 +7,11 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   exit();
 }
 
-// Get department filter (if any)
-$department = isset($_GET['department']) ? $_GET['department'] : 'All';
+// Get college filter (if any)
+$college = isset($_GET['college']) ? $_GET['college'] : 'All';
 
 // Base query for active faculty
-if ($department === 'All') {
+if ($college === 'All') {
   $faculty_query = "SELECT COUNT(*) AS total_faculty FROM faculty WHERE role = 'faculty' AND status = 'active'";
 } else {
   $faculty_query = "
@@ -19,21 +19,21 @@ if ($department === 'All') {
     FROM faculty f
     INNER JOIN student_subject ss ON ss.faculty_id = f.idnumber
     WHERE f.role = 'faculty' AND f.status = 'active' 
-    AND ss.department = '" . mysqli_real_escape_string($conn, $department) . "'
+    AND ss.college = '" . mysqli_real_escape_string($conn, $college) . "'
   ";
 }
 $faulty_result = mysqli_query($conn, $faculty_query);
 $totalfaculty = mysqli_fetch_assoc($faulty_result)['total_faculty'] ?? 0;
 
 // Completed evaluations (student → faculty)
-if ($department === 'All') {
+if ($college === 'All') {
   $completedQuery = "SELECT COUNT(DISTINCT faculty_id) AS completed FROM evaluation";
 } else {
   $completedQuery = "
     SELECT COUNT(DISTINCT e.faculty_id) AS completed
     FROM evaluation e
     INNER JOIN student_subject ss ON ss.faculty_id = e.faculty_id
-    WHERE ss.department = '" . mysqli_real_escape_string($conn, $department) . "'
+    WHERE ss.college = '" . mysqli_real_escape_string($conn, $college) . "'
   ";
 }
 $completedResult = mysqli_query($conn, $completedQuery);

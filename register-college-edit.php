@@ -10,19 +10,19 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
 
 $id = $_GET['id'] ?? null;
 if (!$id) {
-  header("Location: register-department-info.php");
+  header("Location: register-college-info.php");
   exit();
 }
 
 // Fetch current record
-$stmt = $conn->prepare("SELECT * FROM department_info WHERE id = ?");
+$stmt = $conn->prepare("SELECT * FROM college_info WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
 $dept = $result->fetch_assoc();
 
 if (!$dept) {
-  header("Location: register-department-info.php");
+  header("Location: register-college-info.php");
   exit();
 }
 
@@ -31,21 +31,21 @@ $updated = false;
 // Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // ✅ FIX: Get the values from the readonly fields
-  $department_name = $_POST['department_name'];
+  $college_name = $_POST['college_name'];
   $program_name = $_POST['program_name'];
   $website = $_POST['website'];
   $phone = $_POST['phone'];
   $email = $_POST['email'];
 
   // ✅ FIX: Corrected query with program_name
-  $stmt = $conn->prepare("UPDATE department_info SET department_name=?, program_name=?, website=?, phone=?, email=? WHERE id=?");
-  $stmt->bind_param("sssssi", $department_name, $program_name, $website, $phone, $email, $id);
+  $stmt = $conn->prepare("UPDATE college_info SET college_name=?, program_name=?, website=?, phone=?, email=? WHERE id=?");
+  $stmt->bind_param("sssssi", $college_name, $program_name, $website, $phone, $email, $id);
   $stmt->execute();
 
   $updated = true; // trigger sweetalert2
 
   // Re-fetch the data to show the updated info
-  $stmt = $conn->prepare("SELECT * FROM department_info WHERE id = ?");
+  $stmt = $conn->prepare("SELECT * FROM college_info WHERE id = ?");
   $stmt->bind_param("i", $id);
   $stmt->execute();
   $result = $stmt->get_result();
@@ -70,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Department Information</h1>
+      <h1>college Information</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item"><a href="register-department-info.php">Department Information</a></li>
+          <li class="breadcrumb-item"><a href="register-college-info.php">college Information</a></li>
           <li class="breadcrumb-item active">Edit</li>
         </ol>
       </nav>
@@ -85,13 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="col-lg-10">
           <div class="card shadow-sm border-0">
             <div class="card-body">
-              <h5 class="card-title">Edit Department Info</h5>
+              <h5 class="card-title">Edit college Info</h5>
 
               <form method="POST" class="p-4 r">
                 <div class="row g-3">
                   <div class="col-md-4">
-                    <label class="form-label fw-semibold">Department Name</label>
-                    <input type="text" name="department_name" value="<?= htmlspecialchars($dept['department_name']) ?>" class="form-control" readonly>
+                    <label class="form-label fw-semibold">college Name</label>
+                    <input type="text" name="college_name" value="<?= htmlspecialchars($dept['college_name']) ?>" class="form-control" readonly>
                   </div>
 
                   <div class="col-md-8">
@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   <button type="submit" class="btn btn-success btn-sm px-4">
                     <i class="bi bi-check-circle"></i> Update
                   </button>
-                  <a href="register-department-info.php" class="btn btn-secondary btn-sm px-4">
+                  <a href="register-college-info.php" class="btn btn-secondary btn-sm px-4">
                     <i class="bi bi-x-circle"></i> Cancel
                   </a>
                 </div>
@@ -144,12 +144,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       Swal.fire({
         icon: 'success',
         title: 'Updated Successfully!',
-        text: 'Department information has been updated.',
+        text: 'college information has been updated.',
         confirmButtonColor: '#198754',
         confirmButtonText: 'OK'
       }).then(() => {
         // Redirect back to the main list
-        window.location.href = 'register-department-info.php';
+        window.location.href = 'register-college-info.php';
       });
     </script>
   <?php endif; ?>

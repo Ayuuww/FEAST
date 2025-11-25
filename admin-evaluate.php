@@ -41,8 +41,8 @@ if (!in_array($evaluator_position, $allowed_positions)) {
   exit();
 }
 
-// ✅ --- MODIFICATION 1: Get all department/program pairs assigned to this admin ---
-$dept_stmt = $conn->prepare("SELECT department_name, program_name FROM admin_departments WHERE admin_idnumber = ?");
+// ✅ --- MODIFICATION 1: Get all college/program pairs assigned to this admin ---
+$dept_stmt = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $evaluator_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
@@ -55,7 +55,7 @@ $dept_stmt->close();
 
 // If admin has no assignments, block access
 if (empty($assignments)) {
-  $_SESSION['msg'] = "No departments or programs assigned to your account. Cannot find faculty to evaluate.";
+  $_SESSION['msg'] = "No colleges or programs assigned to your account. Cannot find faculty to evaluate.";
   $_SESSION['msg_type'] = "error";
   header("Location: admin-dashboard.php");
   exit();
@@ -88,8 +88,8 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
   // --- Build Query for Part 1: Faculty teaching subjects admin manages ---
   $subject_where_clauses = [];
   foreach ($assignments as $assign) {
-    $subject_where_clauses[] = "(s.department = ? AND s.program = ?)";
-    $params[] = $assign['department_name'];
+    $subject_where_clauses[] = "(s.college = ? AND s.program = ?)";
+    $params[] = $assign['college_name'];
     $params[] = $assign['program_name'];
     $types .= "ss"; // two strings
   }
@@ -105,8 +105,8 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
   // --- Build Query for Part 2: Faculty whose home dept/prog admin manages ---
   $home_where_clauses = [];
   foreach ($assignments as $assign) {
-    $home_where_clauses[] = "(f.department = ? AND f.program = ?)";
-    $params[] = $assign['department_name'];
+    $home_where_clauses[] = "(f.college = ? AND f.program = ?)";
+    $params[] = $assign['college_name'];
     $params[] = $assign['program_name'];
     $types .= "ss";
   }
@@ -127,7 +127,7 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
         f.mid_name,
         f.last_name,
         f.faculty_rank,
-        f.department AS home_department
+        f.college AS home_college
     FROM
         faculty f
     WHERE
@@ -293,7 +293,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                               <option value="" disabled selected>-- Select Faculty --</option>
                               <?php
                               if (empty($faculty_list)) {
-                                echo '<option value="" disabled>No faculty to evaluate in your department or all have been evaluated.</option>';
+                                echo '<option value="" disabled>No faculty to evaluate in your college or all have been evaluated.</option>';
                               } else {
                                 foreach ($faculty_list as $faculty):
                                   $fullName = htmlspecialchars($faculty['first_name'] . ' ' . $faculty['mid_name'] . ' ' . $faculty['last_name']);
@@ -501,7 +501,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
 
                       <input type="hidden" name="evaluator_id" value="<?= $_SESSION['idnumber'] ?>">
                       <input type="hidden" name="evaluator_position" value="<?= htmlspecialchars($evaluator_position) ?>">
-                      <input type="hidden" name="department" value="<?= htmlspecialchars($department) ?>">
+                      <input type="hidden" name="college" value="<?= htmlspecialchars($college) ?>">
 
 
                       <div class="row mb-3">

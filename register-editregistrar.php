@@ -37,19 +37,19 @@ while ($r = $rankQuery->fetch_assoc()) {
   $facultyRanks[] = $r['rank_name'];
 }
 
-// Fetch departments/programs from adds table
+// Fetch colleges/programs from adds table
 $adds_data_result = $conn->query("
-  SELECT DISTINCT department_name, program_name 
+  SELECT DISTINCT college_name, program_name 
   FROM adds 
-  WHERE department_name IS NOT NULL AND department_name != ''
-  ORDER BY department_name, program_name ASC
+  WHERE college_name IS NOT NULL AND college_name != ''
+  ORDER BY college_name, program_name ASC
 ");
-$departmentPrograms = [];
+$collegePrograms = [];
 while ($r = $adds_data_result->fetch_assoc()) {
-  $d = $r['department_name'];
+  $d = $r['college_name'];
   $p = $r['program_name'];
-  if (!isset($departmentPrograms[$d])) $departmentPrograms[$d] = [];
-  if ($p && !in_array($p, $departmentPrograms[$d])) $departmentPrograms[$d][] = $p;
+  if (!isset($collegePrograms[$d])) $collegePrograms[$d] = [];
+  if ($p && !in_array($p, $collegePrograms[$d])) $collegePrograms[$d][] = $p;
 }
 
 // Handle form submission
@@ -58,7 +58,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $new_status      = $_POST['status'] ?? 'active';
   $new_employment  = $_POST['employment_role'] ?? 'Non-Teaching';
   $new_faculty_rank = !empty($_POST['faculty_rank']) ? trim($_POST['faculty_rank']) : null;
-  $new_department  = !empty($_POST['department']) ? trim($_POST['department']) : null;
+  $new_college  = !empty($_POST['college']) ? trim($_POST['college']) : null;
   $new_program     = !empty($_POST['program']) ? trim($_POST['program']) : null;
 
   // Normalize employment role
@@ -71,10 +71,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // 1) Update registrar table
     $upd = $conn->prepare("
       UPDATE registrar
-      SET status = ?, faculty_rank = ?, employment_role = ?, department = ?, program = ?
+      SET status = ?, faculty_rank = ?, employment_role = ?, college = ?, program = ?
       WHERE idnumber = ?
     ");
-    $upd->bind_param("ssssss", $new_status, $new_faculty_rank, $new_employment, $new_department, $new_program, $registrar_id);
+    $upd->bind_param("ssssss", $new_status, $new_faculty_rank, $new_employment, $new_college, $new_program, $registrar_id);
     $upd->execute();
     $upd->close();
 
@@ -90,8 +90,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($new_employment === 'Teaching') {
       // Ensure required fields for faculty are present
       // If not provided, rollback and show error
-      if (empty($new_department)) {
-        throw new Exception("Please select a Department when setting Employment Role to Teaching.");
+      if (empty($new_college)) {
+        throw new Exception("Please select a college when setting Employment Role to Teaching.");
       }
 
       if ($faculty_exists) {
@@ -101,11 +101,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           SET first_name = (SELECT first_name FROM registrar WHERE idnumber = ?),
               mid_name   = (SELECT mid_name FROM registrar WHERE idnumber = ?),
               last_name  = (SELECT last_name FROM registrar WHERE idnumber = ?),
-              department = ?, program = ?, faculty_rank = ?, status = 'active'
+              college = ?, program = ?, faculty_rank = ?, status = 'active'
           WHERE idnumber = ?
         ");
         // bind: registrar_id used in subselects too
-        $upf->bind_param("ssssss", $registrar_id, $registrar_id, $registrar_id, $new_department, $new_program, $new_faculty_rank, $registrar_id);
+        $upf->bind_param("ssssss", $registrar_id, $registrar_id, $registrar_id, $new_college, $new_program, $new_faculty_rank, $registrar_id);
         $upf->execute();
         $upf->close();
       } else {
@@ -123,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         $ins = $conn->prepare("
           INSERT INTO faculty
-            (idnumber, first_name, mid_name, last_name, password, department, program, faculty_rank, role, status)
+            (idnumber, first_name, mid_name, last_name, password, college, program, faculty_rank, role, status)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $ins->bind_param(
@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           $reg_mname,
           $reg_lname,
           $reg_password,
-          $new_department,
+          $new_college,
           $new_program,
           $new_faculty_rank,
           $faculty_role,
@@ -275,20 +275,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       </div>
                     </div>
 
-                    <!-- Department (College) -->
+                    <!-- college (College) -->
                     <div class="col-12">
                       <div class="card p-3 shadow-sm border border-primary-subtle">
-                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building"></i> College / Department</h6>
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building"></i> College / college</h6>
                         <div class="form-floating">
-                          <select name="department" id="department" class="form-select">
-                            <option value="">-- Select College / Department --</option>
-                            <?php foreach (array_keys($departmentPrograms) as $dpt): ?>
-                              <option value="<?= htmlspecialchars($dpt) ?>" <?= (isset($registrar['department']) && $registrar['department'] === $dpt) ? 'selected' : '' ?>>
+                          <select name="college" id="college" class="form-select">
+                            <option value="">-- Select College / college --</option>
+                            <?php foreach (array_keys($collegePrograms) as $dpt): ?>
+                              <option value="<?= htmlspecialchars($dpt) ?>" <?= (isset($registrar['college']) && $registrar['college'] === $dpt) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($dpt) ?>
                               </option>
                             <?php endforeach; ?>
                           </select>
-                          <label>College / Department</label>
+                          <label>College / college</label>
                         </div>
                       </div>
                     </div>
@@ -335,17 +335,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <script src="assets/js/main.js"></script>
 
   <script>
-    // departmentPrograms mapping from PHP
-    const departmentPrograms = <?= json_encode($departmentPrograms) ?>;
-    const deptSelect = document.getElementById('department');
+    // collegePrograms mapping from PHP
+    const collegePrograms = <?= json_encode($collegePrograms) ?>;
+    const deptSelect = document.getElementById('college');
     const programSelect = document.getElementById('program');
     const employmentRole = document.getElementById('employment_role');
     const teachingFields = document.getElementById('teachingFields');
 
-    // Load programs for selected department and mark previously selected program
+    // Load programs for selected college and mark previously selected program
     function loadPrograms() {
       const dept = deptSelect.value;
-      const programs = departmentPrograms[dept] || [];
+      const programs = collegePrograms[dept] || [];
       programSelect.innerHTML = `<option value="">-- Select Program --</option>`;
       programs.forEach(p => {
         const opt = new Option(p, p);

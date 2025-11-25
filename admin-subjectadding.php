@@ -28,32 +28,32 @@ if (!in_array($admin_position, $allowed_positions)) {
 }
 
 // --- ✅ 1. THIS IS THE MISSING BLOCK ---
-// Get all departments this admin is assigned to
-$dept_stmt = $conn->prepare("SELECT DISTINCT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// Get all college this admin is assigned to
+$dept_stmt = $conn->prepare("SELECT DISTINCT college_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
 
-$departments = []; // This admin's departments
+$college = []; // This admin's college
 while ($row = $dept_result->fetch_assoc()) {
-  $departments[] = $row['department_name'];
+  $college[] = $row['college_name'];
 }
 $dept_stmt->close();
 // --- END OF MISSING BLOCK ---
 
 
-// --- ✅ 2. Fetch ALL Department/Program relationships for the dropdowns ---
-$adds_query = "SELECT DISTINCT department_name, program_name 
+// --- ✅ 2. Fetch ALL college/Program relationships for the dropdowns ---
+$adds_query = "SELECT DISTINCT college_name, program_name 
                FROM adds 
-               WHERE department_name IS NOT NULL AND department_name != '' 
+               WHERE college_name IS NOT NULL AND college_name != '' 
                  AND program_name IS NOT NULL AND program_name != ''
-               ORDER BY department_name, program_name";
+               ORDER BY college_name, program_name";
 $adds_result = $conn->query($adds_query);
 
-// This array will hold ALL programs: $dept_programs['Department'] = ['Prog1', 'Prog2']
+// This array will hold ALL programs: $dept_programs['college'] = ['Prog1', 'Prog2']
 $dept_programs = [];
 while ($row = $adds_result->fetch_assoc()) {
-  $dept = $row['department_name'];
+  $dept = $row['college_name'];
   $prog = $row['program_name'];
   if (!isset($dept_programs[$dept])) {
     $dept_programs[$dept] = [];
@@ -63,12 +63,12 @@ while ($row = $adds_result->fetch_assoc()) {
 // --- End new query ---
 
 
-// --- ✅ 3. Fetch faculty ONLY from the admin's assigned department + program ---
+// --- ✅ 3. Fetch faculty ONLY from the admin's assigned college + program ---
 $faculty_data = [];
 
 $dept_prog_stmt = $conn->prepare("
-    SELECT department_name, program_name
-    FROM admin_departments
+    SELECT college_name, program_name
+    FROM admin_college
     WHERE admin_idnumber = ?
 ");
 $dept_prog_stmt->bind_param("s", $admin_id);
@@ -80,8 +80,8 @@ $params = [];
 $types = '';
 
 while ($row = $dept_prog_result->fetch_assoc()) {
-  $conditions[] = "(department = ? AND program = ?)";
-  $params[] = $row['department_name'];
+  $conditions[] = "(college = ? AND program = ?)";
+  $params[] = $row['college_name'];
   $params[] = $row['program_name'];
   $types .= "ss";
 }
@@ -186,13 +186,13 @@ if (!empty($conditions)) {
                 <div class="col-md-6">
                   <h6>Where to Assign (College)</h6>
                   <div class="form-floating">
-                    <select name="department" id="department" class="form-select" required>
-                      <option value="" disabled selected>-- Select Department --</option>
+                    <select name="college" id="college" class="form-select" required>
+                      <option value="" disabled selected>-- Select College --</option>
                       <?php foreach (array_keys($dept_programs) as $dept): ?>
                         <option value="<?= htmlspecialchars($dept) ?>"><?= htmlspecialchars($dept) ?></option>
                       <?php endforeach; ?>
                     </select>
-                    <label for="department">College</label>
+                    <label for="college">College</label>
                   </div>
                 </div>
 
@@ -230,7 +230,7 @@ if (!empty($conditions)) {
     const allData = <?php echo json_encode($dept_programs); ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
-      const deptSelect = document.getElementById('department');
+      const deptSelect = document.getElementById('college');
       const progSelect = document.getElementById('program');
 
       deptSelect.addEventListener('change', function() {
@@ -240,7 +240,7 @@ if (!empty($conditions)) {
 
         const selectedDept = this.value;
 
-        // Check if the selected department has any programs in our list
+        // Check if the selected college has any programs in our list
         if (!selectedDept || !allData[selectedDept]) {
           progSelect.innerHTML = '<option value="" disabled selected>No programs found</option>';
           return;

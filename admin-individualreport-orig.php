@@ -8,22 +8,22 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get the department of the admin
-// ✅ Get all departments this admin is assigned to
-$dept_stmt = $conn->prepare("SELECT department_name FROM admin_departments WHERE admin_idnumber = ?");
+// Get the college of the admin
+// ✅ Get all college this admin is assigned to
+$dept_stmt = $conn->prepare("SELECT college_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $admin_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
 
-$admin_departments = [];
+$admin_college = [];
 while ($row = $dept_result->fetch_assoc()) {
-  $admin_departments[] = $row['department_name'];
+  $admin_college[] = $row['college_name'];
 }
 $dept_stmt->close();
 
-// ✅ Handle if admin has no assigned departments
-if (empty($admin_departments)) {
-  $_SESSION['msg'] = "You are not assigned to any department. Please contact the Superadmin.";
+// ✅ Handle if admin has no assigned college
+if (empty($admin_college)) {
+  $_SESSION['msg'] = "You are not assigned to any college. Please contact the Superadmin.";
   $_SESSION['msg_type'] = "error";
   header("Location: admin-dashboard.php");
   exit();
@@ -41,7 +41,7 @@ $reviewer_query = $conn->prepare("
     SELECT first_name, mid_name, last_name, position 
     FROM admin 
     WHERE idnumber IN (
-      SELECT admin_idnumber FROM admin_departments WHERE department_name IN ('" . implode("','", $admin_departments) . "')
+      SELECT admin_idnumber FROM admin_college WHERE college_name IN ('" . implode("','", $admin_college) . "')
     )
       AND (position LIKE 'Dean%' OR position LIKE 'Chair%' OR position LIKE 'Program Chair%')
     LIMIT 1
@@ -158,7 +158,7 @@ $academic_years_query = mysqli_query($conn, "
               $faculty_query = mysqli_query($conn, "
             SELECT idnumber, first_name, mid_name, last_name
             FROM faculty
-            WHERE department IN ('" . implode("','", $admin_departments) . "')
+            WHERE college IN ('" . implode("','", $admin_college) . "')
             ORDER BY last_name ASC
           ");
               while ($row = mysqli_fetch_assoc($faculty_query)) {
@@ -206,10 +206,10 @@ $academic_years_query = mysqli_query($conn, "
         $faculty_id = $_GET['faculty_id'];
 
         // Faculty basic info
-        $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, department, faculty_rank FROM faculty WHERE idnumber = ?");
+        $stmt = $conn->prepare("SELECT last_name, first_name, mid_name, college, faculty_rank FROM faculty WHERE idnumber = ?");
         $stmt->bind_param("s", $faculty_id);
         $stmt->execute();
-        $stmt->bind_result($lname, $fname, $mname, $department, $faculty_rank);
+        $stmt->bind_result($lname, $fname, $mname, $college, $faculty_rank);
         $stmt->fetch();
         $stmt->close();
 
@@ -373,8 +373,8 @@ $academic_years_query = mysqli_query($conn, "
             <td><?= htmlspecialchars($faculty_name) ?></td>
           </tr>
           <tr>
-            <th>Department/College:</th>
-            <td><?= htmlspecialchars($department) ?></td>
+            <th>college/College:</th>
+            <td><?= htmlspecialchars($college) ?></td>
           </tr>
           <tr>
             <th>Current Faculty Rank:</th>
