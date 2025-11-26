@@ -60,6 +60,74 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt_admin_dept->close();
 
+// ---------------------------------------------
+// GET REVIEWER (Dean → fallback Chair)
+// ---------------------------------------------
+
+$admin_colleges_only = array_unique(array_column($admin_assignments, 'college_name'));
+
+$reviewer_name = "N/A";
+$reviewer_position = "N/A";
+
+if (!empty($admin_colleges_only)) {
+
+  $placeholders = implode(',', array_fill(0, count($admin_colleges_only), '?'));
+  $types_rev = str_repeat("s", count($admin_colleges_only));
+
+  // 1️⃣ Try to get DEAN
+  $sql_dean = "
+        SELECT a.first_name, a.mid_name, a.last_name, a.position
+        FROM admin a
+        INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+        WHERE ac.college_name IN ($placeholders)
+        AND a.position LIKE 'Dean%'
+        LIMIT 1
+    ";
+
+  $stmt_rev = $conn->prepare($sql_dean);
+  $stmt_rev->bind_param($types_rev, ...$admin_colleges_only);
+  $stmt_rev->execute();
+  $res_rev = $stmt_rev->get_result();
+
+  if ($row = $res_rev->fetch_assoc()) {
+    $middle_initial_rev = !empty($row['mid_name']) ? ' ' . substr($row['mid_name'], 0, 1) . '.' : '';
+    $reviewer_name = strtoupper(trim("{$row['first_name']}{$middle_initial_rev} {$row['last_name']}"));
+    $reviewer_position = $row['position'];
+  } else {
+    // 2️⃣ Fallback → Chair / Program Chair / Director
+    $sql_chair = "
+            SELECT a.first_name, a.mid_name, a.last_name, a.position
+            FROM admin a
+            INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+            WHERE ac.college_name IN ($placeholders)
+            AND (
+                a.position LIKE 'Chair%'
+                OR a.position LIKE 'Program Chair%'
+                OR a.position LIKE 'Director%'
+            )
+            ORDER BY
+                CASE
+                    WHEN a.position LIKE 'Chair%' THEN 1
+                    WHEN a.position LIKE 'Program Chair%' THEN 2
+                    WHEN a.position LIKE 'Director%' THEN 3
+                END
+            LIMIT 1
+        ";
+
+    $stmt_rev2 = $conn->prepare($sql_chair);
+    $stmt_rev2->bind_param($types_rev, ...$admin_colleges_only);
+    $stmt_rev2->execute();
+    $res_rev2 = $stmt_rev2->get_result();
+
+    if ($row2 = $res_rev2->fetch_assoc()) {
+      $middle_initial_rev = !empty($row2['mid_name']) ? ' ' . substr($row2['mid_name'], 0, 1) . '.' : '';
+      $reviewer_name = strtoupper(trim("{$row2['first_name']}{$middle_initial_rev} {$row2['last_name']}"));
+      $reviewer_position = $row2['position'];
+    }
+  }
+}
+
+
 
 if (!empty($admin_assignments)) {
   // ✅ Build the query to check for (dept = ? AND prog = ?) OR (dept = ? AND prog = ?)
@@ -255,13 +323,13 @@ $pdf->Cell(80, 6, $a_position, 0, 1, 'L'); // Add position
 $pdf->Ln(12); // Add space between blocks
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(140, 6, "Reviewed by:", 0, 1, 'L');
-$pdf->Ln(10); // Space for signature
+$pdf->Ln(10);
 
-$pdf->SetFont('Arial', 'B', 10); // Make name bold
-$pdf->Cell(80, 6, $prepared_by, 0, 1, 'L'); // Use the same admin name
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(80, 6, $reviewer_name, 0, 1, 'L');
 
-$pdf->SetFont('Arial', '', 10); // Revert to normal
-$pdf->Cell(80, 6, $a_position, 0, 1, 'L'); // Use the same admin position
+$pdf->SetFont('Arial', '', 10);
+$pdf->Cell(80, 6, $reviewer_position, 0, 1, 'L');  // Use the same admin position
 
 // --- ✅ END: New Signature Block ---
 

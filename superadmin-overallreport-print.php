@@ -109,14 +109,16 @@ $pdf = new PDF_EXTENDED('P', 'mm', 'A4', $conn);
 $pdf->college = $selected_college;
 $pdf->AddPage();
 
-$pdf->SetFont('Arial', 'B', 14);
-$title = "COLLEGE SET & SEF EVALUATION REPORT";
-$pdf->Cell(0, 10, $title, 0, 1, 'C');
-$pdf->Ln(3);
+// $pdf->SetFont('Arial', 'B', 14);
+// $title = "COLLEGE SET & SEF EVALUATION REPORT – $program_text";
+// $pdf->Cell(0, 10, $title, 0, 1, 'C');
+// $pdf->Ln(3);
 
 // --- Filters Information ---
 $pdf->SetFont('Arial', 'B', 11);
-$program_text = !empty($selected_program) ? $selected_program : 'All Programs'; // ✅ ADD THIS
+$program_text = !empty($selected_program) ? $selected_program : 'All Programs';
+$title = "COLLEGE SET & SEF EVALUATION REPORT";
+$pdf->Cell(0, 10, $title, 0, 1, 'C');
 $semester_text = !empty($selected_semester) ? $selected_semester : 'All Semesters';
 $academic_text = !empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years';
 
@@ -135,7 +137,13 @@ $pdf->Cell(40, 8, 'SEF AVG', 1, 1, 'C', true);
 
 // --- Table Content ---
 $pdf->SetFont('Arial', '', 10);
+$total_set = 0;
+$total_sef = 0;
+$count_set = 0;
+$count_sef = 0;
+
 foreach ($faculties as $fac) {
+    $fid = $fac['idnumber'];
     $fid = $fac['idnumber'];
     $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
@@ -188,10 +196,35 @@ foreach ($faculties as $fac) {
     $sef_avg = $sef_data['total'] ? number_format((float)$sef_data['avg'], 2) : '0.00';
 
     // 🔹 Output table row
+    $set_avg_raw = $set_data['total'] ? (float)$set_data['avg'] : 0;
+    $sef_avg_raw = $sef_data['total'] ? (float)$sef_data['avg'] : 0;
+
+    $set_avg = number_format($set_avg_raw, 2);
+    $sef_avg = number_format($sef_avg_raw, 2);
+
     $pdf->Cell(110, 8, $name, 1);
     $pdf->Cell(40, 8, $set_avg, 1, 0, 'C');
     $pdf->Cell(40, 8, $sef_avg, 1, 1, 'C');
+
+    if ($set_avg_raw > 0) {
+        $total_set += $set_avg_raw;
+        $count_set++;
+    }
+    if ($sef_avg_raw > 0) {
+        $total_sef += $sef_avg_raw;
+        $count_sef++;
+    }
 }
+
+// Compute averages
+$final_set_average = $count_set > 0 ? number_format($total_set / $count_set, 2) : '0.00';
+$final_sef_average = $count_sef > 0 ? number_format($total_sef / $count_sef, 2) : '0.00';
+
+// Add row at bottom of table
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(110, 8, 'College Average', 1, 0, 'R', true);
+$pdf->Cell(40, 8, $final_set_average, 1, 0, 'C', true);
+$pdf->Cell(40, 8, $final_sef_average, 1, 1, 'C', true);
 
 $pdf->Ln(15);
 
@@ -206,22 +239,67 @@ $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(140, 6, $s_position, 0, 1, 'L');
 
 
-// --- ✅ START: NEW REVIEWED BY SECTION ---
-if (!empty($reviewers)) {
-    $pdf->Ln(15); // Space between sections
-    $pdf->SetFont('Arial', '', 10);
-    $pdf->Cell(140, 6, "Reviewed by:", 0, 1, 'L');
-    $pdf->Ln(10); // Space before the first signature
+// ─────────────────────────────────────────────
+// Reviewed By section (1 admin only, Dean prioritized)
+// ─────────────────────────────────────────────
+$reviewer_name = "N/A";
+$reviewer_position = "N/A";
 
-    foreach ($reviewers as $reviewer) {
-        $pdf->SetFont('Arial', 'B', 10);
-        $pdf->Cell(140, 6, $reviewer['name'], 0, 1, 'L');
-        $pdf->SetFont('Arial', '', 10);
-        $pdf->Cell(140, 6, $reviewer['position'], 0, 1, 'L');
-        $pdf->Ln(8); // Space for the next reviewer
+// 1️⃣ Try to get Dean first
+$sql_dean = "
+    SELECT a.first_name, a.mid_name, a.last_name, a.position
+    FROM admin a
+    INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+    WHERE ac.college_name = ?
+      AND a.position LIKE 'Dean%'
+    LIMIT 1
+";
+$stmt = $conn->prepare($sql_dean);
+$stmt->bind_param("s", $selected_college);
+$stmt->execute();
+$res = $stmt->get_result();
+if ($row = $res->fetch_assoc()) {
+    $middle_initial = !empty($row['mid_name']) ? ' ' . substr($row['mid_name'], 0, 1) . '.' : '';
+    $reviewer_name = strtoupper(trim("{$row['first_name']}{$middle_initial} {$row['last_name']}"));
+    $reviewer_position = $row['position'];
+} else {
+    // 2️⃣ Fallback → Chair / Program Chair / Director
+    $sql_fallback = "
+        SELECT a.first_name, a.mid_name, a.last_name, a.position
+        FROM admin a
+        INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+        WHERE ac.college_name = ?
+          AND (a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+        ORDER BY
+            CASE
+                WHEN a.position LIKE 'Chair%' THEN 1
+                WHEN a.position LIKE 'Program Chair%' THEN 2
+                WHEN a.position LIKE 'Director%' THEN 3
+            END
+        LIMIT 1
+    ";
+    $stmt = $conn->prepare($sql_fallback);
+    $stmt->bind_param("s", $selected_college);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    if ($row2 = $res->fetch_assoc()) {
+        $middle_initial = !empty($row2['mid_name']) ? ' ' . substr($row2['mid_name'], 0, 1) . '.' : '';
+        $reviewer_name = strtoupper(trim("{$row2['first_name']}{$middle_initial} {$row2['last_name']}"));
+        $reviewer_position = $row2['position'];
     }
 }
-// --- ✅ END: NEW REVIEWED BY SECTION ---
+$stmt->close();
+
+// Display in PDF
+$pdf->Ln(20);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 6, "Reviewed By:", 0, 1, 'L');
+$pdf->Ln(8);
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(140, 6, $reviewer_name, 0, 1, 'L');
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(140, 6, strtoupper($reviewer_position), 0, 1, 'L');
+
 
 
 $pdf->Output('I', 'Overall-Evaluation-Report.pdf');

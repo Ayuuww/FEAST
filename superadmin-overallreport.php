@@ -2,18 +2,20 @@
 session_start();
 include 'conn/conn.php';
 
+// Check if logged in as superadmin
 if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'superadmin') {
   header("Location: pages-login.php");
   exit();
 }
 
-// Default filters
+// --- Filters ---
 $selected_college = isset($_GET['college']) ? $_GET['college'] : "";
-$selected_program = isset($_GET['program']) ? $_GET['program'] : ""; // ✅ ADD THIS
+$selected_program = isset($_GET['program']) ? $_GET['program'] : "";
 $selected_semester = isset($_GET['semester']) ? $_GET['semester'] : "";
 $selected_academic_year = isset($_GET['academic_year']) ? $_GET['academic_year'] : "";
 
-// Build college dropdown (from faculty table)
+// --- Dropdowns ---
+// Colleges
 $col_options = "";
 $col_query = $conn->query("SELECT DISTINCT college FROM faculty ORDER BY college ASC");
 while ($row = $col_query->fetch_assoc()) {
@@ -22,21 +24,22 @@ while ($row = $col_query->fetch_assoc()) {
   $col_options .= "<option value='$col' $selected>$col</option>";
 }
 
-// --- Build program dropdown (depends on selected college) ---
+// Programs (depends on selected college)
 $prog_options = "<option value=''>-- All Programs --</option>";
 if (!empty($selected_college)) {
-  $prog_stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE college = ? AND program != '' ORDER BY program ASC");
-  $prog_stmt->bind_param("s", $selected_college);
-  $prog_stmt->execute();
-  $prog_result = $prog_stmt->get_result();
-  while ($row = $prog_result->fetch_assoc()) {
+  $stmt = $conn->prepare("SELECT DISTINCT program FROM faculty WHERE college = ? AND program != '' ORDER BY program ASC");
+  $stmt->bind_param("s", $selected_college);
+  $stmt->execute();
+  $result = $stmt->get_result();
+  while ($row = $result->fetch_assoc()) {
     $prog = $row['program'];
     $selected = ($prog === $selected_program) ? "selected" : "";
     $prog_options .= "<option value='$prog' $selected>$prog</option>";
   }
-  $prog_stmt->close();
+  $stmt->close();
 }
-// Build semester dropdown (from evaluation/admin_evaluation)
+
+// Semesters (SET + SEF)
 $sem_options = "";
 $sem_query = $conn->query("SELECT DISTINCT semester FROM evaluation UNION SELECT DISTINCT semester FROM admin_evaluation ORDER BY semester ASC");
 while ($row = $sem_query->fetch_assoc()) {
@@ -45,7 +48,7 @@ while ($row = $sem_query->fetch_assoc()) {
   $sem_options .= "<option value='$sem' $selected>$sem</option>";
 }
 
-// Build academic year dropdown
+// Academic years
 $year_options = "";
 $year_query = $conn->query("SELECT DISTINCT academic_year FROM evaluation UNION SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
 while ($row = $year_query->fetch_assoc()) {
@@ -54,21 +57,18 @@ while ($row = $year_query->fetch_assoc()) {
   $year_options .= "<option value='$year' $selected>$year</option>";
 }
 
-// Initialize rows
-$set_rows = '';
-$sef_rows = '';
+// --- Fetch faculty ---
 $overall_rows = '';
+$total_set_avg = 0;
+$total_sef_avg = 0;
+$faculty_with_set = 0;
+$faculty_with_sef = 0;
 
 if (!empty($selected_college)) {
-  // Get all faculty in college
-  // Get all faculty in college (and program, if selected)
-  $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name
-         FROM faculty
-         WHERE college = ?";
+  $faculty_sql = "SELECT idnumber, last_name, first_name, mid_name FROM faculty WHERE college = ?";
   $params = [$selected_college];
   $types = "s";
 
-  // Add program filter if it exists
   if (!empty($selected_program)) {
     $faculty_sql .= " AND program = ?";
     $params[] = $selected_program;
@@ -77,93 +77,103 @@ if (!empty($selected_college)) {
 
   $faculty_sql .= " ORDER BY last_name ASC";
 
-  $query = $conn->prepare($faculty_sql);
-  $query->bind_param($types, ...$params);
-  $query->execute();
-  $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
-  $query->close();
+  $stmt = $conn->prepare($faculty_sql);
+  $stmt->bind_param($types, ...$params);
+  $stmt->execute();
+  $faculties = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+  $stmt->close();
 
   foreach ($faculties as $fac) {
     $fid = $fac['idnumber'];
     $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
 
-    // SET (Student evaluations)
-    $where_set = "faculty_id = '$fid'";
+    // SET
+    $sql = "SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating FROM evaluation WHERE faculty_id = ?";
+    $sql_types = "s";
+    $sql_params = [$fid];
     if (!empty($selected_semester)) {
-      $where_set .= " AND semester = '" . $conn->real_escape_string($selected_semester) . "'";
+      $sql .= " AND semester = ?";
+      $sql_params[] = $selected_semester;
+      $sql_types .= "s";
     }
     if (!empty($selected_academic_year)) {
-      $where_set .= " AND academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
+      $sql .= " AND academic_year = ?";
+      $sql_params[] = $selected_academic_year;
+      $sql_types .= "s";
     }
-    $set_result = $conn->query("
-      SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
-      FROM evaluation
-      WHERE $where_set
-    ")->fetch_assoc();
+    $stmtEval = $conn->prepare($sql);
+    $stmtEval->bind_param($sql_types, ...$sql_params);
+    $stmtEval->execute();
+    $set_result = $stmtEval->get_result()->fetch_assoc();
+    $stmtEval->close();
     $set_count = (int)$set_result['students'];
-    $set_avg = $set_count ? number_format((float)$set_result['avg_rating'], 2) : '0.00';
-    $set_rows .= "<tr><td>{$name}</td><td class='text-center'>{$set_count}</td><td class='text-center'>{$set_avg} %</td></tr>";
+    $set_avg_raw = $set_count ? (float)$set_result['avg_rating'] : 0.00;
+    $set_avg_display = number_format($set_avg_raw, 2);
 
-    // SEF (Supervisor evaluations)
-    $where_sef = "evaluatee_id = '$fid'";
+    // SEF
+    $sql = "SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating FROM admin_evaluation WHERE evaluatee_id = ?";
+    $sql_types = "s";
+    $sql_params = [$fid];
     if (!empty($selected_semester)) {
-      $where_sef .= " AND semester = '" . $conn->real_escape_string($selected_semester) . "'";
+      $sql .= " AND semester = ?";
+      $sql_params[] = $selected_semester;
+      $sql_types .= "s";
     }
     if (!empty($selected_academic_year)) {
-      $where_sef .= " AND academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
+      $sql .= " AND academic_year = ?";
+      $sql_params[] = $selected_academic_year;
+      $sql_types .= "s";
     }
-    $sef_result = $conn->query("
-      SELECT COUNT(*) AS admins, AVG(computed_rating) AS avg_rating
-      FROM admin_evaluation
-      WHERE $where_sef
-    ")->fetch_assoc();
+    $stmtEval = $conn->prepare($sql);
+    $stmtEval->bind_param($sql_types, ...$sql_params);
+    $stmtEval->execute();
+    $sef_result = $stmtEval->get_result()->fetch_assoc();
+    $stmtEval->close();
     $sef_count = (int)$sef_result['admins'];
-    $sef_avg = $sef_count ? number_format((float)$sef_result['avg_rating'], 2) : '0.00';
-    $sef_rows .= "<tr><td>{$name}</td><td class='text-center'>{$sef_count}</td><td class='text-center'>{$sef_avg} %</td></tr>";
+    $sef_avg_raw = $sef_count ? (float)$sef_result['avg_rating'] : 0.00;
+    $sef_avg_display = number_format($sef_avg_raw, 2);
 
-    // Combined Overall
-    $set_avg_val = (float)$set_avg;
-    $sef_avg_val = (float)$sef_avg;
-    $overall_avg = ($set_count && $sef_count)
-      ? number_format(($set_avg_val + $sef_avg_val) / 2, 2)
-      : ($set_count ? $set_avg : ($sef_count ? $sef_avg : '0.00'));
+    // Totals for college averages
+    if ($set_count > 0) {
+      $total_set_avg += $set_avg_raw;
+      $faculty_with_set++;
+    }
+    if ($sef_count > 0) {
+      $total_sef_avg += $sef_avg_raw;
+      $faculty_with_sef++;
+    }
+
     $overall_rows .= "<tr>
-                        <td>{$name}</td>
-                        <td class='text-center'>{$set_avg}</td>
-                        <td class='text-center'>{$sef_avg}</td>
-                      </tr>";
+        <td>{$name}</td>
+        <td class='text-center'>{$set_avg_display}</td>
+        <td class='text-center'>{$sef_avg_display}</td>
+      </tr>";
   }
 }
+
+$final_set_average = ($faculty_with_set > 0) ? ($total_set_avg / $faculty_with_set) : 0;
+$final_sef_average = ($faculty_with_sef > 0) ? ($total_sef_avg / $faculty_with_sef) : 0;
+
 ?>
-
-
-
 <!DOCTYPE html>
 <html>
 
 <head>
-
-  <!-- Head -->
-  <?php include 'head.php' ?>
-  <!-- End Head -->
-
+  <?php include 'head.php'; ?>
 </head>
 
 <body>
   <?php include 'superadmin-header.php'; ?>
-
-  <!-- ======= Sidebar ======= -->
-  <?php include 'superadmin-sidebar.php' ?>
-  <!-- End Sidebar-->
+  <?php include 'superadmin-sidebar.php'; ?>
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>Overall Faculty Evaluation Report (SET + SEF)</h1>
+      <h1>Overall Faculty Evaluation Report</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
           <li class="breadcrumb-item">Reports</li>
-          <li class="breadcrumb-item active">Overall Report</li>
+          <li class="breadcrumb-item active">Overall Report SET & SEF</li>
         </ol>
       </nav>
     </div>
@@ -175,13 +185,9 @@ if (!empty($selected_college)) {
             <div class="card">
               <div class="card-body">
                 <h4 class="card-title text-center my-3">
-                  Overall SET/SEF Report
-                  <?= !empty($selected_college) ? " – " . htmlspecialchars($selected_college) : "" ?>
-                  <?= !empty($selected_semester) ? " | Semester: " . htmlspecialchars($selected_semester) : "" ?>
-                  <?= !empty($selected_academic_year) ? " | AY: " . htmlspecialchars($selected_academic_year) : "" ?>
+                  Overall Evaluation Report – <?= htmlspecialchars($selected_college) ?>
                 </h4>
 
-                <!-- Filters -->
                 <form method="GET" class="mb-3">
                   <div class="row align-items-end g-3">
                     <div class="col-md-3">
@@ -211,39 +217,37 @@ if (!empty($selected_college)) {
                         <?= $year_options ?>
                       </select>
                     </div>
-                    <div class="col-md-auto">
+                    <div class="col-md-auto mt-2">
                       <button type="submit" class="btn btn-success w-100">Generate Report</button>
                     </div>
                   </div>
                 </form>
 
-                <?php if (!empty($selected_college)) { ?>
+                <div class="table-responsive mb-4">
+                  <table class="table table-bordered table-hover">
+                    <thead class="table-light text-center">
+                      <tr>
+                        <th>Faculty Name</th>
+                        <th>SET Avg</th>
+                        <th>SEF Avg</th>
+                      </tr>
+                    </thead>
+                    <tbody><?= $overall_rows ?></tbody>
+                    <tfoot>
+                      <tr class="table-light fw-bold">
+                        <td class="text-end">College Average:</td>
+                        <td class="text-center"><?= number_format($final_set_average, 2) ?></td>
+                        <td class="text-center"><?= number_format($final_sef_average, 2) ?></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
 
-                  <!-- Overall Table -->
-                  <h5 class="mb-2">Overall Evaluation (SET + SEF)</h5>
-                  <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-hover">
-                      <thead class="table-light text-center">
-                        <tr>
-                          <th>Faculty Name</th>
-                          <th>SET Avg</th>
-                          <th>SEF Avg</th>
-                        </tr>
-                      </thead>
-                      <tbody><?= $overall_rows ?></tbody>
-                    </table>
-                  </div>
-
-                  <div class="text-end mb-3">
-                    <a href="superadmin-overallreport-print.php?college=<?= urlencode($selected_college) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>"
-                      class="btn btn-secondary" target="_blank">
-                      <i class="bi bi-printer"></i> Print Report
-                    </a>
-                  </div>
-
-                <?php } else { ?>
-                  <p class="text-center text-muted">Please select a college to generate the report.</p>
-                <?php } ?>
+                <div class="text-end mb-3">
+                  <a href="superadmin-overallreport-print.php?college=<?= urlencode($selected_college) ?>&program=<?= urlencode($selected_program) ?>&semester=<?= urlencode($selected_semester) ?>&academic_year=<?= urlencode($selected_academic_year) ?>" class="btn btn-secondary" target="_blank">
+                    <i class="bi bi-printer"></i> Print Report
+                  </a>
+                </div>
 
               </div>
             </div>
@@ -258,7 +262,6 @@ if (!empty($selected_college)) {
     <i class="bi bi-arrow-up-short"></i>
   </a>
 
-  <!-- Vendor JS Files -->
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/main.js"></script>
 </body>

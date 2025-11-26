@@ -58,7 +58,7 @@ while ($row = $result->fetch_assoc()) {
   if (!empty($row['mid_name'])) {
     $middle_initial = ' ' . substr($row['mid_name'], 0, 1) . '.'; // Add space, initial, and period
   }
-  
+
   $fullname = strtoupper(trim("{$row['first_name']} $middle_initial {$row['last_name']}"));
   $supervisors[] = [
     'name' => $fullname,
@@ -82,7 +82,7 @@ $pdf->SetFont('Arial', 'B', 14);
 $pdf->Cell(0, 10, ' COLLEGE SET EVALUATION REPORT', 0, 1, 'C');
 
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'college/College: ' . (!empty($selected_college) ? $selected_college : 'All Programs'), 0, 1); // ✅ ADD THIS
+$pdf->Cell(0, 8, 'College: ' . (!empty($selected_college) ? $selected_college : 'All Programs'), 0, 1); // ✅ ADD THIS
 $pdf->Cell(0, 8, 'Semester: ' . ($selected_semester ?: '1st / 2nd Semester'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . ($selected_academic_year ?: 'All Academic Years'), 0, 1);
 $pdf->Cell(0, 8, 'Date: ' . date('F j, Y'), 0, 1);
@@ -204,21 +204,67 @@ $pdf->Cell(0, 6, strtoupper($position), 0, 1, 'L');
 
 
 // ─────────────────────────────────────────────
-// 8️⃣ Approved by section (if you want Program Chair shown)
+// 8️⃣ Reviewed By section (single admin, Dean prioritized)
 // ─────────────────────────────────────────────
-if (!empty($supervisors)) {
-  $pdf->Ln(20);
-  $pdf->SetFont('Arial', '', 11);
-  $pdf->Cell(0, 6, "Reviewed By:", 0, 1, 'L');
-  $pdf->SetFont('Arial', '', 11);
 
-  foreach ($supervisors as $sup) {
-    $pdf->Ln(8);
-    $pdf->SetFont('Arial', 'B', 11);
-    $pdf->Cell(140, 6, $sup['name'], 0, 1, 'L');
-    $pdf->SetFont('Arial', '', 11);
-    $pdf->Cell(140, 6, strtoupper($sup['position']), 0, 1, 'L');
+// Default values
+$reviewer_name = "N/A";
+$reviewer_position = "N/A";
+
+// Try to fetch Dean first
+$sql_dean = "
+    SELECT a.first_name, a.mid_name, a.last_name, a.position
+    FROM admin a
+    INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+    WHERE ac.college_name = ?
+      AND a.position LIKE 'Dean%'
+    LIMIT 1
+";
+$stmt = $conn->prepare($sql_dean);
+$stmt->bind_param("s", $selected_college);
+$stmt->execute();
+$res = $stmt->get_result();
+if ($row = $res->fetch_assoc()) {
+  $middle_initial = !empty($row['mid_name']) ? ' ' . substr($row['mid_name'], 0, 1) . '.' : '';
+  $reviewer_name = strtoupper(trim("{$row['first_name']}{$middle_initial} {$row['last_name']}"));
+  $reviewer_position = $row['position'];
+} else {
+  // Fallback: Chair / Program Chair / Director
+  $sql_fallback = "
+        SELECT a.first_name, a.mid_name, a.last_name, a.position
+        FROM admin a
+        INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+        WHERE ac.college_name = ?
+          AND (a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+        ORDER BY
+            CASE
+                WHEN a.position LIKE 'Chair%' THEN 1
+                WHEN a.position LIKE 'Program Chair%' THEN 2
+                WHEN a.position LIKE 'Director%' THEN 3
+            END
+        LIMIT 1
+    ";
+  $stmt = $conn->prepare($sql_fallback);
+  $stmt->bind_param("s", $selected_college);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  if ($row = $res->fetch_assoc()) {
+    $middle_initial = !empty($row['mid_name']) ? ' ' . substr($row['mid_name'], 0, 1) . '.' : '';
+    $reviewer_name = strtoupper(trim("{$row['first_name']}{$middle_initial} {$row['last_name']}"));
+    $reviewer_position = $row['position'];
   }
 }
+$stmt->close();
+
+// Display in PDF
+$pdf->Ln(20);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 6, "Reviewed By:", 0, 1, 'L');
+$pdf->Ln(8);
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(140, 6, $reviewer_name, 0, 1, 'L');
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(140, 6, strtoupper($reviewer_position), 0, 1, 'L');
+
 
 $pdf->Output('I', 'College-SET-Report.pdf');

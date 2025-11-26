@@ -148,6 +148,31 @@ foreach ($faculties as $fac) {
   // --- End Modification 3 ---
 }
 
+// ─────────────────────────────────────────────
+// ✅ 6.5️⃣ College Average (Overall college Average)
+// ─────────────────────────────────────────────
+$college_where = ["f.college = '" . $conn->real_escape_string($selected_college) . "'"];
+if (!empty($selected_program)) $college_where[] = "f.program = '" . $conn->real_escape_string($selected_program) . "'";
+if (!empty($selected_academic_year)) $college_where[] = "academic_year = '" . $conn->real_escape_string($selected_academic_year) . "'";
+$college_where_sql = implode(" AND ", $college_where);
+
+$college_avg_query = "
+  SELECT COUNT(*) AS total_students, AVG(computed_rating) AS college_avg
+  FROM evaluation e
+  INNER JOIN faculty f ON e.faculty_id = f.idnumber
+  WHERE $college_where_sql
+";
+$college_result = $conn->query($college_avg_query)->fetch_assoc();
+$total_students = (int)$college_result['total_students'];
+$college_avg = $total_students ? number_format((float)$college_result['college_avg'], 2) : '0.00';
+
+// Add college average row
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->SetFillColor(240, 240, 240);
+$pdf->Cell(140, 10, 'College Average', 1, 0, 'R', true);
+$pdf->Cell(40, 10, number_format($college_avg, 2), 1, 1, 'C', true);
+$pdf->Ln(12);
+
 // Get logged-in superadmin info
 $prepared_by = "";
 $position = "";
@@ -186,19 +211,66 @@ $pdf->SetFont('Arial', '', 11);
 $pdf->Cell(120, 6, strtoupper($position), 0, 1, 'L');
 $pdf->Ln(8);
 
-// Reviewed By section (supervisors)
-if (!empty($supervisors)) {
-  $pdf->SetFont('Arial', '', 11);
-  $pdf->Cell(0, 6, 'Reviewed by:', 0, 1, 'L');
-  $pdf->Ln(5);
+// ─────────────────────────────────────────────
+// Reviewed By section (1 admin only, Dean prioritized)
+// ─────────────────────────────────────────────
+$reviewer_name = "N/A";
+$reviewer_position = "N/A";
 
-  foreach ($supervisors as $sup) {
-    $pdf->SetFont('Arial', 'B', 11);
-    $pdf->Cell(120, 6, $sup['name'], 0, 1, 'L');
-    $pdf->SetFont('Arial', '', 11);
-    $pdf->Cell(120, 6, strtoupper($sup['position']), 0, 1, 'L');
-    $pdf->Ln(6);
+// 1️⃣ Try to get Dean first
+$sql_dean = "
+    SELECT a.first_name, a.mid_name, a.last_name, a.position
+    FROM admin a
+    INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+    WHERE ac.college_name = ?
+      AND a.position LIKE 'Dean%'
+    LIMIT 1
+";
+$stmt = $conn->prepare($sql_dean);
+$stmt->bind_param("s", $selected_college);
+$stmt->execute();
+$res = $stmt->get_result();
+if ($row = $res->fetch_assoc()) {
+  $middle_initial = !empty($row['mid_name']) ? ' ' . substr($row['mid_name'], 0, 1) . '.' : '';
+  $reviewer_name = strtoupper(trim("{$row['first_name']}{$middle_initial} {$row['last_name']}"));
+  $reviewer_position = $row['position'];
+} else {
+  // 2️⃣ Fallback → Chair / Program Chair / Director
+  $sql_fallback = "
+        SELECT a.first_name, a.mid_name, a.last_name, a.position
+        FROM admin a
+        INNER JOIN admin_college ac ON a.idnumber = ac.admin_idnumber
+        WHERE ac.college_name = ?
+          AND (a.position LIKE 'Chair%' OR a.position LIKE 'Program Chair%' OR a.position LIKE 'Director%')
+        ORDER BY
+            CASE
+                WHEN a.position LIKE 'Chair%' THEN 1
+                WHEN a.position LIKE 'Program Chair%' THEN 2
+                WHEN a.position LIKE 'Director%' THEN 3
+            END
+        LIMIT 1
+    ";
+  $stmt = $conn->prepare($sql_fallback);
+  $stmt->bind_param("s", $selected_college);
+  $stmt->execute();
+  $res = $stmt->get_result();
+  if ($row2 = $res->fetch_assoc()) {
+    $middle_initial = !empty($row2['mid_name']) ? ' ' . substr($row2['mid_name'], 0, 1) . '.' : '';
+    $reviewer_name = strtoupper(trim("{$row2['first_name']}{$middle_initial} {$row2['last_name']}"));
+    $reviewer_position = $row2['position'];
   }
 }
+$stmt->close();
+
+// Display in PDF
+$pdf->Ln(20);
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(0, 6, "Reviewed By:", 0, 1, 'L');
+$pdf->Ln(8);
+$pdf->SetFont('Arial', 'B', 11);
+$pdf->Cell(140, 6, $reviewer_name, 0, 1, 'L');
+$pdf->SetFont('Arial', '', 11);
+$pdf->Cell(140, 6, strtoupper($reviewer_position), 0, 1, 'L');
+
 
 $pdf->Output('I', 'Overall-SEF-Report.pdf');

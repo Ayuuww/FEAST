@@ -244,7 +244,7 @@ $admin_info_query->close();
 </head>
 
 <body>
-  
+
   <?php include 'admin-header.php' ?>
   <?php include 'admin-sidebar.php' ?>
 
@@ -595,7 +595,7 @@ $admin_info_query->close();
                 </tr>
                 <tr>
                   <td class="label">Name:</td>
-                  <td><?= htmlspecialchars($prepared_by_name) ?></td>
+                  <td><?= htmlspecialchars($reviewer_name) ?></td>
                 </tr>
                 <tr>
                   <td class="label">Date:</td>

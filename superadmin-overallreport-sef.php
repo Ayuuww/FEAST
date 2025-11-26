@@ -77,6 +77,10 @@ if (!empty($selected_college)) {
   $faculties = $query->get_result()->fetch_all(MYSQLI_ASSOC);
   $query->close();
 
+  // --- Compute College Average ---
+  $total_faculty_with_evals = 0; // count only faculties with evaluations
+  $total_avg_sum = 0;
+
   foreach ($faculties as $fac) {
     $fid = $fac['idnumber'];
     $name = "{$fac['last_name']}, {$fac['first_name']} {$fac['mid_name']}";
@@ -91,16 +95,25 @@ if (!empty($selected_college)) {
     }
 
     $r = $conn->query("
-          SELECT COUNT(*) AS evaluations, AVG(computed_rating) AS avg_rating
-          FROM admin_evaluation
-          WHERE $where
-        ")->fetch_assoc();
+    SELECT COUNT(*) AS students, AVG(computed_rating) AS avg_rating
+    FROM admin_evaluation
+    WHERE $where
+    ")->fetch_assoc();
 
-    $count = (int)$r['evaluations'];
+    $count = (int)$r['students'];
     $avg = $count ? number_format((float)$r['avg_rating'], 2) : '0.00';
+
+    // Accumulate for college average (only include faculties with at least 1 evaluation)
+    if ($count > 0) {
+      $total_faculty_with_evals++;
+      $total_avg_sum += (float)$r['avg_rating'];
+    }
 
     $rows .= "<tr><td>{$name}</td><td>{$count}</td><td>{$avg}</td></tr>";
   }
+
+  // Calculate College Average
+  $college_average = $total_faculty_with_evals > 0 ? number_format($total_avg_sum / $total_faculty_with_evals, 2) : '0.00';
 }
 ?>
 
@@ -152,9 +165,9 @@ if (!empty($selected_college)) {
                   <div class="row align-items-end">
                     <!-- college -->
                     <div class="col-md-3">
-                      <label for="college" class="form-label">Select college/College</label>
+                      <label for="college" class="form-label">Select College</label>
                       <select name="college" id="college" class="form-select" onchange="this.form.submit()">
-                        <option value="">-- Choose college --</option>
+                        <option value="">-- Choose College --</option>
                         <?= $col_options ?>
                       </select>
                     </div>
@@ -204,6 +217,12 @@ if (!empty($selected_college)) {
                       <tbody>
                         <?= $rows ?>
                       </tbody>
+                      <tfoot>
+                        <tr class="table-light fw-bold">
+                          <td colspan="2" class="text-end">College Average:</td>
+                          <td><?= number_format($college_average, 2) ?></td>
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
 
