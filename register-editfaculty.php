@@ -349,35 +349,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <hr>
                     <h6 class="text-primary fw-bold">Admin Promotion Details</h6>
 
-                    <div class="col-md-12">
-                      <div class="form-floating">
-                        <select class="form-select" name="position" id="position">
-                          <option value="" disabled selected>-- Select Position --</option>
-                          <?php $positions_result->data_seek(0); // Reset result pointer 
-                          ?>
-                          <?php while ($row = $positions_result->fetch_assoc()): ?>
-                            <option value="<?= htmlspecialchars($row['position_name']) ?>"><?= htmlspecialchars($row['position_name']) ?></option>
-                          <?php endwhile; ?>
-                        </select>
-                        <label for="position">Position</label>
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                          <select class="form-select" name="position" id="position">
+                            <option value="" disabled selected>-- Select Position --</option>
+                            <?php $positions_result->data_seek(0); // Reset result pointer 
+                            ?>
+                            <?php while ($row = $positions_result->fetch_assoc()): ?>
+                              <option value="<?= htmlspecialchars($row['position_name']) ?>"><?= htmlspecialchars($row['position_name']) ?></option>
+                            <?php endwhile; ?>
+                          </select>
+                          <label for="position">Position</label>
+                        </div>
                       </div>
-                    </div>
 
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <select class="form-select" name="main_college" id="main_college">
-                          <option value="" disabled selected>-- Select Main college --</option>
-                        </select>
-                        <label>New Main college</label>
+                      <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                          <select class="form-select" name="main_college" id="main_college">
+                            <option value="" disabled selected>-- Select Main college --</option>
+                          </select>
+                          <label>New Main college</label>
+                        </div>
                       </div>
-                    </div>
 
-                    <div class="col-md-6">
-                      <div class="form-floating">
-                        <select class="form-select" name="main_program" id="main_program">
-                          <option value="" selected>-- Select Main Program (if any) --</option>
-                        </select>
-                        <label>New Main Program</label>
+                      <div class="col-md-12 mb-3">
+                        <div class="form-floating">
+                          <select class="form-select" name="main_program" id="main_program">
+                            <option value="" selected>-- Select Main Program (if any) --</option>
+                          </select>
+                          <label>New Main Program</label>
+                        </div>
                       </div>
                     </div>
 

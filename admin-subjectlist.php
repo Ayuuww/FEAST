@@ -38,49 +38,75 @@ if (!in_array($admin_position, $allowed_positions)) {
 }
 
 
-// --- ✅ NEW DYNAMIC QUERY ---
+// --- NEW DYNAMIC QUERY ---
 
-$params = []; // Array to hold all parameters
-$types = "";  // String for all types
+$params = [];
+$types  = "";
 
+// Base SELECT
 $sub_q = "
     SELECT subject.*,
            COALESCE(f.first_name, a.first_name) AS first_name,
-           COALESCE(f.mid_name, a.mid_name) AS mid_name,
-           COALESCE(f.last_name, a.last_name) AS last_name,
+           COALESCE(f.mid_name,   a.mid_name)   AS mid_name,
+           COALESCE(f.last_name,  a.last_name)  AS last_name,
            CASE
                WHEN subject.faculty_id IS NOT NULL THEN 'Faculty'
-               WHEN subject.admin_id IS NOT NULL THEN 'Admin'
+               WHEN subject.admin_id   IS NOT NULL THEN 'Admin'
                ELSE 'Unknown'
-           END AS handler_role
+           END AS handler_role,
+           subject.admin_id AS creator_admin_id
     FROM subject
     LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
-    LEFT JOIN admin a ON subject.admin_id = a.idnumber
+    LEFT JOIN admin a    ON subject.admin_id  = a.idnumber
+    LEFT JOIN (
+        SELECT DISTINCT admin_idnumber, college_name
+        FROM admin_college
+    ) ac ON ac.admin_idnumber = subject.admin_id
+    WHERE 1
 ";
 
-$where_clauses = [];
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//   DEAN or DIRECTOR → sees all subjects from same college
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-// 1. Add college clause ONLY if college exist
-if (!empty($college)) {
-  $placeholders = implode(',', array_fill(0, count($college), '?'));
-  $where_clauses[] = "subject.college IN ($placeholders)";
-  $params = array_merge($params, $college); // Add all college to params
-  $types .= str_repeat('s', count($college)); // Add 's' for each dept
+if ($admin_position === 'Dean' || $admin_position === 'Director') {
+
+  if (!empty($college)) {
+    $placeholders = implode(',', array_fill(0, count($college), '?'));
+    $sub_q .= " AND ac.college_name IN ($placeholders)";
+    $params = array_merge($params, $college);
+    $types .= str_repeat('s', count($college));
+  }
 }
 
-// 2. Add the "created by me" clause
-$where_clauses[] = "subject.admin_id = ?";
-$params[] = $admin_id; // Add admin_id to params
-$types .= 's'; // Add 's' for admin_id
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+//   PROGRAM CHAIR or CHAIR PERSON
+//   → sees all subjects from same college 
+//     PLUS their own created subjects
+// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
-// 3. Combine the WHERE clauses with OR
-if (!empty($where_clauses)) {
-  $sub_q .= " WHERE " . implode(' OR ', $where_clauses);
+else {
+  $conditions = [];
+
+  // Same college (creator’s college)
+  if (!empty($college)) {
+    $placeholders = implode(',', array_fill(0, count($college), '?'));
+    $conditions[] = "ac.college_name IN ($placeholders)";
+    $params = array_merge($params, $college);
+    $types .= str_repeat('s', count($college));
+  }
+
+  // OR subjects they personally created
+  $conditions[] = "subject.admin_id = ?";
+  $params[] = $admin_id;
+  $types .= "s";
+
+  // Combine
+  $sub_q .= " AND (" . implode(" OR ", $conditions) . ")";
 }
 
 $sub_q .= " ORDER BY subject.code ASC";
 
-// 4. Prepare and execute the statement
 $sub_stmt = $conn->prepare($sub_q);
 
 if (!empty($params)) {
@@ -151,31 +177,58 @@ $result = $sub_stmt->get_result();
               <table class="table datatable">
                 <thead>
                   <tr>
-                    <th><b>Subject Code</b></th>
+                    <th>Subject Code</th>
                     <th>Descriptive Title</th>
                     <th>Faculty Name</th>
                     <th>Assigned College</th>
                     <th>Assigned Program</th>
-                    <th>Action</th>
+                    <th>Creator</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php while ($row = $result->fetch_assoc()) : ?>
                     <tr>
-                      <td class="text-uppercase"><?php echo htmlspecialchars($row['code']); ?></td>
-                      <td class="text-capitalize"><?php echo htmlspecialchars($row['title']); ?></td>
-                      <td class="text-capitalize">
-                        <?php echo htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])); ?>
+                      <!-- Subject Code -->
+                      <td class="text-uppercase">
+                        <?= htmlspecialchars($row['code']) ?>
                       </td>
 
-                      <td class="text-uppercase"><?php echo htmlspecialchars($row['college']); ?></td>
-                      <td class="text-capitalize"><?php echo htmlspecialchars($row['program']); ?></td>
-                      <td>
-                        <form method="post" class="delete-form" action="deletesubject.php">
-                          <input type="hidden" name="idnumber" value="<?php echo $row['idnumber']; ?>">
-                          <button type="button" class="btn btn-danger btn-sm delete-btn" data-subject="<?php echo htmlspecialchars($row['title']); ?>">Delete</button>
-                        </form>
+                      <!-- Title -->
+                      <td class="text-capitalize">
+                        <?= htmlspecialchars($row['title']) ?>
                       </td>
+
+                      <!-- Faculty Name -->
+                      <td class="text-capitalize">
+                        <?= htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])) ?>
+                      </td>
+
+                      <!-- College -->
+                      <td class="text-uppercase">
+                        <?= htmlspecialchars($row['college']) ?>
+                      </td>
+
+                      <!-- Program -->
+                      <td class="text-capitalize">
+                        <?= htmlspecialchars($row['program']) ?>
+                      </td>
+
+                      <!-- Creator (admin idnumber) -->
+                      <td class="text-uppercase">
+                        <?= $row['creator_admin_id'] ? htmlspecialchars($row['creator_admin_id']) : 'N/A' ?>
+                      </td>
+
+                      <!-- Action -->
+                      <!-- <td>
+                        <form method="post" class="delete-form" action="deletesubject.php">
+                          <input type="hidden" name="idnumber" value="<?= $row['idnumber'] ?>">
+                          <button type="button"
+                            class="btn btn-danger btn-sm delete-btn"
+                            data-subject="<?= htmlspecialchars($row['title']) ?>">
+                            Delete
+                          </button>
+                        </form>
+                      </td> -->
                     </tr>
                   <?php endwhile; ?>
                 </tbody>

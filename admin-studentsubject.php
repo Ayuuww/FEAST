@@ -1,8 +1,4 @@
 <?php
-require 'vendor/autoload.php';
-
-use PhpOffice\PhpSpreadsheet\IOFactory;
-
 session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -14,12 +10,27 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
 
 $admin_id = $_SESSION['idnumber'];
 
-// Get admin’s college + position for access control
+// Get admin’s position
 $pos_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $pos_stmt->bind_param("s", $admin_id);
 $pos_stmt->execute();
 $admin_position = $pos_stmt->get_result()->fetch_assoc()['position'] ?? '';
 $pos_stmt->close();
+
+// Get admin's college and program
+$college_stmt = $conn->prepare("
+    SELECT college_name, program_name
+    FROM admin_college
+    WHERE admin_idnumber = ?
+    LIMIT 1
+");
+$college_stmt->bind_param("s", $admin_id);
+$college_stmt->execute();
+$collegeRow = $college_stmt->get_result()->fetch_assoc();
+$college_stmt->close();
+
+$admin_college = $collegeRow['college_name'] ?? null;
+$admin_program = $collegeRow['program_name'] ?? null;
 
 $allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director'];
 if (!in_array($admin_position, $allowed_positions)) {
@@ -182,43 +193,84 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       continue;
     }
 
-    // --- Check if subject exists ---
-    $subject_check = $conn->prepare("SELECT code FROM subject WHERE code = ? LIMIT 1");
-    $subject_check->bind_param("s", $subject_code);
+    // --- Check if subject exists and get current values ---
+    // --- Check if this specific offering (code + college + program + faculty) exists ---
+    $subject_check = $conn->prepare("
+    SELECT idnumber, code, title, faculty_id, admin_id, college, program
+    FROM subject
+    WHERE code = ?
+      AND ( (college = ? OR (? = '')) )
+      AND ( (program = ? OR (? = '')) )
+      AND ( (faculty_id = ? OR (? = '')) )
+    LIMIT 1
+");
+    $colParam  = $college;   // from CSV
+    $progParam = $program;   // from CSV
+    $facParam  = $faculty_id; // from CSV
+
+    $subject_check->bind_param(
+      "sssssss",
+      $subject_code,
+      $colParam,
+      $colParam,
+      $progParam,
+      $progParam,
+      $facParam,
+      $facParam
+    );
     $subject_check->execute();
-    $subject_exists = $subject_check->get_result()->num_rows > 0;
+    $subject_row = $subject_check->get_result()->fetch_assoc();
     $subject_check->close();
 
-    // --- Create subject if missing ---
-    if (!$subject_exists) {
-
-      // Clean empty fields
-      $faculty_id_db = (!empty($faculty_id)) ? $faculty_id : null;
-      $admin_id_db   = (!empty($admin_csv_id)) ? $admin_csv_id : null;
-
+    if (!$subject_row) {
+      // --- CREATE NEW SUBJECT (same code allowed, different faculty/college/program) ---
       $insert_subject = $conn->prepare("
         INSERT INTO subject
         (code, title, faculty_id, admin_id, college, program)
         VALUES (?, ?, ?, ?, ?, ?)
     ");
-
       $insert_subject->bind_param(
         "ssssss",
         $subject_code,
         $subject_title,
-        $faculty_id_db,
-        $admin_id_db,
-        $college,
+        $faculty_id,     // may be null
+        $admin_csv_id,
+        $college,        // where to assign
         $program
       );
-
       $insert_subject->execute();
       $insert_subject->close();
 
       $_SESSION['detailed_errors'][] =
-        "ℹ️ Row $line: Subject <b>{$subject_code}</b> created with faculty {$faculty_id_db} and admin {$admin_id_db}.";
-    }
+        "ℹ️ NEW subject <b>{$subject_code}</b> created for faculty <b>{$faculty_id}</b> in <b>{$college}</b>/<b>{$program}</b>.";
+    } else {
+      // --- UPDATE ONLY THIS SPECIFIC OFFERING ---
+      $new_title   = !empty($subject_title) ? $subject_title   : $subject_row['title'];
+      $new_admin   = !empty($admin_csv_id) ? $admin_csv_id     : $subject_row['admin_id'];
+      $new_college = !empty($college)      ? $college          : $subject_row['college'];
+      $new_program = !empty($program)      ? $program          : $subject_row['program'];
+      $new_faculty = !empty($faculty_id)   ? $faculty_id       : $subject_row['faculty_id'];
 
+      $update_subject = $conn->prepare("
+        UPDATE subject
+        SET title = ?, faculty_id = ?, admin_id = ?, college = ?, program = ?
+        WHERE idnumber = ?
+    ");
+      $update_subject->bind_param(
+        "sssssi",
+        $new_title,
+        $new_faculty,
+        $new_admin,
+        $new_college,
+        $new_program,
+        $subject_row['idnumber']
+      );
+      $update_subject->execute();
+      $update_subject->close();
+
+      $_SESSION['detailed_errors'][] =
+        "🔄 Updated existing subject <b>{$subject_code}</b> for faculty <b>{$new_faculty}</b> in <b>{$new_college}</b>/<b>{$new_program}</b>.";
+    }
 
     // --- Check student exists ---
     $checkStudent = $conn->prepare("SELECT idnumber FROM student WHERE idnumber = ? LIMIT 1");
@@ -285,70 +337,66 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
  */
 function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter, $csv_faculty_id = null, $csv_admin_id = null)
 {
-  // 1. Get subject/instructor details
-  $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ?");
-  $stmt_subj->bind_param("s", $subject_code);
-  $stmt_subj->execute();
-  $subject_data = $stmt_subj->get_result()->fetch_assoc();
-  $stmt_subj->close();
+  // 1. Decide instructor from CSV directly
+  $faculty_id = $csv_faculty_id;
+  $admin_id   = $csv_admin_id;
 
-  if ($subject_data) {
-    // If subject has instructor info in DB, use it
-    $faculty_id = $subject_data['faculty_id'] ?? null;
-    $admin_id   = $subject_data['admin_id'] ?? null;
+  // Optional safety: if both are empty, try to read from subject table once
+  if (empty($faculty_id) && empty($admin_id)) {
+    $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ? LIMIT 1");
+    $stmt_subj->bind_param("s", $subject_code);
+    $stmt_subj->execute();
+    $subject_data = $stmt_subj->get_result()->fetch_assoc();
+    $stmt_subj->close();
 
-    // If subject is NEW (created from CSV), use CSV values
-    if (!$faculty_id && $csv_faculty_id) $faculty_id = $csv_faculty_id;
-    if (!$admin_id   && $csv_admin_id)   $admin_id   = $csv_admin_id;
-
-    $instructor_id = $faculty_id ?: $admin_id;
-
-    // Allow subject without instructor during CSV creation
-    if (!$instructor_id) {
-      $faculty_id = null;
-      $admin_id   = null;
+    if ($subject_data) {
+      if (empty($faculty_id)) $faculty_id = $subject_data['faculty_id'];
+      if (empty($admin_id))   $admin_id   = $subject_data['admin_id'];
     }
-
-    if (!$instructor_id) {
-      $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** has no assigned instructor.";
-      return;
-    }
-
-    // 2. Check if it already exists
-    $check_stmt = $conn->prepare("SELECT 1 FROM student_subject WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?");
-    $check_stmt->bind_param("ssss", $student_id, $subject_code, $ay, $sem);
-    $check_stmt->execute();
-    if ($check_stmt->get_result()->num_rows === 0) {
-      // 3. Insert if it doesn't exist
-      $insert_stmt = $conn->prepare(" INSERT INTO student_subject
-                                      (student_id, subject_code, faculty_id, admin_id, academic_year, semester)
-                                      VALUES (?, ?, ?, ?, ?, ?)
-                                      ");
-      $insert_stmt->bind_param(
-        "ssssss",
-        $student_id,
-        $subject_code,
-        $faculty_id,   // Now includes CSV instructor if new subject
-        $admin_id,
-        $ay,
-        $sem
-      );
-
-      if ($insert_stmt->execute()) {
-        $success_counter++;
-      } else {
-        $_SESSION['detailed_errors'][] = "❌ DB Error assigning **$subject_code** to **$student_id**.";
-      }
-      $insert_stmt->close();
-    } else {
-      $_SESSION['detailed_errors'][] = "⚠️ Subject **$subject_code** already assigned to **$student_id** for this period.";
-    }
-    $check_stmt->close();
-  } else {
-    $_SESSION['detailed_errors'][] = "❌ Subject **$subject_code** (for student **$student_id**) does not exist in the database.";
   }
-}
 
+  // Ensure at least one of them is present
+  if (empty($faculty_id) && empty($admin_id)) {
+    $_SESSION['detailed_errors'][] = "❌ Subject <b>$subject_code</b> has no faculty/admin in CSV or subject table.";
+    return;
+  }
+
+  // 2. Check if already assigned
+  $check_stmt = $conn->prepare("
+        SELECT 1
+        FROM student_subject 
+        WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?
+    ");
+  $check_stmt->bind_param("ssss", $student_id, $subject_code, $ay, $sem);
+  $check_stmt->execute();
+  $exists = $check_stmt->get_result()->num_rows > 0;
+  $check_stmt->close();
+
+  if ($exists) {
+    // Already assigned; no insert
+    return;
+  }
+
+  // 3. Insert assignment with the CSV faculty/admin
+  $insert = $conn->prepare("
+        INSERT INTO student_subject
+        (student_id, subject_code, faculty_id, admin_id, academic_year, semester)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+  $insert->bind_param(
+    "ssssss",
+    $student_id,
+    $subject_code,
+    $faculty_id,
+    $admin_id,
+    $ay,
+    $sem
+  );
+  $insert->execute();
+  $insert->close();
+
+  $success_counter++;
+}
 
 // --- Fetch data for the form (existing code) ---
 $student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.college, s.section FROM student s WHERE s.role = 'student' ORDER BY s.college, s.last_name ASC";
@@ -358,18 +406,69 @@ while ($row = $student_result->fetch_assoc()) {
   $students_by_dept[$row['college']][] = $row;
 }
 
-$subject_query = "
-    SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
-           COALESCE(f.first_name, a.first_name) AS first_name,
-           COALESCE(f.last_name, a.last_name) AS last_name
-    FROM subject ss
-    LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
-    LEFT JOIN admin a ON ss.admin_id = a.idnumber
-    WHERE ss.admin_id = ?
-    ORDER BY last_name, first_name, ss.title";
+// 1) Get this admin's college
+$college_stmt = $conn->prepare("
+    SELECT college_name
+    FROM admin_college
+    WHERE admin_idnumber = ?
+    LIMIT 1
+");
+$college_stmt->bind_param("s", $admin_id);
+$college_stmt->execute();
+$collegeRow = $college_stmt->get_result()->fetch_assoc();
+$college_stmt->close();
 
-$subject_stmt = $conn->prepare($subject_query);
-$subject_stmt->bind_param("s", $admin_id);
+$admin_college = $collegeRow['college_name'] ?? null;
+
+// 2) Get all admin IDs in the same college
+$adminIds = [];
+if ($admin_college) {
+  $adm_stmt = $conn->prepare("
+        SELECT admin_idnumber
+        FROM admin_college
+        WHERE college_name = ?
+    ");
+  $adm_stmt->bind_param("s", $admin_college);
+  $adm_stmt->execute();
+  $adm_res = $adm_stmt->get_result();
+  while ($r = $adm_res->fetch_assoc()) {
+    $adminIds[] = $r['admin_idnumber'];
+  }
+  $adm_stmt->close();
+}
+
+// 3) Build subject query
+if (!empty($adminIds)) {
+  // build an IN (...) with placeholders
+  $placeholders = implode(',', array_fill(0, count($adminIds), '?'));
+  $types = str_repeat('s', count($adminIds));
+
+  $subject_query = "
+        SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
+               COALESCE(f.first_name, a.first_name) AS first_name,
+               COALESCE(f.last_name, a.last_name) AS last_name
+        FROM subject ss
+        LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
+        LEFT JOIN admin   a ON ss.admin_id   = a.idnumber
+        WHERE ss.admin_id IN ($placeholders)
+        ORDER BY last_name, first_name, ss.title
+    ";
+  $subject_stmt = $conn->prepare($subject_query);
+  $subject_stmt->bind_param($types, ...$adminIds);
+} else {
+  // fallback: no college info, show nothing or all
+  $subject_query = "
+        SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
+               COALESCE(f.first_name, a.first_name) AS first_name,
+               COALESCE(f.last_name, a.last_name) AS last_name
+        FROM subject ss
+        LEFT JOIN faculty f ON ss.faculty_id = f.idnumber
+        LEFT JOIN admin   a ON ss.admin_id   = a.idnumber
+        WHERE 1=0
+    ";
+  $subject_stmt = $conn->prepare($subject_query);
+}
+
 $subject_stmt->execute();
 $subject_result = $subject_stmt->get_result();
 $subjects_by_faculty = [];
@@ -455,25 +554,6 @@ ksort($subjects_by_faculty);
       </script>
       <?php unset($_SESSION['missing_subjects'], $_SESSION['detailed_errors']); ?>
     <?php endif; ?>
-    <!-- <strong>📌 CSV Upload Requirements</strong>
-                  <p class="mb-1">The CSV file will populate the <strong>student_subject</strong> table.</p>
-
-                  <p class="mb-1">It must contain <strong>exactly two columns</strong> in this specific order:</p>
-
-                  <ol class="mb-2">
-                    <li><strong>student_id</strong> — must match <code>student.idnumber</code></li>
-                    <li><strong>subject_code</strong> — must match <code>subject.code</code></li>
-                  </ol>
-
-                  <p class="mb-1">
-                    The system will automatically insert:
-                  <ul style="margin-left: 20px;">
-                    <li>academic_year (based on the current active term)</li>
-                    <li>semester (based on the current active term)</li>
-                    <li>faculty_id (from the subject table)</li>
-                    <li>admin_id (logged in admin)</li>
-                  </ul>
-                  </p> -->
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
@@ -515,15 +595,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
 202-3110-2|IT101       |
 202-3121-2|IT101       |
         </pre>
-                  <ul style="font-size: 90%;margin-top:10px;">
-                    <li><strong>student_id</strong>: student ID as listed in your student table.</li>
-                    <li><strong>subject_code</strong>: unique subject code.</li>
-                    <li><strong>subject_title</strong>: title of the subject (required if code is new).</li>
-                    <li><strong>faculty_id</strong>: (optional) faculty/instructor ID for the subject.</li>
-                    <li><strong>admin_id</strong>: (optional) admin responsible for the subject.</li>
-                    <li><strong>college</strong>: (optional) college/college for the subject.</li>
-                    <li><strong>program</strong>: (optional) program under which the subject falls.</li>
-                  </ul>
                   <p class="small text-muted mb-0">
                     Save your file as <b>.csv</b> (comma separated values) with these columns in this order. For existing subjects, you may leave other subject fields blank.
                   </p>
@@ -553,7 +624,7 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
 
               <form method="POST" action="" class="row g-4">
                 <div class="col-md-3">
-                  <label for="collegeFilter" class="form-label">Filter Students by college</label>
+                  <label for="collegeFilter" class="form-label">Filter Students by College</label>
                   <select id="collegeFilter" class="form-select">
                     <option value="">All Colleges</option>
                     <?php ksort($students_by_dept);
@@ -578,6 +649,12 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
                       <option value="<?= htmlspecialchars($section) ?>"><?= htmlspecialchars($section) ?></option>
                     <?php endforeach; ?>
                   </select>
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                  <button type="button" id="selectAllStudents" class="btn btn-success w-100">
+                    Select All Filtered Students
+                  </button>
                 </div>
 
                 <div class="col-12">
@@ -782,6 +859,38 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
 
       deptFilter.addEventListener('change', filterStudents);
       sectionFilter.addEventListener('change', filterStudents);
+      // --- SELECT ALL FILTERED STUDENTS BUTTON ---
+      const selectAllBtn = document.getElementById("selectAllStudents");
+
+      selectAllBtn.addEventListener("click", function() {
+
+        const displayedStudentIDs = Array.from(studentSelectElement.options)
+          .filter(opt => !opt.disabled && opt.style.display !== "none")
+          .map(opt => opt.value);
+
+        if (displayedStudentIDs.length === 0) {
+          Swal.fire({
+            icon: "warning",
+            title: "No Students Available",
+            text: "There are no students in the current filter."
+          });
+          return;
+        }
+
+        displayedStudentIDs.forEach(id => {
+          studentChoices.setChoiceByValue(id);
+        });
+
+        Swal.fire({
+          icon: "success",
+          title: "All Filtered Students Selected",
+          text: `${displayedStudentIDs.length} students selected.`,
+          timer: 1500,
+          showConfirmButton: false
+        });
+
+      });
+
     });
   </script>
 

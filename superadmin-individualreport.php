@@ -243,9 +243,9 @@ $academic_years_query = $conn->query("
         <div class="row g-3">
           <!-- College/college -->
           <div class="col-md-4">
-            <label for="college" class="form-label fw-semibold">College / college</label>
+            <label for="college" class="form-label fw-semibold">College</label>
             <select class="form-select" name="college" id="college" onchange="this.form.submit()">
-              <option value="">-- Select College / college --</option>
+              <option value="">-- Select College --</option>
               <?php while ($row = $college_result->fetch_assoc()): ?>
                 <option value="<?= htmlspecialchars($row['college']) ?>" <?= ($selected_col == $row['college']) ? 'selected' : '' ?>>
                   <?= htmlspecialchars($row['college']) ?>

@@ -35,8 +35,8 @@ $query = "
     s.title AS subject_title,
     ss.academic_year,
     ss.semester,
-    AVG(DISTINCT e.total_score) AS avg_score,
-    AVG(DISTINCT e.computed_rating) AS avg_rating,
+    AVG(e.total_score) AS avg_score,
+    AVG(e.computed_rating) AS avg_rating,
     GROUP_CONCAT(DISTINCT e.comment SEPARATOR '||') AS all_comments
   FROM student_subject ss
   JOIN subject s ON ss.subject_code = s.code
@@ -162,8 +162,8 @@ while ($row = $enrolledResult->fetch_assoc()) {
                   <tr>
                     <th>Subject Code</th>
                     <th>Title</th>
-                    <th>Total Score</th>
-                    <th>Computed Rating</th>
+                    <th>Avg Score</th>
+                    <th>Avg Computed Rating</th>
                     <th>Comments</th>
                     <th>Semester</th>
                     <th>School Year</th>

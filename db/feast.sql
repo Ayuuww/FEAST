@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 25, 2025 at 01:59 PM
+-- Generation Time: Nov 27, 2025 at 06:30 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -349,7 +349,43 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (591, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-04 | End: 2025-11-06', '2025-11-25 20:54:16'),
 (592, 'system', '', 'Evaluation auto turned OFF (end date reached)', '2025-11-25 20:54:16'),
 (593, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-25 20:54:26'),
-(594, '40151', 'admin', 'Logged in', '2025-11-25 20:54:58');
+(594, '40151', 'admin', 'Logged in', '2025-11-25 20:54:58'),
+(595, '00000', '', 'Logged in', '2025-11-26 18:39:35'),
+(596, '00001', 'admin', 'Logged in', '2025-11-26 18:41:03'),
+(597, '40045', 'admin', 'Logged in', '2025-11-26 18:41:34'),
+(598, '40050', 'admin', 'Logged in', '2025-11-26 18:51:08'),
+(599, '00001', 'admin', 'Logged in', '2025-11-26 19:03:35'),
+(600, '40045', 'admin', 'Logged in', '2025-11-26 19:03:59'),
+(601, '40193', 'superadmin', 'Logged in', '2025-11-26 19:04:20'),
+(602, '40045', 'admin', 'Logged in', '2025-11-26 19:07:00'),
+(603, '40193', 'superadmin', 'Logged in', '2025-11-26 19:41:55'),
+(604, '00000', '', 'Logged in', '2025-11-27 19:39:11'),
+(605, '40151', 'admin', 'Logged in', '2025-11-27 20:12:31'),
+(606, '00001', 'admin', 'Logged in', '2025-11-27 20:12:45'),
+(607, '40045', 'admin', 'Logged in', '2025-11-27 20:13:41'),
+(608, '00001', 'admin', 'Logged in', '2025-11-27 20:32:29'),
+(609, '40005', 'admin', 'Logged in', '2025-11-27 20:33:23'),
+(610, '00001', 'admin', 'Logged in', '2025-11-27 20:43:17'),
+(611, '40045', 'admin', 'Logged in', '2025-11-27 20:46:33'),
+(612, '40151', 'admin', 'Logged in', '2025-11-27 20:46:51'),
+(613, '40045', 'admin', 'Logged in', '2025-11-27 20:57:37'),
+(614, '00001', 'admin', 'Logged in', '2025-11-27 21:01:25'),
+(615, '40045', 'admin', 'Logged in', '2025-11-27 21:07:56'),
+(616, '00001', 'admin', 'Logged in', '2025-11-27 21:12:18'),
+(617, '40151', 'admin', 'Logged in', '2025-11-27 21:26:13'),
+(618, '40045', 'admin', 'Logged in', '2025-11-27 21:26:28'),
+(619, '00001', 'admin', 'Logged in', '2025-11-27 21:31:08'),
+(620, '40045', 'admin', 'Logged in', '2025-11-27 22:00:34'),
+(621, '00001', 'admin', 'Logged in', '2025-11-27 22:01:27'),
+(622, '40045', 'admin', 'Logged in', '2025-11-27 22:03:28'),
+(623, '00001', 'admin', 'Logged in', '2025-11-27 22:10:24'),
+(624, '40151', 'admin', 'Logged in', '2025-11-27 22:50:49'),
+(625, '00001', 'admin', 'Logged in', '2025-11-27 23:07:32'),
+(626, '40151', 'admin', 'Logged in', '2025-11-27 23:09:38'),
+(627, '40151', 'admin', 'Logged in', '2025-11-27 23:28:45'),
+(628, '00711', 'faculty', 'Logged in', '2025-11-28 00:42:32'),
+(629, '40045', 'admin', 'Logged in', '2025-11-28 01:14:51'),
+(630, '40151', 'admin', 'Logged in', '2025-11-28 01:22:52');
 
 -- --------------------------------------------------------
 
@@ -390,7 +426,7 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `college
 (135, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCES', NULL),
 (136, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language'),
 (137, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology'),
-(138, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCES', 'General Education'),
+(138, NULL, NULL, NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education'),
 (139, 'Instructor III', NULL, NULL, NULL, NULL),
 (140, 'Assistant Professor II', NULL, NULL, NULL, NULL),
 (141, 'Assistant Professor IV', NULL, NULL, NULL, NULL),
@@ -398,7 +434,29 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `college
 (143, 'Associate Professor II', NULL, NULL, NULL, NULL),
 (144, 'Associate Professor III', NULL, NULL, NULL, NULL),
 (145, 'Instructor I', NULL, NULL, NULL, NULL),
-(146, NULL, NULL, NULL, 'COLLEGE OF EDUCATION', 'Bachelor in Physical Education');
+(146, NULL, NULL, NULL, 'COLLEGE OF EDUCATION', 'Bachelor in Physical Education'),
+(148, NULL, NULL, NULL, 'COLLEGE OF EDUCATION', 'Bachelor of Elementary Education'),
+(149, NULL, NULL, NULL, 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education'),
+(150, NULL, NULL, NULL, 'COLLEGE OF VETERINARY MEDICINE', NULL),
+(151, NULL, NULL, NULL, 'COLLEGE OF VETERINARY MEDICINE', 'Doctor of Veterinary Medicine'),
+(152, NULL, NULL, NULL, 'COLLEGE OF AGROFORESTRY AND FORESTRY', NULL),
+(153, NULL, NULL, NULL, 'COLLEGE OF AGROFORESTRY AND FORESTRY', 'Bachelor of Science in Forestry'),
+(154, NULL, NULL, NULL, 'COLLEGE OF AGROFORESTRY AND FORESTRY', 'Bachelor of Science in Agroforestry'),
+(155, NULL, NULL, NULL, 'COLLEGE OF AGRICULTURE', NULL),
+(156, NULL, NULL, NULL, 'COLLEGE OF AGRICULTURE', 'Bachelor of Science in Agriculture'),
+(157, NULL, NULL, NULL, 'INSTITUTE OF AGRIBUSINESS MANAGEMENT', NULL),
+(158, NULL, NULL, NULL, 'INSTITUTE OF AGRIBUSINESS MANAGEMENT', 'Bachelor of Science in Agribusiness Management'),
+(159, NULL, NULL, NULL, 'INSTITUTE OF ENVIRONMENTAL STUDIES', NULL),
+(160, NULL, NULL, NULL, 'INSTITUTE OF ENVIRONMENTAL STUDIES', 'Bachelor of Science in Environmental Science'),
+(161, NULL, 'Director', NULL, NULL, NULL),
+(162, 'Assistant Professor III', NULL, NULL, NULL, NULL),
+(163, 'Assistant Professor I', NULL, NULL, NULL, NULL),
+(164, 'Associate Professor I', NULL, NULL, NULL, NULL),
+(165, 'Professor I', NULL, NULL, NULL, NULL),
+(166, 'Professor II', NULL, NULL, NULL, NULL),
+(167, 'Professor III', NULL, NULL, NULL, NULL),
+(168, 'Professor IV', NULL, NULL, NULL, NULL),
+(169, 'Professor V', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -424,6 +482,7 @@ CREATE TABLE `admin` (
 
 INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`) VALUES
 ('40005', 'Theresa', 'Crispino', 'Cachero', '$2y$10$7ddHbp89iZO1TUPNADI7YeeoXSXU37LtR2rpNL0ipjRuJ9dDGrFIC', 'Program Chair', 'admin', 'active', 'Assistant Professor IV'),
+('40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'Dean', 'admin', 'active', 'Assistant Professor I'),
 ('40045', 'Christianne Glory', 'L', 'Arbollente', '$2y$10$AL3JqU.T22XvzvwruiOuTuIZGPLP1TOgB.oZOYgNWI79bTA8RF1Kq', 'Program Chair', 'admin', 'active', 'Instructor III'),
 ('40050', 'Lynbelle', 'Chan', 'Pascua', '$2y$10$zY3B9.cA1L3I/btGOpiEpuDfvsOPzS2OBT/LgINzG05GYucNc9X22', 'Program Chair', 'admin', 'active', 'Instructor I'),
 ('40151', 'Edelita', 'Corpuz', 'Ebuenga', '$2y$10$Ltz8JeCc3EJ1vVtTPbSE5.rh3X7Rb4EEO28tQ69OLePJi78EZ0wu.', 'Dean', 'admin', 'active', 'Associate Professor V');
@@ -446,7 +505,12 @@ CREATE TABLE `admin_college` (
 
 INSERT INTO `admin_college` (`admin_idnumber`, `college_name`, `program_name`) VALUES
 ('40005', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology'),
-('40045', 'COLLEGE OF ARTS AND SCIENCES', 'General Education'),
+('40014', 'COLLEGE OF EDUCATION', 'Bachelor in Physical Education'),
+('40014', 'COLLEGE OF EDUCATION', 'Bachelor of Early Childhood Education'),
+('40014', 'COLLEGE OF EDUCATION', 'Bachelor of Elementary Education'),
+('40014', 'COLLEGE OF EDUCATION', 'Bachelor of Secondary Education'),
+('40014', 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education'),
+('40045', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education'),
 ('40050', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language'),
 ('40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
 
@@ -470,16 +534,6 @@ CREATE TABLE `admin_evaluation` (
   `evaluation_date` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
---
--- Dumping data for table `admin_evaluation`
---
-
-INSERT INTO `admin_evaluation` (`id`, `evaluator_id`, `evaluatee_id`, `evaluator_position`, `academic_year`, `semester`, `total_score`, `computed_rating`, `comments`, `college`, `evaluation_date`) VALUES
-(81, '40151', '02860', 'Dean', '2025-2026', '1st Semester', 75, 100.00, 'Excellent teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:37:01'),
-(82, '40151', '00421', 'Dean', '2025-2026', '1st Semester', 70, 93.33, 'good teaching', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:40:52'),
-(83, '40151', '0716', 'Dean', '2025-2026', '1st Semester', 67, 89.33, 'Good teacher', 'COLLEGE OF ARTS AND SCIENCES', '2025-11-17 18:43:19'),
-(84, '40151', '40180', 'Dean', '2025-2026', '1st Semester', 71, 94.67, 'goodteaching', 'COLLEGE OF INFORMATION SYSTEMS', '2025-11-17 19:11:22');
-
 -- --------------------------------------------------------
 
 --
@@ -498,17 +552,6 @@ CREATE TABLE `admin_evaluation_submissions` (
   `submission_date` datetime DEFAULT current_timestamp(),
   `form_data` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `admin_evaluation_submissions`
---
-
-INSERT INTO `admin_evaluation_submissions` (`id`, `evaluator_id`, `evaluatee_id`, `semester`, `academic_year`, `total_score`, `rating_percent`, `comment`, `submission_date`, `form_data`) VALUES
-(56, '00021', '41953', '1st Semester', '2025-2026', 70, 93.33, '', '2025-11-02 17:26:40', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":5,\"q4\":4,\"q5\":5,\"q6\":5,\"q7\":4,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":5}'),
-(57, '40151', '02860', '1st Semester', '2025-2026', 75, 100.00, 'Excellent teacher', '2025-11-17 18:37:01', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}'),
-(58, '40151', '00421', '1st Semester', '2025-2026', 70, 93.33, 'good teaching', '2025-11-17 18:40:52', '{\"q0\":5,\"q1\":5,\"q2\":4,\"q3\":5,\"q4\":5,\"q5\":4,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":4,\"q12\":4,\"q13\":5,\"q14\":5}'),
-(59, '40151', '0716', '1st Semester', '2025-2026', 67, 89.33, 'Good teacher', '2025-11-17 18:43:19', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":4,\"q5\":5,\"q6\":4,\"q7\":5,\"q8\":4,\"q9\":4,\"q10\":5,\"q11\":4,\"q12\":5,\"q13\":4,\"q14\":5}'),
-(60, '40151', '40180', '1st Semester', '2025-2026', 71, 94.67, 'goodteaching', '2025-11-17 19:11:22', '{\"q0\":5,\"q1\":4,\"q2\":5,\"q3\":4,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":4,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":4,\"q13\":5,\"q14\":5}');
 
 -- --------------------------------------------------------
 
@@ -675,13 +718,14 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `faculty_rank`, `role`, `status`) VALUES
-('00421', 'Kristine Maylan', 'Sabado', 'Espero', '$2y$10$6sDggnKta7b7xCdaP1Ib/eIe85tOjuo1lb3v7am4JtP4vZ9M1eG5W', 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'Instructor I', 'faculty', 'active'),
+('00421', 'Kristine Maylan', 'Sabado', 'Espero', '$2y$10$6sDggnKta7b7xCdaP1Ib/eIe85tOjuo1lb3v7am4JtP4vZ9M1eG5W', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor I', 'faculty', 'active'),
 ('00711', 'Mark Kenneth', 'Molina', 'Mangaser', '$2y$10$STXSd0A4CyFoab/G/ADv7.MOKWUTUpQTz66kdgIfF.lcval9XV5b6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
-('02860', 'Larmie', 'Dosono', 'Barcelona', '$2y$10$Z/Bqwy3zpmgkVX6A7uoo7eCyBX01V64mIOyjhRbxa/1FHyCkxUfve', 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'Instructor I', 'faculty', 'active'),
+('02860', 'Larmie', 'Dosono', 'Barcelona', '$2y$10$Z/Bqwy3zpmgkVX6A7uoo7eCyBX01V64mIOyjhRbxa/1FHyCkxUfve', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor I', 'faculty', 'active'),
 ('0716', 'Reiner Jan', 'Agustin', 'Castelo', '$2y$10$fRUv6hw/4/5ZkrIF8VvoKOMdomyPzx6YnjwyGYzeaqenfhqK9h7Fa', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Instructor I', 'faculty', 'active'),
 ('40005', 'Theresa', 'Crispino', 'Cachero', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Assistant Professor IV', 'faculty', 'active'),
+('40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education', 'Assistant Professor I', 'faculty', 'active'),
 ('40023', 'Shalimar', 'Licudine', 'Navalta', '$2y$10$hyxK8egZRYMGC1dzTm6.iu5YXk02AQBd4iBhfXKMZk34NDUFzWzoC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
-('40045', 'Christianne Glory', 'L', 'Arbollente', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'General Education', 'Instructor III', 'faculty', 'active'),
+('40045', 'Christianne Glory', 'L', 'Arbollente', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor III', 'faculty', 'active'),
 ('40050', 'Lynbelle', 'Chan', 'Pascua', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Instructor I', 'faculty', 'active'),
 ('40094', 'Maricel', 'Oficiar', 'Pre', '$2y$10$7Q4SgyxGufI6HtGAQ9Ssa..7t6bpDWmjcSvphzG6Cd3cfXWbchyPy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
 ('40112', 'Jhonalyn', 'Bautista', 'Lardizabal', '$2y$10$HnDfJjH8lTY4stHShIsMeeNMZzoYWR6jnL8cP1n.BHPLu1fOczE0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
@@ -1374,9 +1418,7 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (1113, '211-0004-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
 (1114, '211-0004-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
 (1115, '211-0004-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
-(1119, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
-(1130, '221-0387-1', 'IT 101', '2025-2026', '1st Semester', '00711', '40151'),
-(1131, '221-0388-1', 'IT 101', '2025-2026', '1st Semester', '00711', '40151');
+(1119, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151');
 
 -- --------------------------------------------------------
 
@@ -1411,8 +1453,7 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `c
 (72, 'GECC 101', 'Arts Appreciation', '00421', '40045', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (73, 'GECC 102', 'Purposive Communication', '40193', '40050', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (74, 'ISCC 101', 'Introduction to Computing', '00711', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-(91, 'IT 101', 'Introduction to IT', '00711', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
+(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
 
 -- --------------------------------------------------------
 
@@ -1599,13 +1640,13 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=595;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=631;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=148;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=170;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -1653,13 +1694,13 @@ ALTER TABLE `student_evaluation_submissions`
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1132;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1150;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- Constraints for dumped tables

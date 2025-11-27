@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       case 'Section':
         $column = 'section_name';
         break;
-      case 'college':
+      case 'College':
         $column = 'college_name';
         break;
       case 'Program':
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       if ($type === 'Program') {
         $college_name = trim($_POST['college_name'] ?? '');
         if (empty($college_name)) {
-          $_SESSION['msg'] = "Please select a college for the program.";
+          $_SESSION['msg'] = "Please select a College for the program.";
           $_SESSION['msg_type'] = "warning";
           header("Location: register-addsmanagement.php");
           exit();
@@ -50,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $check->close();
 
         if ($count > 0) {
-          $_SESSION['msg'] = "Program already exists in this college.";
+          $_SESSION['msg'] = "Program already exists in this College.";
           $_SESSION['msg_type'] = "warning";
         } else {
           $stmt = $conn->prepare("INSERT INTO adds (college_name, program_name) VALUES (?, ?)");
@@ -171,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <option value="Rank">Rank</option>
               <option value="Position">Position</option>
               <option value="Section">Section</option>
-              <option value="college">College</option>
+              <option value="College">College</option>
               <option value="Program">Program</option>
             </select>
           </div>

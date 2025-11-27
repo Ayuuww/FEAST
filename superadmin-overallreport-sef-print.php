@@ -73,7 +73,7 @@ $pdf->Ln(3);
 
 // 🔹 Show selected filters clearly
 $pdf->SetFont('Arial', 'B', 11);
-$pdf->Cell(0, 8, 'college/College: ' . (!empty($selected_college) ? $selected_college : 'All college'), 0, 1);
+$pdf->Cell(0, 8, 'College: ' . (!empty($selected_college) ? $selected_college : 'All college'), 0, 1);
 $pdf->Cell(0, 8, 'Program: ' . (!empty($selected_program) ? $selected_program : 'All Programs'), 0, 1); // ✅ **MODIFICATION 1: Show program**
 $pdf->Cell(0, 8, 'Semester: ' . (!empty($selected_semester) ? $selected_semester : 'All Semesters'), 0, 1);
 $pdf->Cell(0, 8, 'Academic Year: ' . (!empty($selected_academic_year) ? $selected_academic_year : 'All Academic Years'), 0, 1);
