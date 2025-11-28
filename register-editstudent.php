@@ -60,14 +60,19 @@ while ($row = $result->fetch_assoc()) {
 
 // --- ✅ MODIFICATION 2: Handle form submission with 'program' ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $old_id = $_POST['old_idnumber'];
+  $new_id = trim($_POST['idnumber']);
   $new_college = $_POST['college'];
   $new_program = $_POST['program']; // Added this
   $new_section = $_POST['section'];
 
   // Added 'program = ?'
-  $update = $conn->prepare("UPDATE student SET college = ?, program = ?, section = ? WHERE idnumber = ?");
-  // Added '$new_program' and changed type string to "ssss"
-  $update->bind_param("ssss", $new_college, $new_program, $new_section, $student_id);
+  $update = $conn->prepare("
+  UPDATE student 
+  SET idnumber = ?, college = ?, program = ?, section = ?
+  WHERE idnumber = ?
+  ");
+  $update->bind_param("sssss", $new_id, $new_college, $new_program, $new_section, $old_id);
 
   if ($update->execute()) {
     // We must re-fetch the student data AFTER update
@@ -81,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $_SESSION['msg'] = 'Student information updated successfully!';
     $_SESSION['msg_type'] = 'success';
 
-    header("Location: register-editstudent.php?id=$student_id");
+    header("Location: register-editstudent.php?id=$new_id");
     exit();
   } else {
     echo "Update failed.";
@@ -142,13 +147,17 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
 
             <form method="POST">
               <div class="row">
-                
+
                 <div class="col-md-3 mb-3">
                   <div class="form-floating">
-                    <input type="text" class="form-control" value="<?= htmlspecialchars($student['idnumber']) ?>" disabled>
+                    <input type="text" name="idnumber" class="form-control"
+                      value="<?= htmlspecialchars($student['idnumber']) ?>" required pattern="^[0-9\-]+$">
                     <label class="form-label">ID Number</label>
                   </div>
                 </div>
+
+                <!-- Store original ID -->
+                <input type="hidden" name="old_idnumber" value="<?= htmlspecialchars($student['idnumber']) ?>">
 
                 <div class="col-md-6 mb-3">
                   <div class="form-floating">
@@ -265,6 +274,25 @@ $sections_result = $conn->query("SELECT DISTINCT section_name FROM adds WHERE se
 
       // --- 4. DELETED progSelect.addEventListener ---
       // (It is no longer needed as it only controlled sections)
+    });
+  </script>
+
+  <script>
+    document.querySelector("form").addEventListener("submit", function(e) {
+      e.preventDefault(); // stop normal form submit
+
+      Swal.fire({
+        title: "Confirm Update",
+        text: "Do you want to save these changes?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Update",
+        cancelButtonText: "Cancel",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.submit();
+        }
+      });
     });
   </script>
 

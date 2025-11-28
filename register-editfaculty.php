@@ -61,6 +61,7 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  $new_idnumber = $_POST['idnumber'];
   $faculty_id = $_GET['id'];
   $new_status = $_POST['status'];
   $new_role_trigger = $_POST['role']; // This is just the trigger
@@ -116,7 +117,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // 8 variables bind to 8 's'
         $insertAdmin->bind_param(
           "ssssssss",
-          $faculty['idnumber'],
+          $new_idnumber,
           $faculty['first_name'],
           $faculty['mid_name'],
           $faculty['last_name'],
@@ -185,8 +186,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   // This 'else' block runs if $new_role_trigger is 'faculty' OR if they were already an admin
   try {
-    $stmt = $conn->prepare("UPDATE faculty SET status = ?, faculty_rank = ? WHERE idnumber = ?");
-    $stmt->bind_param("sss", $new_status, $new_faculty_rank, $faculty_id);
+    $stmt = $conn->prepare("UPDATE faculty 
+                        SET idnumber = ?, status = ?, faculty_rank = ? 
+                        WHERE idnumber = ?");
+    $stmt->bind_param("ssss", $new_idnumber, $new_status, $new_faculty_rank, $faculty_id);
     $stmt->execute();
 
     // Also sync to admin table if this faculty is also an admin
@@ -196,17 +199,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $adminResult = $checkAdmin->get_result();
 
     if ($adminResult->num_rows > 0) {
-      $updateAdmin = $conn->prepare("UPDATE admin SET status = ?, faculty_rank = ? WHERE idnumber = ?");
-      $updateAdmin->bind_param("sss", $new_status, $new_faculty_rank, $faculty_id);
+      $updateAdmin = $conn->prepare("UPDATE admin 
+                               SET idnumber = ?, status = ?, faculty_rank = ? 
+                               WHERE idnumber = ?");
+      $updateAdmin->bind_param("ssss", $new_idnumber, $new_status, $new_faculty_rank, $faculty_id);
       $updateAdmin->execute();
     }
 
-    $success = "Faculty updated successfully!";
-
-    // Re-fetch updated faculty data
-    $stmt = $conn->prepare("SELECT * FROM faculty WHERE idnumber = ?");
-    $stmt->bind_param("s", $faculty_id);
-    $stmt->execute();
+    $_SESSION['update_success'] = "Faculty updated successfully!";
+    header("Location: register-editfaculty.php?id=$new_idnumber");
+    exit();
     $result = $stmt->get_result();
     $faculty = $result->fetch_assoc();
   } catch (mysqli_sql_exception $e) {
@@ -251,16 +253,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="card-body">
               <h5 class="card-title">Faculty Information</h5>
 
-              <?php if (isset($success)): ?>
+              <?php if (isset($_SESSION['update_success'])): ?>
                 <script>
                   Swal.fire({
                     icon: 'success',
-                    title: 'Success!',
-                    text: <?= json_encode($success) ?>,
+                    title: 'Updated!',
+                    text: <?= json_encode($_SESSION['update_success']) ?>,
                     timer: 2000,
                     showConfirmButton: false
                   });
                 </script>
+                <?php unset($_SESSION['update_success']); ?>
               <?php endif; ?>
               <?php if (isset($_SESSION['msg'])): ?>
                 <script>
@@ -278,7 +281,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                   <div class="col-md-6">
                     <div class="form-floating">
-                      <input type="text" class="form-control" value="<?php echo htmlspecialchars($faculty['idnumber']); ?>" disabled>
+                      <input type="text" class="form-control" name="idnumber"
+                        value="<?php echo htmlspecialchars($faculty['idnumber']); ?>" required>
                       <label class="form-label">ID Number</label>
                     </div>
                   </div>

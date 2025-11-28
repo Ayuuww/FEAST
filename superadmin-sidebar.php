@@ -68,12 +68,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         data-bs-parent="#sidebar-nav">
         <li>
           <a href="superadmin-evaluationsetting.php" class="<?= $currentPage == 'superadmin-evaluationsetting.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>Setting</span>
+            <i class="bi bi-circle"></i><span>Academic Year/ Semester</span>
           </a>
         </li>
         <li>
           <a href="superadmin-evaluationswitch.php" class="<?= $currentPage == 'superadmin-evaluationswitch.php' ? 'active' : '' ?>">
-            <i class="bi bi-circle"></i><span>On/Off</span>
+            <i class="bi bi-circle"></i><span>Control</span>
           </a>
         </li>
         <li>

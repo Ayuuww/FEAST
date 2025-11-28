@@ -51,31 +51,50 @@ while ($row = $dept_result->fetch_assoc()) {
 
 // ✅ Handle update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+  $new_id = $_POST['idnumber'];
   $new_status = $_POST['status'] ?? 'active';
   $new_position = $_POST['position'] ?? null;
   $new_rank = $_POST['faculty_rank'] ?? null;
   $new_college = $_POST['college'] ?? null;
   $new_program = $_POST['program'] ?? null;
 
-  // Validation
-  if (empty($new_position)) {
-    $_SESSION['msg'] = "Position is required.";
+  // Prevent duplicate ID number
+  $check = $conn->prepare("SELECT idnumber FROM superadmin WHERE idnumber = ? AND idnumber != ?");
+  $check->bind_param("ss", $new_id, $superadmin_id);
+  $check->execute();
+  $res = $check->get_result();
+
+  if ($res->num_rows > 0) {
+    $_SESSION['msg'] = "ID Number already exists!";
     $_SESSION['msg_type'] = "danger";
     header("Location: register-editsuperadmin.php?id=$superadmin_id");
     exit();
   }
 
+  // 🔄 Update SUPERADMIN table
   $stmt = $conn->prepare("
-      UPDATE superadmin
-      SET status = ?, position = ?, faculty_rank = ?, college = ?, program = ?
-      WHERE idnumber = ?
+    UPDATE superadmin
+    SET idnumber = ?, status = ?, position = ?, faculty_rank = ?, college = ?, program = ?
+    WHERE idnumber = ?
   ");
-  $stmt->bind_param("ssssss", $new_status, $new_position, $new_rank, $new_college, $new_program, $superadmin_id);
+  $stmt->bind_param("sssssss", $new_id, $new_status, $new_position, $new_rank, $new_college, $new_program, $superadmin_id);
   $stmt->execute();
 
-  header("Location: register-editsuperadmin.php?id=$superadmin_id&update=success");
+  // 🔄 Update FACULTY table too (superadmin is also a faculty)
+  $faculty_update = $conn->prepare("
+    UPDATE faculty
+    SET idnumber = ?, college = ?, program = ?, faculty_rank = ?, status = ?
+    WHERE idnumber = ?
+  ");
+  $faculty_update->bind_param("ssssss", $new_id, $new_college, $new_program, $new_rank, $new_status, $superadmin_id);
+  $faculty_update->execute();
+
+  header("Location: register-editsuperadmin.php?id=$new_id&update=success");
   exit();
 }
+
+
 ?>
 
 <!DOCTYPE html>
@@ -124,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <!-- ID -->
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
-                        <input type="text" class="form-control" value="<?= htmlspecialchars($superadmin['idnumber']) ?>" disabled>
+                        <input type="text" class="form-control" name="idnumber" value="<?= htmlspecialchars($superadmin['idnumber']) ?>" required>
                         <label>ID Number</label>
                       </div>
                     </div>

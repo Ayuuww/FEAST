@@ -26,10 +26,8 @@ function tryLogin($conn, $table, $id, $password)
 
             // ✅ Check account status if present
             if (array_key_exists('status', $row) && $row['status'] !== 'active') {
-                $_SESSION['msg'] = 'Your account is inactive. Please contact the administrator.';
-                $_SESSION['msg_type'] = 'warning';
-                header("Location: pages-login.php");
-                exit();
+                // Skip this table and try the next table
+                return false;
             }
 
             // ✅ Set session

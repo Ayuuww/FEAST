@@ -54,7 +54,11 @@ while ($r = $adds_data_result->fetch_assoc()) {
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  // Collect POST safely
+
+  // Read POST safely
+  $old_idnumber = $_POST['old_idnumber'] ?? null;
+  $new_idnumber = trim($_POST['idnumber'] ?? '');
+
   $new_status      = $_POST['status'] ?? 'active';
   $new_employment  = $_POST['employment_role'] ?? 'Non-Teaching';
   $new_faculty_rank = !empty($_POST['faculty_rank']) ? trim($_POST['faculty_rank']) : null;
@@ -70,18 +74,27 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     // 1) Update registrar table
     $upd = $conn->prepare("
-      UPDATE registrar
-      SET status = ?, faculty_rank = ?, employment_role = ?, college = ?, program = ?
-      WHERE idnumber = ?
-    ");
-    $upd->bind_param("ssssss", $new_status, $new_faculty_rank, $new_employment, $new_college, $new_program, $registrar_id);
+  UPDATE registrar
+  SET idnumber = ?, status = ?, faculty_rank = ?, employment_role = ?, college = ?, program = ?
+  WHERE idnumber = ?
+");
+    $upd->bind_param(
+      "sssssss",
+      $new_idnumber,
+      $new_status,
+      $new_faculty_rank,
+      $new_employment,
+      $new_college,
+      $new_program,
+      $old_idnumber
+    );
     $upd->execute();
     $upd->close();
 
     // 2) Handle faculty record depending on employment role
     // Check if faculty record exists
     $chk = $conn->prepare("SELECT idnumber FROM faculty WHERE idnumber = ?");
-    $chk->bind_param("s", $registrar_id);
+    $chk->bind_param("s", $old_idnumber);
     $chk->execute();
     $chkRes = $chk->get_result();
     $faculty_exists = ($chkRes && $chkRes->num_rows > 0);
@@ -105,7 +118,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           WHERE idnumber = ?
         ");
         // bind: registrar_id used in subselects too
-        $upf->bind_param("ssssss", $registrar_id, $registrar_id, $registrar_id, $new_college, $new_program, $new_faculty_rank, $registrar_id);
+        $upf->bind_param(
+          "sssssss",
+          $new_idnumber,   // first_name source
+          $new_idnumber,   // mid_name source
+          $new_idnumber,   // last_name source
+          $new_college,
+          $new_program,
+          $new_faculty_rank,
+          $old_idnumber    // WHERE idnumber = old_idnumber
+        );
         $upf->execute();
         $upf->close();
       } else {
@@ -128,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         ");
         $ins->bind_param(
           "ssssssssss",
-          $registrar_id,
+          $$new_idnumber,
           $reg_fname,
           $reg_mname,
           $reg_lname,
@@ -146,7 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       // Non-Teaching: if a faculty record exists, set to inactive (do not delete)
       if ($faculty_exists) {
         $upf2 = $conn->prepare("UPDATE faculty SET status = 'inactive' WHERE idnumber = ?");
-        $upf2->bind_param("s", $registrar_id);
+        $upf2->bind_param("s", $old_idnumber);
         $upf2->execute();
         $upf2->close();
       }
@@ -173,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   }
 
   // Redirect (Post/Redirect/Get) to avoid resubmission
-  header("Location: register-editregistrar.php?id=" . urlencode($registrar_id));
+  header("Location: register-editregistrar.php?id=" . urlencode($new_idnumber));
   exit();
 }
 ?>
@@ -223,12 +245,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <?php if ($registrar): ?>
                 <form method="POST" class="row g-3">
 
+                  <!-- Editable ID Number -->
                   <div class="col-md-6">
                     <div class="form-floating">
-                      <input class="form-control" type="text" value="<?= htmlspecialchars($registrar['idnumber']) ?>" disabled>
+                      <input class="form-control" type="text" name="idnumber" value="<?= htmlspecialchars($registrar['idnumber']) ?>" required>
                       <label>ID Number</label>
                     </div>
                   </div>
+
+                  <!-- Hidden old ID Number -->
+                  <input type="hidden" name="old_idnumber" value="<?= htmlspecialchars($registrar['idnumber']) ?>">
 
                   <div class="col-md-6">
                     <div class="form-floating">
@@ -278,17 +304,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <!-- college (College) -->
                     <div class="col-12">
                       <div class="card p-3 shadow-sm border border-primary-subtle">
-                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building"></i> College / college</h6>
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building"></i> College</h6>
                         <div class="form-floating">
                           <select name="college" id="college" class="form-select">
-                            <option value="">-- Select College / college --</option>
+                            <option value="">-- Select College --</option>
                             <?php foreach (array_keys($collegePrograms) as $dpt): ?>
                               <option value="<?= htmlspecialchars($dpt) ?>" <?= (isset($registrar['college']) && $registrar['college'] === $dpt) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($dpt) ?>
                               </option>
                             <?php endforeach; ?>
                           </select>
-                          <label>College / college</label>
+                          <label>College</label>
                         </div>
                       </div>
                     </div>
