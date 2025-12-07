@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 28, 2025 at 04:06 PM
+-- Generation Time: Dec 07, 2025 at 04:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -403,7 +403,61 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `role`, `activity`, `timestamp`) V
 (645, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-28 22:56:04'),
 (646, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-28 22:56:09'),
 (647, '40193', 'superadmin', 'Updated evaluation settings from \'1st Semester - 2024-2026\' to \'1st Semester - 2025-2026\'', '2025-11-28 22:56:20'),
-(648, '40151', 'admin', 'Logged in', '2025-11-28 23:02:43');
+(648, '40151', 'admin', 'Logged in', '2025-11-28 23:02:43'),
+(653, '40151', 'admin', 'Logged in', '2025-11-29 18:25:51'),
+(654, '00000', '', 'Logged in', '2025-11-29 21:26:21'),
+(655, '00711', 'faculty', 'Logged in', '2025-11-30 01:01:47'),
+(656, '00000', '', 'Logged in', '2025-11-30 01:26:09'),
+(657, '123', 'admin', 'Logged in', '2025-11-30 01:32:31'),
+(658, '40045', 'admin', 'Logged in', '2025-11-30 01:32:52'),
+(659, '40005', 'admin', 'Logged in', '2025-11-30 01:33:09'),
+(660, '123', 'admin', 'Logged in', '2025-11-30 01:33:48'),
+(661, '00000', '', 'Logged in', '2025-11-30 02:10:08'),
+(662, '123', 'admin', 'Logged in', '2025-11-30 02:33:13'),
+(663, '123', 'admin', 'Logged in', '2025-11-30 02:55:21'),
+(664, '40151', 'admin', 'Logged in', '2025-11-30 03:16:04'),
+(665, '40151', 'admin', 'Logged in', '2025-11-30 03:26:39'),
+(666, '40151', 'admin', 'Logged in', '2025-11-30 16:36:34'),
+(667, '40151', 'admin', 'Logged in', '2025-11-30 17:11:16'),
+(668, '221-0387-1', 'student', 'Logged in', '2025-11-30 17:15:37'),
+(669, '221-0387-1', 'student', 'Logged in', '2025-11-30 17:17:19'),
+(670, '00000', '', 'Logged in', '2025-11-30 17:17:29'),
+(671, '00000', '', 'Logged in', '2025-11-30 17:18:10'),
+(672, '40151', 'admin', 'Logged in', '2025-11-30 17:18:33'),
+(673, '221-0387-1', 'student', 'Logged in', '2025-11-30 17:21:46'),
+(674, '40182', 'faculty', 'Logged in', '2025-11-30 17:23:43'),
+(675, '40045', 'admin', 'Logged in', '2025-11-30 17:24:16'),
+(676, '00000', '', 'Logged in', '2025-11-30 17:24:32'),
+(677, '00000', '', 'Logged in', '2025-11-30 17:26:41'),
+(678, '40045', 'faculty', 'Logged in', '2025-11-30 17:29:07'),
+(679, '00000', '', 'Logged in', '2025-11-30 17:31:42'),
+(680, '40045', 'faculty', 'Logged in', '2025-11-30 17:32:55'),
+(681, '00000', '', 'Logged in', '2025-11-30 17:33:23'),
+(682, '40045', 'admin', 'Logged in', '2025-11-30 17:33:51'),
+(683, '40045', 'faculty', 'Logged in', '2025-11-30 17:34:23'),
+(684, '40045', 'faculty', 'Logged in', '2025-11-30 17:37:37'),
+(685, '00000', '', 'Logged in', '2025-11-30 17:37:53'),
+(686, '00000', '', 'Logged in', '2025-11-30 17:38:32'),
+(687, '40045', 'admin', 'Logged in', '2025-11-30 17:38:47'),
+(688, '00000', '', 'Logged in', '2025-11-30 17:38:58'),
+(689, '00000', '', 'Logged in', '2025-11-30 17:42:09'),
+(690, '40193', 'faculty', 'Logged in', '2025-11-30 17:42:30'),
+(691, '00000', '', 'Logged in', '2025-11-30 17:46:07'),
+(692, '40193', 'superadmin', 'Logged in', '2025-11-30 17:46:42'),
+(693, 'system', '', 'Evaluation auto turned OFF (end date reached)', '2025-11-30 17:46:57'),
+(694, '00000', '', 'Logged in', '2025-11-30 17:47:49'),
+(695, '00421', 'faculty', 'Logged in', '2025-11-30 17:50:22'),
+(696, '00000', '', 'Logged in', '2025-11-30 17:50:44'),
+(697, '40193', 'faculty', 'Logged in', '2025-11-30 17:53:10'),
+(698, '40193', 'superadmin', 'Logged in', '2025-11-30 17:53:42'),
+(699, '40193', 'faculty', 'Logged in', '2025-11-30 17:54:12'),
+(700, '40151', 'admin', 'Logged in', '2025-11-30 18:43:52'),
+(701, '40193', 'superadmin', 'Logged in', '2025-11-30 18:44:09'),
+(702, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-25 | End: 2025-11-28', '2025-11-30 18:44:15'),
+(703, 'system', '', 'Evaluation auto turned OFF (end date reached)', '2025-11-30 18:44:15'),
+(704, '40193', 'superadmin', 'Evaluation turned on | Start: 2025-11-30 | End: 2025-12-01', '2025-11-30 18:44:34'),
+(705, '40151', 'admin', 'Logged in', '2025-12-07 21:42:39'),
+(706, '40193', 'superadmin', 'Logged in', '2025-12-07 21:55:56');
 
 -- --------------------------------------------------------
 
@@ -477,7 +531,12 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `college
 (169, 'Professor V', NULL, NULL, NULL, NULL),
 (170, NULL, NULL, '1-B', NULL, NULL),
 (171, NULL, NULL, '1-C', NULL, NULL),
-(172, NULL, NULL, '1-D', NULL, NULL);
+(172, NULL, NULL, '1-D', NULL, NULL),
+(173, NULL, NULL, '2-A', NULL, NULL),
+(174, NULL, NULL, '2-B', NULL, NULL),
+(175, NULL, NULL, '2-C', NULL, NULL),
+(176, NULL, NULL, '2-D', NULL, NULL),
+(177, NULL, NULL, '3-A', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -486,7 +545,8 @@ INSERT INTO `adds` (`id`, `rank_name`, `position_name`, `section_name`, `college
 --
 
 CREATE TABLE `admin` (
-  `idnumber` varchar(11) NOT NULL,
+  `id` int(255) NOT NULL,
+  `idnumber` varchar(255) NOT NULL,
   `first_name` varchar(255) NOT NULL,
   `mid_name` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -501,13 +561,12 @@ CREATE TABLE `admin` (
 -- Dumping data for table `admin`
 --
 
-INSERT INTO `admin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`) VALUES
-('40005', 'Theresa', 'Crispino', 'Cachero', '$2y$10$7ddHbp89iZO1TUPNADI7YeeoXSXU37LtR2rpNL0ipjRuJ9dDGrFIC', 'Program Chair', 'admin', 'active', 'Assistant Professor IV'),
-('40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'Dean', 'admin', 'active', 'Assistant Professor I'),
-('40045', 'Christianne Glory', 'L', 'Arbollente', '$2y$10$AL3JqU.T22XvzvwruiOuTuIZGPLP1TOgB.oZOYgNWI79bTA8RF1Kq', 'Program Chair', 'admin', 'active', 'Instructor III'),
-('40050', 'Lynbelle', 'Chan', 'Pascua', '$2y$10$zY3B9.cA1L3I/btGOpiEpuDfvsOPzS2OBT/LgINzG05GYucNc9X22', 'Program Chair', 'admin', 'active', 'Instructor I'),
-('40151', 'Edelita', 'Corpuz', 'Ebuenga', '$2y$10$Ltz8JeCc3EJ1vVtTPbSE5.rh3X7Rb4EEO28tQ69OLePJi78EZ0wu.', 'Dean', 'admin', 'active', 'Associate Professor V'),
-('40180', 'Rufo', 'Agaloos', 'Baro', '$2y$10$awW24CgCqZVTGxqR6A6THOYA8AxTrg.pxKsOYIhWE8KOiR/4XEz.O', 'Dean', 'admin', 'active', 'Associate Professor V');
+INSERT INTO `admin` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `position`, `role`, `status`, `faculty_rank`) VALUES
+(13, '40005', 'Theresa', 'Crispino', 'Cachero', '$2y$10$7ddHbp89iZO1TUPNADI7YeeoXSXU37LtR2rpNL0ipjRuJ9dDGrFIC', 'Program Chair', 'admin', 'active', 'Assistant Professor IV'),
+(14, '40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'Dean', 'admin', 'active', 'Assistant Professor I'),
+(15, '40045', 'Christianne Glory', 'L', 'Arbollente', '$2y$10$AL3JqU.T22XvzvwruiOuTuIZGPLP1TOgB.oZOYgNWI79bTA8RF1Kq', 'Program Chair', 'admin', 'active', 'Instructor III'),
+(16, '40050', 'Lynbelle', 'Chan', 'Pascua', '$2y$10$zY3B9.cA1L3I/btGOpiEpuDfvsOPzS2OBT/LgINzG05GYucNc9X22', 'Program Chair', 'admin', 'active', 'Instructor I'),
+(17, '40151', 'Edelita', 'Corpuz', 'Ebuenga', '$2y$10$Ltz8JeCc3EJ1vVtTPbSE5.rh3X7Rb4EEO28tQ69OLePJi78EZ0wu.', 'Dean', 'admin', 'active', 'Associate Professor V');
 
 -- --------------------------------------------------------
 
@@ -534,8 +593,7 @@ INSERT INTO `admin_college` (`admin_idnumber`, `college_name`, `program_name`) V
 ('40014', 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education'),
 ('40045', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education'),
 ('40050', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language'),
-('40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-('40180', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
+('40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
 
 -- --------------------------------------------------------
 
@@ -692,7 +750,7 @@ CREATE TABLE `evaluation_switch` (
 --
 
 INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`, `start_date`, `end_date`) VALUES
-(7, 'on', '40193', '2025-11-25', '2025-11-28');
+(7, 'on', '40193', '2025-11-30', '2025-12-01');
 
 -- --------------------------------------------------------
 
@@ -701,9 +759,10 @@ INSERT INTO `evaluation_switch` (`id`, `status`, `user_id`, `start_date`, `end_d
 --
 
 CREATE TABLE `faculty` (
-  `idnumber` varchar(11) NOT NULL,
+  `id` int(255) NOT NULL,
+  `idnumber` varchar(255) NOT NULL,
   `first_name` varchar(50) NOT NULL,
-  `mid_name` varchar(50) NOT NULL,
+  `mid_name` varchar(50) DEFAULT NULL,
   `last_name` varchar(50) NOT NULL,
   `password` varchar(255) DEFAULT NULL,
   `college` varchar(255) DEFAULT NULL,
@@ -717,26 +776,51 @@ CREATE TABLE `faculty` (
 -- Dumping data for table `faculty`
 --
 
-INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `faculty_rank`, `role`, `status`) VALUES
-('00000', 'First Name', 'Middle Name', 'Last Name', '$2y$10$QZEzS12wjqwVLiYh2BGJu.7GlVKeCUTto7iS5T7ene8RABqHMQBae', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
-('00421', 'Kristine Maylan', 'Sabado', 'Espero', '$2y$10$6sDggnKta7b7xCdaP1Ib/eIe85tOjuo1lb3v7am4JtP4vZ9M1eG5W', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor I', 'faculty', 'active'),
-('00711', 'Mark Kenneth', 'Molina', 'Mangaser', '$2y$10$STXSd0A4CyFoab/G/ADv7.MOKWUTUpQTz66kdgIfF.lcval9XV5b6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
-('02860', 'Larmie', 'Dosono', 'Barcelona', '$2y$10$Z/Bqwy3zpmgkVX6A7uoo7eCyBX01V64mIOyjhRbxa/1FHyCkxUfve', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor I', 'faculty', 'active'),
-('0716', 'Reiner Jan', 'Agustin', 'Castelo', '$2y$10$fRUv6hw/4/5ZkrIF8VvoKOMdomyPzx6YnjwyGYzeaqenfhqK9h7Fa', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Instructor I', 'faculty', 'active'),
-('40005', 'Theresa', 'Crispino', 'Cachero', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Assistant Professor IV', 'faculty', 'active'),
-('40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education', 'Assistant Professor I', 'faculty', 'active'),
-('40023', 'Shalimar', 'Licudine', 'Navalta', '$2y$10$hyxK8egZRYMGC1dzTm6.iu5YXk02AQBd4iBhfXKMZk34NDUFzWzoC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
-('40045', 'Christianne Glory', 'L', 'Arbollente', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor III', 'faculty', 'active'),
-('40050', 'Lynbelle', 'Chan', 'Pascua', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Instructor I', 'faculty', 'active'),
-('40094', 'Maricel', 'Oficiar', 'Pre', '$2y$10$7Q4SgyxGufI6HtGAQ9Ssa..7t6bpDWmjcSvphzG6Cd3cfXWbchyPy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
-('40112', 'Jhonalyn', 'Bautista', 'Lardizabal', '$2y$10$HnDfJjH8lTY4stHShIsMeeNMZzoYWR6jnL8cP1n.BHPLu1fOczE0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
-('40151', 'Edelita', 'Corpuz', 'Ebuenga', NULL, 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
-('40180', 'Rufo', 'Agaloos', 'Baro', '$2y$10$awW24CgCqZVTGxqR6A6THOYA8AxTrg.pxKsOYIhWE8KOiR/4XEz.O', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
-('40182', 'Daniel', 'Almojuela', 'Neri', '$2y$10$Lzvob3L7hGF1aqMPlcgeNuVg0HgBYFqbk.degfuS52jDPOV0gphNS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor II', 'faculty', 'active'),
-('40184', 'Herve', 'Estrada', 'Orpilla', '$2y$10$Vgm05e3hAx2417BIfAIS4uEpPTWzLOu8KTGMhSZs3W1QAcF.uiUtu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor III', 'faculty', 'active'),
-('40193', 'Frediz Winda', 'Ferrer', 'Badua', NULL, 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'faculty', 'active'),
-('40207', 'Rhoda', 'Marquez', 'Lilan', '$2y$10$Dh5Dz3iRIRcg7N.DGYHzou0x1NxTkdgZjq8X/PnqgcPMevcafpqNC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
-('40413', 'Jessie', 'Bautista', 'Vallecera', '$2y$10$JcHvquUKJ96KyfD0Ri8cXODOkZTAxfBWcI0uB86tsV.KBmmLiOqfS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active');
+INSERT INTO `faculty` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `faculty_rank`, `role`, `status`) VALUES
+(40, '00421', 'Kristine Maylan', 'Sabado', 'Espero', '$2y$10$6sDggnKta7b7xCdaP1Ib/eIe85tOjuo1lb3v7am4JtP4vZ9M1eG5W', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Instructor I', 'faculty', 'active'),
+(41, '00711', 'Mark Kenneth', 'Molina', 'Mangaser', '$2y$10$STXSd0A4CyFoab/G/ADv7.MOKWUTUpQTz66kdgIfF.lcval9XV5b6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
+(42, '02860', 'Larmie', 'Dosono', 'Barcelona', '$2y$10$Z/Bqwy3zpmgkVX6A7uoo7eCyBX01V64mIOyjhRbxa/1FHyCkxUfve', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor I', 'faculty', 'active'),
+(43, '0716', 'Reiner Jan', 'Agustin', 'Castelo', '$2y$10$fRUv6hw/4/5ZkrIF8VvoKOMdomyPzx6YnjwyGYzeaqenfhqK9h7Fa', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Instructor I', 'faculty', 'active'),
+(44, '40005', 'Theresa', 'Crispino', 'Cachero', '$2y$10$hro5VK.m8yKAi1OFGh9ZXOMmitsthk4Bv7JsLdBdNN1qCGDVp0QRW', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Science in Biology', 'Assistant Professor IV', 'faculty', 'active'),
+(45, '40014', 'Nel Bryan', 'Cariño', 'Tugelida', '$2y$10$iRU7UNcH2guHlzFGjnhR3etFBcRaR6.f8p/jBHYatizFT8pHF4xFO', 'COLLEGE OF EDUCATION', 'Bachelor of Technology and Livelihood Education', 'Assistant Professor I', 'faculty', 'active'),
+(46, '40023', 'Shalimar', 'Licudine', 'Navalta', '$2y$10$hyxK8egZRYMGC1dzTm6.iu5YXk02AQBd4iBhfXKMZk34NDUFzWzoC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
+(47, '40045', 'Christianne Glory', 'L', 'Arbollente', '$2y$10$c00mYOVf8FHBRFKI/6/WYOMOdkvOMFqldqXz5DiwU/OsF43AH5oQq', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of General Education', 'Instructor III', 'faculty', 'active'),
+(48, '40050', 'Lynbelle', 'Chan', 'Pascua', '$2y$10$FugDB2YfrmFODnV9UcrsZOpjZvW4djSXZJs0r3XOmTj3FcgPxmbF2', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Instructor I', 'faculty', 'active'),
+(49, '40094', 'Maricel', 'Oficiar', 'Pre', '$2y$10$7Q4SgyxGufI6HtGAQ9Ssa..7t6bpDWmjcSvphzG6Cd3cfXWbchyPy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active'),
+(50, '40112', 'Jhonalyn', 'Bautista', 'Lardizabal', '$2y$10$HnDfJjH8lTY4stHShIsMeeNMZzoYWR6jnL8cP1n.BHPLu1fOczE0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
+(51, '40151', 'Edelita', 'Corpuz', 'Ebuenga', '$2y$10$m1ouEV9QEoCimrW3268Uy.XPEzVd8HB.g7LoE1ybJuGVGmTc7nILG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
+(52, '40180', 'Rufo', 'Agaloos', 'Baro', '$2y$10$nhjJHEGLIeMTBT/zBWXB3.iPLEMiiCMy4OH7EsPUt9kE01Mhqd9a.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
+(53, '40182', 'Daniel', 'Almojuela', 'Neri', '$2y$10$Lzvob3L7hGF1aqMPlcgeNuVg0HgBYFqbk.degfuS52jDPOV0gphNS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor II', 'faculty', 'active'),
+(54, '40184', 'Herve', 'Estrada', 'Orpilla', '$2y$10$Vgm05e3hAx2417BIfAIS4uEpPTWzLOu8KTGMhSZs3W1QAcF.uiUtu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor III', 'faculty', 'active'),
+(55, '40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$FXc/x9GWqxqXqC2mf9JO9O0Pfy6o0DbPD6myd8YovtqI59UxkgxSS', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'faculty', 'active'),
+(56, '40207', 'Rhoda', 'Marquez', 'Lilan', '$2y$10$Dh5Dz3iRIRcg7N.DGYHzou0x1NxTkdgZjq8X/PnqgcPMevcafpqNC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
+(57, '40413', 'Jessie', 'Bautista', 'Vallecera', '$2y$10$JcHvquUKJ96KyfD0Ri8cXODOkZTAxfBWcI0uB86tsV.KBmmLiOqfS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
+(59, '00424', 'Stephan', '', 'Kupsch', '$2y$10$LXEuveIvZhxyYXt9JB8otejLdYxRkOgT4x/rg4kUjPvxmPNVANtdG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `faculty_dev_plan`
+--
+
+CREATE TABLE `faculty_dev_plan` (
+  `id` int(11) NOT NULL,
+  `faculty_id` varchar(50) DEFAULT NULL,
+  `semester` varchar(50) NOT NULL,
+  `academic_year` varchar(50) NOT NULL,
+  `areas_improvement` text DEFAULT NULL,
+  `proposed_activities` text DEFAULT NULL,
+  `action_plan` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `faculty_dev_plan`
+--
+
+INSERT INTO `faculty_dev_plan` (`id`, `faculty_id`, `semester`, `academic_year`, `areas_improvement`, `proposed_activities`, `action_plan`, `created_at`, `updated_at`) VALUES
+(1, '40207', '1st Semester', '2025-2026', 'In teaching sided', 'O yeah', 'Nothing', '2025-12-07 13:49:13', '2025-12-07 13:54:27');
 
 -- --------------------------------------------------------
 
@@ -745,6 +829,7 @@ INSERT INTO `faculty` (`idnumber`, `first_name`, `mid_name`, `last_name`, `passw
 --
 
 CREATE TABLE `registrar` (
+  `id` int(255) NOT NULL,
   `idnumber` varchar(255) NOT NULL,
   `first_name` varchar(255) NOT NULL,
   `mid_name` varchar(255) NOT NULL,
@@ -762,8 +847,8 @@ CREATE TABLE `registrar` (
 -- Dumping data for table `registrar`
 --
 
-INSERT INTO `registrar` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `status`, `role`, `employment_role`, `faculty_rank`) VALUES
-('00000', 'Account', 'Creator', 'System', '$2y$10$oIAZEL68lgR8cOOc6YP5d.UA5GaQwnCLtrSP/7cv03CNmGt6fylRm', NULL, NULL, 'active', 'registrar', 'Non-Teaching', NULL);
+INSERT INTO `registrar` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `status`, `role`, `employment_role`, `faculty_rank`) VALUES
+(1, '00000', 'Account', 'Creator', 'System', '$2y$10$oIAZEL68lgR8cOOc6YP5d.UA5GaQwnCLtrSP/7cv03CNmGt6fylRm', NULL, NULL, 'active', 'registrar', 'Non-Teaching', NULL);
 
 -- --------------------------------------------------------
 
@@ -772,14 +857,15 @@ INSERT INTO `registrar` (`idnumber`, `first_name`, `mid_name`, `last_name`, `pas
 --
 
 CREATE TABLE `student` (
-  `idnumber` varchar(11) NOT NULL,
+  `id` int(255) NOT NULL,
+  `idnumber` varchar(255) NOT NULL,
   `first_name` varchar(50) NOT NULL,
   `mid_name` varchar(50) NOT NULL,
   `last_name` varchar(50) NOT NULL,
   `password` varchar(255) NOT NULL,
   `college` varchar(255) NOT NULL,
   `program` varchar(255) DEFAULT NULL,
-  `section` varchar(11) NOT NULL,
+  `section` varchar(11) DEFAULT NULL,
   `role` varchar(50) NOT NULL DEFAULT 'student'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -787,84 +873,97 @@ CREATE TABLE `student` (
 -- Dumping data for table `student`
 --
 
-INSERT INTO `student` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `section`, `role`) VALUES
-('201-0326-1', 'Rodel Andre', 'Bumatay', 'Cardona', '$2y$10$.3J8f0HN56qVyud..gugsOsmAykyg2DfS7eBlHfeXM6HEkZB1wEQ2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('202-0021-1', 'Ren Ren', 'Alimpia', 'Donato', '$2y$10$hx3jjm..uGUIVfq4PX0w6u7jKAi2cNkSgm/D2O9SvvYBAVgseOC.O', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('211-0004-1', 'Symphony Angel', 'Manalo', 'Vivit', '$2y$10$Zb2BkcFRnQEvUlsxZRKUEO6CRvNQheG0XKgl.iLr4sL6RbFAOtnui', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('211-0161-1 ', 'Herobin', 'MiddleName', 'Mariñas', '$2y$10$NW9ntaa01AYex8oGt5qCQuNsLLdldbq5lvdyBxY1sAaX4YB4KfW6u', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('211-0164-1', 'Emma Cecille', 'Ariola', 'Badua', '$2y$10$kixnr6W1iveVo3C1AVL9fuxeTvehTVPlcPbsyEerfU3kyr3S5svLa', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('211-0174-1', 'John Godwin', 'MiddleName', 'Taningco', '$2y$10$TyLgDbCNfofpYC6M8QOIa.v99.8.TT70QQv2fY3Lwf2rgEt/w0J1i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('211-0805-1', 'Gohan', 'Espe', 'Gamboa', '$2y$10$BCJGB/C2AVsoe3rUVBU7r.cv6Gjt40eNBnq0R5K1C/XH097iOxUxy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221- 0411-1', 'Clouie Ann', 'MiddleName', 'Aclinen', '$2y$10$PnJUVdK7rvXHoB.p1LQ8KeVMaVud5x3crYA/Jx3TsW305PCbSEvRO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0005-1', 'Alexandrea ', 'Jean', 'Garcia', '$2y$10$SHZx36mhnnIZv5gTKSPNoOHrS/poBF/.i6e72Yl58TensgBHI6a0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0006-1', 'Renz Allen', 'Bautista', 'Miller', '$2y$10$Mr8YA1x/ZATqPLAEnexuuucKbVAscbj0I.PUM6dtO.oLYe.ru70cK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0026-1', 'Jeandra Joy', 'Opinaldo', 'Orfiano', '$2y$10$Fo32ZIz4C71NNDETq3MjKuvhdTmouK0opssTw6LybchIEKVyoWROu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0070-1', 'Honey Boy', 'Bucsit', 'Corial', '$2y$10$E7n0kwQRL38O.oXNMtLtTe9b/KRuFG2CSQBAETxHs43QTNzHfg6h6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0079-1', 'Procxel', 'Claro', 'Almoite', '$2y$10$U8jHoYQT6rj91xt6k866fO8zh2ms.OLvKjGsJECHCqWW9AthMqIpi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0080-1', 'Ika Ivana', 'Buccat', 'Licudan', '$2y$10$ibS37rjJxS/j7TxicrjCeeXA75OsUci.xpIzqQFNjfWGyeyrVSfk2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0082-1', 'Aerone', 'MiddleName', 'Imbuedo', '$2y$10$UvNNBqE4Ys5hsezzk6PPo.c6Y2pUu6/Tpw0oySFPWVSQw1I05Y9xC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0137-1', 'Christian John', 'MiddleName', 'Navarro ', '$2y$10$nMC4TqP/R2MhgrJlUjXMA.eJRm3x3eu6pvPT.hddWpknrL8Sr8bDG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0146-1', 'Baniely', 'MiddleName', 'Pajarit', '$2y$10$WOUVXxwSUsjrSVkAwXgeSeG.91dcYr9sFvBRGVTWCfnamYgku7Zqi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0179-1', 'Jaira Mitch', 'Buen', 'Riñon', '$2y$10$ARMg/0iwbzrlqma0ylxRJupczE/zCKvBoZ1VnY4mfhGH9GhOsSMFG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0180-1', 'Irish Jingle', ' Ader', 'Riñon', '$2y$10$mRJUBZ1JvEIcGsGBPernd.nl0B4InRrAGUFHq/l07Wsp0yXcOVoVG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0325-1', 'Pryce', 'Cabanes', 'Cabagbag', '$2y$10$tIfoQlQKrp/Gu7.8Tu527.MV1LjoOhzOn34WtR2x3mnTY4CHCwere', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0368-1', 'Vench Axel Ross', 'Libed', 'Gliam', '$2y$10$OQTkK28o07IJhLfgH5KlFev09/Pk1NZRjHSgqLL7SFABawfCM7t0W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0387-1', 'Clark Joshua', ' Velasco', 'Rojas', '$2y$10$tCGIAZQf7gD1UdsMTmb.UeBhC9nU22HKqsVY4rIKBjCksPh6vN96y', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0388-1', 'Charls Adonis', 'Velasco', 'Rojas', '$2y$10$FTMsMRx5rgm3IwfnIcAimuUVJNsZwnRKWJFhXzICrPF8i95RshtZy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0422-1', 'Mark Kristian', 'Parchamento', 'Lagman', '$2y$10$b5nP9UgdeMj7.4zqlWTKru3s4UYQird0is4BuW8DImj5c27iwSKEu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0476-1', 'Ana Marie', 'Edic', 'Almirol', '$2y$10$EDWbLzNKh14bSUpBXV0ew.cF4CagStZ88wI6BwybgM5yaVpGeyI3i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0478-1', 'Claire', 'V', 'Almirol', '$2y$10$iqgnv81CNjVdkIcQa8PTj.2j/BoUPLUE/1uefiGZxWrixcJV//UaG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0484-1', 'Lyzette', ' S', 'Oliveros', '$2y$10$PNfFYBK/dZDzg.KGcvgzKOcBL2SpDD.bXfh7Urpn3SDjwOnALBAKi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0485-1', 'Lorenzo', 'Nodora', 'Cariaga', '$2y$10$R0.pcCXXQ4mkYqHlVy7l5.kWhuaFoEgOgB6ypmH/d0EdFjUfnrSCO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0497-1', 'Tyron', 'Doble', 'Cruz', '$2y$10$cFPabS1D63SN0epwj0zlHOMg/ka6mNznxKcxVVOZbPUEHxsq6FzDO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0557-1', 'Giovani', 'Bataller', 'Valdriz', '$2y$10$1za0RMhuP.5pXLDZ8PqEgOwnxl2hYfgi3Fzupz4PZbHYYuE2wQkDO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0626-1', 'Kristelle', 'Pacleb', 'Yara', '$2y$10$yx8/CGYu41B6wuS3dpqq/u/7ekMUnP9UzFTYqUm9fEjASlzHNZ.Qe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0629-1', ' Karyl Zyrra', 'Tadije', 'Ancheta', '$2y$10$MZhmnGOakI/J.7bpJhQRS.qMRgSqEAdvsJupP0enOfbOGws0GTqIG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0648-1', 'Andrei Kyle', 'MiddleName', 'Legaspi', '$2y$10$Ig4Z1Pq5irU/qk0DE1IrnuhIJRiZ1QemDTFxouolt.m2hM.5lysem', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0733-1', 'Van Apollo', 'Untal', 'Mon', '$2y$10$iY2wgMgnu2aTb/b01Sk.luRLQdCRyomk7PP6U5vUqWFJE020lUEVS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0743- 1', 'Jose Christopher', 'Gacrama', 'Apocero', '$2y$10$47xr9TsKglie3rBknlcmguK1ijAJfSOAuQ.eAB5b16rG9ag4c6ORW', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0778-1', 'Shasney', 'Sabado', 'Alminiana', '$2y$10$EwOwCR9oSwbA1KhLLfLk9eAQyq6lm/UU/.KkcpZqJb/6nEoSO3/vS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0852-1', 'Jesiry', 'Bati', 'Subli', '$2y$10$t.fZQFjix1SRep./qelqzeO3hMUva6Wq4Cc27z0j.sBqwpVNhc.L6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('221-0867-1 ', 'Arianne Yesha', 'Mones', 'Marcella', '$2y$10$Dn1yC8JIxxR7DP5l/ekJFeB4X6y13CCVWOkeRaV80xMbw2SKIMVCi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('221-0926-1', 'Shina Marie', 'Sobremonte', 'Apolinar', '$2y$10$TqYctaOEdA2zRhMT/3P5g.biCBqQKOZy2TdpTF3cxQU8dYo/a4XIS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-('222-0014-1', 'Jeremiah', 'Valerio', 'Lubian', '$2y$10$C8pKTwxlP5xwUOYat/QxBOVU46YZUwPc8Uwp3QbB3gnPgD.Cmu3lO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('231-0884-1', 'Delwin', 'N', 'Calica', '$2y$10$md7ym/5eHvgqyduRam.f4O.n5rUbWSSM2TzEphXQ/R7CXkqlKT4Ym', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('231-0923-1', 'Vien', 'Ivory', 'Marzan', '$2y$10$fDT3AF2rplrwln2oohZJVOcLJjovjIh4KnAKlAtIjcgmxKvFa4YHm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
-('251-0004-1', 'Unikey', 'Galvez', 'Visca', '$2y$10$Ld1ExLkdvda9TGdauZvCquuB.sOe/u1BFurAgdOr7E/hE1ix7KylG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0008-1', 'Jermain', 'Malubay', 'Mique', '$2y$10$H0nJlh29.ChGKtN54EoEiOCaNzp9HaG6TXGZ2H/OFiICB4cDLUP62', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0009-1', 'Rhodney Josh', 'Valdez', 'Olivar', '$2y$10$gy0oWdcDfrph5NPzkDfmF.yQHHmKD33kvkACt8r/0mB96uVQY5mAC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0010-1', 'Julius', 'Reola', 'Camat', '$2y$10$RWKveJiJhhhfhiiODrq2lei0PFMhJ751pXiGLdbdIEFkRw8vhXT3G', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0019-1', 'Princess Nicole', 'Salinas', 'Ordinario', '$2y$10$ZVayBsC/DJ7.DyAov.FZC.jC69YKsNMmm/ffcgGuJlQaKvVbPtk1e', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0042-1', 'Cedric Jyhn', 'Abellera', 'Galvez', '$2y$10$j3ea1UNjl3dgRUnyPP7zcOUfzzX9FYGZlzy6YXNiyZ/d2oELXSXfu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0047-1', 'Kurt Russel', 'Perez', 'Almodovar', '$2y$10$zT/A3RDLGpLXKhrApmk5cutmCRyOQIR2KkMvjRaeHHQt56bGBhhNu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0054-1', 'Althea', 'Cruz', 'Nuval', '$2y$10$WKLlLVFE8cuy//YggKyd3ORGuRGOxtIBcZKZMaQcDsJRzwgHnsHOG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0055-1', 'Angelica', 'Munar', 'Nuval', '$2y$10$4Nkn13lwjeW4XGC1USByzOwBsO33LyCqizsPxfKTWLMzCGMCy/rAy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0057-1', 'Kristhel', 'Valdez', 'Obille', '$2y$10$M9O4wYDwAOosx25Q6nR5bu8rkIUZHl.IZh3OCgRsrM.S5i.y4hk4K', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0166-1', 'Heraneth', 'Federico', 'Baro', '$2y$10$tkvDUq6DarjGEwLhrIYuCeI.WMeuWrfCxk8ZXL0e9bDlnsYopApaK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0186-1', 'Deric', 'Gacayan', 'Cotcheza', '$2y$10$kyqxNGttROoX5gMwTuwakeP.FcH1s.nUNctqh8OkCUdH8b2z6IKf.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0231-1', 'John Vincent', 'Degyem', 'Nillo', '$2y$10$.acgiaRC18Z0mENwI9zXoOt9oyWgmV1vCyO/7Lh5ac14oDNQSmxp2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0233-1', 'Jayson', 'Cabanban', 'De Guzman', '$2y$10$vUCkv/USih7LKjxKaVGNSumkWPc5RfcGPyijd60oumcUCtE879LZe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0234-1', 'Cristobal', 'Palabay', 'Ledesma', '$2y$10$xoJ08IhSh6V7Umk2VE9rz.eJ6qM.yfcsp..cfMxVGBrKXpNRbs2fm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0238-1', 'Rio', 'Cabanban', 'Cabanban', '$2y$10$tTDHv9Hl7QqJTQ3JCBYt.us8SfBp6uXjIPnGeF.mfDYw9AiKe1J5W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0250-1', 'Precious Lara', 'Marcella', 'Eslava', '$2y$10$Z6GGiuk4rYdSJbo9cjZi8OpL4h/vU4y6ZBw9ALhMtWz/NF2rxbsoC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0261-1', 'Joemarc', 'Uslay', 'Balisong', '$2y$10$HJk9R1Q.ooL5keNd.64kxe1AXeiZx9uY2r1eWimW4UGjmvT8iHSa6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0269-1', 'Georgen', 'Cabanayan', 'Perez', '$2y$10$JhfwKYAZfn/JR/XMJMYuqO3dutkktiwxgu7ue2XZNTkqjwSycmJQe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0271-1', 'Rhalyle Kenneth', 'Biore', 'Bentoy', '$2y$10$50PnL2ckM.c/6H.2PY2rjuHx1nU/KCcyD3x.wpet82uVVrG9O/lYm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0367-1', 'Jeremi', 'Delarna', 'Castro', '$2y$10$GnPVEmKKHmmH.5EUNKC2neoLffynxjkhblWcwmKX8l34wwbLe4Cz2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0368-1', 'Hans Christian', 'Joven', 'Cortez', '$2y$10$u0igbzA84B6AnEXi6VFBMOw7beEkLUFHDR1aBr6znyCplCZZnhf6W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0369-1', 'Princess Lei Ann', 'Carig', 'Tagumpay', '$2y$10$8.4E5Tf34zWNp591NtUAte4XO6cHYoH5HcnQamKmWzO3C9Mjn809i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0375-1', 'Rafael Christian Mark', 'Nieveras', 'Astudillo', '$2y$10$.QUchP.kcjSvGaDt8RmbD.KlBKNw1xbkrhtga9jNBivQgpdZiXVIq', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0376-1', 'Domnic Savio Angelo', 'Munar', 'Munar', '$2y$10$8qvFF6MdKfVLBPKniDeopuoFIuiS/B3X2wLTapvwt42i3Ime3FB76', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0379-1', 'Jerald Collin', 'Bautista', 'Lim', '$2y$10$2qqFcZsZFak.pDhPvhZA4.2KhoIFF5sPSj7AToAJERLgAh4k2n2Ja', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0383-1', 'Gian Kenneth', 'Jalne', 'Nuesca', '$2y$10$7Z7kQW1Dn86MM.9HW7UXT.Uby9knE/mFQvSH.kofaQpPuD6VeQEF6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0386-1', 'Manilyn', 'Briongos', 'Olito', '$2y$10$jB6YSapTR3G7UAItE.ajUeHj23C86IJ0Hul/RcmpnGofpWDWySVLi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0401-1', 'Rashelle', 'Dating-E', 'Mahgit', '$2y$10$EskNvmyyLk.JE4lqU.w7.egQROXvQUu86629mKAZGZrsZIl8T7kku', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0416-1', 'Renz', 'Dadcoes', 'Madayag', '$2y$10$l6yzt/kE7b8LtVVg2m3mau5/aDnUiADcczbo9Z/JZa..nOO2262oG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0458-1', 'Bonnie', 'Buccat', 'Padua', '$2y$10$.gSwcxxGZKjA3fqFAKEzD.v2GuAWbxWJiW/mh5CL6.LwtFN2TeRGe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0477-1', 'Monica', 'Seguin', 'Albay', '$2y$10$w3BEYODsBQskDHSB4WAzvOB76hXbSrcUEJuKfUXu6J5UEr50EEoNK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0482-1', 'Aeron', 'Nerona', 'Gao-An', '$2y$10$jKhWkysKhuxSnSm832n2XeVVNzyTfLyu6KKkU.cw.0k.h2aaM6Rq.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0512-1', 'Princess Dianah', 'Monis', 'Lucena', '$2y$10$.csmd0itdYAHsyZaLXCVOO87tE9uU7YSzFfg8OFBpdpttwTNt1XZ6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
-('251-0517-1', 'Chloe', 'Arquero', 'Nones', '$2y$10$esXECc8cqhdbMqJPAJGPo.dZmGGzLcLZIhlV6BZugByuHrIVCNXsm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student');
+INSERT INTO `student` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `college`, `program`, `section`, `role`) VALUES
+(156, '201-0326-1', 'Rodel Andre', 'Bumatay', 'Cardona', '$2y$10$.3J8f0HN56qVyud..gugsOsmAykyg2DfS7eBlHfeXM6HEkZB1wEQ2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(157, '202-0021-1', 'Ren Ren', 'Alimpia', 'Donato', '$2y$10$hx3jjm..uGUIVfq4PX0w6u7jKAi2cNkSgm/D2O9SvvYBAVgseOC.O', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(158, '211-0004-1', 'Symphony Angel', 'Manalo', 'Vivit', '$2y$10$Zb2BkcFRnQEvUlsxZRKUEO6CRvNQheG0XKgl.iLr4sL6RbFAOtnui', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(159, '211-0161-1 ', 'Herobin', 'MiddleName', 'Mariñas', '$2y$10$NW9ntaa01AYex8oGt5qCQuNsLLdldbq5lvdyBxY1sAaX4YB4KfW6u', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(160, '211-0164-1', 'Emma Cecille', 'Ariola', 'Badua', '$2y$10$kixnr6W1iveVo3C1AVL9fuxeTvehTVPlcPbsyEerfU3kyr3S5svLa', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(161, '211-0174-1', 'John Godwin', 'MiddleName', 'Taningco', '$2y$10$TyLgDbCNfofpYC6M8QOIa.v99.8.TT70QQv2fY3Lwf2rgEt/w0J1i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(162, '211-0805-1', 'Gohan', 'Espe', 'Gamboa', '$2y$10$BCJGB/C2AVsoe3rUVBU7r.cv6Gjt40eNBnq0R5K1C/XH097iOxUxy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(163, '221- 0411-1', 'Clouie Ann', 'MiddleName', 'Aclinen', '$2y$10$PnJUVdK7rvXHoB.p1LQ8KeVMaVud5x3crYA/Jx3TsW305PCbSEvRO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(164, '221-0005-1', 'Alexandrea ', 'Jean', 'Garcia', '$2y$10$SHZx36mhnnIZv5gTKSPNoOHrS/poBF/.i6e72Yl58TensgBHI6a0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(165, '221-0006-1', 'Renz Allen', 'Bautista', 'Miller', '$2y$10$Mr8YA1x/ZATqPLAEnexuuucKbVAscbj0I.PUM6dtO.oLYe.ru70cK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(166, '221-0026-1', 'Jeandra Joy', 'Opinaldo', 'Orfiano', '$2y$10$Fo32ZIz4C71NNDETq3MjKuvhdTmouK0opssTw6LybchIEKVyoWROu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(167, '221-0070-1', 'Honey Boy', 'Bucsit', 'Corial', '$2y$10$E7n0kwQRL38O.oXNMtLtTe9b/KRuFG2CSQBAETxHs43QTNzHfg6h6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(168, '221-0079-1', 'Procxel', 'Claro', 'Almoite', '$2y$10$U8jHoYQT6rj91xt6k866fO8zh2ms.OLvKjGsJECHCqWW9AthMqIpi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(169, '221-0080-1', 'Ika Ivana', 'Buccat', 'Licudan', '$2y$10$ibS37rjJxS/j7TxicrjCeeXA75OsUci.xpIzqQFNjfWGyeyrVSfk2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(170, '221-0082-1', 'Aerone', 'MiddleName', 'Imbuedo', '$2y$10$UvNNBqE4Ys5hsezzk6PPo.c6Y2pUu6/Tpw0oySFPWVSQw1I05Y9xC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(171, '221-0137-1', 'Christian John', 'MiddleName', 'Navarro ', '$2y$10$nMC4TqP/R2MhgrJlUjXMA.eJRm3x3eu6pvPT.hddWpknrL8Sr8bDG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(172, '221-0146-1', 'Baniely', 'MiddleName', 'Pajarit', '$2y$10$WOUVXxwSUsjrSVkAwXgeSeG.91dcYr9sFvBRGVTWCfnamYgku7Zqi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(173, '221-0179-1', 'Jaira Mitch', 'Buen', 'Riñon', '$2y$10$ARMg/0iwbzrlqma0ylxRJupczE/zCKvBoZ1VnY4mfhGH9GhOsSMFG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(174, '221-0180-1', 'Irish Jingle', ' Ader', 'Riñon', '$2y$10$mRJUBZ1JvEIcGsGBPernd.nl0B4InRrAGUFHq/l07Wsp0yXcOVoVG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(175, '221-0325-1', 'Pryce', 'Cabanes', 'Cabagbag', '$2y$10$tIfoQlQKrp/Gu7.8Tu527.MV1LjoOhzOn34WtR2x3mnTY4CHCwere', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(176, '221-0368-1', 'Vench Axel Ross', 'Libed', 'Gliam', '$2y$10$OQTkK28o07IJhLfgH5KlFev09/Pk1NZRjHSgqLL7SFABawfCM7t0W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(177, '221-0387-1', 'Clark Joshua', ' Velasco', 'Rojas', '$2y$10$nkDCfWUECOm578UrUqko7OsHIx9gtBiIjhopiDWHCim1.ql3nHxSS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(178, '221-0388-1', 'Charls Adonis', 'Velasco', 'Rojas', '$2y$10$FTMsMRx5rgm3IwfnIcAimuUVJNsZwnRKWJFhXzICrPF8i95RshtZy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(179, '221-0422-1', 'Mark Kristian', 'Parchamento', 'Lagman', '$2y$10$b5nP9UgdeMj7.4zqlWTKru3s4UYQird0is4BuW8DImj5c27iwSKEu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(180, '221-0476-1', 'Ana Marie', 'Edic', 'Almirol', '$2y$10$EDWbLzNKh14bSUpBXV0ew.cF4CagStZ88wI6BwybgM5yaVpGeyI3i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(181, '221-0478-1', 'Claire', 'V', 'Almirol', '$2y$10$iqgnv81CNjVdkIcQa8PTj.2j/BoUPLUE/1uefiGZxWrixcJV//UaG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(182, '221-0484-1', 'Lyzette', ' S', 'Oliveros', '$2y$10$PNfFYBK/dZDzg.KGcvgzKOcBL2SpDD.bXfh7Urpn3SDjwOnALBAKi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(183, '221-0485-1', 'Lorenzo', 'Nodora', 'Cariaga', '$2y$10$R0.pcCXXQ4mkYqHlVy7l5.kWhuaFoEgOgB6ypmH/d0EdFjUfnrSCO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(184, '221-0497-1', 'Tyron', 'Doble', 'Cruz', '$2y$10$cFPabS1D63SN0epwj0zlHOMg/ka6mNznxKcxVVOZbPUEHxsq6FzDO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(185, '221-0557-1', 'Giovani', 'Bataller', 'Valdriz', '$2y$10$1za0RMhuP.5pXLDZ8PqEgOwnxl2hYfgi3Fzupz4PZbHYYuE2wQkDO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(186, '221-0626-1', 'Kristelle', 'Pacleb', 'Yara', '$2y$10$yx8/CGYu41B6wuS3dpqq/u/7ekMUnP9UzFTYqUm9fEjASlzHNZ.Qe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(187, '221-0629-1', ' Karyl Zyrra', 'Tadije', 'Ancheta', '$2y$10$MZhmnGOakI/J.7bpJhQRS.qMRgSqEAdvsJupP0enOfbOGws0GTqIG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(188, '221-0648-1', 'Andrei Kyle', 'MiddleName', 'Legaspi', '$2y$10$Ig4Z1Pq5irU/qk0DE1IrnuhIJRiZ1QemDTFxouolt.m2hM.5lysem', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(189, '221-0733-1', 'Van Apollo', 'Untal', 'Mon', '$2y$10$iY2wgMgnu2aTb/b01Sk.luRLQdCRyomk7PP6U5vUqWFJE020lUEVS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(190, '221-0743- 1', 'Jose Christopher', 'Gacrama', 'Apocero', '$2y$10$47xr9TsKglie3rBknlcmguK1ijAJfSOAuQ.eAB5b16rG9ag4c6ORW', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(191, '221-0778-1', 'Shasney', 'Sabado', 'Alminiana', '$2y$10$EwOwCR9oSwbA1KhLLfLk9eAQyq6lm/UU/.KkcpZqJb/6nEoSO3/vS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(192, '221-0852-1', 'Jesiry', 'Bati', 'Subli', '$2y$10$t.fZQFjix1SRep./qelqzeO3hMUva6Wq4Cc27z0j.sBqwpVNhc.L6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(193, '221-0867-1 ', 'Arianne Yesha', 'Mones', 'Marcella', '$2y$10$Dn1yC8JIxxR7DP5l/ekJFeB4X6y13CCVWOkeRaV80xMbw2SKIMVCi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(194, '221-0926-1', 'Shina Marie', 'Sobremonte', 'Apolinar', '$2y$10$TqYctaOEdA2zRhMT/3P5g.biCBqQKOZy2TdpTF3cxQU8dYo/a4XIS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
+(195, '222-0014-1', 'Jeremiah', 'Valerio', 'Lubian', '$2y$10$C8pKTwxlP5xwUOYat/QxBOVU46YZUwPc8Uwp3QbB3gnPgD.Cmu3lO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(196, '231-0884-1', 'Delwin', 'N', 'Calica', '$2y$10$md7ym/5eHvgqyduRam.f4O.n5rUbWSSM2TzEphXQ/R7CXkqlKT4Ym', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(197, '231-0923-1', 'Vien', 'Ivory', 'Marzan', '$2y$10$fDT3AF2rplrwln2oohZJVOcLJjovjIh4KnAKlAtIjcgmxKvFa4YHm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(198, '251-0004-1', 'Unikey', 'Galvez', 'Visca', '$2y$10$Ld1ExLkdvda9TGdauZvCquuB.sOe/u1BFurAgdOr7E/hE1ix7KylG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(199, '251-0008-1', 'Jermain', 'Malubay', 'Mique', '$2y$10$H0nJlh29.ChGKtN54EoEiOCaNzp9HaG6TXGZ2H/OFiICB4cDLUP62', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(200, '251-0009-1', 'Rhodney Josh', 'Valdez', 'Olivar', '$2y$10$gy0oWdcDfrph5NPzkDfmF.yQHHmKD33kvkACt8r/0mB96uVQY5mAC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(201, '251-0010-1', 'Julius', 'Reola', 'Camat', '$2y$10$RWKveJiJhhhfhiiODrq2lei0PFMhJ751pXiGLdbdIEFkRw8vhXT3G', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(202, '251-0019-1', 'Princess Nicole', 'Salinas', 'Ordinario', '$2y$10$ZVayBsC/DJ7.DyAov.FZC.jC69YKsNMmm/ffcgGuJlQaKvVbPtk1e', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(203, '251-0042-1', 'Cedric Jyhn', 'Abellera', 'Galvez', '$2y$10$j3ea1UNjl3dgRUnyPP7zcOUfzzX9FYGZlzy6YXNiyZ/d2oELXSXfu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(204, '251-0047-1', 'Kurt Russel', 'Perez', 'Almodovar', '$2y$10$zT/A3RDLGpLXKhrApmk5cutmCRyOQIR2KkMvjRaeHHQt56bGBhhNu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(205, '251-0054-1', 'Althea', 'Cruz', 'Nuval', '$2y$10$WKLlLVFE8cuy//YggKyd3ORGuRGOxtIBcZKZMaQcDsJRzwgHnsHOG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(206, '251-0055-1', 'Angelica', 'Munar', 'Nuval', '$2y$10$4Nkn13lwjeW4XGC1USByzOwBsO33LyCqizsPxfKTWLMzCGMCy/rAy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(207, '251-0057-1', 'Kristhel', 'Valdez', 'Obille', '$2y$10$M9O4wYDwAOosx25Q6nR5bu8rkIUZHl.IZh3OCgRsrM.S5i.y4hk4K', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(208, '251-0166-1', 'Heraneth', 'Federico', 'Baro', '$2y$10$tkvDUq6DarjGEwLhrIYuCeI.WMeuWrfCxk8ZXL0e9bDlnsYopApaK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(209, '251-0186-1', 'Deric', 'Gacayan', 'Cotcheza', '$2y$10$kyqxNGttROoX5gMwTuwakeP.FcH1s.nUNctqh8OkCUdH8b2z6IKf.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(210, '251-0231-1', 'John Vincent', 'Degyem', 'Nillo', '$2y$10$.acgiaRC18Z0mENwI9zXoOt9oyWgmV1vCyO/7Lh5ac14oDNQSmxp2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(211, '251-0233-1', 'Jayson', 'Cabanban', 'De Guzman', '$2y$10$vUCkv/USih7LKjxKaVGNSumkWPc5RfcGPyijd60oumcUCtE879LZe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(212, '251-0234-1', 'Cristobal', 'Palabay', 'Ledesma', '$2y$10$xoJ08IhSh6V7Umk2VE9rz.eJ6qM.yfcsp..cfMxVGBrKXpNRbs2fm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(213, '251-0238-1', 'Rio', 'Cabanban', 'Cabanban', '$2y$10$tTDHv9Hl7QqJTQ3JCBYt.us8SfBp6uXjIPnGeF.mfDYw9AiKe1J5W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(214, '251-0250-1', 'Precious Lara', 'Marcella', 'Eslava', '$2y$10$Z6GGiuk4rYdSJbo9cjZi8OpL4h/vU4y6ZBw9ALhMtWz/NF2rxbsoC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(215, '251-0261-1', 'Joemarc', 'Uslay', 'Balisong', '$2y$10$HJk9R1Q.ooL5keNd.64kxe1AXeiZx9uY2r1eWimW4UGjmvT8iHSa6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(216, '251-0269-1', 'Georgen', 'Cabanayan', 'Perez', '$2y$10$JhfwKYAZfn/JR/XMJMYuqO3dutkktiwxgu7ue2XZNTkqjwSycmJQe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(217, '251-0271-1', 'Rhalyle Kenneth', 'Biore', 'Bentoy', '$2y$10$50PnL2ckM.c/6H.2PY2rjuHx1nU/KCcyD3x.wpet82uVVrG9O/lYm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(218, '251-0367-1', 'Jeremi', 'Delarna', 'Castro', '$2y$10$GnPVEmKKHmmH.5EUNKC2neoLffynxjkhblWcwmKX8l34wwbLe4Cz2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(219, '251-0368-1', 'Hans Christian', 'Joven', 'Cortez', '$2y$10$u0igbzA84B6AnEXi6VFBMOw7beEkLUFHDR1aBr6znyCplCZZnhf6W', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(220, '251-0369-1', 'Princess Lei Ann', 'Carig', 'Tagumpay', '$2y$10$8.4E5Tf34zWNp591NtUAte4XO6cHYoH5HcnQamKmWzO3C9Mjn809i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(221, '251-0375-1', 'Rafael Christian Mark', 'Nieveras', 'Astudillo', '$2y$10$.QUchP.kcjSvGaDt8RmbD.KlBKNw1xbkrhtga9jNBivQgpdZiXVIq', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(222, '251-0376-1', 'Domnic Savio Angelo', 'Munar', 'Munar', '$2y$10$8qvFF6MdKfVLBPKniDeopuoFIuiS/B3X2wLTapvwt42i3Ime3FB76', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(223, '251-0379-1', 'Jerald Collin', 'Bautista', 'Lim', '$2y$10$2qqFcZsZFak.pDhPvhZA4.2KhoIFF5sPSj7AToAJERLgAh4k2n2Ja', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(224, '251-0383-1', 'Gian Kenneth', 'Jalne', 'Nuesca', '$2y$10$7Z7kQW1Dn86MM.9HW7UXT.Uby9knE/mFQvSH.kofaQpPuD6VeQEF6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(225, '251-0386-1', 'Manilyn', 'Briongos', 'Olito', '$2y$10$jB6YSapTR3G7UAItE.ajUeHj23C86IJ0Hul/RcmpnGofpWDWySVLi', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(226, '251-0401-1', 'Rashelle', 'Dating-E', 'Mahgit', '$2y$10$EskNvmyyLk.JE4lqU.w7.egQROXvQUu86629mKAZGZrsZIl8T7kku', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(227, '251-0416-1', 'Renz', 'Dadcoes', 'Madayag', '$2y$10$l6yzt/kE7b8LtVVg2m3mau5/aDnUiADcczbo9Z/JZa..nOO2262oG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(228, '251-0458-1', 'Bonnie', 'Buccat', 'Padua', '$2y$10$.gSwcxxGZKjA3fqFAKEzD.v2GuAWbxWJiW/mh5CL6.LwtFN2TeRGe', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(229, '251-0477-1', 'Monica', 'Seguin', 'Albay', '$2y$10$w3BEYODsBQskDHSB4WAzvOB76hXbSrcUEJuKfUXu6J5UEr50EEoNK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(230, '251-0482-1', 'Aeron', 'Nerona', 'Gao-An', '$2y$10$jKhWkysKhuxSnSm832n2XeVVNzyTfLyu6KKkU.cw.0k.h2aaM6Rq.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(231, '251-0512-1', 'Princess Dianah', 'Monis', 'Lucena', '$2y$10$.csmd0itdYAHsyZaLXCVOO87tE9uU7YSzFfg8OFBpdpttwTNt1XZ6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(232, '251-0517-1', 'Chloe', 'Arquero', 'Nones', '$2y$10$esXECc8cqhdbMqJPAJGPo.dZmGGzLcLZIhlV6BZugByuHrIVCNXsm', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '1-A', 'student'),
+(260, '231-0354-1', 'REYMART', 'TEQUIL', 'AJERO', '$2y$10$6lJYB82QsCdG3CNx7xdey.fxKxq6ckdYLh3rH9Rbubk3dQ6Yh57zu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(261, '231-0355-1', 'RUBY', 'PAJARIT', 'ALMOJUELA', '$2y$10$suaQW0iAfDN.PCUrEK1/HOKcqhPCTOQYq65XytC73gEW2ugReY8mS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(262, '231-0410-1', 'CHRISTIAN JAKE', 'DELA CRUZ', 'ANCHETA', '$2y$10$1xq//qnfB.zdfTIII9jgre9IXXSBO32pnofeQFU4Qe24Yp6wz8DY6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(263, '231-0211-1', 'ROD ANDREW', 'PLANTA', 'ANDAYA', '$2y$10$dPntnBV0lMP5Eam2ViPwQeEbL9DbZig/PJdnhcI9NdFHEdVtPdMYq', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(264, '231-0288-1', 'TRIXIE', 'LICUDINE', 'BALLESTEROS', '$2y$10$LQ2jB6GiNZp88iIQLJwdi.Noh7MswLkdBh9zfam7auWPZgKq09jg6', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(265, '211-0815-1', 'ANGIELYN', 'EPI', 'BALUDDA', '$2y$10$rd4zGzzeAqEMg2MzgUfN0eMWOQz3YhAIzz.J0qlKFgKQleGMwuZ1C', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(266, '231-0661-1', 'JORON', 'BALLASIW', 'BONETE', '$2y$10$.wbiPgnAklDo55HEwRDtQeTh6QB09eJMz1xuC3D5cuf/w7hwWYnu.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(267, '231-0528-1', 'IAN LLOYD', 'RODRIGUEZ', 'BORROMEO', '$2y$10$9BR0HatrzE1O7dKwZlVfo.rkS/EOKhzizVGLkydEW1fUFnMISKyIS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(268, '231-0867-1', 'RUBY JANE', 'GABE', 'BUCSIT', '$2y$10$1g6OItj7.sXnIhcOrBKSQejRxq0XEVO2HlA9TnWJLRYT1qJNLVSX.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(269, '231-0491-1', 'JUAN CARLO', 'MADRID', 'CARIAGA', '$2y$10$K5XSIBZfVm2KbpXQzca6ueQNRGC4n9wdI8eu3SkxmmSKrVV1Zhhc2', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(270, '221-0553-1', 'DENVER KEITH', 'OTANES', 'CASEM', '$2y$10$sAjzJT73/EjetBVpdP1kZ.ZK1a8GksSgamwY3ql7gC2s4CfbXD.kO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(271, '231-0507-1', 'MARY JOY', 'TAVISORA', 'CELESTRE', '$2y$10$yCn1VOkzmER96sWA2YGMg.NSnocDxlGIhXYGTVukV3SypSi3k.O72', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student'),
+(272, '231-0353-1', 'STEPHANIE', 'BADUA', 'DACANAY', '$2y$10$2JfRsnn9gEw4Alc.MBQYHO74ZoLyxuk3d0Bxmo0EKIiyRjEkDGqAS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '3-A', 'student');
 
 -- --------------------------------------------------------
 
@@ -877,7 +976,7 @@ CREATE TABLE `student_evaluation_submissions` (
   `student_id` varchar(50) DEFAULT NULL,
   `subject_code` varchar(50) DEFAULT NULL,
   `faculty_id` varchar(50) DEFAULT NULL,
-  `college` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
   `academic_year` varchar(20) DEFAULT NULL,
   `semester` varchar(20) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -892,7 +991,7 @@ CREATE TABLE `student_evaluation_submissions` (
 -- Dumping data for table `student_evaluation_submissions`
 --
 
-INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `college`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
+INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
 (71, '221-0325-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:08', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
 (72, '221-0476-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:27', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'none', 'yes'),
 (73, '231-0884-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:43:52', '{\"q0\":3,\"q1\":3,\"q2\":3,\"q3\":3,\"q4\":3,\"q5\":3,\"q6\":3,\"q7\":3,\"q8\":3,\"q9\":3,\"q10\":3,\"q11\":3,\"q12\":3,\"q13\":3,\"q14\":3}', 45, 60.00, 'yes', 'yes'),
@@ -1419,7 +1518,20 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (1113, '211-0004-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
 (1114, '211-0004-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
 (1115, '211-0004-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
-(1119, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151');
+(1119, '221-0387-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
+(1282, '231-0354-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1283, '231-0355-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1284, '231-0410-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1285, '231-0211-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1286, '231-0288-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1287, '211-0815-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1288, '231-0661-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1289, '231-0528-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1290, '231-0867-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1291, '231-0491-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1292, '221-0553-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1293, '231-0507-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151'),
+(1294, '231-0353-1', 'ISAE 106', '2025-2026', '1st Semester', '00424', '40151');
 
 -- --------------------------------------------------------
 
@@ -1454,7 +1566,8 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `c
 (72, 'GECC 101', 'Arts Appreciation', '00421', '40045', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (73, 'GECC 102', 'Purposive Communication', '40193', '40050', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
 (74, 'ISCC 101', 'Introduction to Computing', '00711', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
-(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
+(75, 'ISCC 102', 'Computer Programming 1', '40094', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems'),
+(385, 'ISAE 106', 'Operating Systems', '00424', '40151', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems');
 
 -- --------------------------------------------------------
 
@@ -1463,7 +1576,8 @@ INSERT INTO `subject` (`idnumber`, `code`, `title`, `faculty_id`, `admin_id`, `c
 --
 
 CREATE TABLE `superadmin` (
-  `idnumber` varchar(111) NOT NULL,
+  `id` int(255) NOT NULL,
+  `idnumber` varchar(255) NOT NULL,
   `first_name` varchar(255) NOT NULL,
   `mid_name` varchar(255) NOT NULL,
   `last_name` varchar(255) NOT NULL,
@@ -1480,8 +1594,8 @@ CREATE TABLE `superadmin` (
 -- Dumping data for table `superadmin`
 --
 
-INSERT INTO `superadmin` (`idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `college`, `program`, `faculty_rank`, `position`, `status`) VALUES
-('40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$e6ZHPQM/6xvk1/jvupujHO4pggmk8P27m5TeUAnRpyZ9Iiblm.lpa', 'superadmin', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'Head Instruction', 'active');
+INSERT INTO `superadmin` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, `password`, `role`, `college`, `program`, `faculty_rank`, `position`, `status`) VALUES
+(2, '40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$e6ZHPQM/6xvk1/jvupujHO4pggmk8P27m5TeUAnRpyZ9Iiblm.lpa', 'superadmin', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'Head Instruction', 'active');
 
 --
 -- Indexes for dumped tables
@@ -1509,9 +1623,10 @@ ALTER TABLE `adds`
 -- Indexes for table `admin`
 --
 ALTER TABLE `admin`
-  ADD PRIMARY KEY (`idnumber`),
+  ADD PRIMARY KEY (`id`),
   ADD KEY `position` (`position`),
-  ADD KEY `fk_admin_faculty_rank` (`faculty_rank`);
+  ADD KEY `fk_admin_faculty_rank` (`faculty_rank`),
+  ADD KEY `idnumber` (`idnumber`);
 
 --
 -- Indexes for table `admin_college`
@@ -1553,7 +1668,7 @@ ALTER TABLE `evaluation`
   ADD KEY `subject_code_key` (`subject_code`),
   ADD KEY `faculty_id_key` (`faculty_id`),
   ADD KEY `subject_title` (`subject_title`),
-  ADD KEY `fk_evaluation_department` (`college`),
+  ADD KEY `fk_evaluation_college` (`college`),
   ADD KEY `fk_evaluation_student_section` (`student_section`);
 
 --
@@ -1573,29 +1688,39 @@ ALTER TABLE `evaluation_switch`
 -- Indexes for table `faculty`
 --
 ALTER TABLE `faculty`
-  ADD PRIMARY KEY (`idnumber`),
+  ADD PRIMARY KEY (`id`),
   ADD KEY `department` (`college`),
   ADD KEY `fk_faculty_rank` (`faculty_rank`),
   ADD KEY `fk_faculty_program` (`program`),
-  ADD KEY `college` (`college`);
+  ADD KEY `college` (`college`),
+  ADD KEY `idnumber` (`idnumber`);
+
+--
+-- Indexes for table `faculty_dev_plan`
+--
+ALTER TABLE `faculty_dev_plan`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_plan` (`faculty_id`,`semester`,`academic_year`);
 
 --
 -- Indexes for table `registrar`
 --
 ALTER TABLE `registrar`
-  ADD PRIMARY KEY (`idnumber`),
+  ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `faculty_rank` (`faculty_rank`),
   ADD KEY `fk_registrar_department` (`college`),
-  ADD KEY `fk_registrar_program` (`program`);
+  ADD KEY `fk_registrar_program` (`program`),
+  ADD KEY `idnumber` (`idnumber`);
 
 --
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
-  ADD PRIMARY KEY (`idnumber`),
+  ADD PRIMARY KEY (`id`),
   ADD KEY `department` (`college`),
   ADD KEY `section` (`section`),
-  ADD KEY `section_2` (`section`);
+  ADD KEY `section_2` (`section`),
+  ADD KEY `idnumber` (`idnumber`);
 
 --
 -- Indexes for table `student_evaluation_submissions`
@@ -1627,11 +1752,12 @@ ALTER TABLE `subject`
 -- Indexes for table `superadmin`
 --
 ALTER TABLE `superadmin`
-  ADD PRIMARY KEY (`idnumber`),
+  ADD PRIMARY KEY (`id`),
   ADD KEY `fk_superadmin_faculty_rank` (`faculty_rank`),
   ADD KEY `fk_superadmin_position` (`position`),
   ADD KEY `fk_superadmin_department` (`college`),
-  ADD KEY `fk_superadmin_program` (`program`);
+  ADD KEY `fk_superadmin_program` (`program`),
+  ADD KEY `idnumber` (`idnumber`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -1641,13 +1767,19 @@ ALTER TABLE `superadmin`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=649;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=707;
 
 --
 -- AUTO_INCREMENT for table `adds`
 --
 ALTER TABLE `adds`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=173;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=178;
+
+--
+-- AUTO_INCREMENT for table `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `admin_evaluation`
@@ -1686,6 +1818,30 @@ ALTER TABLE `evaluation_switch`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `faculty`
+--
+ALTER TABLE `faculty`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+
+--
+-- AUTO_INCREMENT for table `faculty_dev_plan`
+--
+ALTER TABLE `faculty_dev_plan`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `registrar`
+--
+ALTER TABLE `registrar`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `student`
+--
+ALTER TABLE `student`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=273;
+
+--
 -- AUTO_INCREMENT for table `student_evaluation_submissions`
 --
 ALTER TABLE `student_evaluation_submissions`
@@ -1695,13 +1851,19 @@ ALTER TABLE `student_evaluation_submissions`
 -- AUTO_INCREMENT for table `student_subject`
 --
 ALTER TABLE `student_subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1150;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1295;
 
 --
 -- AUTO_INCREMENT for table `subject`
 --
 ALTER TABLE `subject`
-  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `idnumber` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=386;
+
+--
+-- AUTO_INCREMENT for table `superadmin`
+--
+ALTER TABLE `superadmin`
+  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- Constraints for dumped tables
@@ -1728,17 +1890,15 @@ ALTER TABLE `admin_college`
 ALTER TABLE `admin_evaluation`
   ADD CONSTRAINT `fk_admin_evaluation_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_admin_evaluator` FOREIGN KEY (`evaluator_id`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_eval_admin` FOREIGN KEY (`evaluator_id`) REFERENCES `admin` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_eval_faculty` FOREIGN KEY (`evaluatee_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_evaluator_position` FOREIGN KEY (`evaluator_position`) REFERENCES `admin` (`position`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_faculty_evaluatee` FOREIGN KEY (`evaluatee_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_evaluatee_id` FOREIGN KEY (`evaluatee_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_evaluator_position` FOREIGN KEY (`evaluator_position`) REFERENCES `admin` (`position`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `evaluation`
 --
 ALTER TABLE `evaluation`
   ADD CONSTRAINT `faculty_id_key` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_evaluation_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_evaluation_college` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_evaluation_student_section` FOREIGN KEY (`student_section`) REFERENCES `student` (`section`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `student_id_key` FOREIGN KEY (`student_id`) REFERENCES `student` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `subject_code_key` FOREIGN KEY (`subject_code`) REFERENCES `subject` (`code`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -1757,6 +1917,12 @@ ALTER TABLE `faculty`
   ADD CONSTRAINT `fk_faculty_department` FOREIGN KEY (`college`) REFERENCES `adds` (`college_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_faculty_program` FOREIGN KEY (`program`) REFERENCES `adds` (`program_name`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_faculty_rank` FOREIGN KEY (`faculty_rank`) REFERENCES `adds` (`rank_name`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `faculty_dev_plan`
+--
+ALTER TABLE `faculty_dev_plan`
+  ADD CONSTRAINT `fk_plan_faculty` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`idnumber`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `registrar`
