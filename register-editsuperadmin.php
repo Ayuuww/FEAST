@@ -84,10 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // 🔄 Update FACULTY table too (superadmin is also a faculty)
   $faculty_update = $conn->prepare("
     UPDATE faculty
-    SET idnumber = ?, college = ?, program = ?, faculty_rank = ?, status = ?
+    SET idnumber = ?, college = ?, program = ?, faculty_rank = ?
     WHERE idnumber = ?
   ");
-  $faculty_update->bind_param("ssssss", $new_id, $new_college, $new_program, $new_rank, $new_status, $superadmin_id);
+  $faculty_update->bind_param("sssss", $new_id, $new_college, $new_program, $new_rank, $superadmin_id);
   $faculty_update->execute();
 
   header("Location: register-editsuperadmin.php?id=$new_id&update=success");

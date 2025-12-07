@@ -52,7 +52,54 @@ $selected_faculty_id = $_GET['faculty_id'] ?? '';
 $selected_semester = $_GET['semester'] ?? '';
 $selected_academic_year = $_GET['academic_year'] ?? '';
 
+// --- ✅ NEW: Handle Saving Development Plan ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_dev_plan'])) {
+  $p_faculty_id = $_POST['p_faculty_id'];
+  $p_semester   = $_POST['p_semester'];
+  $p_acad_year  = $_POST['p_academic_year'];
+  $areas        = $_POST['areas_improvement'];
+  $activities   = $_POST['proposed_activities'];
+  $action       = $_POST['action_plan'];
 
+  // Insert or Update (Upsert)
+  $stmt_save = $conn->prepare("
+        INSERT INTO faculty_dev_plan (faculty_id, semester, academic_year, areas_improvement, proposed_activities, action_plan)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE 
+        areas_improvement = VALUES(areas_improvement),
+        proposed_activities = VALUES(proposed_activities),
+        action_plan = VALUES(action_plan)
+    ");
+  $stmt_save->bind_param("ssssss", $p_faculty_id, $p_semester, $p_acad_year, $areas, $activities, $action);
+
+  if ($stmt_save->execute()) {
+    // Refresh to show saved data
+    $redirect_url = "?faculty_id=$p_faculty_id&semester=$p_semester&academic_year=$p_acad_year";
+    echo "<script>alert('Development Plan Saved Successfully!'); window.location.href='$redirect_url';</script>";
+    exit();
+  } else {
+    echo "<script>alert('Error saving plan.');</script>";
+  }
+}
+
+// --- ✅ NEW: Fetch Existing Development Plan Data ---
+$dev_areas = "";
+$dev_activities = "";
+$dev_action = "";
+
+if (!empty($selected_faculty_id)) {
+  // Default to 'All' if filters are empty to prevent saving to null keys, 
+  // or handle strictly. Here we use the selected values.
+  $q_sem = $selected_semester ?: 'All';
+  $q_ay  = $selected_academic_year ?: 'All';
+
+  $stmt_get_plan = $conn->prepare("SELECT areas_improvement, proposed_activities, action_plan FROM faculty_dev_plan WHERE faculty_id = ? AND semester = ? AND academic_year = ?");
+  $stmt_get_plan->bind_param("sss", $selected_faculty_id, $q_sem, $q_ay);
+  $stmt_get_plan->execute();
+  $stmt_get_plan->bind_result($dev_areas, $dev_activities, $dev_action);
+  $stmt_get_plan->fetch();
+  $stmt_get_plan->close();
+}
 // --- Fetch Data for Dropdowns (BEFORE the form) ---
 
 // --- ✅ START FIX: Build complex query to get faculty ---
@@ -238,6 +285,42 @@ $admin_info_query->close();
 
       .no-print {
         display: none !important;
+      }
+    }
+
+    /* Add this to your existing CSS */
+    .editable-textarea {
+      width: 100%;
+      min-height: 80px;
+      border: 1px solid #ccc;
+      /* Visible border on screen */
+      padding: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      background-color: #fff;
+    }
+
+    /* Print specific styles for textareas */
+    @media print {
+      .editable-textarea {
+        border: none !important;
+        /* Remove border when printing */
+        resize: none;
+        overflow: visible;
+        height: auto !important;
+        /* Expand to fit content */
+        padding: 0;
+      }
+
+      /* Hide the Save Button when printing */
+      .btn-save-plan {
+        display: none !important;
+      }
+
+      /* Ensure the table cell doesn't clip content */
+      .dev-plan-table td {
+        height: auto !important;
       }
     }
   </style>
@@ -542,26 +625,55 @@ $admin_info_query->close();
         </table>
 
         <div class="section-title">E. Development Plan (to be jointly accomplished by the Supervisor and Faculty)</div>
-        <table class="report-table dev-plan-table">
-          <tr>
-            <th>Areas for Improvement</th>
-          </tr>
-          <tr>
-            <td></td>
-          </tr>
-          <tr>
-            <th>Proposed Learning and Development Activities</th>
-          </tr>
-          <tr>
-            <td></td>
-          </tr>
-          <tr>
-            <th>Action Plan</th>
-          </tr>
-          <tr>
-            <td></td>
-          </tr>
-        </table>
+
+        <form method="POST" action="">
+          <input type="hidden" name="p_faculty_id" value="<?= htmlspecialchars($selected_faculty_id) ?>">
+          <input type="hidden" name="p_semester" value="<?= htmlspecialchars($selected_semester ?: 'All') ?>">
+          <input type="hidden" name="p_academic_year" value="<?= htmlspecialchars($selected_academic_year ?: 'All') ?>">
+          <input type="hidden" name="save_dev_plan" value="1">
+
+          <table class="report-table dev-plan-table">
+            <tr>
+              <th>Areas for Improvement</th>
+            </tr>
+            <tr>
+              <td style="padding: 0;">
+                <textarea
+                  name="areas_improvement"
+                  class="editable-textarea"
+                  placeholder="Enter areas for improvement here..."><?= htmlspecialchars($dev_areas) ?></textarea>
+              </td>
+            </tr>
+            <tr>
+              <th>Proposed Learning and Development Activities</th>
+            </tr>
+            <tr>
+              <td style="padding: 0;">
+                <textarea
+                  name="proposed_activities"
+                  class="editable-textarea"
+                  placeholder="Enter proposed activities here..."><?= htmlspecialchars($dev_activities) ?></textarea>
+              </td>
+            </tr>
+            <tr>
+              <th>Action Plan</th>
+            </tr>
+            <tr>
+              <td style="padding: 0;">
+                <textarea
+                  name="action_plan"
+                  class="editable-textarea"
+                  placeholder="Enter action plan here..."><?= htmlspecialchars($dev_action) ?></textarea>
+              </td>
+            </tr>
+          </table>
+
+          <div class="text-end mt-2 mb-4 no-print">
+            <button type="submit" class="btn btn-primary btn-save-plan">
+              <i class="bi bi-save"></i> Save Development Plan
+            </button>
+          </div>
+        </form>
 
         <table class="report-table" style="border: none; margin-top: 30px;">
           <tr>

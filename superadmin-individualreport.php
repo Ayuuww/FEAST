@@ -403,6 +403,22 @@ LIMIT 1
 
       $term_display = ($selected_semester ?: "All Semesters") . " / " . ($selected_academic_year ?: "All Academic Years");
 
+      // --- ✅ NEW: Fetch Development Plan (Inputted by Admin) ---
+      $dev_areas = "";
+      $dev_activities = "";
+      $dev_action = "";
+
+      // Match the logic used when Admin saved (Default to 'All' if empty)
+      $q_sem = $selected_semester ?: 'All';
+      $q_ay  = $selected_academic_year ?: 'All';
+
+      $stmt_plan = $conn->prepare("SELECT areas_improvement, proposed_activities, action_plan FROM faculty_dev_plan WHERE faculty_id = ? AND semester = ? AND academic_year = ?");
+      $stmt_plan->bind_param("sss", $faculty_id, $q_sem, $q_ay);
+      $stmt_plan->execute();
+      $stmt_plan->bind_result($dev_areas, $dev_activities, $dev_action);
+      $stmt_plan->fetch();
+      $stmt_plan->close();
+
       // --- B. Summary of Average SET Rating ---
       $set_summary_query = "SELECT e.subject_code, TRIM(e.student_section) AS student_section, COUNT(*) AS num_students, ROUND(AVG(e.computed_rating), 2) AS avg_rating FROM evaluation e WHERE {$eval_where_sql} GROUP BY e.subject_code, TRIM(e.student_section) ORDER BY e.subject_code";
       $stmt_set = $conn->prepare($set_summary_query);
@@ -594,19 +610,25 @@ LIMIT 1
             <th>Areas for Improvement</th>
           </tr>
           <tr>
-            <td></td>
+            <td style="height: auto; min-height: 80px;">
+              <?= !empty($dev_areas) ? nl2br(htmlspecialchars($dev_areas)) : '<span class="text-muted fst-italic">No input provided by Admin.</span>' ?>
+            </td>
           </tr>
           <tr>
             <th>Proposed Learning and Development Activities</th>
           </tr>
           <tr>
-            <td></td>
+            <td style="height: auto; min-height: 80px;">
+              <?= !empty($dev_activities) ? nl2br(htmlspecialchars($dev_activities)) : '<span class="text-muted fst-italic">No input provided by Admin.</span>' ?>
+            </td>
           </tr>
           <tr>
             <th>Action Plan</th>
           </tr>
           <tr>
-            <td></td>
+            <td style="height: auto; min-height: 80px;">
+              <?= !empty($dev_action) ? nl2br(htmlspecialchars($dev_action)) : '<span class="text-muted fst-italic">No input provided by Admin.</span>' ?>
+            </td>
           </tr>
         </table>
 

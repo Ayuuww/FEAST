@@ -69,7 +69,7 @@ $result = mysqli_query($conn, $query);
                       <th>ID Number</th>
                       <th>Full Name</th>
                       <th>Faculty Rank</th>
-                      <th>college</th>
+                      <th>College</th>
                       <th>Programs</th>
                       <th>Position</th>
                       <th>Status</th>
@@ -89,7 +89,7 @@ $result = mysqli_query($conn, $query);
                         <td>
                           <?php if (!empty($row['college'])): ?>
                             <?php foreach (explode(', ', $row['college']) as $dept): ?>
-                              <span class="badge bg-primary mb-1"><?= htmlspecialchars($dept); ?></span><br>
+                              <span><?= htmlspecialchars($dept); ?></span><br>
                             <?php endforeach; ?>
                           <?php else: ?>
                             —
@@ -100,7 +100,7 @@ $result = mysqli_query($conn, $query);
                         <td>
                           <?php if (!empty($row['programs'])): ?>
                             <?php foreach (explode(', ', $row['programs']) as $prog): ?>
-                              <span class="badge bg-info text-dark mb-1"><?= htmlspecialchars($prog); ?></span><br>
+                              <span><?= htmlspecialchars($prog); ?></span><br>
                             <?php endforeach; ?>
                           <?php else: ?>
                             —
@@ -111,7 +111,7 @@ $result = mysqli_query($conn, $query);
 
                         <td>
                           <?php if ($row['status'] === 'active'): ?>
-                            <span class="badge bg-success">Active</span>
+                            <span>Active</span>
                           <?php else: ?>
                             <span class="badge bg-secondary">Inactive</span>
                           <?php endif; ?>

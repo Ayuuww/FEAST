@@ -116,6 +116,22 @@ $stmt_sup_comments->execute();
 $supervisor_comments = $stmt_sup_comments->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_sup_comments->close();
 
+// --- ✅ NEW: Fetch Development Plan Data ---
+$dev_areas = "";
+$dev_activities = "";
+$dev_action = "";
+
+// Use filters or default to 'All' to match how it was saved
+$q_sem = $filter_semester ?: 'All';
+$q_ay  = $filter_academic_year ?: 'All';
+
+$stmt_plan = $conn->prepare("SELECT areas_improvement, proposed_activities, action_plan FROM faculty_dev_plan WHERE faculty_id = ? AND semester = ? AND academic_year = ?");
+$stmt_plan->bind_param("sss", $faculty_id, $q_sem, $q_ay);
+$stmt_plan->execute();
+$stmt_plan->bind_result($dev_areas, $dev_activities, $dev_action);
+$stmt_plan->fetch();
+$stmt_plan->close();
+
 // --- Signatory Info ---
 $prepared_by_name = "N/A";
 $prepared_by_position = "N/A";
@@ -306,12 +322,38 @@ $pdf->Ln(5);
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->Cell(0, 8, 'E. Development Plan (to be jointly accomplished by the Supervisor and Faculty)', 0, 1);
 $pdf->SetFont('Arial', 'B', 9);
+$pdf->SetFillColor(240, 240, 240); // Light gray header
+
+// 1. Areas for Improvement
 $pdf->Cell(0, 7, 'Areas for Improvement', 1, 1, 'L', true);
-$pdf->Cell(0, 25, '', 1, 1);
+$pdf->SetFont('Arial', '', 9);
+if (!empty($dev_areas)) {
+    // If data exists, print it wrapped
+    $pdf->MultiCell(0, 5, $dev_areas, 1, 'L');
+} else {
+    // If empty, print a fixed empty box (like before)
+    $pdf->Cell(0, 25, '', 1, 1);
+}
+
+// 2. Proposed Activities
+$pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 7, 'Proposed Learning and Development Activities', 1, 1, 'L', true);
-$pdf->Cell(0, 25, '', 1, 1);
+$pdf->SetFont('Arial', '', 9);
+if (!empty($dev_activities)) {
+    $pdf->MultiCell(0, 5, $dev_activities, 1, 'L');
+} else {
+    $pdf->Cell(0, 25, '', 1, 1);
+}
+
+// 3. Action Plan
+$pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 7, 'Action Plan', 1, 1, 'L', true);
-$pdf->Cell(0, 25, '', 1, 1);
+$pdf->SetFont('Arial', '', 9);
+if (!empty($dev_action)) {
+    $pdf->MultiCell(0, 5, $dev_action, 1, 'L');
+} else {
+    $pdf->Cell(0, 25, '', 1, 1);
+}
 
 
 // --- Signatories ---

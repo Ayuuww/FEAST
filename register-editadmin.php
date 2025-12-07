@@ -157,25 +157,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $update_admin->execute();
 
     // 2. Update FACULTY table (if the admin is also listed as faculty)
+    // 2. Update faculty table (if exists)
     $update_faculty = $conn->prepare("
-            UPDATE faculty 
-            SET idnumber = ?, faculty_rank = ?, college = ?, program = ?, status = ?
-            WHERE idnumber = ?
-        ");
+    UPDATE faculty 
+    SET idnumber = ?, faculty_rank = ?, college = ?, program = ?
+    WHERE idnumber = ?
+");
 
-    // For faculty, use first selected college/program (if available) for the main assignment
+    // For faculty: first selected college/program OR null
     $firstCollege = !empty($college_post) ? $college_post[0] : null;
-    $firstProgram = (isset($programs_post[$firstCollege]) && !empty($programs_post[$firstCollege]))
-      ? $programs_post[$firstCollege][0]
-      : null;
+    $firstProgram = isset($programs_post[$firstCollege][0]) ? $programs_post[$firstCollege][0] : null;
 
     $update_faculty->bind_param(
-      "ssssss",
+      "sssss",
       $new_id,
       $faculty_rank,
       $firstCollege,
       $firstProgram,
-      $status,
       $original_id
     );
     $update_faculty->execute();

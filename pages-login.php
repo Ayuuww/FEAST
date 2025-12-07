@@ -202,25 +202,35 @@ if (isset($_POST['login'])) {
         <?php if (isset($_SESSION['msg'])): ?>
           <script>
             document.addEventListener("DOMContentLoaded", function() {
-              let message = <?= json_encode($_SESSION['msg']) ?>;
-              let icon = 'error';
-              let title = 'Login Failed';
+              let message = <?= json_encode($_SESSION['msg'] ?? '') ?>;
+              let type = <?= json_encode($_SESSION['msg_type'] ?? 'error') ?>;
+              let title = "Login Failed";
+              let icon = "error";
 
-              if (message.toLowerCase().includes('inactive')) {
-                title = 'Account Inactive';
+              // Determine popup type
+              if (type === "inactive") {
+                title = "Account Inactive";
+                icon = "warning";
+              } else if (type === "error") {
+                title = "Invalid Login";
+                icon = "error";
               }
 
+              // SweetAlert2 popup
               Swal.fire({
-                icon: icon,
                 title: title,
                 text: message,
-                confirmButtonColor: '#198754'
+                icon: icon,
+                confirmButtonColor: '#198754',
+                timer: 4000,
+                timerProgressBar: true
               });
             });
           </script>
           <?php
           unset($_SESSION['msg']);
           unset($_SESSION['login_failed']);
+          unset($_SESSION['msg_type']);
           ?>
         <?php endif; ?>
 

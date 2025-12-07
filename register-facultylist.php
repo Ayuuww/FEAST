@@ -85,7 +85,7 @@ $result = mysqli_query($conn, $query);
                       <td class="text-uppercase"><?= htmlspecialchars($row['college']); ?></td>
                       <td class="text-capitalize"><?= htmlspecialchars($row['program'] ?? '—'); ?></td>
                       <td>
-                        <span class="badge bg-<?= $row['status'] === 'active' ? 'success' : 'secondary'; ?>">
+                        <span class="text-capitalize">
                           <?= htmlspecialchars($row['status']); ?>
                         </span>
                       </td>

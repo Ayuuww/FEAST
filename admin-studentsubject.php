@@ -1,4 +1,8 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
+
+use Smalot\PdfParser\Parser;
+
 session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -49,7 +53,9 @@ $current_semester = $current_period['semester'] ?? null;
 $success = 0;
 $_SESSION['detailed_errors'] = [];
 
-// --- Handle Manual Form Submission ---
+/* -------------------------
+   MANUAL FORM SUBMISSION
+-------------------------- */
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
   if (!$current_academic_year || !$current_semester) {
     $_SESSION['msg'] = "Cannot assign subjects because the current academic period is not set.";
@@ -70,44 +76,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
 
   foreach ($student_ids as $student_id) {
     foreach ($subject_codes as $subject_code) {
-      // (Your existing, correct assignment logic is here)
-      // This is a reusable function now
       assignSubject(
         $conn,
         $student_id,
         $subject_code,
         $current_academic_year,
         $current_semester,
-        $success,
-        $faculty_id,
-        $admin_csv_id
+        $success
       );
     }
   }
 
-  // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-    $_SESSION['msg'] = "Processed file. Assigned $success subjects, but some rows had issues.";
+    $_SESSION['msg'] = "Processed request. Assigned $success subjects, but some students had issues.";
     $_SESSION['msg_type'] = 'warning';
   } elseif ($success > 0) {
-    $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
+    $_SESSION['msg'] = "Assignment successful. Assigned $success subjects.";
     $_SESSION['msg_type'] = 'success';
   } elseif (!empty($_SESSION['detailed_errors'])) {
-    // Check if all errors are warnings about already assigned
-    $onlyAlreadyAssigned = true;
-    foreach ($_SESSION['detailed_errors'] as $err) {
-      if (stripos($err, 'already assigned') === false) {
-        $onlyAlreadyAssigned = false;
-        break;
-      }
-    }
-    if ($onlyAlreadyAssigned) {
-      $_SESSION['msg'] = "No new subjects assigned because they were already assigned to the students for this period.";
-      $_SESSION['msg_type'] = 'info';
-    } else {
-      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
-      $_SESSION['msg_type'] = 'danger';
-    }
+    $_SESSION['msg'] = "No subjects assigned. Please check the errors shown.";
+    $_SESSION['msg_type'] = 'danger';
   } else {
     $_SESSION['msg'] = "No subjects assigned.";
     $_SESSION['msg_type'] = 'info';
@@ -117,8 +105,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['assign'])) {
   exit();
 }
 
-
-// --- UPDATED: Handle Bulk CSV Upload ---
+/* -------------------------
+   BULK PDF UPLOAD ONLY
+-------------------------- */
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])) {
 
   if (!$current_academic_year || !$current_semester) {
@@ -139,8 +128,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
   $file_name = $_FILES['bulk_file']['name'];
   $file_ext = strtolower(pathinfo($file_name, PATHINFO_EXTENSION));
 
-  if ($file_ext !== 'csv') {
-    $_SESSION['msg'] = "Upload failed. Only .csv files are allowed.";
+  // ONLY PDF
+  if ($file_ext !== 'pdf') {
+    $_SESSION['msg'] = "Upload failed. Only .pdf files are allowed.";
     $_SESSION['msg_type'] = 'danger';
     header("Location: admin-studentsubject.php");
     exit();
@@ -148,131 +138,134 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
 
   $dataRows = [];
 
-  // ========================
-  // OPTION A: CSV FILE
-  // ========================
-  if ($file_ext === 'csv') {
-    if (($fp = fopen($file_tmp_path, "r")) !== FALSE) {
-      $bom = fread($fp, 3);
-      if ($bom !== "\xEF\xBB\xBF") rewind($fp);
+  // ---------- PDF BRANCH ----------
+  $parser = new Parser();
+  $pdf = $parser->parseFile($file_tmp_path);
+  $text = $pdf->getText();
 
-      fgetcsv($fp); // skip header
-      while (($row = fgetcsv($fp)) !== FALSE) {
-        if (array_filter($row)) {
-          $dataRows[] = $row;
-        }
+  // 1. SUBJECT CODE (e.g. "ISAE 106")
+  preg_match('/Subject\s*Code\s*:\s*([A-Z]+)\s*\n\s*([0-9]+)/i', $text, $m_code);
+  if (!empty($m_code[1]) && !empty($m_code[2])) {
+    $subject_code_detected = trim($m_code[1] . ' ' . $m_code[2]);
+  } else {
+    preg_match('/Subject Code\s*:\s*([A-Z0-9\-]+)/i', $text, $m_code_alt);
+    $subject_code_detected = trim($m_code_alt[1] ?? '');
+  }
+
+  // 2. SUBJECT TITLE (Descriptive)
+  preg_match('/Descriptive\s*:\s*([A-Za-z0-9\s\-\(\)]+)/i', $text, $m_title);
+  $subject_title_detected = trim($m_title[1] ?? '');
+
+  // 3. INSTRUCTOR NAME
+  preg_match('/Instructor\s*:\s*([A-Z,\s]+(?:[A-Z\s]+)?)\b/i', $text, $m_inst);
+  $instructor_name_raw = trim($m_inst[1] ?? '');
+  $instructor_name = ucwords(strtolower($instructor_name_raw));
+
+  if (strpos($instructor_name, ',') !== false) {
+    [$last, $first] = array_map('trim', explode(',', $instructor_name));
+    $instructor_name = "$first $last";
+  }
+
+  // 4. MATCH FACULTY BY NAME (optional)
+  $faculty_id = null;
+  if ($instructor_name !== '') {
+    $queries = [
+      "LOWER(CONCAT(first_name, ' ', last_name)) LIKE LOWER(?)",
+      "LOWER(CONCAT(last_name, ' ', first_name)) LIKE LOWER(?)",
+      "LOWER(first_name) LIKE LOWER(?)",
+      "LOWER(last_name) LIKE LOWER(?)"
+    ];
+
+    foreach ($queries as $q) {
+      $stmt = $conn->prepare("SELECT idnumber FROM faculty WHERE $q LIMIT 1");
+      $like = '%' . strtolower($instructor_name) . '%';
+      $stmt->bind_param("s", $like);
+      $stmt->execute();
+      $res = $stmt->get_result()->fetch_assoc();
+      $stmt->close();
+
+      if (!empty($res['idnumber'])) {
+        $faculty_id = $res['idnumber'];
+        break;
       }
-      fclose($fp);
     }
   }
 
+  // 5. STUDENT IDS
+  preg_match_all('/\b\d{3}-\d{4}-\d\b/', $text, $matches);
+  $student_ids = $matches[0];
 
-  // ========================
+  // 6. BUILD DATAROWS
+  foreach ($student_ids as $sid) {
+    $dataRows[] = [
+      trim($sid),
+      $subject_code_detected,
+      $subject_title_detected,
+      $faculty_id,
+      $admin_id,
+      $admin_college,
+      $admin_program
+    ];
+  }
+
+  $_SESSION['msg'] = "PDF roster processed: " . count($dataRows) . " students found.";
+  $_SESSION['msg_type'] = 'success';
+
   // PROCESS DATA ROWS
-  // ========================
-  $line = 1; // Start at 1 (header was 1, so first data row is line 2)
-
+  $line = 1;
   $missing_subjects = [];
 
   foreach ($dataRows as $row) {
     $line++;
 
-    // Expecting 7 columns: student_id, subject_code, subject_title, faculty_id, admin_id, college, program
-    if (count($row) < 2) continue; // You may want to use count($row) < 7 for strict checking
+    if (count($row) < 2) continue;
 
-    $student_id    = trim($row[0]);
-    $subject_code  = trim($row[1]);
-    $subject_title = isset($row[2]) ? trim($row[2]) : "Untitled Subject";
-    $faculty_id    = isset($row[3]) ? trim($row[3]) : null;
-    $admin_csv_id  = isset($row[4]) ? trim($row[4]) : $admin_id;
-    $college    = isset($row[5]) ? trim($row[5]) : "";
-    $program       = isset($row[6]) ? trim($row[6]) : "";
+    $student_id   = trim($row[0]);
+    $subject_code = isset($row[1]) ? trim($row[1]) : '';
+    $subject_title = isset($row[2]) && trim($row[2]) !== ''
+      ? trim($row[2])
+      : ($subject_title_detected ?: 'Unknown subject');
+    $faculty_id   = isset($row[3]) ? trim($row[3]) : null;
+    $admin_csv_id = isset($row[4]) ? trim($row[4]) : $admin_id;
+    $college      = isset($row[5]) ? trim($row[5]) : "";
+    $program      = isset($row[6]) ? trim($row[6]) : "";
 
+    // Basic required fields
     if (empty($student_id) || empty($subject_code)) {
-      $_SESSION['detailed_errors'][] = "⚠️ Row $line: Missing student_id or subject_code.";
+      $_SESSION['detailed_errors'][] =
+        "Row $line: Missing student ID or subject code in the PDF roster.";
       continue;
     }
 
-    // --- Check if subject exists and get current values ---
-    // --- Check if this specific offering (code + college + program + faculty) exists ---
+    // Subject must exist in subject table first
     $subject_check = $conn->prepare("
-    SELECT idnumber, code, title, faculty_id, admin_id, college, program
-    FROM subject
-    WHERE code = ?
-      AND ( (college = ? OR (? = '')) )
-      AND ( (program = ? OR (? = '')) )
-      AND ( (faculty_id = ? OR (? = '')) )
-    LIMIT 1
-");
-    $colParam  = $college;   // from CSV
-    $progParam = $program;   // from CSV
-    $facParam  = $faculty_id; // from CSV
-
+      SELECT idnumber
+      FROM subject
+      WHERE code = ?
+        AND (college = ? OR ? = '')
+        AND (program = ? OR ? = '')
+      LIMIT 1
+    ");
     $subject_check->bind_param(
-      "sssssss",
+      "sssss",
       $subject_code,
-      $colParam,
-      $colParam,
-      $progParam,
-      $progParam,
-      $facParam,
-      $facParam
+      $college,
+      $college,
+      $program,
+      $program
     );
     $subject_check->execute();
-    $subject_row = $subject_check->get_result()->fetch_assoc();
+    $subRow = $subject_check->get_result()->fetch_assoc();
     $subject_check->close();
 
-    if (!$subject_row) {
-      // --- CREATE NEW SUBJECT (same code allowed, different faculty/college/program) ---
-      $insert_subject = $conn->prepare("
-        INSERT INTO subject
-        (code, title, faculty_id, admin_id, college, program)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
-      $insert_subject->bind_param(
-        "ssssss",
-        $subject_code,
-        $subject_title,
-        $faculty_id,     // may be null
-        $admin_csv_id,
-        $college,        // where to assign
-        $program
-      );
-      $insert_subject->execute();
-      $insert_subject->close();
-
+    if (!$subRow) {
       $_SESSION['detailed_errors'][] =
-        "ℹ️ NEW subject <b>{$subject_code}</b> created for faculty <b>{$faculty_id}</b> in <b>{$college}</b>/<b>{$program}</b>.";
-    } else {
-      // --- UPDATE ONLY THIS SPECIFIC OFFERING ---
-      $new_title   = !empty($subject_title) ? $subject_title   : $subject_row['title'];
-      $new_admin   = !empty($admin_csv_id) ? $admin_csv_id     : $subject_row['admin_id'];
-      $new_college = !empty($college)      ? $college          : $subject_row['college'];
-      $new_program = !empty($program)      ? $program          : $subject_row['program'];
-      $new_faculty = !empty($faculty_id)   ? $faculty_id       : $subject_row['faculty_id'];
-
-      $update_subject = $conn->prepare("
-        UPDATE subject
-        SET title = ?, faculty_id = ?, admin_id = ?, college = ?, program = ?
-        WHERE idnumber = ?
-    ");
-      $update_subject->bind_param(
-        "sssssi",
-        $new_title,
-        $new_faculty,
-        $new_admin,
-        $new_college,
-        $new_program,
-        $subject_row['idnumber']
-      );
-      $update_subject->execute();
-      $update_subject->close();
-
-      $_SESSION['detailed_errors'][] =
-        "🔄 Updated existing subject <b>{$subject_code}</b> for faculty <b>{$new_faculty}</b> in <b>{$new_college}</b>/<b>{$new_program}</b>.";
+        "Row $line: Subject code <b>$subject_code</b> - $subject_title - is not yet created in the Subject list. Please add this subject in <b>Add Subject</b> before importing this roster again.";
+      $missing_subjects[] = $subject_code;
+      continue;
     }
 
-    // --- Check student exists ---
+    // Student exists?
     $checkStudent = $conn->prepare("SELECT idnumber FROM student WHERE idnumber = ? LIMIT 1");
     $checkStudent->bind_param("s", $student_id);
     $checkStudent->execute();
@@ -280,11 +273,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     $checkStudent->close();
 
     if (!$studentExists) {
-      $_SESSION['detailed_errors'][] = "❌ Row $line: Student ID $student_id does not exist.";
+      $_SESSION['detailed_errors'][] =
+        "Row $line: Student ID <b>$student_id</b> does not exist in the Student table.";
       continue;
     }
 
-    // --- Assign Subject ---
+    // Assign
     assignSubject(
       $conn,
       $student_id,
@@ -292,97 +286,74 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       $current_academic_year,
       $current_semester,
       $success,
-      $faculty_id,      // <-- from CSV
-      $admin_csv_id     // <-- from CSV or logged admin
+      $faculty_id,
+      $admin_csv_id
     );
   }
+
   $_SESSION['missing_subjects'] = array_unique($missing_subjects);
 
-  // Summary
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
-    $_SESSION['msg'] = "Processed file. Assigned $success subjects, but some rows had issues.";
+    $_SESSION['msg'] = "Some rows were assigned successfully, but others had errors. See details below.";
     $_SESSION['msg_type'] = 'warning';
   } elseif ($success > 0) {
     $_SESSION['msg'] = "Upload successful. Assigned $success subjects.";
     $_SESSION['msg_type'] = 'success';
   } elseif (!empty($_SESSION['detailed_errors'])) {
-    // Check if ALL errors are "already assigned"
-    $onlyAlreadyAssigned = true;
-    foreach ($_SESSION['detailed_errors'] as $err) {
-      if (stripos($err, 'already assigned') === false) { // Not just "already assigned"
-        $onlyAlreadyAssigned = false;
-        break;
-      }
-    }
-    if ($onlyAlreadyAssigned) {
-      $_SESSION['msg'] = "No new subjects assigned because all subjects were already assigned to these students for this academic period.";
-      $_SESSION['msg_type'] = 'info';
-    } else {
-      $_SESSION['msg'] = "No subjects assigned. Please check your file format or correct the errors.";
-      $_SESSION['msg_type'] = 'danger';
-    }
+    $_SESSION['msg'] = "No subjects were assigned. Please review the errors below and correct them.";
+    $_SESSION['msg_type'] = 'danger';
   } else {
-    $_SESSION['msg'] = "No subjects assigned.";
+    $_SESSION['msg'] = "No subjects assigned. The PDF did not contain any valid rows.";
     $_SESSION['msg_type'] = 'info';
   }
-
 
   header("Location: admin-studentsubject.php");
   exit();
 }
 
 /**
- * ✅ NEW: Reusable function to assign a subject to a student.
- * This function is used by BOTH the manual and bulk assign logic.
+ * Reusable function to assign a subject to a student.
  */
 function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter, $csv_faculty_id = null, $csv_admin_id = null)
 {
-  // 1. Decide instructor from CSV directly
   $faculty_id = $csv_faculty_id;
   $admin_id   = $csv_admin_id;
 
-  // Optional safety: if both are empty, try to read from subject table once
-  if (empty($faculty_id) && empty($admin_id)) {
-    $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ? LIMIT 1");
-    $stmt_subj->bind_param("s", $subject_code);
-    $stmt_subj->execute();
-    $subject_data = $stmt_subj->get_result()->fetch_assoc();
-    $stmt_subj->close();
+  $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ? LIMIT 1");
+  $stmt_subj->bind_param("s", $subject_code);
+  $stmt_subj->execute();
+  $subject_data = $stmt_subj->get_result()->fetch_assoc();
+  $stmt_subj->close();
 
-    if ($subject_data) {
-      if (empty($faculty_id)) $faculty_id = $subject_data['faculty_id'];
-      if (empty($admin_id))   $admin_id   = $subject_data['admin_id'];
-    }
-  }
-
-  // Ensure at least one of them is present
-  if (empty($faculty_id) && empty($admin_id)) {
-    $_SESSION['detailed_errors'][] = "❌ Subject <b>$subject_code</b> has no faculty/admin in CSV or subject table.";
+  if (!$subject_data) {
+    $_SESSION['detailed_errors'][] = "❌ Subject <b>$subject_code</b> not found in subject table.";
     return;
   }
 
-  // 2. Check if already assigned
+  $faculty_id = $subject_data['faculty_id'];
+  $admin_id   = $subject_data['admin_id'];
+
   $check_stmt = $conn->prepare("
-        SELECT 1
-        FROM student_subject 
-        WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?
-    ");
+      SELECT 1
+      FROM student_subject 
+      WHERE student_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?
+  ");
   $check_stmt->bind_param("ssss", $student_id, $subject_code, $ay, $sem);
   $check_stmt->execute();
   $exists = $check_stmt->get_result()->num_rows > 0;
   $check_stmt->close();
 
   if ($exists) {
-    // Already assigned; no insert
+    $_SESSION['detailed_errors'][] =
+      "Student <b>$student_id</b> is already assigned to subject <b>$subject_code</b> for $ay / $sem.";
     return;
   }
 
-  // 3. Insert assignment with the CSV faculty/admin
   $insert = $conn->prepare("
-        INSERT INTO student_subject
-        (student_id, subject_code, faculty_id, admin_id, academic_year, semester)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ");
+      INSERT INTO student_subject
+      (student_id, subject_code, faculty_id, admin_id, academic_year, semester)
+      VALUES (?, ?, ?, ?, ?, ?)
+  ");
   $insert->bind_param(
     "ssssss",
     $student_id,
@@ -398,15 +369,20 @@ function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_c
   $success_counter++;
 }
 
-// --- Fetch data for the form (existing code) ---
-$student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.college, s.section FROM student s WHERE s.role = 'student' ORDER BY s.college, s.last_name ASC";
+/* -------------------------
+   FETCH DATA FOR FORMS
+-------------------------- */
+$student_query = "SELECT s.idnumber, s.first_name, s.mid_name, s.last_name, s.college, s.section
+                  FROM student s
+                  WHERE s.role = 'student'
+                  ORDER BY s.college, s.last_name ASC";
 $student_result = $conn->query($student_query);
 $students_by_dept = [];
 while ($row = $student_result->fetch_assoc()) {
   $students_by_dept[$row['college']][] = $row;
 }
 
-// 1) Get this admin's college
+// Admin college again for subject filtering
 $college_stmt = $conn->prepare("
     SELECT college_name
     FROM admin_college
@@ -420,7 +396,7 @@ $college_stmt->close();
 
 $admin_college = $collegeRow['college_name'] ?? null;
 
-// 2) Get all admin IDs in the same college
+// All admin IDs in same college
 $adminIds = [];
 if ($admin_college) {
   $adm_stmt = $conn->prepare("
@@ -437,9 +413,8 @@ if ($admin_college) {
   $adm_stmt->close();
 }
 
-// 3) Build subject query
+// Build subject query
 if (!empty($adminIds)) {
-  // build an IN (...) with placeholders
   $placeholders = implode(',', array_fill(0, count($adminIds), '?'));
   $types = str_repeat('s', count($adminIds));
 
@@ -456,7 +431,6 @@ if (!empty($adminIds)) {
   $subject_stmt = $conn->prepare($subject_query);
   $subject_stmt->bind_param($types, ...$adminIds);
 } else {
-  // fallback: no college info, show nothing or all
   $subject_query = "
         SELECT ss.code, ss.title, ss.faculty_id, ss.admin_id,
                COALESCE(f.first_name, a.first_name) AS first_name,
@@ -479,7 +453,6 @@ while ($subject = $subject_result->fetch_assoc()) {
 }
 ksort($subjects_by_faculty);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -509,20 +482,33 @@ ksort($subjects_by_faculty);
           const msg = <?= json_encode($_SESSION['msg']) ?>;
           const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
 
+          // Map PHP msg_type → SweetAlert2 icon
+          const iconMap = {
+            success: 'success',
+            warning: 'warning',
+            danger: 'error',
+            info: 'info'
+          };
+          const icon = iconMap[type] || 'info';
+
           if (errors.length > 0) {
-            const htmlContent = `<div style="text-align: left; max-height: 200px; overflow-y: auto;"><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+            const htmlContent =
+              `<div style="text-align:left;max-height:250px;overflow-y:auto;">
+                 <ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul>
+               </div>`;
+
             Swal.fire({
-              icon: type,
+              icon: icon,
               title: msg,
               html: htmlContent,
               confirmButtonText: 'OK'
             });
           } else {
             Swal.fire({
-              icon: type,
+              icon: icon,
               title: msg,
               showConfirmButton: false,
-              timer: 2000,
+              timer: 2200,
               timerProgressBar: true
             });
           }
@@ -535,89 +521,66 @@ ksort($subjects_by_faculty);
       <script>
         document.addEventListener("DOMContentLoaded", function() {
           const missingSubjects = <?= json_encode($_SESSION['missing_subjects']) ?>;
-          const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
-          let htmlContent = "<strong>The following subject codes are NOT listed in your subject table:</strong><br><ul>";
-          missingSubjects.forEach((sub) => htmlContent += "<li><b>" + sub + "</b></li>");
-          htmlContent += "</ul>";
 
-          if (errors.length > 0) {
-            htmlContent += `<div style="margin-top:10px;text-align:left;"><strong>Other Errors:</strong><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
-          }
+          let htmlContent =
+            "<p style='text-align:left;'>The following subject codes are <b>not found</b> in your Subject table. " +
+            "Please create them in <b>Add Subject</b> and upload the PDF again.</p><ul>";
+
+          missingSubjects.forEach((sub) => {
+            htmlContent += "<li><b>" + sub + "</b></li>";
+          });
+          htmlContent += "</ul>";
 
           Swal.fire({
             icon: "warning",
-            title: "Missing Subjects Detected",
+            title: "Missing Subject Codes",
             html: htmlContent,
             confirmButtonText: "OK"
           });
         });
       </script>
-      <?php unset($_SESSION['missing_subjects'], $_SESSION['detailed_errors']); ?>
+      <?php unset($_SESSION['missing_subjects']); ?>
     <?php endif; ?>
+
+
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
 
+          <!-- BULK PDF UPLOAD CARD -->
           <div class="card shadow-sm p-4 mb-4">
             <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via CSV Upload</h5>
-              <div class="alert alert-info border-info mt-2" style="font-size: 14px;">
-                <strong>📌 Reminder:</strong><br>
-                <ul class="mb-0">
-                  <li><strong>Only <code>student_id</code> and <code>subject_code</code></strong> need to be filled in for every row.</li>
-                  <li>Other fields (<code>subject_title</code>, <code>faculty_id</code>, <code>admin_id</code>, <code>college</code>, <code>program</code>)
-                    can be entered <strong>once</strong> and reused automatically for new subjects.</li>
-                  <li>If the subject already exists in the database, you may leave the extra fields <strong>blank</strong>.</li>
-                  <li>If the subject does <strong>not</strong> exist, the system will create it using the additional fields from your CSV.</li>
-                </ul>
-              </div>
+              <h5 class="card-title mb-4">Bulk Assign via PDF Class Roster</h5>
 
-              <!-- CSV Template Download Button -->
-              <div class="mb-3">
-                <a href="downloads/sample_template.csv" class="btn btn-success" download>
-                  <i class="bi bi-download"></i> Download CSV Template
-                </a>
-                <span class="small text-muted ms-2">
-                  Use this file as your starting template.
-                </span>
-              </div>
               <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
                 <?php if (!$current_academic_year || !$current_semester): ?>
                   <div class="col-12">
                     <div class="alert alert-danger"><b>Warning:</b> Current academic period is not set. Please contact the superadmin.</div>
                   </div>
                 <?php endif; ?>
-                <div class="mt-2 p-3 border rounded bg-light">
-                  <strong>✔ Correct Sample CSV Format:</strong>
-                  <pre class="border p-2 bg-white" style="white-space: pre-wrap; font-size: 90%;">
-student_id|subject_code|subject_title     |faculty_id|admin_id|college                       |program                                   |
-202-3110-1|IT101       |Introduction to IT|10001     |00001   |COLLEGE OF INFORMATION SYSTEMS|Bachelor of Science in Information Systems|
-202-3110-2|IT101       |
-202-3121-2|IT101       |
-        </pre>
-                  <p class="small text-muted mb-0">
-                    Save your file as <b>.csv</b> (comma separated values) with these columns in this order. For existing subjects, you may leave other subject fields blank.
-                  </p>
-                </div>
+
                 <div class="col-md-9">
-                  <label for="bulk_file" class="form-label fw-bold">Select CSV File</label>
-                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".csv" required>
+                  <label for="bulk_file" class="form-label fw-bold">Select PDF File</label>
+                  <input type="file" name="bulk_file" id="bulk_file" class="form-control" accept=".pdf" required>
                 </div>
+
                 <div class="col-md-3 d-flex align-items-end">
                   <button type="submit" name="upload_bulk_assign" class="btn btn-success w-100">
                     <i class="bi bi-upload"></i> Upload and Assign
                   </button>
                 </div>
+
                 <div class="col-12">
                   <p class="small text-muted mb-0">
-                    Data is validated on upload. Any missing or incorrect IDs/codes will be shown in the feedback popup.
+                    Only <strong>PDF class rosters</strong> are supported. Students will be auto-assigned
+                    based on detected subject code and student IDs. The subject code must already exist in the Subject table.
                   </p>
                 </div>
               </form>
             </div>
           </div>
 
-
+          <!-- MANUAL ASSIGNMENT CARD (unchanged) -->
           <div class="card shadow-sm p-4">
             <div class="card-body">
               <h5 class="card-title mb-4">Manual Assignment for A.Y. <?= htmlspecialchars($current_academic_year ?? 'N/A') ?> / <?= htmlspecialchars($current_semester ?? 'N/A') ?></h5>
@@ -700,13 +663,16 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
               </form>
             </div>
           </div>
+
         </div>
       </div>
     </section>
   </main>
 
   <?php include 'footer.php' ?>
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+  </a>
 
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/choices.min.js"></script>
@@ -714,7 +680,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // --- Store Original Student Data ---
       const studentSelectElement = document.getElementById('student_id');
       const originalStudentData = Array.from(studentSelectElement.options).map(opt => ({
         value: opt.value,
@@ -724,7 +689,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
         groupLabel: opt.parentElement.label
       }));
 
-      // --- Initialize Choices.js Dropdowns ---
       const studentChoices = new Choices(studentSelectElement, {
         removeItemButton: true,
         placeholder: true,
@@ -747,13 +711,9 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
         }
       });
 
-      // --- When subject(s) change, filter students that ALREADY have those subjects ---
       subjectSelect.addEventListener("change", function() {
-        // Get selected subject codes as array of strings
         const selectedSubjects = subjectChoices.getValue(true);
-        // If nothing selected, restore original full student list
         if (!selectedSubjects || selectedSubjects.length === 0) {
-          // rebuild grouped choices from originalStudentData
           const groups = {};
           originalStudentData.forEach(s => {
             if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
@@ -771,7 +731,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
           return;
         }
 
-        // Prepare body for application/x-www-form-urlencoded: subject_codes[]=A&subject_codes[]=B...
         const body = selectedSubjects.map(code => 'subject_codes[]=' + encodeURIComponent(code)).join('&');
 
         fetch('admin-get-assigned-students.php', {
@@ -786,9 +745,7 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
             return res.json();
           })
           .then(assignedStudents => {
-            // assignedStudents should be array of student_id strings
             const filtered = originalStudentData.filter(s => !assignedStudents.includes(s.value));
-            // Group the remaining students
             const groups = {};
             filtered.forEach(s => {
               if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
@@ -806,7 +763,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
           })
           .catch(err => {
             console.error('Error fetching assigned students:', err);
-            // fallback: restore full list so admin can still proceed
             const groups = {};
             originalStudentData.forEach(s => {
               if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
@@ -829,7 +785,6 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
           });
       });
 
-      // --- rest of your code (filters) remains unchanged ---
       const deptFilter = document.getElementById('collegeFilter');
       const sectionFilter = document.getElementById('sectionFilter');
 
@@ -859,11 +814,9 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
 
       deptFilter.addEventListener('change', filterStudents);
       sectionFilter.addEventListener('change', filterStudents);
-      // --- SELECT ALL FILTERED STUDENTS BUTTON ---
+
       const selectAllBtn = document.getElementById("selectAllStudents");
-
       selectAllBtn.addEventListener("click", function() {
-
         const displayedStudentIDs = Array.from(studentSelectElement.options)
           .filter(opt => !opt.disabled && opt.style.display !== "none")
           .map(opt => opt.value);
@@ -888,105 +841,9 @@ student_id|subject_code|subject_title     |faculty_id|admin_id|college          
           timer: 1500,
           showConfirmButton: false
         });
-
       });
-
     });
   </script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-
-      const bulkFileInput = document.getElementById("bulk_file");
-
-      bulkFileInput.addEventListener("change", function() {
-        const file = this.files[0];
-        if (!file) return;
-
-        const fileName = file.name.toLowerCase();
-        const isCSV = fileName.endsWith(".csv");
-
-        if (!isCSV) {
-          Swal.fire({
-            icon: "error",
-            title: "Invalid File",
-            text: "Please upload a valid .csv file."
-          });
-          this.value = "";
-          return;
-        }
-
-        const reader = new FileReader();
-
-        // ==========================================
-        // HANDLER FOR CSV FILES (Text Mode)
-        // ==========================================
-        if (isCSV) {
-          reader.onload = function(e) {
-            const text = e.target.result;
-            // Split by new line, then split by comma
-            const rows = text.trim().split("\n").map(r => r.split(","));
-            showPreview(rows, "CSV");
-          };
-          reader.readAsText(file);
-        }
-      });
-
-      // ==========================================
-      // REUSABLE PREVIEW FUNCTION
-      // ==========================================
-      function showPreview(rows, type) {
-        if (!rows || rows.length === 0) {
-          Swal.fire({
-            icon: "warning",
-            title: "Empty File",
-            text: `The ${type} file has no data.`
-          });
-          return;
-        }
-
-        // Extract header (Row 0)
-        const header = rows[0];
-
-        // Generate Table HTML
-        let tableHTML = `
-        <div style="text-align:left; margin-bottom:10px;">
-            <strong>Format Detected:</strong> ${type}<br>
-            <strong>Total Rows:</strong> ${rows.length - 1} (excluding header)
-        </div>
-        <strong>Preview (First 5 rows):</strong><br>
-        <table border="1" cellpadding="5" style="width:100%; border-collapse: collapse; text-align:left; font-size: 12px;">
-          <tr style="background:#f0f0f0; font-weight:bold;">
-            ${header.map(h => `<th>${h}</th>`).join("")}
-          </tr>
-      `;
-
-        // Show max 5 data rows
-        const previewLimit = Math.min(6, rows.length); // 6 because index 0 is header
-        for (let i = 1; i < previewLimit; i++) {
-          const cols = rows[i].map(c => `<td>${c}</td>`).join("");
-          tableHTML += `<tr>${cols}</tr>`;
-        }
-        tableHTML += "</table>";
-
-        // Fire SweetAlert
-        Swal.fire({
-          title: "File Preview",
-          html: tableHTML,
-          width: 700,
-          confirmButtonText: "Looks Good",
-          showCancelButton: true,
-          cancelButtonText: "Cancel Upload"
-        }).then((result) => {
-          if (result.dismiss === Swal.DismissReason.cancel) {
-            document.getElementById("bulk_file").value = ""; // Clear input if canceled
-          }
-        });
-      }
-
-    });
-  </script>
-
 </body>
 
 </html>

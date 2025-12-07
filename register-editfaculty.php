@@ -89,8 +89,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $adminResult = $checkAdmin->get_result();
 
     if ($adminResult->num_rows > 0) {
-      $_SESSION['msg'] = "This faculty is already an Admin. Their details have been updated instead.";
-      // Fall through to the 'else' logic to perform an update
+      $_SESSION['promotion_message'] = "This faculty is already an Admin. Their details have been updated instead.";
     } else {
       // Not an admin, so let's create them
       $position = $_POST['position'] ?? NULL;
@@ -136,9 +135,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // 3. Prepare statement for 'admin_college'
         $stmt_dept = $conn->prepare("INSERT INTO admin_college (admin_idnumber, college_name, program_name) VALUES (?, ?, ?)");
-
         // 4. Insert the MAIN college/program assignment first
-        $stmt_dept->bind_param("sss", $faculty_id, $main_college, $main_program);
+        $stmt_dept->bind_param("sss", $new_idnumber, $main_college, $main_program);
         $stmt_dept->execute();
         $added_assignments[$main_college . "::" . $main_program] = true; // Track it
 
@@ -168,8 +166,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // All good, commit the changes
         $conn->commit();
-        $_SESSION['success_message'] = "Faculty successfully promoted to Admin!";
-        header("Location: register-adminlist.php"); // Redirect to admin list
+        $_SESSION['promotion_message'] = "Faculty successfully promoted to Admin!";
+        header("Location: register-editfaculty.php"); // Redirect to admin list
         exit();
       } catch (mysqli_sql_exception $e) {
         $conn->rollback();
@@ -183,6 +181,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       }
     }
   }
+
+  // --- Promote to Superadmin Logic ---
+  if ($new_role_trigger === 'superadmin') {
+    try {
+      $position = $_POST['position'] ?? NULL;
+      $main_college = $_POST['main_college'] ?? NULL;
+      $main_program = $_POST['main_program'] ?? '';
+
+      // Check if already superadmin
+      $checkSuper = $conn->prepare("SELECT idnumber FROM superadmin WHERE idnumber = ?");
+      $checkSuper->bind_param("s", $faculty_id);
+      $checkSuper->execute();
+      $superResult = $checkSuper->get_result();
+
+      if ($superResult->num_rows > 0) {
+        $_SESSION['promotion_message'] = "Faculty is already an Superadmin. Updated details instead.";
+      } else {
+        // Insert into superadmin table
+        $insertSuper = $conn->prepare("
+    INSERT INTO superadmin 
+    (idnumber, first_name, mid_name, last_name, password, role, college, program, faculty_rank, position, status)
+    VALUES (?, ?, ?, ?, ?, 'superadmin', ?, ?, ?, ?, ?)
+");
+
+        $status = 'active'; // default status if not coming from form
+
+        $insertSuper->bind_param(
+          "ssssssssss",
+          $new_idnumber,
+          $faculty['first_name'],
+          $faculty['mid_name'],
+          $faculty['last_name'],
+          $faculty['password'],
+          $main_college,
+          $main_program,
+          $new_faculty_rank,
+          $position,
+          $status
+        );
+        $insertSuper->execute();
+
+        // Update faculty record with role, college, program
+        $updateFaculty = $conn->prepare("
+                UPDATE faculty 
+                SET college = ?, program = ?, faculty_rank = ?
+                WHERE idnumber = ?
+            ");
+        $updateFaculty->bind_param("ssss", $main_college, $main_program, $new_faculty_rank, $faculty_id);
+        $updateFaculty->execute();
+
+        $_SESSION['promotion_message'] = "Faculty successfully promoted to Superadmin!";
+      }
+
+      header("Location: register-editfaculty.php?id=$faculty_id");
+      exit();
+    } catch (mysqli_sql_exception $e) {
+      $_SESSION['msg'] = "Database Error: " . $e->getMessage();
+      header("Location: register-editfaculty.php?id=$faculty_id");
+      exit();
+    }
+  }
+
 
   // This 'else' block runs if $new_role_trigger is 'faculty' OR if they were already an admin
   try {
@@ -276,6 +336,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </script>
                 <?php unset($_SESSION['msg']); ?>
               <?php endif; ?>
+              <?php if (isset($_SESSION['promotion_message'])): ?>
+                <script>
+                  Swal.fire({
+                    icon: 'success',
+                    title: 'Promotion Status',
+                    text: <?= json_encode($_SESSION['promotion_message']) ?>,
+                    timer: 2500,
+                    showConfirmButton: false
+                  });
+                </script>
+                <?php unset($_SESSION['promotion_message']); ?>
+              <?php endif; ?>
               <?php if ($faculty): ?>
                 <form method="POST" class="row g-3">
 
@@ -313,6 +385,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                       <select name="role" class="form-select" required>
                         <option value="faculty" <?php if ($faculty['role'] == 'faculty') echo 'selected'; ?>>Faculty</option>
                         <option value="admin">Promote to Admin</option>
+                        <option value="superadmin">Promote to Superadmin</option>
                       </select>
                       <label class="form-label">Role</label>
                     </div>
@@ -503,12 +576,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
       // --- Function to toggle Admin Options ---
       function toggleAdminOptions() {
-        if (roleSelect.value === 'admin') {
+        if (roleSelect.value === 'admin' || roleSelect.value === 'superadmin') {
           adminOptions.style.display = 'block';
           adminPosition.setAttribute('required', 'required');
           mainDeptSelect.setAttribute('required', 'required');
-          // mainProgramSelect is optional
-          // collegeElement (additional) is optional
         } else {
           adminOptions.style.display = 'none';
           adminPosition.removeAttribute('required');
