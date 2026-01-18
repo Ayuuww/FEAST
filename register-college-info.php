@@ -121,11 +121,11 @@ while ($row = $program_query->fetch_assoc()) {
 
   <main id="main" class="main">
     <div class="pagetitle">
-      <h1>college Information</h1>
+      <h1>College Information</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="register-dashboard.php">Home</a></li>
-          <li class="breadcrumb-item active">college Information</li>
+          <li class="breadcrumb-item active">College Information</li>
         </ol>
       </nav>
     </div>
@@ -135,15 +135,15 @@ while ($row = $program_query->fetch_assoc()) {
         <div class="col-lg-12">
           <div class="card shadow-sm border-0">
             <div class="card-body">
-              <h5 class="card-title">Add New college Info</h5>
+              <h5 class="card-title">Add New College Info</h5>
 
               <form method="POST" class="mb-4">
                 <div class="row gy-3 gx-3">
 
                   <div class="col-lg-3 col-md-6">
-                    <label class="form-label fw-semibold">college</label>
+                    <label class="form-label fw-semibold">College</label>
                     <select name="college_name" id="college" class="form-select" required>
-                      <option value="">Select college</option>
+                      <option value="">Select College</option>
                       <?php while ($d = $college_result->fetch_assoc()): ?>
                         <option value="<?= htmlspecialchars($d['college_name']) ?>">
                           <?= htmlspecialchars($d['college_name']) ?>
@@ -155,7 +155,7 @@ while ($row = $program_query->fetch_assoc()) {
                   <div class="col-lg-3 col-md-6">
                     <label class="form-label fw-semibold">Program</label>
                     <select name="program_name" id="program" class="form-select" required disabled>
-                      <option value="">Select college First</option>
+                      <option value="">Select College First</option>
                     </select>
                   </div>
 
@@ -178,7 +178,7 @@ while ($row = $program_query->fetch_assoc()) {
 
                 <div class="mt-3 text-end">
                   <button type="submit" name="add" class="btn btn-success btn-sm px-4">
-                    Add college Info
+                    Add College Info
                   </button>
                 </div>
               </form>
@@ -187,7 +187,7 @@ while ($row = $program_query->fetch_assoc()) {
                 <table class="table table-hover align-middle datatable">
                   <thead class="table-success">
                     <tr>
-                      <th>College/college</th>
+                      <th>College</th>
                       <th>Program</th>
                       <th>Website</th>
                       <th>Phone</th>
@@ -285,7 +285,7 @@ while ($row = $program_query->fetch_assoc()) {
       } else {
         // Disable if no dept or no programs
         programSelect.disabled = true;
-        programSelect.innerHTML = '<option value="">Select college First</option>';
+        programSelect.innerHTML = '<option value="">Select College First</option>';
       }
     });
   </script>

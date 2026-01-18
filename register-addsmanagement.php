@@ -33,6 +33,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if ($column) {
+      if ($type === 'College') {
+        $value = strtoupper($value);
+      }
+
       if ($type === 'Program') {
         $college_name = trim($_POST['college_name'] ?? '');
         if (empty($college_name)) {
@@ -175,22 +179,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               <option value="Program">Program</option>
             </select>
           </div>
-          <div class="col-md-4">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" name="value" required>
-          </div>
+
           <div class="col-md-4 d-none" id="collegeField">
             <label class="form-label">Select College</label>
-            <select class="form-select" name="college_name">
+            <select class="form-select" name="college_name" id="collegeSelect">
               <option value="">-- Choose College --</option>
               <?php
-              $college = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' ORDER BY college_name ASC");
+              $college = $conn->query("SELECT DISTINCT college_name FROM adds WHERE college_name IS NOT NULL AND college_name != '' AND (program_name IS NULL OR program_name = '') ORDER BY college_name ASC");
               while ($row = $college->fetch_assoc()):
               ?>
                 <option value="<?= htmlspecialchars($row['college_name']) ?>"><?= htmlspecialchars($row['college_name']) ?></option>
               <?php endwhile; ?>
             </select>
           </div>
+
+          <div class="col-md-4" id="nameContainer">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" name="value" id="entryValue" required>
+          </div>
+
           <div class="col-12 text-end mt-3">
             <button type="button" id="confirmAdd" class="btn btn-success"><i class="bi bi-plus-circle"></i> Add Entry</button>
           </div>
@@ -307,8 +314,50 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     function togglecollegeDropdown() {
       const type = document.getElementById("type").value;
-      const field = document.getElementById("collegeField");
-      field.classList.toggle("d-none", type !== "Program");
+      const collegeField = document.getElementById("collegeField");
+      const nameContainer = document.getElementById("nameContainer");
+      const inputField = document.getElementById("entryValue");
+      const collegeSelect = document.getElementById("collegeSelect");
+
+      if (type === "Program") {
+        // Show College Selection in the middle
+        collegeField.classList.remove("d-none");
+        collegeSelect.setAttribute("required", "required");
+
+        // Ensure the layout stays as Type(4) | College(4) | Name(4)
+        nameContainer.className = "col-md-4";
+
+        // Reset specific college styles
+        inputField.style.textTransform = "none";
+        inputField.removeEventListener('input', forceUppercase);
+        inputField.placeholder = "Enter Program Name";
+      } else if (type === "College") {
+        // Hide College Selection
+        collegeField.classList.add("d-none");
+        collegeSelect.removeAttribute("required");
+
+        // Take up more space if only 2 fields are visible (Optional: col-md-8)
+        nameContainer.className = "col-md-8";
+
+        // Force Uppercase for College
+        inputField.style.textTransform = "uppercase";
+        inputField.placeholder = "ENTER COLLEGE NAME (CAPS ONLY)";
+        inputField.addEventListener('input', forceUppercase);
+      } else {
+        // Default for Rank, Position, Section
+        collegeField.classList.add("d-none");
+        collegeSelect.removeAttribute("required");
+        nameContainer.className = "col-md-8";
+
+        inputField.style.textTransform = "none";
+        inputField.placeholder = "";
+        inputField.removeEventListener('input', forceUppercase);
+      }
+    }
+
+    // Keep your forceUppercase function
+    function forceUppercase(e) {
+      e.target.value = e.target.value.toUpperCase();
     }
   </script>
 </body>

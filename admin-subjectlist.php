@@ -58,50 +58,26 @@ $sub_q = "
     FROM subject
     LEFT JOIN faculty f ON subject.faculty_id = f.idnumber
     LEFT JOIN admin a    ON subject.admin_id  = a.idnumber
-    LEFT JOIN (
-        SELECT DISTINCT admin_idnumber, college_name
-        FROM admin_college
-    ) ac ON ac.admin_idnumber = subject.admin_id
     WHERE 1
 ";
 
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//   DEAN or DIRECTOR → sees all subjects from same college
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+$conditions = [];
 
-if ($admin_position === 'Dean' || $admin_position === 'Director') {
-
-  if (!empty($college)) {
-    $placeholders = implode(',', array_fill(0, count($college), '?'));
-    $sub_q .= " AND ac.college_name IN ($placeholders)";
-    $params = array_merge($params, $college);
-    $types .= str_repeat('s', count($college));
-  }
+// 1. Filter by College Name (Matches the 'college' column in 'subject' table)
+if (!empty($college)) {
+  $placeholders = implode(',', array_fill(0, count($college), '?'));
+  $conditions[] = "subject.college IN ($placeholders)";
+  $params = array_merge($params, $college);
+  $types .= str_repeat('s', count($college));
 }
 
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-//   PROGRAM CHAIR or CHAIR PERSON
-//   → sees all subjects from same college 
-//     PLUS their own created subjects
-// ▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
+// 2. Filter by Personal Creation (If they created it, even if it's a different college)
+$conditions[] = "subject.admin_id = ?";
+$params[] = $admin_id;
+$types .= "s";
 
-else {
-  $conditions = [];
-
-  // Same college (creator’s college)
-  if (!empty($college)) {
-    $placeholders = implode(',', array_fill(0, count($college), '?'));
-    $conditions[] = "ac.college_name IN ($placeholders)";
-    $params = array_merge($params, $college);
-    $types .= str_repeat('s', count($college));
-  }
-
-  // OR subjects they personally created
-  $conditions[] = "subject.admin_id = ?";
-  $params[] = $admin_id;
-  $types .= "s";
-
-  // Combine
+// Combine conditions with OR so they see subjects in their college AND subjects they created
+if (!empty($conditions)) {
   $sub_q .= " AND (" . implode(" OR ", $conditions) . ")";
 }
 
@@ -182,7 +158,7 @@ $result = $sub_stmt->get_result();
                     <th>Faculty Name</th>
                     <th>Assigned College</th>
                     <th>Assigned Program</th>
-                    <th>Creator</th>
+                    <th>Creator ID</th>
                   </tr>
                 </thead>
                 <tbody>

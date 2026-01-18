@@ -113,7 +113,7 @@ $result = mysqli_query($conn, $query);
                           <?php if ($row['status'] === 'active'): ?>
                             <span>Active</span>
                           <?php else: ?>
-                            <span class="badge bg-secondary">Inactive</span>
+                            <span>Inactive</span>
                           <?php endif; ?>
                         </td>
 

@@ -154,14 +154,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="col-md-6 mb-3">
                       <div class="form-floating">
                         <select name="college" id="college" class="form-select" required>
-                          <option value="">-- Select college --</option>
+                          <option value="">-- Select College --</option>
                           <?php foreach ($college as $dept): ?>
                             <option value="<?= htmlspecialchars($dept) ?>" <?= $superadmin['college'] === $dept ? 'selected' : '' ?>>
                               <?= htmlspecialchars($dept) ?>
                             </option>
                           <?php endforeach; ?>
                         </select>
-                        <label>college</label>
+                        <label>College</label>
                       </div>
                     </div>
 

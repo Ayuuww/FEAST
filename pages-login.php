@@ -59,7 +59,7 @@ if (isset($_POST['login'])) {
   <?php include 'head.php'; ?>
   <style>
     body {
-      background: linear-gradient(135deg, #0bb35fff 0%, #3a6073 100%);
+      background: #636161ff;
       background-attachment: fixed;
       font-family: 'Poppins', sans-serif;
       color: #333;
