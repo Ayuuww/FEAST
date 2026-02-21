@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 21, 2026 at 08:09 AM
+-- Generation Time: Dec 07, 2025 at 04:03 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -792,7 +792,7 @@ INSERT INTO `faculty` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, 
 (52, '40180', 'Rufo', 'Agaloos', 'Baro', '$2y$10$nhjJHEGLIeMTBT/zBWXB3.iPLEMiiCMy4OH7EsPUt9kE01Mhqd9a.', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
 (53, '40182', 'Daniel', 'Almojuela', 'Neri', '$2y$10$Lzvob3L7hGF1aqMPlcgeNuVg0HgBYFqbk.degfuS52jDPOV0gphNS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor II', 'faculty', 'active'),
 (54, '40184', 'Herve', 'Estrada', 'Orpilla', '$2y$10$Vgm05e3hAx2417BIfAIS4uEpPTWzLOu8KTGMhSZs3W1QAcF.uiUtu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor III', 'faculty', 'active'),
-(55, '40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$FXc/x9GWqxqXqC2mf9JO9O0Pfy6o0DbPD6myd8YovtqI59UxkgxSS', 'COLLEGE OF EDUCATION', 'Bachelor in Physical Education', 'Assistant Professor IV', 'faculty', 'active'),
+(55, '40193', 'Frediz Winda', 'Ferrer', 'Badua', '$2y$10$FXc/x9GWqxqXqC2mf9JO9O0Pfy6o0DbPD6myd8YovtqI59UxkgxSS', 'COLLEGE OF ARTS AND SCIENCES', 'Bachelor of Arts in English Language', 'Assistant Professor IV', 'faculty', 'active'),
 (56, '40207', 'Rhoda', 'Marquez', 'Lilan', '$2y$10$Dh5Dz3iRIRcg7N.DGYHzou0x1NxTkdgZjq8X/PnqgcPMevcafpqNC', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Associate Professor V', 'faculty', 'active'),
 (57, '40413', 'Jessie', 'Bautista', 'Vallecera', '$2y$10$JcHvquUKJ96KyfD0Ri8cXODOkZTAxfBWcI0uB86tsV.KBmmLiOqfS', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor III', 'faculty', 'active'),
 (59, '00424', 'Stephan', '', 'Kupsch', '$2y$10$LXEuveIvZhxyYXt9JB8otejLdYxRkOgT4x/rg4kUjPvxmPNVANtdG', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', 'Instructor I', 'faculty', 'active');
@@ -881,7 +881,7 @@ INSERT INTO `student` (`id`, `idnumber`, `first_name`, `mid_name`, `last_name`, 
 (160, '211-0164-1', 'Emma Cecille', 'Ariola', 'Badua', '$2y$10$kixnr6W1iveVo3C1AVL9fuxeTvehTVPlcPbsyEerfU3kyr3S5svLa', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
 (161, '211-0174-1', 'John Godwin', 'MiddleName', 'Taningco', '$2y$10$TyLgDbCNfofpYC6M8QOIa.v99.8.TT70QQv2fY3Lwf2rgEt/w0J1i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
 (162, '211-0805-1', 'Gohan', 'Espe', 'Gamboa', '$2y$10$BCJGB/C2AVsoe3rUVBU7r.cv6Gjt40eNBnq0R5K1C/XH097iOxUxy', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
-(163, '221-0411-1', 'Clouie Ann', 'MiddleName', 'Aclinen', '$2y$10$PnJUVdK7rvXHoB.p1LQ8KeVMaVud5x3crYA/Jx3TsW305PCbSEvRO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
+(163, '221- 0411-1', 'Clouie Ann', 'MiddleName', 'Aclinen', '$2y$10$PnJUVdK7rvXHoB.p1LQ8KeVMaVud5x3crYA/Jx3TsW305PCbSEvRO', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
 (164, '221-0005-1', 'Alexandrea ', 'Jean', 'Garcia', '$2y$10$SHZx36mhnnIZv5gTKSPNoOHrS/poBF/.i6e72Yl58TensgBHI6a0i', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
 (165, '221-0006-1', 'Renz Allen', 'Bautista', 'Miller', '$2y$10$Mr8YA1x/ZATqPLAEnexuuucKbVAscbj0I.PUM6dtO.oLYe.ru70cK', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-B', 'student'),
 (166, '221-0026-1', 'Jeandra Joy', 'Opinaldo', 'Orfiano', '$2y$10$Fo32ZIz4C71NNDETq3MjKuvhdTmouK0opssTw6LybchIEKVyoWROu', 'COLLEGE OF INFORMATION SYSTEMS', 'Bachelor of Science in Information Systems', '4-A', 'student'),
@@ -976,7 +976,7 @@ CREATE TABLE `student_evaluation_submissions` (
   `student_id` varchar(50) DEFAULT NULL,
   `subject_code` varchar(50) DEFAULT NULL,
   `faculty_id` varchar(50) DEFAULT NULL,
-  `college` varchar(100) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
   `academic_year` varchar(20) DEFAULT NULL,
   `semester` varchar(20) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -991,7 +991,7 @@ CREATE TABLE `student_evaluation_submissions` (
 -- Dumping data for table `student_evaluation_submissions`
 --
 
-INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `college`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
+INSERT INTO `student_evaluation_submissions` (`id`, `student_id`, `subject_code`, `faculty_id`, `department`, `academic_year`, `semester`, `created_at`, `answers`, `total_score`, `computed_rating`, `comment`, `is_anonymous`) VALUES
 (71, '221-0325-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:08', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, '', 'yes'),
 (72, '221-0476-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:42:27', '{\"q0\":5,\"q1\":5,\"q2\":5,\"q3\":5,\"q4\":5,\"q5\":5,\"q6\":5,\"q7\":5,\"q8\":5,\"q9\":5,\"q10\":5,\"q11\":5,\"q12\":5,\"q13\":5,\"q14\":5}', 75, 100.00, 'none', 'yes'),
 (73, '231-0884-1', 'ISAE 108', '40182', 'COLLEGE OF INFORMATION SYSTEMS', '2025-2026', '1st Semester', '2025-11-06 13:43:52', '{\"q0\":3,\"q1\":3,\"q2\":3,\"q3\":3,\"q4\":3,\"q5\":3,\"q6\":3,\"q7\":3,\"q8\":3,\"q9\":3,\"q10\":3,\"q11\":3,\"q12\":3,\"q13\":3,\"q14\":3}', 45, 60.00, 'yes', 'yes'),
@@ -1387,12 +1387,12 @@ INSERT INTO `student_subject` (`idnumber`, `student_id`, `subject_code`, `academ
 (981, '221-0626-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
 (982, '221-0626-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
 (983, '221-0626-1', 'ISSM 105', '2025-2026', '1st Semester', '40023', '40151'),
-(984, '221-0411-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
-(985, '221-0411-1', 'ISPC 112', '2025-2026', '1st Semester', '40184', '40151'),
-(986, '221-0411-1', 'ISPC 114', '2025-2026', '1st Semester', '40413', '40151'),
-(987, '221-0411-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
-(988, '221-0411-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
-(989, '221-0411-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
+(984, '221- 0411-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
+(985, '221- 0411-1', 'ISPC 112', '2025-2026', '1st Semester', '40184', '40151'),
+(986, '221- 0411-1', 'ISPC 114', '2025-2026', '1st Semester', '40413', '40151'),
+(987, '221- 0411-1', 'ISPC 110', '2025-2026', '1st Semester', '40112', '40151'),
+(988, '221- 0411-1', 'ISAE 107', '2025-2026', '1st Semester', '40207', '40151'),
+(989, '221- 0411-1', 'ISBA 105', '2025-2026', '1st Semester', '40180', '40151'),
 (990, '221-0476-1', 'ISAE 108', '2025-2026', '1st Semester', '40182', '40151'),
 (991, '221-0476-1', 'ISPC 112', '2025-2026', '1st Semester', '40184', '40151'),
 (992, '221-0476-1', 'ISPC 114', '2025-2026', '1st Semester', '40413', '40151'),

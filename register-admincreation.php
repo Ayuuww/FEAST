@@ -12,7 +12,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
 $positions_result = $conn->query("SELECT DISTINCT position_name FROM adds WHERE position_name IS NOT NULL AND position_name != '' ORDER BY position_name ASC");
 $ranks_result = $conn->query("SELECT DISTINCT rank_name FROM adds WHERE rank_name IS NOT NULL AND rank_name != '' ORDER BY rank_name ASC");
 
-// ✅ Fetch college and programs properly (FIXED SPACES)
+// ✅ Fetch college and programs
 $adds_data_result = $conn->query("
     SELECT DISTINCT college_name, program_name 
     FROM adds 
@@ -38,7 +38,25 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
 <head>
   <?php include 'head.php' ?>
+  <link rel="stylesheet" href="assets/css/choices.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* Make Choices.js flush with Bootstrap styling */
+    .choices[data-type*="select-multiple"] .choices__inner {
+      border-radius: 0.375rem;
+      border: 1px solid #dee2e6;
+      background-color: #fff;
+      padding: 0.375rem 0.75rem;
+      min-height: calc(3.5rem + 2px);
+    }
+
+    .choices__list--multiple .choices__item {
+      background-color: #198754;
+      /* Bootstrap Success Green */
+      border: 1px solid #146c43;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 
 <body>
@@ -59,9 +77,9 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
     <section class="section">
       <div class="row justify-content-center">
-        <div class="col-lg-6">
-          <div class="card">
-            <div class="card-body">
+        <div class="col-lg-7">
+          <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
 
               <?php if (isset($_SESSION['success_message'])): ?>
                 <script>
@@ -87,7 +105,8 @@ while ($row = $adds_data_result->fetch_assoc()) {
                 <?php unset($_SESSION['error_message']); ?>
               <?php endif; ?>
 
-              <h5 class="card-title text-center">Create New Admin</h5>
+              <h4 class="card-title text-center mb-4">Create New Admin Account</h4>
+
               <form class="row g-3" method="post" action="admincreation.php">
 
                 <div class="col-md-6">
@@ -122,7 +141,7 @@ while ($row = $adds_data_result->fetch_assoc()) {
 
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <select class="form-select" name="position" required>
+                    <select class="form-select" name="position" id="position" required>
                       <option value="" disabled selected>-- Select Position --</option>
                       <?php while ($row = $positions_result->fetch_assoc()): ?>
                         <option value="<?= htmlspecialchars($row['position_name']) ?>"><?= htmlspecialchars($row['position_name']) ?></option>
@@ -144,33 +163,38 @@ while ($row = $adds_data_result->fetch_assoc()) {
                   </div>
                 </div>
 
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select class="form-select" name="main_college" id="main_college" required>
-                      <option value="" disabled selected>-- Select Main College --</option>
-                    </select>
-                    <label>Main College</label>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="form-floating">
-                    <select class="form-select" name="main_program" id="main_program">
-                      <option value="" selected>-- Select Main Program (if any) --</option>
-                    </select>
-                    <label>Main Program</label>
-                  </div>
+                <div class="col-12 mt-4">
+                  <hr class="text-muted">
+                  <h6 class="fw-bold text-secondary mb-3">Department & Program Assignment</h6>
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label fw-bold">Assign *Additional* College(s) (Optional)</label>
-                  <select name="college[]" id="college" multiple></select>
+                  <div class="form-floating">
+                    <select class="form-select" name="main_college" id="main_college" required>
+                      <option value="" disabled selected>-- Select College --</option>
+                    </select>
+                    <label>College</label>
+                  </div>
                 </div>
 
-                <div class="col-12 mt-3" id="program_container"></div>
+                <div class="col-12 mt-3">
+                  <label class="form-label fw-bold mb-1" style="font-size: 0.95rem; color: #444;">
+                    Assign Program(s) <span id="program_hint"></span>
+                  </label>
 
-                <div class="col-4 offset-4 mt-4">
-                  <button class="btn btn-success w-100" name="submit" type="submit">Create Admin Account</button>
+                  <select class="form-control" name="main_program[]" id="main_program" multiple></select>
+
+                  <div class="alert border-0 shadow-sm mt-3" id="primary_program_notice" style="display: none; border-left: 4px solid #0d6efd !important; background-color: #f8f9fa;">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-info-circle-fill fs-3 text-primary me-3"></i>
+                      <div id="notice_text" style="font-size: 0.9rem; color: #333;">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 mt-4 text-center">
+                  <button class="btn btn-success px-5 py-2 w-100 fw-bold shadow-sm" name="submit" type="submit">Create Admin Account</button>
                 </div>
 
               </form>
@@ -190,80 +214,74 @@ while ($row = $adds_data_result->fetch_assoc()) {
     const collegePrograms = <?= json_encode($collegePrograms) ?>;
 
     document.addEventListener('DOMContentLoaded', function() {
-      const collegeelect = document.getElementById('college');
+      const positionSelect = document.getElementById('position');
       const mainDeptSelect = document.getElementById('main_college');
       const mainProgramSelect = document.getElementById('main_program');
-      const programContainer = document.getElementById('program_container');
+      const programHint = document.getElementById('program_hint');
+      const noticeDiv = document.getElementById('primary_program_notice');
+      const noticeText = document.getElementById('notice_text');
 
-      // Populate all college (for main + multi-select)
+      let programChoicesInstance = null;
+
+      // 1. Populate College Dropdown
       const allcollege = Object.keys(collegePrograms);
       allcollege.forEach(dept => {
-        const opt = new Option(dept, dept);
-        mainDeptSelect.appendChild(opt);
+        mainDeptSelect.add(new Option(dept, dept));
       });
 
-      // ✅ When main college changes, load its programs
-      mainDeptSelect.addEventListener('change', function() {
-        const dept = this.value;
-        const programs = collegePrograms[dept] || [];
-        // ✅ FIX: Updated placeholder
-        mainProgramSelect.innerHTML = `<option value="" selected>-- Select Main Program (if any) --</option>`;
-        programs.forEach(p => {
-          const opt = new Option(p, p);
-          mainProgramSelect.appendChild(opt);
-        });
-      });
+      // 2. Initialize dynamic Program Dropdown based on Role
+      function updateProgramDropdown() {
+        const dept = mainDeptSelect.value;
+        const position = positionSelect.value || '';
+        const isDean = position.toLowerCase().includes('dean');
 
-      // ✅ Choices.js for multiple college selection
-      const deptChoices = new Choices(collegeelect, {
-        removeItemButton: true,
-        placeholderValue: 'Select additional college...'
-      });
+        if (programChoicesInstance) {
+          programChoicesInstance.destroy();
+        }
 
-      deptChoices.setChoices(
-        allcollege.map(d => ({
-          value: d,
-          label: d
-        })),
-        'value',
-        'label',
-        true
-      );
-
-      // ✅ Dynamic programs under selected college
-      collegeelect.addEventListener('change', function() {
-        programContainer.innerHTML = '';
-        const selectedcollege = Array.from(collegeelect.selectedOptions).map(opt => opt.value);
-
-        selectedcollege.forEach(dept => {
-          const programs = collegePrograms[dept] || [];
-          if (programs.length > 0) {
-            const div = document.createElement('div');
-            div.classList.add('mt-3', 'p-3', 'border', 'rounded');
-            div.innerHTML = `
-                        <label class="form-label fw-bold text-primary">Programs under ${dept}</label>
-                        <select name="programs[${dept}][]" multiple></select>
-                    `;
-            programContainer.appendChild(div);
-
-            const select = div.querySelector('select');
-            const programChoices = new Choices(select, {
-              removeItemButton: true,
-              placeholderValue: `Select program(s) for ${dept}...`
-            });
-
-            programChoices.setChoices(
-              programs.map(p => ({
-                value: p,
-                label: p
-              })),
-              'value',
-              'label',
-              true
-            );
+        // --- Update UI Hint and Alert Box ---
+        if (dept) {
+          noticeDiv.style.display = "block";
+          if (isDean) {
+            programHint.innerText = "— Deans can select multiple";
+            programHint.className = "text-success fw-normal";
+            noticeText.innerHTML = "<strong>Note for Deans:</strong> You can assign multiple programs. <br><span class='text-danger fw-bold'>Important:</span> The very <strong>FIRST</strong> program you select will be set as their primary/mother program in the Faculty system.";
+          } else {
+            programHint.innerText = "— Limited to 1 program";
+            programHint.className = "text-secondary fw-normal";
+            noticeText.innerHTML = "<strong>Note:</strong> Non-Deans can only be assigned to 1 program. This program will be directly linked to their Faculty account.";
           }
+        } else {
+          noticeDiv.style.display = "none";
+          programHint.innerText = "";
+        }
+
+        // --- Safely Re-initialize Choices.js ---
+        const selectEl = document.getElementById('main_program');
+        programChoicesInstance = new Choices(selectEl, {
+          removeItemButton: true,
+          searchEnabled: true,
+          shouldSort: false,
+          maxItemCount: isDean ? -1 : 1, // -1 means infinite, 1 means single
+          placeholderValue: isDean ? 'Click to select Program(s)...' : 'Click to select a Program...'
         });
-      });
+
+        // Load programs for the selected college
+        const programs = collegePrograms[dept] || [];
+        const choicesData = programs.map(p => ({
+          value: p,
+          label: p
+        }));
+
+        programChoicesInstance.setChoices(choicesData, 'value', 'label', true);
+      }
+
+      // Listeners
+      mainDeptSelect.addEventListener('change', updateProgramDropdown);
+      positionSelect.addEventListener('change', updateProgramDropdown);
+
+      // Force UI to initialize nicely on page load
+      updateProgramDropdown();
     });
   </script>
 </body>

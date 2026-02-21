@@ -51,7 +51,6 @@ if (isset($_POST['login'])) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -163,6 +162,27 @@ if (isset($_POST['login'])) {
       color: #555;
     }
 
+    /* NEW: Forgot Password Link Styling */
+    .forgot-password-link {
+      color: #00b09b;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-password-link:hover {
+      color: #96c93d;
+      text-decoration: underline;
+    }
+
+    /* NEW: Modal Custom Styling */
+    .modal-content.custom-modal {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
     @media (max-width: 768px) {
       .login-card {
         flex-direction: column;
@@ -188,14 +208,12 @@ if (isset($_POST['login'])) {
   <div class="login-wrapper">
     <div class="login-card">
 
-      <!-- Left side: Logo and title -->
       <div class="login-left">
         <img src="pics/DMMMSUlogosignup.png" alt="Logo">
-        <h3 class="fw-bold">FEASTA DMMMSU-NLUC</h3>
+        <h3 class="fw-bold">FEASTa DMMMSU-NLUC</h3>
         <p class="mt-2">Faculty Effectiveness and Assessment System with Tracking and Analytics</p>
       </div>
 
-      <!-- Right side: Login form -->
       <div class="login-right">
         <h5 class="text-center">Login to Your Account</h5>
 
@@ -255,21 +273,24 @@ if (isset($_POST['login'])) {
               placeholder="Password" required>
             <label for="password">Password</label>
 
-            <!-- 👁 Show Password Button -->
             <span class="toggle-password" onclick="togglePassword()"
               style="position:absolute; top:50%; right:15px; transform:translateY(-50%); cursor:pointer; font-size: 1.1rem; color: #6c757d;">
-
               <i class="bi bi-eye-fill" id="togglePasswordIcon"></i>
             </span>
 
             <div class="invalid-feedback">Please enter your password.</div>
           </div>
 
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
+                <?= isset($_COOKIE['remember_idnumber']) ? 'checked' : '' ?>>
+              <label class="form-check-label" for="rememberMe">Remember my ID</label>
+            </div>
 
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe"
-              <?= isset($_COOKIE['remember_idnumber']) ? 'checked' : '' ?>>
-            <label class="form-check-label" for="rememberMe">Remember my ID</label>
+            <a href="#" class="forgot-password-link" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">
+              Forgot Password?
+            </a>
           </div>
 
           <button class="btn btn-login text-white w-100 py-2" name="login">Login</button>
@@ -279,33 +300,45 @@ if (isset($_POST['login'])) {
     </div>
   </div>
 
-  <!-- Vendor JS -->
+  <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content custom-modal">
+        <div class="modal-header border-0 pb-0">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center py-4 px-4">
+          <i class="bi bi-shield-lock mb-3" style="font-size: 3.5rem; color: #00b09b;"></i>
+          <h4 class="fw-bold mb-3" style="color: #333;">Forgot your password?</h4>
+          <p class="fs-6" style="color: #666;">
+            For security reasons, please <strong>contact your administrator</strong> or proceed directly to the <strong>Registrar's Office</strong> to request a password reset.
+          </p>
+        </div>
+        <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+          <button type="button" class="btn btn-login text-white px-5 rounded-pill" data-bs-dismiss="modal">I Understand</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/main.js"></script>
 
   <script>
     function togglePassword() {
       const password = document.getElementById("password");
-      const icon = document.getElementById("togglePasswordIcon"); // This is now the <i> tag
+      const icon = document.getElementById("togglePasswordIcon");
 
       if (password.type === "password") {
-        // Password is HIDDEN, so change to TEXT
         password.type = "text";
-
-        // Change icon to "slashed" (to mean "click to hide")
         icon.classList.remove("bi-eye-fill");
         icon.classList.add("bi-eye-slash-fill");
       } else {
-        // Password is SHOWN, so change to PASSWORD
         password.type = "password";
-
-        // Change icon back to "open" (to mean "click to show")
         icon.classList.remove("bi-eye-slash-fill");
         icon.classList.add("bi-eye-fill");
       }
     }
   </script>
-
 
 </body>
 
