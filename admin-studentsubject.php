@@ -138,62 +138,115 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
 
   $dataRows = [];
 
-  // ---------- PDF BRANCH ----------
+  // ---------- PDF PARSER ----------
   $parser = new Parser();
   $pdf = $parser->parseFile($file_tmp_path);
   $text = $pdf->getText();
 
-  // 1. SUBJECT CODE (e.g. "ISAE 106")
-  preg_match('/Subject\s*Code\s*:\s*([A-Z]+)\s*\n\s*([0-9]+)/i', $text, $m_code);
-  if (!empty($m_code[1]) && !empty($m_code[2])) {
-    $subject_code_detected = trim($m_code[1] . ' ' . $m_code[2]);
+  // 1. SUBJECT CODE (e.g., "Subject Code: ISAE Units: 3 \n 106")
+  $subject_code_detected = '';
+  if (preg_match('/Subject\s*Code\s*:\s*([a-zA-Z]+).*?(?<!\d)(\d{2,5}[a-zA-Z]?)(?!\d)/is', $text, $m_code)) {
+    $subject_code_detected = strtoupper(trim($m_code[1] . ' ' . $m_code[2]));
   } else {
     preg_match('/Subject Code\s*:\s*([A-Z0-9\-]+)/i', $text, $m_code_alt);
-    $subject_code_detected = trim($m_code_alt[1] ?? '');
+    $subject_code_detected = strtoupper(trim($m_code_alt[1] ?? ''));
   }
 
   // 2. SUBJECT TITLE (Descriptive)
-  preg_match('/Descriptive\s*:\s*([A-Za-z0-9\s\-\(\)]+)/i', $text, $m_title);
-  $subject_title_detected = trim($m_title[1] ?? '');
-
-  // 3. INSTRUCTOR NAME
-  preg_match('/Instructor\s*:\s*([A-Z,\s]+(?:[A-Z\s]+)?)\b/i', $text, $m_inst);
-  $instructor_name_raw = trim($m_inst[1] ?? '');
-  $instructor_name = ucwords(strtolower($instructor_name_raw));
-
-  if (strpos($instructor_name, ',') !== false) {
-    [$last, $first] = array_map('trim', explode(',', $instructor_name));
-    $instructor_name = "$first $last";
+  $subject_title_detected = '';
+  if (preg_match('/Descriptive\s*:\s*(.*?)(?=Instructor\s*:)/is', $text, $m_title)) {
+    $subject_title_detected = trim(preg_replace('/\s+/', ' ', $m_title[1]));
+  } else {
+    // Fallback if Instructor tag is missing
+    preg_match('/Descriptive\s*:\s*([^\n\r]+)/i', $text, $m_title_fallback);
+    $subject_title_detected = trim($m_title_fallback[1] ?? '');
   }
 
-  // 4. MATCH FACULTY BY NAME (optional)
+  // 3. INSTRUCTOR NAME PARSING
+  preg_match('/Instructor\s*:\s*([^\n\r]+)/i', $text, $m_inst);
+  $instructor_name_raw = trim($m_inst[1] ?? '');
+
+  // 4. MATCH FACULTY BY NAME AND ASSIGN IDNUMBER
   $faculty_id = null;
-  if ($instructor_name !== '') {
-    $queries = [
-      "LOWER(CONCAT(first_name, ' ', last_name)) LIKE LOWER(?)",
-      "LOWER(CONCAT(last_name, ' ', first_name)) LIKE LOWER(?)",
-      "LOWER(first_name) LIKE LOWER(?)",
-      "LOWER(last_name) LIKE LOWER(?)"
-    ];
+  if ($instructor_name_raw !== '') {
+    $instructor_name_raw = preg_replace('/\s+/', ' ', $instructor_name_raw);
+    $last_name = '';
+    $first_name_clean = '';
 
-    foreach ($queries as $q) {
-      $stmt = $conn->prepare("SELECT idnumber FROM faculty WHERE $q LIMIT 1");
-      $like = '%' . strtolower($instructor_name) . '%';
-      $stmt->bind_param("s", $like);
-      $stmt->execute();
-      $res = $stmt->get_result()->fetch_assoc();
-      $stmt->close();
+    if (strpos($instructor_name_raw, ',') !== false) {
+      $parts = explode(',', $instructor_name_raw);
+      $last_name = trim($parts[0]);
+      $first_name_str = trim($parts[1] ?? '');
+      $first_name_clean = explode(' ', $first_name_str)[0];
+    } else {
+      $parts = explode(' ', $instructor_name_raw);
+      $last_name = array_pop($parts);
+      $first_name_clean = $parts[0] ?? '';
+    }
 
-      if (!empty($res['idnumber'])) {
-        $faculty_id = $res['idnumber'];
-        break;
-      }
+    $stmt = $conn->prepare("
+        SELECT idnumber 
+        FROM faculty 
+        WHERE LOWER(last_name) = LOWER(?) 
+          AND LOWER(first_name) LIKE LOWER(?)
+        LIMIT 1
+    ");
+    $like_first = '%' . $first_name_clean . '%';
+    $stmt->bind_param("ss", $last_name, $like_first);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if (!$res && $last_name !== '') {
+      $stmt2 = $conn->prepare("SELECT idnumber FROM faculty WHERE LOWER(last_name) = LOWER(?) LIMIT 1");
+      $stmt2->bind_param("s", $last_name);
+      $stmt2->execute();
+      $res = $stmt2->get_result()->fetch_assoc();
+      $stmt2->close();
+    }
+
+    if (!empty($res['idnumber'])) {
+      $faculty_id = $res['idnumber'];
     }
   }
 
   // 5. STUDENT IDS
   preg_match_all('/\b\d{3}-\d{4}-\d\b/', $text, $matches);
   $student_ids = $matches[0];
+
+  // ✅ NEW MAJORITY LOGIC FOR COLLEGE AND PROGRAM
+  $majority_college = $admin_college; // Default fallback
+  $majority_program = $admin_program; // Default fallback
+
+  if (!empty($student_ids)) {
+    // Create a string of question marks for the IN clause
+    $in_placeholders = implode(',', array_fill(0, count($student_ids), '?'));
+    $types = str_repeat('s', count($student_ids));
+
+    $stmt_maj = $conn->prepare("SELECT college, program FROM student WHERE idnumber IN ($in_placeholders)");
+    $stmt_maj->bind_param($types, ...$student_ids);
+    $stmt_maj->execute();
+    $res_maj = $stmt_maj->get_result();
+
+    $freq = [];
+    while ($sRow = $res_maj->fetch_assoc()) {
+      $c = trim($sRow['college']);
+      $p = trim($sRow['program']);
+      if (!empty($c) && !empty($p)) {
+        $key = $c . '|||' . $p; // Create a combined string key
+        if (!isset($freq[$key])) $freq[$key] = 0;
+        $freq[$key]++;
+      }
+    }
+    $stmt_maj->close();
+
+    // Find the combination with the highest frequency
+    if (!empty($freq)) {
+      arsort($freq); // Sorts highest to lowest
+      $top_key = array_key_first($freq);
+      list($majority_college, $majority_program) = explode('|||', $top_key);
+    }
+  }
 
   // 6. BUILD DATAROWS
   foreach ($student_ids as $sid) {
@@ -203,8 +256,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       $subject_title_detected,
       $faculty_id,
       $admin_id,
-      $admin_college,
-      $admin_program
+      $majority_college,  // ✅ Now dynamically set based on majority
+      $majority_program   // ✅ Now dynamically set based on majority
     ];
   }
 
@@ -213,7 +266,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
 
   // PROCESS DATA ROWS
   $line = 1;
-  $missing_subjects = [];
+  $created_subjects_in_loop = []; // Tracker array to prevent duplicate subject creation
 
   foreach ($dataRows as $row) {
     $line++;
@@ -224,48 +277,50 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     $subject_code = isset($row[1]) ? trim($row[1]) : '';
     $subject_title = isset($row[2]) && trim($row[2]) !== ''
       ? trim($row[2])
-      : ($subject_title_detected ?: 'Unknown subject');
+      : ($subject_title_detected ?: 'Auto-created subject from OCR');
     $faculty_id   = isset($row[3]) ? trim($row[3]) : null;
     $admin_csv_id = isset($row[4]) ? trim($row[4]) : $admin_id;
     $college      = isset($row[5]) ? trim($row[5]) : "";
     $program      = isset($row[6]) ? trim($row[6]) : "";
 
-    // Basic required fields
     if (empty($student_id) || empty($subject_code)) {
-      $_SESSION['detailed_errors'][] =
-        "Row $line: Missing student ID or subject code in the PDF roster.";
+      $_SESSION['detailed_errors'][] = "Row $line: Missing student ID or subject code in the PDF roster.";
       continue;
     }
 
-    // Subject must exist in subject table first
+    // AUTO-CREATE SUBJECT SAFELY (NO DUPLICATES)
+    $cache_key = $subject_code . '|' . $college . '|' . $program;
+
     $subject_check = $conn->prepare("
-      SELECT idnumber
-      FROM subject
-      WHERE code = ?
-        AND (college = ? OR ? = '')
-        AND (program = ? OR ? = '')
+      SELECT idnumber 
+      FROM subject 
+      WHERE code = ? 
+        AND (college = ? OR ? = '') 
+        AND (program = ? OR ? = '') 
       LIMIT 1
     ");
-    $subject_check->bind_param(
-      "sssss",
-      $subject_code,
-      $college,
-      $college,
-      $program,
-      $program
-    );
+    $subject_check->bind_param("sssss", $subject_code, $college, $college, $program, $program);
     $subject_check->execute();
     $subRow = $subject_check->get_result()->fetch_assoc();
     $subject_check->close();
 
-    if (!$subRow) {
-      $_SESSION['detailed_errors'][] =
-        "Row $line: Subject code <b>$subject_code</b> - $subject_title - is not yet created in the Subject list. Please add this subject in <b>Add Subject</b> before importing this roster again.";
-      $missing_subjects[] = $subject_code;
-      continue;
+    if (!$subRow && !in_array($cache_key, $created_subjects_in_loop)) {
+
+      $insert_subj = $conn->prepare("
+        INSERT INTO subject (code, title, faculty_id, admin_id, college, program) 
+        VALUES (?, ?, ?, ?, ?, ?)
+      ");
+      $insert_subj->bind_param("ssssss", $subject_code, $subject_title, $faculty_id, $admin_csv_id, $college, $program);
+
+      if ($insert_subj->execute()) {
+        $created_subjects_in_loop[] = $cache_key;
+      } else {
+        $_SESSION['detailed_errors'][] = "Row $line: Failed to auto-create missing subject <b>$subject_code</b>. Error: " . $insert_subj->error;
+        continue;
+      }
+      $insert_subj->close();
     }
 
-    // Student exists?
     $checkStudent = $conn->prepare("SELECT idnumber FROM student WHERE idnumber = ? LIMIT 1");
     $checkStudent->bind_param("s", $student_id);
     $checkStudent->execute();
@@ -273,12 +328,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
     $checkStudent->close();
 
     if (!$studentExists) {
-      $_SESSION['detailed_errors'][] =
-        "Row $line: Student ID <b>$student_id</b> does not exist in the Student table.";
+      $_SESSION['detailed_errors'][] = "Row $line: Student ID <b>$student_id</b> does not exist in the Student table.";
       continue;
     }
 
-    // Assign
     assignSubject(
       $conn,
       $student_id,
@@ -290,8 +343,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
       $admin_csv_id
     );
   }
-
-  $_SESSION['missing_subjects'] = array_unique($missing_subjects);
 
   if ($success > 0 && !empty($_SESSION['detailed_errors'])) {
     $_SESSION['msg'] = "Some rows were assigned successfully, but others had errors. See details below.";
@@ -316,9 +367,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['upload_bulk_assign'])
  */
 function assignSubject($conn, $student_id, $subject_code, $ay, $sem, &$success_counter, $csv_faculty_id = null, $csv_admin_id = null)
 {
-  $faculty_id = $csv_faculty_id;
-  $admin_id   = $csv_admin_id;
-
   $stmt_subj = $conn->prepare("SELECT faculty_id, admin_id FROM subject WHERE code = ? LIMIT 1");
   $stmt_subj->bind_param("s", $subject_code);
   $stmt_subj->execute();
@@ -382,7 +430,6 @@ while ($row = $student_result->fetch_assoc()) {
   $students_by_dept[$row['college']][] = $row;
 }
 
-// Admin college again for subject filtering
 $college_stmt = $conn->prepare("
     SELECT college_name
     FROM admin_college
@@ -396,7 +443,6 @@ $college_stmt->close();
 
 $admin_college = $collegeRow['college_name'] ?? null;
 
-// All admin IDs in same college
 $adminIds = [];
 if ($admin_college) {
   $adm_stmt = $conn->prepare("
@@ -413,7 +459,6 @@ if ($admin_college) {
   $adm_stmt->close();
 }
 
-// Build subject query
 if (!empty($adminIds)) {
   $placeholders = implode(',', array_fill(0, count($adminIds), '?'));
   $types = str_repeat('s', count($adminIds));
@@ -482,7 +527,6 @@ ksort($subjects_by_faculty);
           const msg = <?= json_encode($_SESSION['msg']) ?>;
           const errors = <?= json_encode($_SESSION['detailed_errors'] ?? []) ?>;
 
-          // Map PHP msg_type → SweetAlert2 icon
           const iconMap = {
             success: 'success',
             warning: 'warning',
@@ -501,7 +545,8 @@ ksort($subjects_by_faculty);
               icon: icon,
               title: msg,
               html: htmlContent,
-              confirmButtonText: 'OK'
+              confirmButtonText: 'OK',
+              confirmButtonColor: '#198754'
             });
           } else {
             Swal.fire({
@@ -517,40 +562,13 @@ ksort($subjects_by_faculty);
       <?php unset($_SESSION['msg'], $_SESSION['msg_type'], $_SESSION['detailed_errors']); ?>
     <?php endif; ?>
 
-    <?php if (!empty($_SESSION['missing_subjects'])): ?>
-      <script>
-        document.addEventListener("DOMContentLoaded", function() {
-          const missingSubjects = <?= json_encode($_SESSION['missing_subjects']) ?>;
-
-          let htmlContent =
-            "<p style='text-align:left;'>The following subject codes are <b>not found</b> in your Subject table. " +
-            "Please create them in <b>Add Subject</b> and upload the PDF again.</p><ul>";
-
-          missingSubjects.forEach((sub) => {
-            htmlContent += "<li><b>" + sub + "</b></li>";
-          });
-          htmlContent += "</ul>";
-
-          Swal.fire({
-            icon: "warning",
-            title: "Missing Subject Codes",
-            html: htmlContent,
-            confirmButtonText: "OK"
-          });
-        });
-      </script>
-      <?php unset($_SESSION['missing_subjects']); ?>
-    <?php endif; ?>
-
-
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
 
-          <!-- BULK PDF UPLOAD CARD -->
           <div class="card shadow-sm p-4 mb-4">
             <div class="card-body">
-              <h5 class="card-title mb-4">Bulk Assign via PDF Class Roster</h5>
+              <h5 class="card-title mb-4">Bulk Assign via PDF Class Roster / OCR</h5>
 
               <form method="POST" action="" enctype="multipart/form-data" class="row g-3">
                 <?php if (!$current_academic_year || !$current_semester): ?>
@@ -572,15 +590,13 @@ ksort($subjects_by_faculty);
 
                 <div class="col-12">
                   <p class="small text-muted mb-0">
-                    Only <strong>PDF class rosters</strong> are supported. Students will be auto-assigned
-                    based on detected subject code and student IDs. The subject code must already exist in the Subject table.
+                    Only <strong>PDF class rosters</strong> are supported. Students will be auto-assigned based on detected subject code and student IDs. <strong>
                   </p>
                 </div>
               </form>
             </div>
           </div>
 
-          <!-- MANUAL ASSIGNMENT CARD (unchanged) -->
           <div class="card shadow-sm p-4">
             <div class="card-body">
               <h5 class="card-title mb-4">Manual Assignment for A.Y. <?= htmlspecialchars($current_academic_year ?? 'N/A') ?> / <?= htmlspecialchars($current_semester ?? 'N/A') ?></h5>
@@ -763,25 +779,6 @@ ksort($subjects_by_faculty);
           })
           .catch(err => {
             console.error('Error fetching assigned students:', err);
-            const groups = {};
-            originalStudentData.forEach(s => {
-              if (!groups[s.groupLabel]) groups[s.groupLabel] = [];
-              groups[s.groupLabel].push({
-                value: s.value,
-                label: s.label
-              });
-            });
-            const formatted = Object.keys(groups).map(g => ({
-              label: g,
-              choices: groups[g]
-            }));
-            studentChoices.clearStore();
-            studentChoices.setChoices(formatted, 'value', 'label', true);
-            Swal.fire({
-              icon: 'error',
-              title: 'Could not check assigned students',
-              text: 'There was a problem checking which students already have the selected subject(s). Please try again or contact IT.'
-            });
           });
       });
 
@@ -804,6 +801,7 @@ ksort($subjects_by_faculty);
           });
           return acc;
         }, {});
+
         const choicesData = Object.keys(groupedStudents).map(groupLabel => ({
           label: groupLabel,
           choices: groupedStudents[groupLabel]
