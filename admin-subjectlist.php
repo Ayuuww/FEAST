@@ -99,21 +99,14 @@ $result = $sub_stmt->get_result();
 <html lang="en">
 
 <head>
-
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
 </head>
 
 <body>
 
   <?php include 'admin-header.php' ?>
 
-  <!-- ======= Sidebar ======= -->
   <?php include 'admin-sidebar.php' ?>
-  <!-- End Sidebar-->
-
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>List of Subjects</h1>
@@ -133,7 +126,7 @@ $result = $sub_stmt->get_result();
             icon: '<?php echo $_SESSION['msg_type'] ?? 'info'; ?>',
             title: '<?php echo addslashes($_SESSION['msg']); ?>',
             showConfirmButton: true,
-            confirmButtonColor: '#3085d6',
+            confirmButtonColor: '#198754',
             confirmButtonText: 'OK'
           });
         });
@@ -148,9 +141,9 @@ $result = $sub_stmt->get_result();
         <div class="col-lg-12">
           <div class="card">
             <div class="card-body table-responsive">
-              <h5 class="card-title">Datatables</h5>
+              <h5 class="card-title">Subject Management</h5>
 
-              <table class="table datatable">
+              <table class="table datatable align-middle">
                 <thead>
                   <tr>
                     <th>Subject Code</th>
@@ -159,52 +152,57 @@ $result = $sub_stmt->get_result();
                     <th>Assigned College</th>
                     <th>Assigned Program</th>
                     <th>Creator ID</th>
+                    <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   <?php while ($row = $result->fetch_assoc()) : ?>
                     <tr>
-                      <!-- Subject Code -->
-                      <td class="text-uppercase">
+                      <td class="text-uppercase fw-bold">
                         <?= htmlspecialchars($row['code']) ?>
                       </td>
 
-                      <!-- Title -->
                       <td class="text-capitalize">
                         <?= htmlspecialchars($row['title']) ?>
                       </td>
 
-                      <!-- Faculty Name -->
                       <td class="text-capitalize">
                         <?= htmlspecialchars(trim($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name'])) ?>
                       </td>
 
-                      <!-- College -->
                       <td class="text-uppercase">
                         <?= htmlspecialchars($row['college']) ?>
                       </td>
 
-                      <!-- Program -->
                       <td class="text-capitalize">
                         <?= htmlspecialchars($row['program']) ?>
                       </td>
 
-                      <!-- Creator (admin idnumber) -->
                       <td class="text-uppercase">
                         <?= $row['creator_admin_id'] ? htmlspecialchars($row['creator_admin_id']) : 'N/A' ?>
                       </td>
 
-                      <!-- Action -->
-                      <!-- <td>
-                        <form method="post" class="delete-form" action="deletesubject.php">
-                          <input type="hidden" name="idnumber" value="<?= $row['idnumber'] ?>">
-                          <button type="button"
-                            class="btn btn-danger btn-sm delete-btn"
-                            data-subject="<?= htmlspecialchars($row['title']) ?>">
-                            Delete
+                      <td>
+                        <div class="d-flex justify-content-center gap-2">
+                          <button type="button" class="btn btn-warning btn-sm text-white edit-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editSubjectModal"
+                            data-id="<?= $row['idnumber'] ?>"
+                            data-code="<?= htmlspecialchars($row['code']) ?>"
+                            data-title="<?= htmlspecialchars($row['title']) ?>">
+                            <i class="bi bi-pencil-square"></i>
                           </button>
-                        </form>
-                      </td> -->
+
+                          <form method="post" class="delete-form m-0" action="deletesubject.php">
+                            <input type="hidden" name="idnumber" value="<?= $row['idnumber'] ?>">
+                            <button type="button"
+                              class="btn btn-danger btn-sm delete-btn"
+                              data-subject="<?= htmlspecialchars($row['title']) ?>">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </form>
+                        </div>
+                      </td>
                     </tr>
                   <?php endwhile; ?>
                 </tbody>
@@ -217,7 +215,35 @@ $result = $sub_stmt->get_result();
     </section>
   </main>
 
+  <div class="modal fade" id="editSubjectModal" tabindex="-1" aria-labelledby="editSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="editSubjectModalLabel">Edit Subject Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="post" action="editsubject.php">
+          <div class="modal-body">
+            <input type="hidden" name="idnumber" id="edit_idnumber">
 
+            <div class="form-floating mb-3">
+              <input type="text" class="form-control" name="code" id="edit_code" placeholder="Subject Code" required>
+              <label for="edit_code">Subject Code</label>
+            </div>
+
+            <div class="form-floating mb-2">
+              <input type="text" class="form-control" name="title" id="edit_title" placeholder="Descriptive Title" required>
+              <label for="edit_title">Descriptive Title</label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" name="update_subject" class="btn btn-success">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   <?php include 'footer.php' ?>
 
   <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -235,6 +261,21 @@ $result = $sub_stmt->get_result();
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // 1. Pass data to Edit Modal
+      const editButtons = document.querySelectorAll('.edit-btn');
+      editButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = this.getAttribute('data-id');
+          const code = this.getAttribute('data-code');
+          const title = this.getAttribute('data-title');
+
+          document.getElementById('edit_idnumber').value = id;
+          document.getElementById('edit_code').value = code;
+          document.getElementById('edit_title').value = title;
+        });
+      });
+
+      // 2. SweetAlert2 Delete Confirmation
       document.querySelectorAll('.delete-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
           const form = this.closest('form');
@@ -242,11 +283,11 @@ $result = $sub_stmt->get_result();
 
           Swal.fire({
             title: `Delete "${subjectName}"?`,
-            text: "This action cannot be undone.",
+            text: "This action cannot be undone. All assigned students to this subject might be affected.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#697077ff',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel'
           }).then((result) => {
