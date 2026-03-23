@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@vercel/edge-config": "^1.4.3",
+    "firebase": "^12.11.0"
+  }
+}
