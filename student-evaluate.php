@@ -109,9 +109,6 @@ if ($dept_result && mysqli_num_rows($dept_result) > 0) {
   }
 }
 
-// No need for explicit student_section variable from database lookup here
-// as it can be fetched directly in submit-evaluation.php or passed via session
-// if strictly needed on this page for display. For now, it's fine as a hidden input.
 ?>
 
 <!DOCTYPE html>

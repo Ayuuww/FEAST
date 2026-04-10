@@ -6,7 +6,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 <aside id="sidebar" class="sidebar">
   <ul class="sidebar-nav" id="sidebar-nav">
 
-    <!-- Dashboard -->
     <li class="nav-item">
       <a class="nav-link <?= $currentPage == 'superadmin-dashboard.php' ? '' : 'collapsed' ?>"
         href="superadmin-dashboard.php">
@@ -15,7 +14,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </a>
     </li>
 
-    <!-- Reports -->
     <li class="nav-item">
       <?php $reportsPages = ['superadmin-individualreport.php', 'superadmin-acknowledgementreport.php', 'superadmin-overallreport-set.php', 'superadmin-overallreport-sef.php', 'superadmin-overallreport.php', 'superadmin-pastrecords.php']; ?>
       <a class="nav-link <?= in_array($currentPage, $reportsPages) ? '' : 'collapsed' ?>"
@@ -57,7 +55,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </ul>
     </li>
 
-    <!-- Evaluation -->
     <?php $evalPages = ['superadmin-evaluationsetting.php', 'superadmin-evaluationswitch.php', 'superadmin-evaluationprogress.php']; ?>
     <li class="nav-item">
       <a class="nav-link <?= in_array($currentPage, $evalPages) ? '' : 'collapsed' ?>"
@@ -84,27 +81,54 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </ul>
     </li>
 
-    <!-- Subject -->
     <li class="nav-item">
-      <a class="nav-link <?= $currentPage == 'superadmin-evaluatedsubject.php' ? 'active' : 'collapsed' ?>"
+      <a class="nav-link <?= $currentPage == 'superadmin-evaluatedsubject.php' ? '' : 'collapsed' ?>"
         href="superadmin-evaluatedsubject.php">
         <i class="bi bi-book-fill"></i>
         <span>Subject Evaluated</span>
       </a>
     </li>
 
+    <li class="nav-heading">Management</li>
+
+    <li class="nav-item">
+      <a class="nav-link <?= $currentPage == 'superadmin-addsmanagement.php' ? '' : 'collapsed' ?>"
+        href="superadmin-addsmanagement.php">
+        <i class="ri-settings-line"></i>
+        <span>Manage</span>
+      </a>
+    </li>
+
+    <?php $adminPages = ['superadmin-adminlist.php', 'superadmin-admincreation.php']; ?>
+    <li class="nav-item">
+      <a class="nav-link <?= in_array($currentPage, $adminPages) ? '' : 'collapsed' ?>"
+        data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#">
+        <i class="bi bi-person"></i><span>Admin</span><i class="bi bi-chevron-down ms-auto"></i>
+      </a>
+      <ul id="admin-nav" class="nav-content collapse <?= in_array($currentPage, $adminPages) ? 'show' : '' ?>"
+        data-bs-parent="#sidebar-nav">
+        <li>
+          <a href="superadmin-adminlist.php" class="<?= $currentPage == 'superadmin-adminlist.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>List</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-admincreation.php" class="<?= $currentPage == 'superadmin-admincreation.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>Add New Admin</span>
+          </a>
+        </li>
+      </ul>
+    </li>
     <li class="nav-heading">Pages</li>
 
-    <!-- Profile -->
     <li class="nav-item">
-      <a class="nav-link <?= $currentPage == 'superadmin-user-profile.php' ? 'active' : 'collapsed' ?>"
+      <a class="nav-link <?= $currentPage == 'superadmin-user-profile.php' ? '' : 'collapsed' ?>"
         href="superadmin-user-profile.php">
         <i class="bi bi-person"></i>
         <span>Profile</span>
       </a>
     </li>
 
-    <!-- Logout -->
     <li class="nav-item">
       <a class="nav-link collapsed" href="logout.php">
         <i class="bi bi-box-arrow-right"></i>
@@ -114,4 +138,3 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
   </ul>
 </aside>
-<!-- End Sidebar-->

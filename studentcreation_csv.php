@@ -5,7 +5,7 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 include 'conn/conn.php';
 
 // Check if the user is logged in (Crucial security step)
-if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'registrar') {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
   exit();
 }

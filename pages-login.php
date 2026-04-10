@@ -275,7 +275,7 @@ if (isset($_POST['login'])) {
           <i class="bi bi-shield-lock mb-3" style="font-size: 3.5rem; color: #00b09b;"></i>
           <h4 class="fw-bold mb-3" style="color: #333;">Forgot your password?</h4>
           <p class="fs-6" style="color: #666; line-height: 1.5;">
-            For security reasons, please contact your <strong>Administrator</strong> or proceed directly to the <strong>Registrar's Office</strong> to request a password reset.
+            For security reasons, please contact your <strong>Administrator</strong> to request a password reset.
           </p>
         </div>
         <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
