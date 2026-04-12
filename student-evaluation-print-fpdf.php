@@ -9,7 +9,7 @@ if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'student') {
     exit();
 }
 
-// ✅ Use session data from submit-evaluation.php
+// Use session data from submit-evaluation.php
 if (!isset($_SESSION['print_data'])) {
     echo "<script>alert('No evaluation data found to print.'); window.close();</script>";
     exit();
@@ -51,26 +51,46 @@ $sub_stmt->fetch();
 $sub_stmt->close();
 $data['subject_title'] = $subject_title;
 
-// Benchmark Questions
-$questions = [
-    "Comes to class on time regularly.",
-    "Explains learning outcomes, expectations, grading system, and various requirements of the subject/course.",
-    "Maximizes the allocated time/learning hours effectively.",
-    "Facilitates students to think critically and creatively by providing appropriate learning activities.",
-    "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
-    "Communicates constructive feedback to students for their academic growth.",
-    "Demonstrates extensive and broad knowledge of the subject/course.",
-    "Simplifies complex ideas in the lesson for ease of understanding.",
-    "Relates the subject matter to contemporary issues and developments in the discipline and/or daily life activities.",
-    "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
-    "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes.",
-    "Recognizes and values the unique diversity and individuality difference among students.",
-    "Assist students with their learning challenges during consultation hours.",
-    "Provide immediate feedback on student outputs and performance.",
-    "Provides transparent and clear criteria in rating student's performance."
-];
 
-// Custom PDF class
+// ==========================================
+// DYNAMIC QUESTION & SCALE FETCHING 
+// ==========================================
+$categories = [];
+$total_active_questions = 0;
+
+$cat_res = $conn->query("SELECT * FROM evaluation_categories ORDER BY order_by ASC");
+if ($cat_res) {
+    while ($cat = $cat_res->fetch_assoc()) {
+        $cat_id = $cat['id'];
+
+        $q_stmt = $conn->prepare("SELECT id, question_text FROM evaluation_questions WHERE category_id = ? AND status = 'active' ORDER BY order_by ASC");
+        $q_stmt->bind_param("i", $cat_id);
+        $q_stmt->execute();
+        $q_result = $q_stmt->get_result();
+
+        $questions = [];
+        while ($q = $q_result->fetch_assoc()) {
+            $questions[] = $q;
+            $total_active_questions++;
+        }
+        $q_stmt->close();
+
+        if (!empty($questions)) {
+            $cat['questions'] = $questions;
+            $categories[] = $cat;
+        }
+    }
+}
+
+// ✅ Fetch highest rating dynamically
+$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
+$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
+
+// Calculate dynamic max score
+$max_possible_score = $total_active_questions * $max_rating_value;
+
+
+// Custom PDF class (assuming you have this configured in printing-headerfooter.php)
 require 'printing-headerfooter.php';
 $pdf = new PDF_EXTENDED('P', 'mm', 'A4');
 $pdf->AddPage();
@@ -92,35 +112,54 @@ $pdf->Ln(4);
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(150, 8, "Benchmark Statement", 1, 0, 'L', true);
-$pdf->Cell(30, 8, "Rating (1-5)", 1, 1, 'C', true);
+// ✅ Dynamic Header
+$pdf->Cell(30, 8, "Rating (1-{$max_rating_value})", 1, 1, 'C', true);
 
 // Table Body
-$pdf->SetFont('Arial', '', 10);
 $lineHeight = 6;
+$q_number = 1;
+$pageBreakThreshold = 270;
 
-foreach ($questions as $i => $q) {
-    $question = ($i + 1) . ". " . $q;
-    $rating = $answers["q$i"] ?? '-';
+foreach ($categories as $category) {
+    // Print Category Header Row
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFillColor(245, 245, 245); // Lighter gray for categories
+    $pdf->Cell(180, 8, "   " . mb_strtoupper($category['category_name']), 1, 1, 'L', true);
 
-    // Save current X and Y position
-    $x = $pdf->GetX();
-    $y = $pdf->GetY();
+    $pdf->SetFont('Arial', '', 10);
 
-    // Draw question (MultiCell for wrapping)
-    $pdf->MultiCell(150, $lineHeight, $question, 1, 'L');
+    foreach ($category['questions'] as $q) {
+        $question_text = $q_number . ". " . $q['question_text'];
+        $q_id = $q['id'];
 
-    // Calculate the height used by the question text
-    $questionHeight = $pdf->GetY() - $y;
+        $rating = $answers["q_$q_id"] ?? '-';
 
-    // Draw the rating box beside it
-    $pdf->SetXY($x + 150, $y);
-    $pdf->Cell(30, $questionHeight, $rating, 1, 1, 'C');
+        $stringWidth = $pdf->GetStringWidth($question_text);
+        $estimatedLines = ceil($stringWidth / 145);
+        $estimatedHeight = $estimatedLines * $lineHeight;
+
+        if ($pdf->GetY() + $estimatedHeight > $pageBreakThreshold) {
+            $pdf->AddPage();
+        }
+
+        $x = $pdf->GetX();
+        $y = $pdf->GetY();
+
+        $pdf->MultiCell(150, $lineHeight, $question_text, 1, 'L');
+        $questionHeight = $pdf->GetY() - $y;
+
+        $pdf->SetXY($x + 150, $y);
+        $pdf->Cell(30, $questionHeight, $rating, 1, 1, 'C');
+
+        $pdf->SetY($y + $questionHeight);
+        $q_number++;
+    }
 }
-
 
 // Scores
 $pdf->Ln(3);
-$pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / 75", 0, 1);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / " . $max_possible_score, 0, 1);
 $pdf->Cell(0, 6, "Computed Rating: " . number_format($data['computed_rating'] ?? 0, 2) . "%", 0, 1);
 $pdf->Ln(2);
 
@@ -133,17 +172,17 @@ if (!empty($data['comment'])) {
     $pdf->Ln(2);
 }
 
-// ✅ Anonymous handling
+// Anonymous handling
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell(0, 6, "Signature of Evaluator: ____________________________", 0, 1);
 
 if (strtolower($is_anonymous) === 'yes') {
-    $pdf->Cell(0, 6, "Name of Evaluator/ID Number: ", 0, 1);
+    $pdf->Cell(0, 6, "Name of Evaluator/ID Number: [ Anonymous Submission ]", 0, 1);
 } else {
     $pdf->Cell(0, 6, "Name of Evaluator/ID Number: " . $student_name . " / " . $student_id, 0, 1);
 }
 
 $pdf->Cell(0, 6, "Date of Evaluation: " . date('F j, Y'), 0, 1);
 
-// Output
+// Output PDF
 $pdf->Output('I', 'Student_Evaluation_Reprint.pdf');

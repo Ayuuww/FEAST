@@ -11,6 +11,8 @@ if (!isset($_SESSION['admin_print_data'])) {
 $data = $_SESSION['admin_print_data'];
 unset($_SESSION['admin_print_data']); // Prevent reprint on refresh
 
+$answers = $data['answers'] ?? [];
+
 function getFacultyName($conn, $id)
 {
     $stmt = $conn->prepare("SELECT first_name, mid_name, last_name FROM faculty WHERE idnumber = ?");
@@ -19,50 +21,61 @@ function getFacultyName($conn, $id)
     $res = $stmt->get_result();
     if ($res->num_rows > 0) {
         $r = $res->fetch_assoc();
-        return $r['first_name'] . ' ' . $r['mid_name'] . ' ' . $r['last_name'];
+        return trim($r['first_name'] . ' ' . $r['mid_name'] . ' ' . $r['last_name']);
     }
     return 'Unknown';
 }
 
-
 $evaluatorName  = getFacultyName($conn, $data['evaluator_id']);
 $evaluateeName  = getFacultyName($conn, $data['evaluatee_id']);
 
-$questions = [
-    "Comes to class on time regularly.",
-    "Submits updated syllabus, grade sheets, and other required reports on time.",
-    "Maximizes the allocated time/learning hours effectively.",
-    "Provide appropriate learning activities that facilitate critical thinking and creativity of students.",
-    "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
-    "Communicates constructive feedback to students for their academic growth.",
-    "Demonstrates extensive and broad knowledge of the subject/course.",
-    "Simplifies complex ideas in the lesson for ease of understanding.",
-    "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
-    "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
-    "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes",
-    "Recognizes and values the unique diversity and individual differences among students.",
-    "Assist students with their learning challenges during consultation hours.",
-    "Provide immediate feedback on student outputs and performance.",
-    "Provides transparent and clear criteria in rating student's performance."
-];
+// ==========================================
+// DYNAMIC FETCHING 
+// ==========================================
+$categories = [];
+$total_active_questions = 0;
 
-$verifications = [
-    " Daily time record, Faculty schedule, Informal interview with students",
-    " Submission logs, Receipts or Acknowledgment emails",
-    " Syllabus, Learning plan, LMS logs, Classroom observations",
-    " Course syllabus, LMS logs, Informal interviews",
-    " Work samples, Consultation logs, Classroom observations",
-    " Graded work, Consultation logs, LMS logs",
-    " Syllabus, Learning plan, Instructional Materials",
-    " Lecture notes, Presentations, Observations",
-    " Syllabus, Webinars, Daily life examples",
-    " Multimedia, LMS logs, Classroom observations",
-    " Assessment tools, Rubrics, Samples",
-    " IMs, Classroom observation, Student diversity notes",
-    " Advisory logs, Consult hours, LMS logs",
-    " Rubrics, Feedback, Informal interviews",
-    " Syllabus, Student outputs, Observations"
-];
+$cat_res = $conn->query("SELECT * FROM admin_evaluation_categories ORDER BY order_by ASC");
+if ($cat_res) {
+    while ($cat = $cat_res->fetch_assoc()) {
+        $cat_id = $cat['id'];
+
+        $q_stmt = $conn->prepare("SELECT id, question_text FROM admin_evaluation_questions WHERE category_id = ? AND status = 'active' ORDER BY order_by ASC");
+        $q_stmt->bind_param("i", $cat_id);
+        $q_stmt->execute();
+        $q_result = $q_stmt->get_result();
+
+        $questions = [];
+        while ($q = $q_result->fetch_assoc()) {
+            $questions[] = $q;
+            $total_active_questions++;
+        }
+        $q_stmt->close();
+
+        if (!empty($questions)) {
+            $cat['questions'] = $questions;
+            $categories[] = $cat;
+        }
+    }
+}
+
+// ✅ Fetch highest rating dynamically
+$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
+$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
+$max_possible_score = $total_active_questions * $max_rating_value;
+
+// Helper function to safely calculate MultiCell height 
+function getEstimatedHeight($pdf, $width, $text, $lineHeight)
+{
+    $lines = explode("\n", $text);
+    $totalLines = 0;
+    foreach ($lines as $line) {
+        $stringWidth = $pdf->GetStringWidth($line);
+        $lineCount = ceil($stringWidth / ($width - 4));
+        $totalLines += ($lineCount == 0) ? 1 : $lineCount;
+    }
+    return $totalLines * $lineHeight;
+}
 
 // Custom PDF class
 require 'printing-headerfooter.php';
@@ -78,8 +91,8 @@ $pdf->Ln(10);
 // Faculty Info
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->Cell(0, 6, "Evaluatee: " . $evaluateeName, 0, 1);
-$pdf->Cell(0, 6, "Academic Rank: " . $data['faculty_rank'], 0, 1);
-$pdf->Cell(0, 6, "College: " . $data['college'], 0, 1);
+$pdf->Cell(0, 6, "Academic Rank: " . ($data['faculty_rank'] ?? 'N/A'), 0, 1);
+$pdf->Cell(0, 6, "College: " . ($data['college'] ?? 'N/A'), 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 
@@ -87,68 +100,81 @@ $pdf->Ln(4);
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
-$pdf->Cell(80, 8, "Suggested Means of Verification", 1, 0, 'C', true);
-$pdf->Cell(30, 8, "Rating", 1, 1, 'C', true);
+$pdf->Cell(80, 8, "Checked Verifications", 1, 0, 'C', true);
+$pdf->Cell(30, 8, "Rating (1-{$max_rating_value})", 1, 1, 'C', true);
 
-// Table Rows
-$pdf->SetFont('Arial', '', 9);
-$pdf->SetFillColor(245, 245, 245);
+// Table Body Settings
 $lineHeight = 5;
+$q_number = 1;
+$pageBreakThreshold = 270;
+$w1 = 80;
+$w2 = 80;
+$w3 = 30;
 
+foreach ($categories as $category) {
+    // Print Category Header Row
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFillColor(245, 245, 245);
+    $pdf->Cell(190, 8, "   " . mb_strtoupper($category['category_name']), 1, 1, 'L', true);
 
-foreach ($questions as $i => $q) {
-    $question = ($i + 1) . ". " . $q;
-    $verify = $verifications[$i];
-    $rating = $data['answers']["q$i"] ?? '-';
+    $pdf->SetFont('Arial', '', 9);
 
-    // Column widths
-    $w1 = 80;
-    $w2 = 80;
-    $w3 = 30;
-    $lineHeight = 5;
+    foreach ($category['questions'] as $q) {
+        $question_text = $q_number . ". " . $q['question_text'];
+        $q_id = $q['id'];
 
-    // Save starting position
-    $x = $pdf->GetX();
-    $y = $pdf->GetY();
+        $rating = $answers["q_$q_id"] ?? '-';
 
-    // Measure max height
-    $h1 = $pdf->GetMultiCellHeight($w1, $lineHeight, $question);
-    $h2 = $pdf->GetMultiCellHeight($w2, $lineHeight, $verify);
-    $maxHeight = max($h1, $h2);
+        $v_array = $answers["v_$q_id"] ?? [];
+        if (empty($v_array)) {
+            $verify_text = "None selected.";
+        } else {
+            $verify_text = chr(149) . " " . implode("\n" . chr(149) . " ", $v_array);
+        }
 
-    // Draw background cells
-    $pdf->Rect($x, $y, $w1, $maxHeight);
-    $pdf->Rect($x + $w1, $y, $w2, $maxHeight);
-    $pdf->Rect($x + $w1 + $w2, $y, $w3, $maxHeight);
+        $h1 = getEstimatedHeight($pdf, $w1, $question_text, $lineHeight);
+        $h2 = getEstimatedHeight($pdf, $w2, $verify_text, $lineHeight);
+        $maxHeight = max($h1, $h2) + 2;
 
-    // Render text inside cells
-    $pdf->SetXY($x, $y);
-    $pdf->MultiCell($w1, $lineHeight, $question, 0, 'L');
+        if ($pdf->GetY() + $maxHeight > $pageBreakThreshold) {
+            $pdf->AddPage();
+        }
 
-    $pdf->SetXY($x + $w1, $y);
-    $pdf->MultiCell($w2, $lineHeight, $verify, 0, 'L');
+        $x = $pdf->GetX();
+        $y = $pdf->GetY();
 
-    $pdf->SetXY($x + $w1 + $w2, $y);
-    $pdf->MultiCell($w3, $maxHeight, $rating, 0, 'C');
+        $pdf->Rect($x, $y, $w1, $maxHeight);
+        $pdf->Rect($x + $w1, $y, $w2, $maxHeight);
+        $pdf->Rect($x + $w1 + $w2, $y, $w3, $maxHeight);
 
-    // Move to next row
-    $pdf->SetY($y + $maxHeight);
+        $pdf->SetXY($x, $y + 1);
+        $pdf->MultiCell($w1, $lineHeight, $question_text, 0, 'L');
+
+        $pdf->SetXY($x + $w1, $y + 1);
+        $pdf->MultiCell($w2, $lineHeight, $verify_text, 0, 'L');
+
+        $pdf->SetXY($x + $w1 + $w2, $y + 1);
+        $pdf->MultiCell($w3, $lineHeight, $rating, 0, 'C');
+
+        $pdf->SetY($y + $maxHeight);
+        $q_number++;
+    }
 }
 
-// Score
-$pdf->Ln(2);
-$pdf->SetFont('Arial', '', 10);
-$pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / 75", 0, 1);
+// Score Section
+$pdf->Ln(3);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / " . $max_possible_score, 0, 1);
 $pdf->Cell(0, 6, "Computed Rating: " . number_format($data['computed_rating'] ?? 0, 2) . "%", 0, 1);
 $pdf->Ln(2);
 
-// Comment
-if (!empty($data['comment'])) {
+// Comment Section
+if (!empty($data['comment']) && !empty(trim($data['comment']))) {
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(0, 6, "Additional Comment:", 0, 1);
     $pdf->SetFont('Arial', '', 9);
     $pdf->MultiCell(0, 5, $data['comment'], 1);
-    $pdf->Ln(0);
+    $pdf->Ln(2);
 }
 
 // Signature Block
@@ -160,3 +186,4 @@ $pdf->Cell(0, 6, "Date of Evaluation: " . date('F j, Y'), 0, 1);
 
 // Output PDF
 $pdf->Output('I', 'Supervisor_Evaluation.pdf');
+exit;

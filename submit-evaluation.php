@@ -18,15 +18,13 @@ $current_semester = $setting_row['semester'];
 $current_year = $setting_row['academic_year'];
 $setting_stmt->close();
 
-
 // Sanitize inputs
 $student_id     = $_SESSION['idnumber'];
 $academic_year  = $_POST['academic_year'] ?? $current_year;
 $semester       = $_POST['semester'] ?? $current_semester;
 $college        = $_POST['college'] ?? '';
 $comment        = $_POST['comment'] ?? '';
-// ✅ NEW: Get the anonymous value
-$is_anonymous   = $_POST['is_anonymous'] ?? 'no'; // Default to 'no'
+$is_anonymous   = $_POST['is_anonymous'] ?? 'no';
 
 // Split subject and faculty
 $subject_parts = explode('|', $_POST['subject_code'] ?? '');
@@ -56,29 +54,56 @@ $sec_stmt->bind_result($student_section);
 $sec_stmt->fetch();
 $sec_stmt->close();
 
-// Collect answers
-$answers = [];
-$total_score = 0;
-for ($i = 0; $i < 15; $i++) {
-  $qkey = "q" . $i;
-  if (!isset($_POST[$qkey])) {
-    $_SESSION['error_message'] = "Please answer all 15 evaluation questions.";
-    header("Location: student-evaluate.php");
-    exit();
-  }
-  $val = intval($_POST[$qkey]);
-  $answers[$qkey] = $val;
-  $total_score += $val;
+
+// ==========================================
+// DYNAMIC SCORING LOGIC
+// ==========================================
+
+// ✅ Get highest rating scale dynamically
+$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
+$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
+
+// Fetch all currently active questions from the database
+$active_questions = [];
+$q_res = $conn->query("SELECT id FROM evaluation_questions WHERE status = 'active'");
+while ($row = $q_res->fetch_assoc()) {
+  $active_questions[] = $row['id'];
 }
 
-if (count($answers) !== 15) {
-  $_SESSION['error_message'] = "Evaluation failed: All 15 questions must be answered.";
+$total_questions = count($active_questions);
+
+if ($total_questions === 0) {
+  $_SESSION['error_message'] = "Evaluation failed: The administrator has not set up any evaluation questions yet.";
   header("Location: student-evaluate.php");
   exit();
 }
 
-$computed_rating = ($total_score / 75) * 100;
+// ✅ Compute max possible score based on dynamic rating
+$max_possible_score = $total_questions * $max_rating_value;
+$answers = [];
+$total_score = 0;
+
+// Loop strictly through active question IDs to extract POST data
+foreach ($active_questions as $q_id) {
+  $post_key = "q_" . $q_id; // e.g., $_POST['q_1']
+
+  if (!isset($_POST[$post_key])) {
+    $_SESSION['error_message'] = "Please answer all required evaluation questions.";
+    header("Location: student-evaluate.php");
+    exit();
+  }
+
+  $val = intval($_POST[$post_key]);
+  $answers[$post_key] = $val;
+  $total_score += $val;
+}
+
+// Compute dynamic rating percentage
+$computed_rating = ($total_score / $max_possible_score) * 100;
+
+// Convert the dynamic associative array to JSON for database storage
 $answers_json = json_encode($answers);
+
 
 // Function to log activity
 function logActivity($conn, $user_id, $role, $action)
@@ -90,9 +115,9 @@ function logActivity($conn, $user_id, $role, $action)
 }
 
 try {
-  // Check for duplicate
-  $check_query = "SELECT 1 FROM evaluation
-                    WHERE student_id = ? AND faculty_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?";
+  // Check for duplicate submission
+  $check_query = "SELECT 1 FROM evaluation 
+                  WHERE student_id = ? AND faculty_id = ? AND subject_code = ? AND academic_year = ? AND semester = ?";
   $stmt_check = $conn->prepare($check_query);
   $stmt_check->bind_param("sssss", $student_id, $faculty_id, $subject_code, $academic_year, $semester);
   $stmt_check->execute();
@@ -105,15 +130,15 @@ try {
   }
   $stmt_check->close();
 
-  // ✅ FIX: Insert into main evaluation table (added is_anonymous)
+  // Insert into main evaluation table
   $stmt = $conn->prepare("INSERT INTO evaluation (
             student_id, faculty_id, subject_code, subject_title,
             college, academic_year, semester,
             total_score, computed_rating, comment, student_section, is_anonymous
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
   $stmt->bind_param(
-    "sssssssddsss", // Added 1 's'
+    "sssssssddsss",
     $student_id,
     $faculty_id,
     $subject_code,
@@ -125,7 +150,7 @@ try {
     $computed_rating,
     $comment,
     $student_section,
-    $is_anonymous // Added new variable
+    $is_anonymous
   );
   $stmt->execute();
   $stmt->close();
@@ -145,12 +170,12 @@ try {
   $rounded_rating = round($computed_rating, 2);
   logActivity($conn, $student_id, 'student', "Rated {$rounded_rating}% for {$subject_code} handled by {$faculty_name}");
 
-  // ✅ FIX: Insert into archive table (added is_anonymous)
+  // Insert into archive table (student_evaluation_submissions)
   $archive_stmt = $conn->prepare("INSERT INTO student_evaluation_submissions (
             student_id, subject_code, faculty_id, college,
             academic_year, semester, answers,
             total_score, computed_rating, comment, is_anonymous
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"); // Added 1 ?
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
   $archive_stmt->bind_param(
     "sssssssidss",
@@ -169,8 +194,7 @@ try {
   $archive_stmt->execute();
   $archive_stmt->close();
 
-  // ✅ FIX: Set session variables for SweetAlert and printing
-  // After successfully inserting evaluation
+  // Set session variables for SweetAlert and printing
   $_SESSION['evaluation_success'] = true;
 
   // Save all evaluation info for printing
@@ -190,11 +214,12 @@ try {
   header("Location: student-evaluate.php");
   exit();
 } catch (mysqli_sql_exception $e) {
-  // Log the actual error for debugging
   error_log("Student Evaluation Error: " . $e->getMessage());
-  $_SESSION['error_message'] = "An error occurred during evaluation submission. Please try again later. " . $e->getMessage();
+  $_SESSION['error_message'] = "An error occurred during evaluation submission. Please try again later.";
   header("Location: student-evaluate.php");
   exit();
 } finally {
-  $conn->close();
+  if (isset($conn)) {
+    $conn->close();
+  }
 }

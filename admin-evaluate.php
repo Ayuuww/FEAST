@@ -3,28 +3,17 @@ session_start();
 include 'conn/conn.php';
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Check evaluation switch status
 $evalRes = mysqli_query($conn, "SELECT status FROM evaluation_switch LIMIT 1");
 $evalStatus = mysqli_fetch_assoc($evalRes)['status'] ?? 'off';
 $evaluation_closed = $evalStatus === 'off';
 
-// Check if the user is logged in
-if (!isset($_SESSION['idnumber'])) {
+if (!isset($_SESSION['idnumber']) || $_SESSION['role'] !== 'admin') {
   header("Location: pages-login.php");
-  exit();
-}
-
-if ($_SESSION['role'] !== 'admin') {
-  $_SESSION['access_denied'] = "Access denied. Only admins are allowed to access this page.";
-  // Redirect to the correct dashboard based on role
-  $redirect_page = ($_SESSION['role'] === 'student') ? 'student-dashboard.php' : 'faculty-dashboard.php';
-  header("Location: $redirect_page");
   exit();
 }
 
 $evaluator_id = $_SESSION['idnumber'];
 
-// Get current admin’s position
 $admin_info_stmt = $conn->prepare("SELECT position FROM admin WHERE idnumber = ? LIMIT 1");
 $admin_info_stmt->bind_param("s", $evaluator_id);
 $admin_info_stmt->execute();
@@ -33,37 +22,31 @@ $admin_data = $admin_result->fetch_assoc();
 $evaluator_position = $admin_data['position'] ?? 'Not Set';
 $admin_info_stmt->close();
 
-// ✅ Restrict allowed positions
-$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director']; // adjust spelling
+$allowed_positions = ['Dean', 'Chair Person', 'Program Chair', 'Director'];
 if (!in_array($evaluator_position, $allowed_positions)) {
   $_SESSION['access_denied'] = "Access denied. Your position ($evaluator_position) is not allowed to perform faculty evaluations.";
   header("Location: admin-dashboard.php");
   exit();
 }
 
-// ✅ --- MODIFICATION 1: Get all college/program pairs assigned to this admin ---
 $dept_stmt = $conn->prepare("SELECT college_name, program_name FROM admin_college WHERE admin_idnumber = ?");
 $dept_stmt->bind_param("s", $evaluator_id);
 $dept_stmt->execute();
 $dept_result = $dept_stmt->get_result();
 
-$assignments = []; // Array of [dept, prog] pairs
+$assignments = [];
 while ($row = $dept_result->fetch_assoc()) {
   $assignments[] = $row;
 }
 $dept_stmt->close();
 
-// If admin has no assignments, block access
 if (empty($assignments)) {
   $_SESSION['msg'] = "No colleges or programs assigned to your account. Cannot find faculty to evaluate.";
   $_SESSION['msg_type'] = "error";
   header("Location: admin-dashboard.php");
   exit();
 }
-// --- End Modification 1 ---
 
-
-// Get current academic year and semester
 $setting_query = "SELECT semester, academic_year FROM evaluation_settings ORDER BY id DESC LIMIT 1";
 $setting_result = $conn->query($setting_query);
 $default_semester = '';
@@ -75,34 +58,21 @@ if ($setting_result && $setting_result->num_rows > 0) {
   $default_year = $setting_row['academic_year'];
 }
 
-
-// --- ✅ MODIFICATION 2: Fetch faculty based on SUBJECT assignments OR HOME PROGRAM ---
 $faculty_list = [];
-$result = false;
-
 if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) {
+  $params = [];
+  $types = "";
 
-  $params = []; // To store all the values for binding
-  $types = "";  // To store all the types
-
-  // --- Build Query for Part 1: Faculty teaching subjects admin manages ---
   $subject_where_clauses = [];
   foreach ($assignments as $assign) {
     $subject_where_clauses[] = "(s.college = ? AND s.program = ?)";
     $params[] = $assign['college_name'];
     $params[] = $assign['program_name'];
-    $types .= "ss"; // two strings
+    $types .= "ss";
   }
   $subject_where_sql = implode(' OR ', $subject_where_clauses);
+  $query_part1 = "SELECT f.idnumber FROM faculty f JOIN subject s ON f.idnumber = s.faculty_id WHERE f.status = 'active' AND ($subject_where_sql)";
 
-  $query_part1 = "
-        SELECT f.idnumber
-        FROM faculty f
-        JOIN subject s ON f.idnumber = s.faculty_id
-        WHERE f.status = 'active' AND ($subject_where_sql)
-    ";
-
-  // --- Build Query for Part 2: Faculty whose home dept/prog admin manages ---
   $home_where_clauses = [];
   foreach ($assignments as $assign) {
     $home_where_clauses[] = "(f.college = ? AND f.program = ?)";
@@ -111,47 +81,18 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
     $types .= "ss";
   }
   $home_where_sql = implode(' OR ', $home_where_clauses);
+  $query_part2 = "SELECT f.idnumber FROM faculty f WHERE f.status = 'active' AND ($home_where_sql)";
 
-  $query_part2 = "
-        SELECT f.idnumber
-        FROM faculty f
-        WHERE f.status = 'active' AND ($home_where_sql)
-    ";
-
-  // --- Combine Queries ---
-  // We use UNION to get a single list of unique faculty IDs
   $combined_query = "
-    SELECT
-        f.idnumber,
-        f.first_name,
-        f.mid_name,
-        f.last_name,
-        f.faculty_rank,
-        f.college AS home_college
-    FROM
-        faculty f
-    WHERE
-        f.idnumber IN (
-            $query_part1
-            UNION
-            $query_part2
-        )
-        
-        -- AND The admin must not have evaluated this faculty for this period
-        AND NOT EXISTS (
-            SELECT 1
-            FROM admin_evaluation ae
-            WHERE
-                ae.evaluatee_id = f.idnumber
-                AND ae.evaluator_id = ?
-                AND ae.academic_year = ?
-                AND ae.semester = ?
-        )
-    ORDER BY
-        f.last_name, f.first_name
-    ";
+    SELECT f.idnumber, f.first_name, f.mid_name, f.last_name, f.faculty_rank, f.college AS home_college
+    FROM faculty f
+    WHERE f.idnumber IN ($query_part1 UNION $query_part2)
+    AND NOT EXISTS (
+        SELECT 1 FROM admin_evaluation ae
+        WHERE ae.evaluatee_id = f.idnumber AND ae.evaluator_id = ? AND ae.academic_year = ? AND ae.semester = ?
+    )
+    ORDER BY f.last_name, f.first_name";
 
-  // Add the final 3 parameters for the NOT EXISTS clause
   $params[] = $evaluator_id;
   $params[] = $default_year;
   $params[] = $default_semester;
@@ -167,14 +108,52 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
       $faculty_list[] = $row;
     }
   }
-  if (isset($stmt)) {
-    $stmt->close();
+  if (isset($stmt)) $stmt->close();
+}
+
+
+// ==========================================
+// DYNAMIC FETCHING: QUESTIONS & SCALES
+// ==========================================
+$categories = [];
+$total_active_questions = 0;
+
+$cat_res = $conn->query("SELECT * FROM admin_evaluation_categories ORDER BY order_by ASC");
+if ($cat_res) {
+  while ($cat = $cat_res->fetch_assoc()) {
+    $cat_id = $cat['id'];
+
+    $q_stmt = $conn->prepare("SELECT id, question_text, verifications FROM admin_evaluation_questions WHERE category_id = ? AND status = 'active' ORDER BY order_by ASC");
+    $q_stmt->bind_param("i", $cat_id);
+    $q_stmt->execute();
+    $q_result = $q_stmt->get_result();
+
+    $questions = [];
+    while ($q = $q_result->fetch_assoc()) {
+      $questions[] = $q;
+      $total_active_questions++;
+    }
+    $q_stmt->close();
+
+    if (!empty($questions)) {
+      $cat['questions'] = $questions;
+      $categories[] = $cat;
+    }
   }
 }
-// --- End Modification 2 ---
+
+// ✅ Fetch Rating Scales dynamically (Ordered highest to lowest)
+$rating_scales = [];
+$scale_res = $conn->query("SELECT * FROM evaluation_rating_scales ORDER BY scale_value DESC");
+if ($scale_res) {
+  while ($row = $scale_res->fetch_assoc()) {
+    $rating_scales[] = $row;
+  }
+}
+// Get the highest possible rating score for math calculations
+$max_rating_value = !empty($rating_scales) ? $rating_scales[0]['scale_value'] : 5;
 
 
-// Display message if set
 $errorMessage = '';
 if (isset($_SESSION['msg'])) {
   $errorMessage = $_SESSION['msg'];
@@ -192,11 +171,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
 <html lang="en">
 
 <head>
-
-  <!-- Head -->
   <?php include 'head.php' ?>
-  <!-- End Head -->
-
   <style>
     @media print {
 
@@ -240,16 +215,11 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       opacity: 0.5;
     }
   </style>
-
 </head>
 
 <body>
-
   <?php include 'admin-header.php' ?>
-
-  <!-- ======= Sidebar ======= -->
   <?php include 'admin-sidebar.php' ?>
-  <!-- End Sidebar-->
 
   <main id="main" class="main">
     <div class="pagetitle">
@@ -310,7 +280,6 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                           </div>
                         </div>
 
-
                         <div class="col-md-3">
                           <div class="form-floating">
                             <select name="academic_year" id="academic_year" class="form-select" required disabled>
@@ -343,166 +312,103 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td><strong>5</strong></td>
-                              <td>Always manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is consistently and unfailling demostrated in all relevant situation or instances. There is no observed deviation from this pattern. Operationally, this could mean occurring in 95-100% of observed opportunities or instances.</td>
-                            </tr>
-                            <tr>
-                              <td><strong>4</strong></td>
-                              <td>Often manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated frequently, though occasional instances of non-manifestation may occur. Operationally, this could mean occurring in 60-94% of observed opportunities or instances.</td>
-                            </tr>
-                            <tr>
-                              <td><strong>3</strong></td>
-                              <td>Sometimes manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated intermittenly or irregulary, with an approximately equal likelihood occurrence and non-occurence. Operationally, this could mean occurring in 40-60% of observed opportunities or instances.</td>
-                            </tr>
-                            <tr>
-                              <td><strong>2</strong></td>
-                              <td>Seldom manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is demostrated infrequently and is generally absent in most relevant situation. Operationally, this could mean occurring in 25-40% of observed opportunities or instances.</td>
-                            </tr>
-                            <tr>
-                              <td><strong>1</strong></td>
-                              <td>Rarely manifested</td>
-                              <td class="text-start text-danger">The behavior, characteristic, or condition is almost never demostrated, with only isolated or exceptional instances of occurrence. Operationally, this could mean occurring in 0-24% of observed opportunities or instances.</td>
-                            </tr>
+                            <?php if (empty($rating_scales)): ?>
+                              <tr>
+                                <td colspan="3" class="text-danger">Rating scales have not been configured in the database.</td>
+                              </tr>
+                            <?php else: ?>
+                              <?php foreach ($rating_scales as $scale): ?>
+                                <tr>
+                                  <td><strong><?= htmlspecialchars($scale['scale_value']) ?></strong></td>
+                                  <td><?= htmlspecialchars($scale['qualitative_description']) ?></td>
+                                  <td class="text-start text-danger"><?= htmlspecialchars($scale['operational_definition']) ?></td>
+                                </tr>
+                              <?php endforeach; ?>
+                            <?php endif; ?>
                           </tbody>
                         </table>
                       </div>
 
+                      <h5 class="mb-3"><strong>C. Instruction: </strong>Read the benchmark statement carefully and rate the faculty on each statement using the rating scale. Please check the applicable Means of Verification.</h5>
+                      <div class="table-responsive">
 
-                      <h5 class="mb-3"><strong>C. Instruction: </strong>Read the benchmark statement carefully and rate the faculty on each
-                        statement using the above-listed rating scale by shading your rating. The Suggested Means of Verification
-                        column can be used by the supervisor to assist the faculty objectively </h5>
-                      <div class="table-responsive ">
-                        <table class="table table-bordered text-center align-middle">
-                          <tbody>
-                            <thead class="table-light">
-                              <tr class="text-start">
-                                <th>Benchmark Statement for Faculty Teaching Effectiveness</th>
+                        <?php if (empty($categories) || empty($rating_scales)): ?>
+                          <div class="alert alert-danger text-center">Missing evaluation questions or rating scales. Please contact the administrator.</div>
+                        <?php else: ?>
+                          <table class="table table-bordered text-center align-middle">
+                            <thead class="table-dark">
+                              <tr>
+                                <th class="text-start" width="35%">Benchmark Statement</th>
+                                <th class="text-start" width="35%">Suggested Means of Verification</th>
+                                <?php foreach ($rating_scales as $scale): ?>
+                                  <th width="6%"><?= htmlspecialchars($scale['scale_value']) ?></th>
+                                <?php endforeach; ?>
                               </tr>
                             </thead>
-                          </tbody>
-                        </table>
-                        <table class="table table-bordered text-center align-middle">
-                          <thead class="table-light">
-                            <tr>
-                              <th class="text-start">A. Manage of Teaching and Learning</th>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <th><?= $i ?></th>
-                              <?php endfor; ?>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            $questionIndex = 0;
-                            $questions_A = [
-                              "Comes to class on time regularly.",
-                              "Submits updated syllabus, grade sheets, and other required reports on time.",
-                              "Maximizes the allocated time/learning hours effectively.",
-                              "Provide appropriate learning activities that facilitate critical thinking and creativity of students.",
-                              "Guides students to learn on their own, reflect on new ideas and experiences, and make decisions in accomplishing given tasks.",
-                              "Communicates constructive feedback to students for their academic growth."
-                            ];
-                            foreach ($questions_A as $question):
-                            ?>
-                              <tr>
-                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                                <?php for ($i = 5; $i >= 1; $i--): ?>
-                                  <td>
-                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
+                            <tbody>
+                              <?php
+                              $question_counter = 1;
+                              // Calculate dynamic colspan based on number of scales + 2 text columns
+                              $category_colspan = count($rating_scales) + 2;
+
+                              foreach ($categories as $category):
+                              ?>
+                                <tr class="table-secondary">
+                                  <td colspan="<?= $category_colspan ?>" class="text-start fw-bold text-uppercase">
+                                    <?= htmlspecialchars($category['category_name']) ?>
                                   </td>
-                                <?php endfor; ?>
+                                </tr>
+                                <?php foreach ($category['questions'] as $q): ?>
+                                  <tr>
+                                    <td class="text-start small">
+                                      <?= $question_counter ?>. <?= htmlspecialchars($q['question_text']) ?>
+                                    </td>
+                                    <td class="text-start">
+                                      <?php
+                                      $verifs = array_filter(array_map('trim', explode(',', $q['verifications'] ?? '')));
+                                      if (empty($verifs)) {
+                                        echo '<span class="text-muted small">No verifications set.</span>';
+                                      } else {
+                                        foreach ($verifs as $v_idx => $v_text):
+                                      ?>
+                                          <div class="form-check mb-1">
+                                            <input class="form-check-input" type="checkbox" name="v_<?= $q['id'] ?>[]" value="<?= htmlspecialchars($v_text) ?>" id="v_<?= $q['id'] ?>_<?= $v_idx ?>">
+                                            <label class="form-check-label small text-muted" for="v_<?= $q['id'] ?>_<?= $v_idx ?>">
+                                              <?= htmlspecialchars($v_text) ?>
+                                            </label>
+                                          </div>
+                                      <?php
+                                        endforeach;
+                                      }
+                                      ?>
+                                    </td>
+                                    <?php foreach ($rating_scales as $scale): ?>
+                                      <td><input type="radio" name="q_<?= $q['id'] ?>" value="<?= $scale['scale_value'] ?>" required></td>
+                                    <?php endforeach; ?>
+                                  </tr>
+                                <?php
+                                  $question_counter++;
+                                endforeach;
+                                ?>
+                              <?php endforeach; ?>
+                              <tr class="table-light">
+                                <td colspan="2" class="text-end fw-bold">Total Score</td>
+                                <td colspan="<?= count($rating_scales) ?>" id="totalScore" class="text-center text-danger fw-bold fs-5">0</td>
                               </tr>
-                            <?php
-                              $questionIndex++;
-                            endforeach;
-                            ?>
-                          </tbody>
-                          <thead class="table-light">
-                            <tr>
-                              <th class="text-start">B. Content Knowledge, Pedagogy and Technology</th>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <th><?= $i ?></th>
-                              <?php endfor; ?>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            $questions_B = [
-                              "Demonstrates extensive and broad knowledge of the subject/course.",
-                              "Simplifies complex ideas in the lesson for ease of understanding.",
-                              "Integrates contemporary issues and developments in the discipline and/or daily life activities in the syllabus.",
-                              "Promotes active learning and student engagement by using appropriate teaching and learning resources including ICT Tools and platforms.",
-                              "Uses appropriate assessment (projects, exams, quizzes, etc.) to align with the learning outcomes"
-                            ];
-                            foreach ($questions_B as $question):
-                            ?>
-                              <tr>
-                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                                <?php for ($i = 5; $i >= 1; $i--): ?>
-                                  <td>
-                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
-                                  </td>
-                                <?php endfor; ?>
-                              </tr>
-                            <?php
-                              $questionIndex++;
-                            endforeach;
-                            ?>
-                          </tbody>
-                          <thead class="table-light">
-                            <tr>
-                              <th class="text-start">C. Commitment and Transparency</th>
-                              <?php for ($i = 5; $i >= 1; $i--): ?>
-                                <th><?= $i ?></th>
-                              <?php endfor; ?>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <?php
-                            $questions_C = [
-                              "Recognizes and values the unique diversity and individual differences among students.",
-                              "Assist students with their learning challenges during consultation hours.",
-                              "Provide immediate feedback on student outputs and performance.",
-                              "Provides transparent and clear criteria in rating student's performance."
-                            ];
-                            foreach ($questions_C as $question):
-                            ?>
-                              <tr>
-                                <td class="text-start"><?= $questionIndex + 1 ?>. <?= $question ?></td>
-                                <?php for ($i = 5; $i >= 1; $i--): ?>
-                                  <td>
-                                    <input type="radio" name="q<?= $questionIndex ?>" value="<?= $i ?>" required>
-                                  </td>
-                                <?php endfor; ?>
-                              </tr>
-                            <?php
-                              $questionIndex++;
-                            endforeach;
-                            ?>
-                          </tbody>
-                          <thead class="table-light">
-                            <tr>
-                              <th class="text-start">Total Score</th>
-                              <th colspan="5" id="totalScore" class="text-center text-danger fs-5">0</th>
-                            </tr>
-                          </thead>
-                        </table>
+                            </tbody>
+                          </table>
+                        <?php endif; ?>
+
                       </div>
 
-
-                      <div class="mb-3">
+                      <div class="mb-3 mt-4">
                         <label for="comment" class="form-label">Other comments and suggestions (optional)</label>
                         <textarea name="comments" id="comment" class="form-control" rows="3" placeholder="Write your feedback here..."></textarea>
                       </div>
 
                       <input type="hidden" name="evaluator_id" value="<?= $_SESSION['idnumber'] ?>">
                       <input type="hidden" name="evaluator_position" value="<?= htmlspecialchars($evaluator_position) ?>">
-                      <input type="hidden" name="college" value="<?= htmlspecialchars($college) ?>">
-
+                      <input type="hidden" name="college" value="<?= htmlspecialchars($college ?? '') ?>">
 
                       <div class="row mb-3">
                         <div class="col-md-6">
@@ -516,7 +422,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                       </div>
 
                       <div class="col-md-4 offset-md-4 mb-3">
-                        <button type="submit" class="btn btn-success btn-block w-100 <?= empty($faculty_list) || $evaluation_closed ? 'disabled-button' : '' ?>">
+                        <button type="submit" class="btn btn-success btn-block w-100 <?= empty($faculty_list) || $evaluation_closed || empty($categories) ? 'disabled-button' : '' ?>" <?= empty($faculty_list) || empty($categories) ? 'disabled' : '' ?>>
                           Submit Evaluation
                         </button>
                       </div>
@@ -535,19 +441,11 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
 
   <?php include 'footer.php' ?>
 
-  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
-      class="bi bi-arrow-up-short"></i></a>
+  <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <script src="vendors/apexcharts/apexcharts.min.js"></script>
   <script src="vendors/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="vendors/chart.js/chart.umd.js"></script>
-  <script src="vendors/echarts/echarts.min.js"></script>
-  <script src="vendors/quill/quill.js"></script>
-  <script src="vendors/simple-datatables/simple-datatables.js"></script>
-  <script src="vendors/tinymce/tinymce.min.js"></script>
-  <script src="vendors/php-email-form/validate.js"></script>
-
   <script src="assets/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -555,29 +453,28 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       const totalScoreDisplay = document.getElementById('totalScore');
       const computedRatingDisplay = document.getElementById('computedRating');
       const submitButton = document.querySelector('button[type="submit"]');
-      const facultySelect = document.getElementById('evaluatee_id'); // Corrected ID
+      const facultySelect = document.getElementById('evaluatee_id');
 
-      const totalQuestions = 15; // Total number of radio button questions
+      const totalActiveQuestions = <?= $total_active_questions ?>;
+      // ✅ Dynamically calculate max score using the highest rating from DB
+      const maxPossibleScore = totalActiveQuestions * <?= $max_rating_value ?>;
 
       function calculateScore() {
         let total = 0;
         let answeredQuestions = 0;
 
-        for (let i = 0; i < totalQuestions; i++) {
-          const radioGroupName = `q${i}`;
-          const checkedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
-          if (checkedRadio) {
-            total += parseInt(checkedRadio.value);
+        inputs.forEach(input => {
+          if (input.checked) {
+            total += parseInt(input.value);
             answeredQuestions++;
           }
-        }
+        });
 
         totalScoreDisplay.textContent = total;
 
-        // Calculate rating only if all questions are answered
         let rating = 0;
-        if (answeredQuestions === totalQuestions) {
-          rating = ((total / (totalQuestions * 5)) * 100).toFixed(2);
+        if (answeredQuestions === totalActiveQuestions && totalActiveQuestions > 0) {
+          rating = ((total / maxPossibleScore) * 100).toFixed(2);
         }
         computedRatingDisplay.value = `${rating}%`;
       }
@@ -586,12 +483,13 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
         input.addEventListener('change', calculateScore);
       });
 
-      calculateScore(); // Initial calculation on page load
+      calculateScore();
 
-      // Disable submit button if no faculty to evaluate or if evaluation is closed
-      if (facultySelect && facultySelect.options.length <= 1) { // Only the "-- Select Faculty --" option exists
-        submitButton.classList.add('disabled-button');
-        submitButton.disabled = true;
+      if (facultySelect && facultySelect.options.length <= 1) {
+        if (submitButton) {
+          submitButton.classList.add('disabled-button');
+          submitButton.disabled = true;
+        }
       }
     });
   </script>
@@ -623,6 +521,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
             "admin-evaluation-print-fpdf.php?evaluatee_id=<?= $_SESSION['last_evaluated_faculty_id'] ?? '' ?>&academic_year=<?= $default_year ?>&semester=<?= $default_semester ?>",
             "_blank"
           );
+          window.location.reload();
         });
       });
     </script>
@@ -640,7 +539,7 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
           confirmButtonColor: '#d33',
           footer: 'Need help? Contact Superadmin'
         }).then(() => {
-          window.location.href = "admin-dashboard.php"; // ✅ redirect after user clicks OK
+          window.location.href = "admin-dashboard.php";
         });
       });
     </script>

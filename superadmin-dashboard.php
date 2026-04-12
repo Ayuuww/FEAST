@@ -307,14 +307,14 @@ foreach ($all_evals as $eval) {
               $selectedDept = $_GET['dept'] ?? 'All';
 
               // Academic Years
-              $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM evaluation ORDER BY academic_year DESC");
+              $year_result = mysqli_query($conn, "SELECT DISTINCT academic_year FROM admin_evaluation ORDER BY academic_year DESC");
               $academic_years = [];
               while ($row = mysqli_fetch_assoc($year_result)) {
                 $academic_years[] = $row['academic_year'];
               }
 
               // Semesters
-              $sem_result = mysqli_query($conn, "SELECT DISTINCT semester FROM evaluation ORDER BY semester ASC");
+              $sem_result = mysqli_query($conn, "SELECT DISTINCT semester FROM admin_evaluation ORDER BY semester ASC");
               $semesters = [];
               while ($row = mysqli_fetch_assoc($sem_result)) {
                 $semesters[] = $row['semester'];
