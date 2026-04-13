@@ -227,7 +227,7 @@ if ($scale_query) {
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" name="edit_scale" class="btn btn-secondary">Update Scale Level</button>
+            <button type="submit" name="edit_scale" class="btn btn-success">Update Scale Level</button>
           </div>
         </form>
       </div>

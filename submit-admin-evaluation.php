@@ -45,23 +45,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $dept_stmt->close();
 
   // ==========================================
-  // DYNAMIC SCORING LOGIC
+  // DYNAMIC SCORING LOGIC (TEMPLATE AWARE)
   // ==========================================
 
   // ✅ Get highest rating scale dynamically
   $scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
   $max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
 
+  // ✅ Fetch ONLY active questions from the CURRENTLY EQUIPPED SEF Template
   $active_questions = [];
-  $q_res = $conn->query("SELECT id FROM admin_evaluation_questions WHERE status = 'active'");
-  while ($row = $q_res->fetch_assoc()) {
-    $active_questions[] = $row['id'];
+  $q_res = $conn->query("
+      SELECT q.id 
+      FROM admin_evaluation_questions q
+      JOIN admin_evaluation_categories c ON q.category_id = c.id
+      JOIN sef_templates t ON c.template_id = t.id
+      WHERE q.status = 'active' AND t.is_equipped = 1
+  ");
+
+  if ($q_res) {
+    while ($row = $q_res->fetch_assoc()) {
+      $active_questions[] = $row['id'];
+    }
   }
 
   $total_questions = count($active_questions);
 
   if ($total_questions === 0) {
-    $_SESSION['msg'] = "Evaluation failed: The administrator has not set up any SEF evaluation questions yet.";
+    $_SESSION['msg'] = "Evaluation failed: The administrator has not set up any SEF evaluation questions in the Active Rubric.";
     header("Location: admin-evaluate.php");
     exit();
   }
@@ -91,6 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 
   $computed_rating = round(($total_score / $max_possible_score) * 100, 2);
+
   // ✅ Snapshot the math data so future scale changes don't break this record
   $questions_data['metadata'] = [
     'max_scale' => $max_rating_value,

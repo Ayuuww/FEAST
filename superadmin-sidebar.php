@@ -55,7 +55,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
       </ul>
     </li>
 
-    <?php $evalPages = ['superadmin-evaluationsetting.php', 'superadmin-evaluationswitch.php', 'superadmin-evaluationprogress.php', 'superadmin-questionnaire.php', 'superadmin-sef-questionnaire.php', 'superadmin-rating-scale.php']; ?>
+    <?php $evalPages = ['superadmin-evaluationsetting.php', 'superadmin-evaluationswitch.php', 'superadmin-evaluationprogress.php', 'superadmin-questionnaire.php', 'superadmin-sef-questionnaire.php', 'superadmin-templates.php', 'superadmin-rating-scale.php']; ?>
     <li class="nav-item">
       <a class="nav-link <?= in_array($currentPage, $evalPages) ? '' : 'collapsed' ?>"
         data-bs-target="#evaluation" data-bs-toggle="collapse" href="#">
@@ -76,6 +76,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         <li>
           <a href="superadmin-evaluationprogress.php" class="<?= $currentPage == 'superadmin-evaluationprogress.php' ? 'active' : '' ?>">
             <i class="bi bi-circle"></i><span>Progress</span>
+          </a>
+        </li>
+        <li>
+          <a href="superadmin-templates.php" class="<?= $currentPage == 'superadmin-templates.php' ? 'active' : '' ?>">
+            <i class="bi bi-circle"></i><span>Rubric Templates</span>
           </a>
         </li>
         <li>

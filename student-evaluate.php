@@ -84,12 +84,24 @@ while ($row = $result->fetch_assoc()) {
 }
 
 // ==========================================
-// DYNAMIC FETCHING LOGIC
+// DYNAMIC FETCHING LOGIC: TEMPLATE SYSTEM
 // ==========================================
 $categories = [];
 $total_active_questions = 0;
 
-$cat_res = $conn->query("SELECT * FROM evaluation_categories ORDER BY order_by ASC");
+// 1. Find the currently EQUIPPED SET Template
+$equipped_template_id = 1; // Default fallback
+$template_query = $conn->query("SELECT id FROM set_templates WHERE is_equipped = 1 LIMIT 1");
+if ($template_query && $template_query->num_rows > 0) {
+  $equipped_template_id = $template_query->fetch_assoc()['id'];
+}
+
+// 2. Fetch Categories ONLY for the equipped template
+$cat_stmt = $conn->prepare("SELECT * FROM evaluation_categories WHERE template_id = ? ORDER BY order_by ASC");
+$cat_stmt->bind_param("i", $equipped_template_id);
+$cat_stmt->execute();
+$cat_res = $cat_stmt->get_result();
+
 if ($cat_res) {
   while ($cat = $cat_res->fetch_assoc()) {
     $cat_id = $cat['id'];
@@ -111,6 +123,7 @@ if ($cat_res) {
     }
   }
 }
+$cat_stmt->close();
 
 // ✅ Fetch Rating Scales dynamically
 $rating_scales = [];

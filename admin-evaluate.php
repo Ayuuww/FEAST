@@ -113,12 +113,24 @@ if (!empty($assignments) && !empty($default_year) && !empty($default_semester)) 
 
 
 // ==========================================
-// DYNAMIC FETCHING: QUESTIONS & SCALES
+// DYNAMIC FETCHING: QUESTIONS WITH TEMPLATE/LOADOUT SYSTEM
 // ==========================================
 $categories = [];
 $total_active_questions = 0;
 
-$cat_res = $conn->query("SELECT * FROM admin_evaluation_categories ORDER BY order_by ASC");
+// 1. Find the currently EQUIPPED SEF Template
+$equipped_template_id = 1; // Default fallback
+$template_query = $conn->query("SELECT id FROM sef_templates WHERE is_equipped = 1 LIMIT 1");
+if ($template_query && $template_query->num_rows > 0) {
+  $equipped_template_id = $template_query->fetch_assoc()['id'];
+}
+
+// 2. Fetch Categories ONLY for the equipped template
+$cat_stmt = $conn->prepare("SELECT * FROM admin_evaluation_categories WHERE template_id = ? ORDER BY order_by ASC");
+$cat_stmt->bind_param("i", $equipped_template_id);
+$cat_stmt->execute();
+$cat_res = $cat_stmt->get_result();
+
 if ($cat_res) {
   while ($cat = $cat_res->fetch_assoc()) {
     $cat_id = $cat['id'];
@@ -141,6 +153,7 @@ if ($cat_res) {
     }
   }
 }
+$cat_stmt->close();
 
 // ✅ Fetch Rating Scales dynamically (Ordered highest to lowest)
 $rating_scales = [];
@@ -348,7 +361,6 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
                             <tbody>
                               <?php
                               $question_counter = 1;
-                              // Calculate dynamic colspan based on number of scales + 2 text columns
                               $category_colspan = count($rating_scales) + 2;
 
                               foreach ($categories as $category):
@@ -456,7 +468,6 @@ if (isset($_SESSION['admin_eval_success']) && $_SESSION['admin_eval_success'] ==
       const facultySelect = document.getElementById('evaluatee_id');
 
       const totalActiveQuestions = <?= $total_active_questions ?>;
-      // ✅ Dynamically calculate max score using the highest rating from DB
       const maxPossibleScore = totalActiveQuestions * <?= $max_rating_value ?>;
 
       function calculateScore() {

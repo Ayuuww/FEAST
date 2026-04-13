@@ -16,8 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category_name = trim($_POST['category_name']);
     $order_by = (int)$_POST['category_order'];
 
-    $stmt = $conn->prepare("INSERT INTO admin_evaluation_categories (category_name, order_by) VALUES (?, ?)");
-    $stmt->bind_param("si", $category_name, $order_by);
+    // ✅ Get the ID of the currently equipped SEF template
+    $tpl_res = $conn->query("SELECT id FROM sef_templates WHERE is_equipped = 1 LIMIT 1");
+    $equipped_id = $tpl_res->fetch_assoc()['id'] ?? 1;
+
+    $stmt = $conn->prepare("INSERT INTO admin_evaluation_categories (template_id, category_name, order_by) VALUES (?, ?, ?)");
+    $stmt->bind_param("isi", $equipped_id, $category_name, $order_by);
 
     if ($stmt->execute()) {
       $_SESSION['success_message'] = "SEF Category added successfully!";
@@ -29,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
   }
 
-  // Add New SEF Question (Updated to include Verifications)
+  // Add New SEF Question
   if (isset($_POST['add_question'])) {
     $category_id = (int)$_POST['category_id'];
     $question_text = trim($_POST['question_text']);
@@ -49,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
   }
 
-  // Edit Existing SEF Question (Updated to include Verifications)
+  // Edit Existing SEF Question
   if (isset($_POST['edit_question'])) {
     $question_id = (int)$_POST['edit_question_id'];
     $question_text = trim($_POST['edit_question_text']);
@@ -91,7 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch SEF Categories
 $categories = [];
-$cat_query = $conn->query("SELECT * FROM admin_evaluation_categories ORDER BY order_by ASC");
+// ✅ Only show categories for the currently equipped SEF template
+$cat_query = $conn->query("
+    SELECT c.* FROM admin_evaluation_categories c
+    JOIN sef_templates t ON c.template_id = t.id
+    WHERE t.is_equipped = 1
+    ORDER BY c.order_by ASC
+");
 if ($cat_query) {
   while ($row = $cat_query->fetch_assoc()) {
     $categories[] = $row;
@@ -125,6 +135,24 @@ if ($cat_query) {
       </div>
     </div>
 
+    <?php
+    $active_tpl = $conn->query("SELECT template_name FROM sef_templates WHERE is_equipped = 1 LIMIT 1")->fetch_assoc();
+    $current_loadout_name = $active_tpl['template_name'] ?? 'None';
+    ?>
+    <div class="card shadow-sm mb-4 border-top border-primary border-3">
+      <div class="card-body py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+        <div class="mb-2 mb-md-0">
+          <h6 class="m-0 text-muted small text-uppercase fw-bold">Currently Editing Rubric</h6>
+          <h5 class="m-0 text-primary fw-bold">
+            <i class="bi bi-journal-check me-2"></i><?= htmlspecialchars($current_loadout_name) ?>
+          </h5>
+        </div>
+        <a href="superadmin-templates.php" class="btn btn-outline-primary btn-sm">
+          <i class="bi bi-arrow-left-right me-1"></i> Change Rubric
+        </a>
+      </div>
+    </div>
+
     <section class="section dashboard">
       <div class="row">
 
@@ -143,7 +171,7 @@ if ($cat_query) {
 
         <?php if (empty($categories)): ?>
           <div class="col-12">
-            <div class="alert alert-info">No SEF categories found. Create one to begin adding questions.</div>
+            <div class="alert alert-info">No SEF categories found in this Rubric. Create one to begin adding questions.</div>
           </div>
         <?php else: ?>
           <?php foreach ($categories as $category): ?>
@@ -189,7 +217,7 @@ if ($cat_query) {
                                 <span class="badge <?= $badgeClass ?>"><?= ucfirst($q['status']) ?></span>
                               </td>
                               <td class="text-center">
-                                <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editQuestionModal"
+                                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#editQuestionModal"
                                   data-id="<?= $q['id'] ?>"
                                   data-text="<?= htmlspecialchars($q['question_text']) ?>"
                                   data-verifications="<?= htmlspecialchars($q['verifications'] ?? '') ?>"
