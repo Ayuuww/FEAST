@@ -126,6 +126,19 @@ if ($cat_query) {
     <section class="section dashboard">
       <div class="row">
 
+        <div class="col-12 mb-3">
+          <div class="alert alert-warning alert-dismissible fade show shadow-sm border-warning" role="alert">
+            <h5 class="alert-heading text-dark fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> Database Integrity Notice</h5>
+            <p class="mb-0 text-dark">To preserve the historical accuracy of past evaluations, <strong>DO NOT</strong> edit the core meaning of an existing question.</p>
+            <hr class="border-warning opacity-50">
+            <ul class="mb-0 text-dark">
+              <li>If you need to change a question entirely, click the <strong>Hide <i class="bi bi-eye-slash"></i></strong> button on the old question, then click <strong>Add Question <i class="bi bi-plus"></i></strong> to create the new one.</li>
+              <li>Only use the <strong>Edit <i class="bi bi-pencil"></i></strong> button to fix minor typographical errors.</li>
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div>
+
         <?php if (empty($categories)): ?>
           <div class="col-12">
             <div class="alert alert-info">No SET categories found. Create one to begin adding questions.</div>
@@ -175,7 +188,7 @@ if ($cat_query) {
                                 <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#editQuestionModal"
                                   data-id="<?= $q['id'] ?>"
                                   data-text="<?= htmlspecialchars($q['question_text']) ?>"
-                                  data-order="<?= $q['order_by'] ?>" title="Edit Question">
+                                  data-order="<?= $q['order_by'] ?>" title="Edit Question (Typos Only)">
                                   <i class="bi bi-pencil"></i>
                                 </button>
 
@@ -252,7 +265,7 @@ if ($cat_query) {
       <div class="modal-content">
         <form method="POST">
           <div class="modal-header">
-            <h5>Edit SET Question</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h5>Edit SET Question <span class="badge bg-warning text-dark ms-2">Typos Only</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <input type="hidden" name="edit_question_id" id="edit_modal_question_id">

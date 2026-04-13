@@ -30,7 +30,7 @@ $evaluatorName  = getFacultyName($conn, $data['evaluator_id']);
 $evaluateeName  = getFacultyName($conn, $data['evaluatee_id']);
 
 // ==========================================
-// DYNAMIC FETCHING 
+// DYNAMIC FETCHING & SNAPSHOT SYNC
 // ==========================================
 $categories = [];
 $total_active_questions = 0;
@@ -59,10 +59,9 @@ if ($cat_res) {
     }
 }
 
-// ✅ Fetch highest rating dynamically
-$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
-$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
-$max_possible_score = $total_active_questions * $max_rating_value;
+// ✅ Use Snapshot Metadata from submission to ensure mathematical consistency
+$max_rating_value = $answers['metadata']['max_scale'] ?? 5;
+$max_possible_score = $answers['metadata']['max_score'] ?? ($total_active_questions * 5);
 
 // Helper function to safely calculate MultiCell height 
 function getEstimatedHeight($pdf, $width, $text, $lineHeight)
@@ -101,6 +100,7 @@ $pdf->SetFont('Arial', 'B', 9);
 $pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
 $pdf->Cell(80, 8, "Checked Verifications", 1, 0, 'C', true);
+// ✅ Dynamic Header using snapshot data
 $pdf->Cell(30, 8, "Rating (1-{$max_rating_value})", 1, 1, 'C', true);
 
 // Table Body Settings
@@ -164,6 +164,7 @@ foreach ($categories as $category) {
 // Score Section
 $pdf->Ln(3);
 $pdf->SetFont('Arial', 'B', 10);
+// ✅ Uses snapshotted max possible score
 $pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / " . $max_possible_score, 0, 1);
 $pdf->Cell(0, 6, "Computed Rating: " . number_format($data['computed_rating'] ?? 0, 2) . "%", 0, 1);
 $pdf->Ln(2);

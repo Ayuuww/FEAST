@@ -53,7 +53,7 @@ $data['subject_title'] = $subject_title;
 
 
 // ==========================================
-// DYNAMIC QUESTION & SCALE FETCHING 
+// DYNAMIC QUESTION FETCHING & SNAPSHOT SYNC
 // ==========================================
 $categories = [];
 $total_active_questions = 0;
@@ -82,12 +82,9 @@ if ($cat_res) {
     }
 }
 
-// ✅ Fetch highest rating dynamically
-$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
-$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
-
-// Calculate dynamic max score
-$max_possible_score = $total_active_questions * $max_rating_value;
+// ✅ Use Snapshot Metadata from submission to ensure mathematical consistency
+$max_rating_value = $answers['metadata']['max_scale'] ?? 5;
+$max_possible_score = $answers['metadata']['max_score'] ?? ($total_active_questions * 5);
 
 
 // Custom PDF class (assuming you have this configured in printing-headerfooter.php)
@@ -112,7 +109,7 @@ $pdf->Ln(4);
 $pdf->SetFont('Arial', 'B', 10);
 $pdf->SetFillColor(230, 230, 230);
 $pdf->Cell(150, 8, "Benchmark Statement", 1, 0, 'L', true);
-// ✅ Dynamic Header
+// ✅ Dynamic Header using snapshot data
 $pdf->Cell(30, 8, "Rating (1-{$max_rating_value})", 1, 1, 'C', true);
 
 // Table Body
@@ -132,8 +129,10 @@ foreach ($categories as $category) {
         $question_text = $q_number . ". " . $q['question_text'];
         $q_id = $q['id'];
 
+        // Grab the answer matching this dynamic question ID
         $rating = $answers["q_$q_id"] ?? '-';
 
+        // --- Page Break Protection ---
         $stringWidth = $pdf->GetStringWidth($question_text);
         $estimatedLines = ceil($stringWidth / 145);
         $estimatedHeight = $estimatedLines * $lineHeight;
@@ -159,6 +158,7 @@ foreach ($categories as $category) {
 // Scores
 $pdf->Ln(3);
 $pdf->SetFont('Arial', 'B', 10);
+// ✅ Uses snapshotted max possible score
 $pdf->Cell(0, 6, "Total Score: " . ($data['total_score'] ?? '-') . " / " . $max_possible_score, 0, 1);
 $pdf->Cell(0, 6, "Computed Rating: " . number_format($data['computed_rating'] ?? 0, 2) . "%", 0, 1);
 $pdf->Ln(2);
@@ -185,4 +185,4 @@ if (strtolower($is_anonymous) === 'yes') {
 $pdf->Cell(0, 6, "Date of Evaluation: " . date('F j, Y'), 0, 1);
 
 // Output PDF
-$pdf->Output('I', 'Student_Evaluation_Reprint.pdf');
+$pdf->Output('I', 'Student_Evaluation_Print.pdf');

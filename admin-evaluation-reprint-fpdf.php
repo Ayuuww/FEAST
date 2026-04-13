@@ -18,7 +18,7 @@ if (!$evaluatee_id || !$academic_year || !$semester) {
     die("Missing parameters.");
 }
 
-// Fetch evaluation record (Checking both standard answers column or legacy form_data)
+// Fetch evaluation record
 $stmt = $conn->prepare("SELECT * FROM admin_evaluation_submissions WHERE evaluatee_id = ? AND academic_year = ? AND semester = ? ORDER BY id DESC LIMIT 1");
 $stmt->bind_param("sss", $evaluatee_id, $academic_year, $semester);
 $stmt->execute();
@@ -29,7 +29,6 @@ if ($result->num_rows === 0) {
 }
 
 $data = $result->fetch_assoc();
-// Support both old JSON column names (form_data) and new (answers)
 $raw_json = $data['answers'] ?? $data['form_data'] ?? '{}';
 $answers = json_decode($raw_json, true);
 
@@ -69,27 +68,25 @@ function getEstimatedHeight($pdf, $width, $text, $lineHeight)
     $totalLines = 0;
     foreach ($lines as $line) {
         $stringWidth = $pdf->GetStringWidth($line);
-        $lineCount = ceil($stringWidth / ($width - 4)); // Subtract 4 for cell padding
+        $lineCount = ceil($stringWidth / ($width - 4));
         $totalLines += ($lineCount == 0) ? 1 : $lineCount;
     }
     return $totalLines * $lineHeight;
 }
 
-// ✅ Fetch highest rating dynamically from database
-$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
-$max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
-
 
 // ==========================================
-// DYNAMIC FETCHING & LEGACY SUPPORT
+// DYNAMIC FETCHING & SNAPSHOT SUPPORT
 // ==========================================
-$is_legacy_record = isset($answers['q0']);
 $categories = [];
 $total_answered_questions = 0;
 
+// ✅ Check for saved metadata snapshot (defaults to 5 if it's an old record)
+$saved_max_scale = $answers['metadata']['max_scale'] ?? 5;
+$is_legacy_record = isset($answers['q0']);
+
 if ($is_legacy_record) {
     // Legacy support setup
-    $max_possible_score = 75;
     $legacy_questions = [
         "Comes to class on time regularly.",
         "Submits updated syllabus, grade sheets, and other required reports on time.",
@@ -124,6 +121,13 @@ if ($is_legacy_record) {
         " Rubrics, Feedback, Informal interviews",
         " Syllabus, Student outputs, Observations"
     ];
+
+    $categories[0] = ['category_name' => 'Evaluation (Legacy Record)', 'questions' => []];
+    foreach ($legacy_questions as $index => $q_text) {
+        $categories[0]['questions'][] = ['id' => 'legacy_' . $index, 'question_text' => $q_text];
+        $answers["q_legacy_" . $index] = $answers["q" . $index];
+        $total_answered_questions++;
+    }
 } else {
     // Dynamic Fetch for Modern Records
     $cat_res = $conn->query("SELECT * FROM admin_evaluation_categories ORDER BY order_by ASC");
@@ -150,9 +154,10 @@ if ($is_legacy_record) {
             }
         }
     }
-    // Calculate max possible score using dynamic rating value
-    $max_possible_score = $total_answered_questions * $max_rating_value;
 }
+
+// ✅ Calculate Max Possible Score Safely (Prioritize snapshot, fallback to math)
+$max_possible_score = $answers['metadata']['max_score'] ?? ($total_answered_questions * $saved_max_scale);
 
 
 // Custom PDF class
@@ -172,12 +177,12 @@ $pdf->Cell(0, 6, "College: " . $evaluateeDept, 0, 1);
 $pdf->Cell(0, 6, "Rating Period (Academic Year): " . $data['academic_year'], 0, 1);
 $pdf->Ln(4);
 
+$pdf->SetFont('Arial', 'B', 9);
+$pdf->SetFillColor(230, 230, 230);
+$pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
 
 if ($is_legacy_record) {
     // --- RENDER LEGACY 3-COLUMN TABLE ---
-    $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetFillColor(230, 230, 230);
-    $pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
     $pdf->Cell(80, 8, "Suggested Means of Verification", 1, 0, 'C', true);
     $pdf->Cell(30, 8, "Rating", 1, 1, 'C', true);
 
@@ -188,7 +193,7 @@ if ($is_legacy_record) {
     foreach ($legacy_questions as $i => $q) {
         $question = ($i + 1) . ". " . $q;
         $verify = trim($verifications[$i]);
-        $rating = $answers["q$i"] ?? '-';
+        $rating = $answers["q_legacy_$i"] ?? '-';
 
         $w1 = 80;
         $w2 = 80;
@@ -213,8 +218,6 @@ if ($is_legacy_record) {
         $pdf->MultiCell($w1, $lineHeight, $question, 0, 'L');
         $pdf->SetXY($x + $w1, $y + 1);
         $pdf->MultiCell($w2, $lineHeight, $verify, 0, 'L');
-
-        // Center the rating vertically and horizontally
         $pdf->SetXY($x + $w1 + $w2, $y + 1);
         $pdf->MultiCell($w3, $lineHeight, $rating, 0, 'C');
 
@@ -222,11 +225,8 @@ if ($is_legacy_record) {
     }
 } else {
     // --- RENDER MODERN DYNAMIC TABLE ---
-    $pdf->SetFont('Arial', 'B', 9);
-    $pdf->SetFillColor(230, 230, 230);
-    $pdf->Cell(80, 8, "Benchmark Statement", 1, 0, 'C', true);
     $pdf->Cell(80, 8, "Checked Verifications", 1, 0, 'C', true);
-    $pdf->Cell(30, 8, "Rating (1-{$max_rating_value})", 1, 1, 'C', true);
+    $pdf->Cell(30, 8, "Rating (1-{$saved_max_scale})", 1, 1, 'C', true);
 
     $lineHeight = 5;
     $q_number = 1;

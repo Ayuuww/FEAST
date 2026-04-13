@@ -91,6 +91,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   }
 
   $computed_rating = round(($total_score / $max_possible_score) * 100, 2);
+  // ✅ Snapshot the math data so future scale changes don't break this record
+  $questions_data['metadata'] = [
+    'max_scale' => $max_rating_value,
+    'max_score' => $max_possible_score
+  ];
+
   $form_data_json = json_encode($questions_data);
 
   try {

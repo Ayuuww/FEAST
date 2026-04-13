@@ -101,6 +101,12 @@ foreach ($active_questions as $q_id) {
 // Compute dynamic rating percentage
 $computed_rating = ($total_score / $max_possible_score) * 100;
 
+// ✅ Snapshot the math data so future scale changes don't break this record
+$answers['metadata'] = [
+  'max_scale' => $max_rating_value,
+  'max_score' => $max_possible_score
+];
+
 // Convert the dynamic associative array to JSON for database storage
 $answers_json = json_encode($answers);
 

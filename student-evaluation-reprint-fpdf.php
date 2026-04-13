@@ -75,9 +75,8 @@ $data['subject_title'] = $subject_title;
 $categories = [];
 $total_answered_questions = 0;
 
-// Fetch highest rating dynamically
-$scale_res = $conn->query("SELECT MAX(scale_value) as max_val FROM evaluation_rating_scales");
-$dynamic_max_rating_value = $scale_res->fetch_assoc()['max_val'] ?? 5;
+// ✅ Check for saved metadata snapshot (defaults to 5 if it's an old record)
+$saved_max_scale = $answers['metadata']['max_scale'] ?? 5;
 
 // Check if this is an old record using the static q0, q1 format
 $is_legacy_record = isset($answers['q0']);
@@ -113,7 +112,7 @@ if ($is_legacy_record) {
   }
 } else {
   // MODERN DYNAMIC FETCH
-  $max_rating_value = $dynamic_max_rating_value; // Use dynamic DB scale for modern records
+  $max_rating_value = $saved_max_scale; // ✅ FIX: Use the snapshotted scale value!
 
   $cat_res = $conn->query("SELECT * FROM evaluation_categories ORDER BY order_by ASC");
   if ($cat_res) {
@@ -141,7 +140,8 @@ if ($is_legacy_record) {
   }
 }
 
-$max_possible_score = $total_answered_questions * $max_rating_value;
+// ✅ Prioritize snapshot max score, fallback to calculation if legacy
+$max_possible_score = $answers['metadata']['max_score'] ?? ($total_answered_questions * $max_rating_value);
 
 
 // ✅ Custom PDF class
