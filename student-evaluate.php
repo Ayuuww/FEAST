@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'conn/conn.php';
+require_once __DIR__ . '/lib/student_evaluate_helpers.php';
 
 $errorMessage = '';
 if (isset($_SESSION['error_message'])) {
@@ -103,7 +104,11 @@ $cat_stmt->execute();
 $cat_res = $cat_stmt->get_result();
 
 if ($cat_res) {
+  $raw_categories = [];
+  $questions_by_category = [];
+
   while ($cat = $cat_res->fetch_assoc()) {
+    $raw_categories[] = $cat;
     $cat_id = $cat['id'];
     $q_stmt = $conn->prepare("SELECT id, question_text FROM evaluation_questions WHERE category_id = ? AND status = 'active' ORDER BY order_by ASC");
     $q_stmt->bind_param("i", $cat_id);
@@ -113,15 +118,14 @@ if ($cat_res) {
     $questions = [];
     while ($q = $q_result->fetch_assoc()) {
       $questions[] = $q;
-      $total_active_questions++;
     }
     $q_stmt->close();
-
-    if (!empty($questions)) {
-      $cat['questions'] = $questions;
-      $categories[] = $cat;
-    }
+    $questions_by_category[$cat_id] = $questions;
   }
+
+  $category_data = studentEvaluateBuildCategoryList($raw_categories, $questions_by_category);
+  $categories = $category_data['categories'];
+  $total_active_questions = $category_data['total_active_questions'];
 }
 $cat_stmt->close();
 
@@ -133,7 +137,7 @@ if ($scale_res) {
     $rating_scales[] = $row;
   }
 }
-$max_rating_value = !empty($rating_scales) ? $rating_scales[0]['scale_value'] : 5;
+$max_rating_value = studentEvaluateMaxRatingValue($rating_scales);
 
 ?>
 
@@ -203,7 +207,7 @@ $max_rating_value = !empty($rating_scales) ? $rating_scales[0]['scale_value'] : 
       <h1>Student Evaluation Form</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="superadmin-dashboard.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="student-dashboard.php">Home</a></li>
           <li class="breadcrumb-item ">Evaluate</li>
           <li class="breadcrumb-item active">Form</li>
         </ol>
@@ -256,14 +260,13 @@ $max_rating_value = !empty($rating_scales) ? $rating_scales[0]['scale_value'] : 
                                 <option value="" disabled>No subjects available for evaluation.</option>
                               <?php else: ?>
                                 <?php foreach ($subjects as $row):
-                                  $facultyName = htmlspecialchars($row['first_name'] . ' ' . $row['mid_name'] . ' ' . $row['last_name']);
+                                  $facultyName = htmlspecialchars(studentEvaluateDisplayFacultyName($row));
                                   $subjectTitle = htmlspecialchars($row['subject_title']);
                                   $subjectCode = htmlspecialchars($row['subject_code']);
                                   $facultyId = htmlspecialchars($row['faculty_id']);
-                                  $tag = $row['role'] === 'admin' ? ' (Admin)' : '';
                                 ?>
                                   <option value="<?= $subjectCode . '|' . $facultyId ?>" data-college="<?= htmlspecialchars($row['college']) ?>">
-                                    <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName . $tag ?>
+                                    <?= $subjectTitle ?> (<?= $subjectCode ?>) - <?= $facultyName ?>
                                   </option>
                                 <?php endforeach; ?>
                               <?php endif; ?>
@@ -397,7 +400,6 @@ $max_rating_value = !empty($rating_scales) ? $rating_scales[0]['scale_value'] : 
                         </div>
                       </div>
 
-                      <input type="hidden" name="student_section" value="<?= htmlspecialchars($student_section ?? '') ?>">
                       <input type="hidden" name="college" id="college_hidden">
 
                       <div class="col-md-4 offset-md-4 mb-3">
